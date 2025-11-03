@@ -1,0 +1,22 @@
+{
+  "name": "@hrskills/integrations",
+  "version": "0.1.0",
+  "description": "Shared integration layer for HR automation platform",
+  "main": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@notionhq/client": "^2.2.15",
+    "@slack/web-api": "^7.0.0",
+    "axios": "^1.7.0",
+    "googleapis": "^140.0.0",
+    "dotenv": "^16.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

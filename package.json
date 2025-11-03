@@ -1,0 +1,28 @@
+{
+  "name": "hrskills",
+  "version": "0.1.0",
+  "description": "HR Command Center - Claude-powered HR automation platform",
+  "private": true,
+  "scripts": {
+    "dev": "cd webapp && npm run dev",
+    "build": "cd webapp && npm run build",
+    "start": "cd webapp && npm run start",
+    "lint": "cd webapp && npm run lint",
+    "agent:onboarding": "python3 agents/new-hire-onboarding/agent.py",
+    "agent:metrics": "python3 agents/hr-metrics-dashboard/agent.py",
+    "setup": "npm install && cd webapp && npm install"
+  },
+  "keywords": [
+    "hr",
+    "automation",
+    "claude",
+    "ai",
+    "rippling",
+    "notion"
+  ],
+  "author": "Your Company",
+  "license": "MIT",
+  "workspaces": [
+    "webapp"
+  ]
+}
