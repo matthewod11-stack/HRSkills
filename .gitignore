@@ -1,0 +1,101 @@
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE and Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+*.egg-info/
+dist/
+build/
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Logs
+*.log
+logs/
+
+# Temporary Files
+*.tmp
+*.temp
+.cache/
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# Misc
+*.bak
+*.orig
+
+# HRBP Office Specific
+# Exclude all data directories EXCEPT articles
+exports/
+data/
+logs/
+
+
+# Keep directory structure
+!exports/.gitkeep
+!exports/docs/.gitkeep
+!exports/charts/.gitkeep
+!exports/recaps/.gitkeep
+!data/.gitkeep
+!logs/.gitkeep
+!culture/.gitkeep
+
+# Build artifacts
+.next/
+out/
+
+# SQLite databases
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Node.js binaries and archives
+node-v*/
+node.tar.gz
+
+# Coverage reports
+coverage/
+
+# Test results
+test-results/
+playwright-report/
