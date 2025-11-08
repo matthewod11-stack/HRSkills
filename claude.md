@@ -798,6 +798,20 @@ GOOGLE_DRIVE_FOLDER_ID=...            # Template storage folder
 NEXT_PUBLIC_GOOGLE_TEMPLATES_ENABLED=true  # Enable template features
 ```
 
+**Optional (Security - DLP):**
+```bash
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json  # For DLP API
+NEXT_PUBLIC_DLP_DEIDENTIFY_CHAT=false  # De-identify PII before sending to Claude (default: false)
+```
+
+**DLP Configuration Notes:**
+- DLP API uses Google Cloud credentials (service account JSON)
+- Set `GOOGLE_APPLICATION_CREDENTIALS` to path of service account key file
+- `NEXT_PUBLIC_DLP_DEIDENTIFY_CHAT=true` will replace PII with labels like `[EMAIL_ADDRESS]` before sending context to Claude
+  - **Pros:** Maximum privacy, reduces risk if Claude API compromised
+  - **Cons:** May reduce Claude's accuracy when answering specific questions about employees
+  - **Recommendation:** Keep disabled (false) unless handling extremely sensitive data or required by compliance
+
 ### Data Backup
 
 **Critical Files:**

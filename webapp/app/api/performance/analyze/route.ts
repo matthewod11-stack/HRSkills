@@ -5,6 +5,7 @@ import { requireAuth, hasPermission, authErrorResponse } from '@/lib/auth/middle
 import { handleApiError, validationError, notFoundError } from '@/lib/api-helpers';
 import { createMessage, extractTextContent } from '@/lib/api-helpers/anthropic-client';
 import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter';
+import { analyzeSentiment, type SentimentResult } from '@/lib/ai-services/nlp-service';
 
 interface ReviewText {
   question: string;
@@ -29,6 +30,14 @@ interface PerformanceAnalysis {
   keyStrengths: string[];
   improvementAreas: string[];
   calibrationNeeded: boolean;
+  sentiment?: {
+    overall: SentimentResult;
+    byReviewType: {
+      manager?: SentimentResult;
+      self?: SentimentResult;
+      peer?: SentimentResult;
+    };
+  };
 }
 
 function buildSystemPrompt(): string {
@@ -274,11 +283,43 @@ Provide objective performance and potential scores based on the review content. 
     analysis.aiPotentialScore = Math.max(1, Math.min(3, analysis.aiPotentialScore));
     analysis.confidence = Math.max(0, Math.min(1, analysis.confidence));
 
+    // Add sentiment analysis if NLP is enabled
+    if (process.env.NEXT_PUBLIC_ENABLE_NLP === 'true') {
+      try {
+        // Analyze overall sentiment
+        const allReviewText = reviewsToAnalyze.map(r => r.text).join(' ');
+        const overallSentiment = await analyzeSentiment(allReviewText, { enableCaching: true });
+
+        // Analyze sentiment by review type
+        const managerReviews = reviewsToAnalyze.filter(r => r.responseType === 'manager').map(r => r.text).join(' ');
+        const selfReviews = reviewsToAnalyze.filter(r => r.responseType === 'self').map(r => r.text).join(' ');
+        const peerReviews = reviewsToAnalyze.filter(r => r.responseType === 'peer').map(r => r.text).join(' ');
+
+        analysis.sentiment = {
+          overall: overallSentiment,
+          byReviewType: {
+            manager: managerReviews ? await analyzeSentiment(managerReviews, { enableCaching: true }) : undefined,
+            self: selfReviews ? await analyzeSentiment(selfReviews, { enableCaching: true }) : undefined,
+            peer: peerReviews ? await analyzeSentiment(peerReviews, { enableCaching: true }) : undefined,
+          }
+        };
+
+        console.log('Sentiment analysis complete:', {
+          overall: overallSentiment.sentiment,
+          score: overallSentiment.score
+        });
+      } catch (sentimentError) {
+        console.warn('Sentiment analysis failed:', sentimentError);
+        // Continue without sentiment data - graceful degradation
+      }
+    }
+
     console.log('Analysis complete:', {
       employee: employeeName,
       performance: analysis.aiPerformanceScore,
       potential: analysis.aiPotentialScore,
-      calibrationNeeded: analysis.calibrationNeeded
+      calibrationNeeded: analysis.calibrationNeeded,
+      sentimentAvailable: !!analysis.sentiment
     });
 
     return NextResponse.json({

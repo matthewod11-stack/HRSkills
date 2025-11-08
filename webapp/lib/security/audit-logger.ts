@@ -9,6 +9,7 @@ import { NextRequest } from 'next/server';
 import { AuthUser } from '@/lib/auth/types';
 import { writeFile, appendFile, mkdir } from 'fs/promises';
 import path from 'path';
+import { validateNoPii, DLP_INFO_TYPE_PRESETS } from './dlp-service';
 
 export type AuditEventType =
   | 'auth.login.success'
@@ -94,7 +95,40 @@ export async function logAuditEvent(entry: Omit<AuditLogEntry, 'timestamp'>): Pr
       timestamp: new Date().toISOString()
     };
 
+    // DLP: Validate that audit logs don't contain PII
+    // This is CRITICAL for compliance - logs should never expose sensitive data
     const logLine = formatLogEntry(fullEntry);
+
+    try {
+      await validateNoPii(logLine, 'audit log entry');
+    } catch (dlpError) {
+      // PII detected in audit log - this is a serious issue
+      console.error(
+        '🚨 [SECURITY] PII detected in audit log entry!',
+        'EventType:', entry.eventType,
+        'Error:', dlpError instanceof Error ? dlpError.message : 'Unknown'
+      );
+
+      // In production, you might want to:
+      // 1. Alert security team
+      // 2. Redact the PII before logging
+      // 3. Block the operation
+
+      // For now, log a sanitized version
+      const sanitizedEntry = {
+        ...fullEntry,
+        message: '[REDACTED - PII detected]',
+        metadata: { error: 'PII detected in original log entry' }
+      };
+
+      const sanitizedLogLine = formatLogEntry(sanitizedEntry);
+
+      // Write to audit log with redaction notice
+      const auditLogPath = getLogFilePath('audit');
+      await appendFile(auditLogPath, sanitizedLogLine, 'utf-8');
+
+      return; // Exit early
+    }
 
     // Write to audit log
     const auditLogPath = getLogFilePath('audit');
@@ -280,6 +314,33 @@ export async function logFileUpload(
       fileType
     },
     ...requestMeta
+  });
+}
+
+/**
+ * Log a generic audit event (simplified interface)
+ */
+export async function logAudit(params: {
+  action: string;
+  userId: string;
+  resourceType: string;
+  resourceId?: string;
+  details?: Record<string, any>;
+  ipAddress?: string;
+  success?: boolean;
+}): Promise<void> {
+  await logAuditEvent({
+    eventType: 'api.request',
+    severity: params.success === false ? 'warning' : 'info',
+    userId: params.userId,
+    resource: params.resourceType,
+    success: params.success !== false,
+    message: params.action,
+    ip: params.ipAddress,
+    metadata: {
+      resourceId: params.resourceId,
+      ...params.details,
+    },
   });
 }
 

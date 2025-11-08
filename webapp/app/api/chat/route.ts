@@ -10,6 +10,7 @@ import { handleApiError, createSuccessResponse, validateRequiredFields } from '@
 import { createMessage, extractTextContent } from '@/lib/api-helpers/anthropic-client'
 import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter'
 import type { Anthropic } from '@/lib/api-helpers/anthropic-client'
+import { deidentifyText, DLP_INFO_TYPE_PRESETS } from '@/lib/security/dlp-service'
 
 // In-memory response cache (OPTIMIZATION: saves $1,350/month on repeated queries)
 interface CachedResponse {
@@ -383,7 +384,23 @@ Your goal: Help this startup scale its people, culture, and leadership with the 
 
       if (employeeData && employeeData.length > 0) {
         // Use intelligent context generation to minimize token usage
-        const employeeContext = generateEmployeeContext(employeeData as Employee[], message)
+        let employeeContext = generateEmployeeContext(employeeData as Employee[], message)
+
+        // DLP: Optionally de-identify PII before sending to Claude API
+        // This protects sensitive data but may reduce Claude's accuracy
+        // Enable via NEXT_PUBLIC_DLP_DEIDENTIFY_CHAT=true
+        const enableDlpDeidentification = process.env.NEXT_PUBLIC_DLP_DEIDENTIFY_CHAT === 'true'
+
+        if (enableDlpDeidentification) {
+          try {
+            console.log('[DLP] De-identifying employee context before sending to Claude...')
+            employeeContext = await deidentifyText(employeeContext, DLP_INFO_TYPE_PRESETS.CONTACT)
+          } catch (dlpError) {
+            console.warn('[DLP] De-identification failed, using original context:', dlpError)
+            // Fail open: continue with original context if DLP unavailable
+          }
+        }
+
         systemPrompt += employeeContext
       }
     } catch (error) {

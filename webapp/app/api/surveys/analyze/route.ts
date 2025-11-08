@@ -1,0 +1,365 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuth, hasPermission, authErrorResponse } from '@/lib/auth/middleware'
+import { handleApiError } from '@/lib/api-helpers'
+import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter'
+import { analyzeSentimentBatch, extractEntities, type BatchSentimentResult } from '@/lib/ai-services/nlp-service'
+import { translateBatch, detectLanguage } from '@/lib/ai-services/translation-service'
+import { loadDataFileByType } from '@/lib/analytics/utils'
+
+interface SurveyResponse {
+  employee_id: string
+  response: string
+  score?: number
+  quarter?: string
+  department?: string
+  survey_type?: string
+}
+
+interface ThemeInsight {
+  theme: string
+  count: number
+  avgSentiment: number
+  examples: string[]
+  entities: Array<{ name: string; frequency: number }>
+}
+
+interface SurveyAnalysisResult {
+  overall: {
+    totalResponses: number
+    avgSentiment: number
+    sentimentDistribution: {
+      veryPositive: number
+      positive: number
+      neutral: number
+      negative: number
+      veryNegative: number
+    }
+  }
+  byDepartment?: Record<string, {
+    count: number
+    avgSentiment: number
+    topConcerns: string[]
+  }>
+  themes: ThemeInsight[]
+  sentiment: BatchSentimentResult
+  topConcerns: string[]
+  topStrengths: string[]
+  actionableInsights: string[]
+}
+
+/**
+ * POST /api/surveys/analyze
+ * Analyze survey responses with sentiment analysis and theme extraction
+ * Supports: Exit interviews, eNPS surveys, engagement surveys, pulse surveys
+ * Requires: Authentication + analytics read permission
+ */
+export async function POST(request: NextRequest) {
+  // Apply rate limiting (AI endpoints: 30 req/min)
+  const rateLimitResult = await applyRateLimit(request, RateLimitPresets.ai)
+  if (!rateLimitResult.allowed) {
+    return rateLimitResult.response
+  }
+
+  // Authenticate
+  const authResult = await requireAuth(request)
+  if (!authResult.success) {
+    return authErrorResponse(authResult)
+  }
+
+  // Check permissions
+  if (!hasPermission(authResult.user, 'analytics', 'read')) {
+    return NextResponse.json(
+      { success: false, error: 'Insufficient permissions to analyze surveys' },
+      { status: 403 }
+    )
+  }
+
+  // Check if NLP is enabled
+  if (process.env.NEXT_PUBLIC_ENABLE_NLP !== 'true') {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'NLP service is not enabled. Set NEXT_PUBLIC_ENABLE_NLP=true to enable.',
+      },
+      { status: 503 }
+    )
+  }
+
+  try {
+    const body = await request.json()
+    const { surveyResponses, surveyType = 'general', analyzeDepartments = true, maxResponses = 500 } = body
+
+    // Validate input
+    if (!surveyResponses || !Array.isArray(surveyResponses)) {
+      return NextResponse.json(
+        { success: false, error: '\"surveyResponses\" must be an array' },
+        { status: 400 }
+      )
+    }
+
+    if (surveyResponses.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'No survey responses provided' },
+        { status: 400 }
+      )
+    }
+
+    // Limit to prevent excessive API costs
+    const limitedResponses = surveyResponses.slice(0, maxResponses)
+    if (surveyResponses.length > maxResponses) {
+      console.warn(`[Survey Analysis] Truncated ${surveyResponses.length} responses to ${maxResponses}`)
+    }
+
+    const startTime = Date.now()
+
+    // Extract response texts for batch sentiment analysis
+    const responseTexts = limitedResponses.map((r: SurveyResponse) => r.response)
+
+    // Perform batch sentiment analysis
+    console.log(`[Survey Analysis] Analyzing ${responseTexts.length} responses...`)
+    const sentimentResults = await analyzeSentimentBatch(responseTexts, {
+      enableCaching: true,
+    })
+
+    // Calculate sentiment distribution
+    const sentimentDistribution = {
+      veryPositive: sentimentResults.results.filter(r => r.sentiment.sentiment === 'very_positive').length,
+      positive: sentimentResults.results.filter(r => r.sentiment.sentiment === 'positive').length,
+      neutral: sentimentResults.results.filter(r => r.sentiment.sentiment === 'neutral').length,
+      negative: sentimentResults.results.filter(r => r.sentiment.sentiment === 'negative').length,
+      veryNegative: sentimentResults.results.filter(r => r.sentiment.sentiment === 'very_negative').length,
+    }
+
+    // Group by department if requested
+    let byDepartment: Record<string, any> | undefined
+    if (analyzeDepartments) {
+      byDepartment = {}
+
+      for (let i = 0; i < limitedResponses.length; i++) {
+        const response = limitedResponses[i]
+        const sentiment = sentimentResults.results[i]
+        const dept = response.department || 'Unknown'
+
+        if (!byDepartment[dept]) {
+          byDepartment[dept] = {
+            count: 0,
+            totalSentiment: 0,
+            responses: [],
+          }
+        }
+
+        byDepartment[dept].count++
+        byDepartment[dept].totalSentiment += sentiment.sentiment.score
+        byDepartment[dept].responses.push({
+          text: response.response,
+          sentiment: sentiment.sentiment,
+        })
+      }
+
+      // Calculate averages and extract top concerns per department
+      for (const dept in byDepartment) {
+        byDepartment[dept].avgSentiment = byDepartment[dept].totalSentiment / byDepartment[dept].count
+
+        // Top concerns = most negative responses
+        const topConcerns = byDepartment[dept].responses
+          .filter((r: any) => r.sentiment.score < -0.3)
+          .sort((a: any, b: any) => a.sentiment.score - b.sentiment.score)
+          .slice(0, 3)
+          .map((r: any) => r.text.substring(0, 100) + (r.text.length > 100 ? '...' : ''))
+
+        byDepartment[dept] = {
+          count: byDepartment[dept].count,
+          avgSentiment: byDepartment[dept].avgSentiment,
+          topConcerns,
+        }
+      }
+    }
+
+    // Extract themes using entity extraction on negative responses
+    const negativeResponses = limitedResponses.filter((r: SurveyResponse, i: number) =>
+      sentimentResults.results[i].sentiment.score < -0.25
+    )
+
+    const themes: ThemeInsight[] = []
+
+    if (negativeResponses.length > 0) {
+      // Combine negative responses for theme extraction
+      const negativeText = negativeResponses.map(r => r.response).join(' ')
+      const entities = await extractEntities(negativeText, { enableCaching: true })
+
+      // Group common entities as themes
+      const entityGroups: Record<string, { count: number; examples: string[] }> = {}
+
+      for (const entity of entities.slice(0, 20)) { // Top 20 most salient entities
+        const key = entity.name.toLowerCase()
+        if (!entityGroups[key]) {
+          entityGroups[key] = { count: 0, examples: [] }
+        }
+        entityGroups[key].count += entity.mentions
+      }
+
+      // Convert to theme insights
+      for (const [theme, data] of Object.entries(entityGroups)) {
+        if (data.count >= 2) { // Only themes mentioned 2+ times
+          themes.push({
+            theme,
+            count: data.count,
+            avgSentiment: sentimentResults.overall.avgScore,
+            examples: negativeResponses.slice(0, 2).map(r => r.response.substring(0, 100)),
+            entities: [{ name: theme, frequency: data.count }],
+          })
+        }
+      }
+    }
+
+    // Extract top concerns (most negative responses)
+    const topConcerns = sentimentResults.results
+      .map((r, i) => ({ text: limitedResponses[i].response, score: r.sentiment.score }))
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 5)
+      .map(r => r.text.substring(0, 150) + (r.text.length > 150 ? '...' : ''))
+
+    // Extract top strengths (most positive responses)
+    const topStrengths = sentimentResults.results
+      .map((r, i) => ({ text: limitedResponses[i].response, score: r.sentiment.score }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5)
+      .map(r => r.text.substring(0, 150) + (r.text.length > 150 ? '...' : ''))
+
+    // Generate actionable insights
+    const actionableInsights: string[] = []
+
+    if (sentimentResults.overall.negativeCount > sentimentResults.overall.totalAnalyzed * 0.3) {
+      actionableInsights.push('⚠️ High negative sentiment detected (>30% of responses). Immediate attention recommended.')
+    }
+
+    if (sentimentResults.overall.avgScore < -0.3) {
+      actionableInsights.push('📉 Overall sentiment is significantly negative. Consider addressing systemic issues.')
+    } else if (sentimentResults.overall.avgScore > 0.5) {
+      actionableInsights.push('✅ Overall sentiment is positive. Continue current initiatives.')
+    }
+
+    if (themes.length > 0) {
+      actionableInsights.push(`🎯 Key themes identified: ${themes.slice(0, 3).map(t => t.theme).join(', ')}`)
+    }
+
+    if (byDepartment) {
+      const deptIssues = Object.entries(byDepartment)
+        .filter(([_, data]: [string, any]) => data.avgSentiment < -0.3)
+        .sort(([_, a]: [string, any], [__, b]: [string, any]) => a.avgSentiment - b.avgSentiment)
+
+      if (deptIssues.length > 0) {
+        actionableInsights.push(`🏢 Departments needing attention: ${deptIssues.slice(0, 3).map(([dept]) => dept).join(', ')}`)
+      }
+    }
+
+    const processingTime = Date.now() - startTime
+
+    const analysis: SurveyAnalysisResult = {
+      overall: {
+        totalResponses: limitedResponses.length,
+        avgSentiment: sentimentResults.overall.avgScore,
+        sentimentDistribution,
+      },
+      byDepartment,
+      themes,
+      sentiment: sentimentResults,
+      topConcerns,
+      topStrengths,
+      actionableInsights,
+    }
+
+    console.log('[Survey Analysis] Complete:', {
+      responses: limitedResponses.length,
+      avgSentiment: sentimentResults.overall.avgScore.toFixed(2),
+      processingTime: `${processingTime}ms`,
+      apiCalls: sentimentResults.metadata.apiCalls,
+      cacheHits: sentimentResults.metadata.cacheHits,
+    })
+
+    return NextResponse.json({
+      success: true,
+      data: analysis,
+      metadata: {
+        processingTime,
+        responsesAnalyzed: limitedResponses.length,
+        responsesTotal: surveyResponses.length,
+        apiCalls: sentimentResults.metadata.apiCalls,
+        cacheHits: sentimentResults.metadata.cacheHits,
+      },
+    })
+  } catch (error) {
+    return handleApiError(error, {
+      endpoint: '/api/surveys/analyze',
+      method: 'POST',
+      userId: authResult.user.userId,
+    })
+  }
+}
+
+/**
+ * GET /api/surveys/analyze/employees
+ * Quick endpoint to analyze all terminated employees' exit survey data
+ * Requires: Authentication + analytics read permission
+ */
+export async function GET(request: NextRequest) {
+  const authResult = await requireAuth(request)
+  if (!authResult.success) {
+    return authErrorResponse(authResult)
+  }
+
+  if (!hasPermission(authResult.user, 'analytics', 'read')) {
+    return NextResponse.json(
+      { success: false, error: 'Insufficient permissions' },
+      { status: 403 }
+    )
+  }
+
+  try {
+    // Load employee master data
+    const employees = await loadDataFileByType('employee_master')
+
+    if (!employees || employees.length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: 'No employee data found. Please upload employee data first.',
+      }, { status: 404 })
+    }
+
+    // Extract terminated employees with termination reasons
+    const exitData = employees
+      .filter((emp: any) => emp.status === 'Terminated' && emp.termination_reason)
+      .map((emp: any) => ({
+        employee_id: emp.employee_id,
+        response: emp.termination_reason,
+        department: emp.department,
+        termination_date: emp.termination_date,
+        regrettable_loss: emp.regrettable_loss,
+      }))
+
+    if (exitData.length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: 'No exit interview data found. Upload exit survey data or ensure termination_reason field is populated.',
+      }, { status: 404 })
+    }
+
+    console.log(`[Survey Analysis] Found ${exitData.length} exit interviews`)
+
+    // Return exit data for analysis
+    return NextResponse.json({
+      success: true,
+      data: {
+        count: exitData.length,
+        message: 'Use POST /api/surveys/analyze with this data to get sentiment analysis',
+        exitInterviews: exitData,
+      },
+    })
+  } catch (error) {
+    return handleApiError(error, {
+      endpoint: '/api/surveys/analyze/employees',
+      method: 'GET',
+      userId: authResult.user.userId,
+    })
+  }
+}
