@@ -23,6 +23,7 @@
   "author": "Your Company",
   "license": "MIT",
   "workspaces": [
-    "webapp"
+    "webapp",
+    "integrations"
   ]
 }

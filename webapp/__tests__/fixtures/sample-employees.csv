@@ -1,0 +1,11 @@
+employee_id,first_name,last_name,email,department,level,hire_date,termination_date,status
+E001,John,Smith,john.smith@company.com,Engineering,Senior,2020-01-15,,Active
+E002,Sarah,Johnson,sarah.j@company.com,Product,Mid,03/22/2021,,Active
+E003,Michael,Chen,m.chen@company.com,Engineering,Junior,2022-11-30,,Active
+E004,Emily,Rodriguez,emily.r@company.com,Sales,Senior,2019-05-10,2024-03-15,Terminated
+E005,David,Kim,d.kim@company.com,Marketing,Mid,01/08/2023,,Active
+E006,Lisa,Thompson,l.thompson@company.com,HR,Senior,2018-12-01,,Active
+E007,James,Wilson,j.wilson@company.com,Engineering,Mid,2021-06-15,2024-10-31,Terminated
+E008,Maria,Garcia,maria.g@company.com,Product,Senior,04/01/2020,,Active
+E009,Robert,Lee,r.lee@company.com,Sales,Junior,2023-02-28,,Active
+E010,Jennifer,Brown,j.brown@company.com,Engineering,Senior,2017-09-20,,Active

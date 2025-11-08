@@ -1,0 +1,40 @@
+# ============================================
+# HR Command Center - Python Dependencies
+# ============================================
+# Python 3.11+ required
+
+# Core dependencies
+anthropic>=0.30.0          # Claude AI SDK
+requests>=2.31.0           # HTTP client
+python-dotenv>=1.0.0       # Environment variables
+
+# Integration SDKs
+notion-client>=2.2.0       # Notion API
+slack-sdk>=3.27.0          # Slack API
+google-api-python-client>=2.100.0  # Google Workspace APIs
+google-auth>=2.23.0        # Google authentication
+google-auth-oauthlib>=1.1.0
+google-auth-httplib2>=0.1.1
+
+# Data processing
+pandas>=2.1.0              # Data manipulation
+numpy>=1.25.0              # Numerical computing
+
+# Utilities
+pyyaml>=6.0                # YAML parsing
+pytz>=2023.3               # Timezone handling
+python-dateutil>=2.8.2     # Date utilities
+
+# Logging and monitoring
+structlog>=23.1.0          # Structured logging
+sentry-sdk>=1.32.0         # Error tracking (optional)
+
+# HTTP and async
+aiohttp>=3.9.0             # Async HTTP client
+httpx>=0.25.0              # Modern HTTP client
+
+# Development dependencies (optional)
+# pytest>=7.4.0            # Testing framework
+# pytest-asyncio>=0.21.0   # Async testing
+# black>=23.9.0            # Code formatter
+# mypy>=1.5.0              # Type checker

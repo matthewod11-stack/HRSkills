@@ -1,0 +1,67 @@
+name: Accessibility Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  accessibility-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: webapp/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./webapp
+        run: npm ci
+
+      - name: Run Jest accessibility tests
+        working-directory: ./webapp
+        run: npm run test:a11y
+        continue-on-error: false
+
+      - name: Install Playwright Browsers
+        working-directory: ./webapp
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright E2E accessibility tests
+        working-directory: ./webapp
+        run: npm run test:e2e:a11y
+        continue-on-error: false
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: accessibility-test-results-${{ matrix.node-version }}
+          path: |
+            webapp/test-results/
+            webapp/playwright-report/
+          retention-days: 30
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request' && failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '⚠️ Accessibility tests failed. Please review the test results and fix any WCAG violations before merging.'
+            })

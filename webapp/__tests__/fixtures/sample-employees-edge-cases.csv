@@ -1,0 +1,7 @@
+employee_id,first_name,last_name,email,department,level,hire_date,termination_date,status
+E101,Test,User1,test1@company.com,Engineering,Mid,2024-03-10,,Active
+E102,Test,User2,test2@company.com,Product,Senior,12/31/2023,,Active
+E103,Test,User3,test3@company.com,Sales,Junior,,,Active
+E104,Test,User4,test4@company.com,Marketing,Mid,2024-11-03,2024-11-04,Terminated
+E105,Test,User5,test5@company.com,HR,Senior,2020-02-29,,Active
+E106,Test,User6,test6@company.com,Engineering,Mid,invalid-date,,Active

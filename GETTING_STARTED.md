@@ -197,8 +197,9 @@ export async function GET() {
 
 ## 📖 Learning Resources
 
-- **[Master Capabilities Document](docs/claude-hr-capabilities-master.md)** - Complete feature list and implementation guide
-- **[Quick Reference Card](docs/quick-reference-card.md)** - Fast lookup for common tasks
+- **[Master Capabilities Document](claude-hr-capabilities-master.md)** - Complete feature list and implementation guide
+- **[Quick Reference Card](quick-reference-card.md)** - Fast lookup for common tasks
+- **[Documentation Index](docs/README.md)** - Browse all guides, features, and references
 - **Individual READMEs** - Each component has its own README with detailed instructions
 
 ## 🎯 Common Use Cases
@@ -284,11 +285,11 @@ All updating in real-time!
 
 ### Building a New Skill
 
-See: `docs/claude-hr-capabilities-master.md` → "Custom Skills Library"
+See: `claude-hr-capabilities-master.md` → "Custom Skills Library"
 
 ### Creating a New Agent
 
-See: `docs/claude-hr-capabilities-master.md` → "Claude Code Agents"
+See: `claude-hr-capabilities-master.md` → "Claude Code Agents"
 
 ### Adding a New Integration
 
@@ -317,4 +318,4 @@ Once all checked, you're ready to go! 🎉
 
 ---
 
-**Next:** Read the [Master Capabilities Document](docs/claude-hr-capabilities-master.md) to see everything this platform can do.
+**Next:** Read the [Master Capabilities Document](claude-hr-capabilities-master.md) to see everything this platform can do, or browse the [Documentation Index](docs/README.md) for specific guides.

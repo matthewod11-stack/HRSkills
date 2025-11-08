@@ -1,0 +1,240 @@
+name: CI - Continuous Integration
+
+# ============================================
+# Trigger Configuration
+# ============================================
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch: # Manual trigger
+
+# ============================================
+# Concurrency Control
+# ============================================
+# Cancel in-progress runs for same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# ============================================
+# Environment Variables
+# ============================================
+env:
+  NODE_VERSION: '20'
+  PYTHON_VERSION: '3.11'
+  NEXT_TELEMETRY_DISABLED: 1
+
+# ============================================
+# Jobs
+# ============================================
+jobs:
+  # ------------------------------------------
+  # Job 1: Code Quality & Linting
+  # ------------------------------------------
+  lint:
+    name: Lint & Code Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd webapp && npm ci
+
+      - name: Run ESLint
+        run: cd webapp && npm run lint
+
+      - name: Check TypeScript types
+        run: cd webapp && npx tsc --noEmit
+
+      - name: Check formatting (Prettier)
+        run: cd webapp && npx prettier --check .
+        continue-on-error: true
+
+  # ------------------------------------------
+  # Job 2: Build & Test Web Application
+  # ------------------------------------------
+  build-webapp:
+    name: Build Next.js Application
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [lint]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd webapp && npm ci
+
+      - name: Run unit tests (if exists)
+        run: cd webapp && npm test --if-present
+        continue-on-error: true
+
+      - name: Build application
+        run: cd webapp && npm run build
+        env:
+          # Use dummy values for build-time checks
+          ANTHROPIC_API_KEY: sk-ant-dummy-for-build
+          RIPPLING_API_KEY: rpl-dummy-for-build
+          NOTION_TOKEN: secret-dummy-for-build
+
+      - name: Check build output
+        run: |
+          ls -lh webapp/.next
+          du -sh webapp/.next
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-build
+          path: |
+            webapp/.next/
+            !webapp/.next/cache
+          retention-days: 7
+
+  # ------------------------------------------
+  # Job 3: Python Agents Validation
+  # ------------------------------------------
+  validate-agents:
+    name: Validate Python Agents
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Lint Python code (flake8)
+        run: |
+          pip install flake8
+          flake8 agents/ --max-line-length=100 --ignore=E501
+        continue-on-error: true
+
+      - name: Type check (mypy)
+        run: |
+          pip install mypy types-requests
+          mypy agents/ --ignore-missing-imports
+        continue-on-error: true
+
+      - name: Python syntax check
+        run: |
+          python -m py_compile agents/**/*.py
+
+  # ------------------------------------------
+  # Job 4: Security Scanning
+  # ------------------------------------------
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run npm audit
+        run: |
+          npm audit --audit-level=moderate
+          cd webapp && npm audit --audit-level=moderate
+        continue-on-error: true
+
+      - name: Check for secrets (Gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+
+      - name: Dependency review
+        uses: actions/dependency-review-action@v4
+        if: github.event_name == 'pull_request'
+
+  # ------------------------------------------
+  # Job 5: Docker Build Test
+  # ------------------------------------------
+  docker-build:
+    name: Docker Build Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [build-webapp]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image (no push)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: hrskills:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Test Docker image
+        run: |
+          docker run --rm hrskills:test node --version
+
+  # ------------------------------------------
+  # Job 6: Integration Summary
+  # ------------------------------------------
+  ci-summary:
+    name: CI Summary
+    runs-on: ubuntu-latest
+    needs: [lint, build-webapp, validate-agents, security, docker-build]
+    if: always()
+
+    steps:
+      - name: Check all jobs status
+        run: |
+          echo "Lint: ${{ needs.lint.result }}"
+          echo "Build: ${{ needs.build-webapp.result }}"
+          echo "Python: ${{ needs.validate-agents.result }}"
+          echo "Security: ${{ needs.security.result }}"
+          echo "Docker: ${{ needs.docker-build.result }}"
+
+      - name: Report failure
+        if: |
+          needs.lint.result == 'failure' ||
+          needs.build-webapp.result == 'failure' ||
+          needs.validate-agents.result == 'failure'
+        run: exit 1

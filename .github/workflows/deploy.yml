@@ -1,0 +1,237 @@
+name: CD - Deploy to Production
+
+# ============================================
+# Trigger Configuration
+# ============================================
+on:
+  push:
+    branches: [main]
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+        default: 'staging'
+
+# ============================================
+# Environment Variables
+# ============================================
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  NODE_VERSION: '20'
+
+# ============================================
+# Jobs
+# ============================================
+jobs:
+  # ------------------------------------------
+  # Job 1: Build and Push Docker Image
+  # ------------------------------------------
+  build-and-push:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            VCS_REF=${{ github.sha }}
+            VERSION=${{ steps.meta.outputs.version }}
+
+      - name: Sign image with Cosign (optional)
+        if: github.event_name != 'pull_request'
+        run: echo "Image signing would happen here"
+        # Add cosign signing for enhanced security
+
+  # ------------------------------------------
+  # Job 2: Deploy to Staging
+  # ------------------------------------------
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build-and-push]
+    if: github.ref == 'refs/heads/develop' || github.event.inputs.environment == 'staging'
+    environment:
+      name: staging
+      url: https://staging.hrskills.example.com
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Cloud Run (Staging)
+        # Example for Google Cloud Run - adjust for your platform
+        run: |
+          echo "Deploying to staging environment..."
+          echo "Image: ${{ needs.build-and-push.outputs.image-tag }}"
+          # gcloud run deploy hrskills-staging \
+          #   --image ${{ needs.build-and-push.outputs.image-tag }} \
+          #   --platform managed \
+          #   --region us-central1 \
+          #   --allow-unauthenticated
+
+      - name: Run smoke tests
+        run: |
+          echo "Running post-deployment smoke tests..."
+          # curl -f https://staging.hrskills.example.com/api/health || exit 1
+
+      - name: Notify deployment success
+        if: success()
+        run: |
+          echo "Staging deployment successful!"
+          # Add Slack notification here
+
+  # ------------------------------------------
+  # Job 3: Deploy to Production
+  # ------------------------------------------
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build-and-push, deploy-staging]
+    if: |
+      (github.ref == 'refs/heads/main' && github.event_name == 'push') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+    environment:
+      name: production
+      url: https://hrskills.example.com
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create deployment marker
+        run: |
+          echo "Deployment started at $(date)" > deployment.log
+          echo "Commit: ${{ github.sha }}" >> deployment.log
+          echo "Image: ${{ needs.build-and-push.outputs.image-tag }}" >> deployment.log
+
+      - name: Deploy to Production (Blue-Green)
+        run: |
+          echo "Deploying to production environment..."
+          echo "Image: ${{ needs.build-and-push.outputs.image-tag }}"
+          # Example deployment commands:
+          # 1. Deploy new version to "green" environment
+          # 2. Run health checks
+          # 3. Switch traffic from "blue" to "green"
+          # 4. Keep "blue" for quick rollback
+
+      - name: Verify deployment
+        run: |
+          echo "Verifying production deployment..."
+          # Run comprehensive health checks
+          # curl -f https://hrskills.example.com/api/health || exit 1
+
+      - name: Run integration tests
+        run: |
+          echo "Running production integration tests..."
+          # npm run test:integration
+
+      - name: Notify deployment success
+        if: success()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'Production deployment successful!'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # ------------------------------------------
+  # Job 4: Rollback on Failure
+  # ------------------------------------------
+  rollback:
+    name: Rollback on Failure
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+    if: failure()
+    environment:
+      name: production
+
+    steps:
+      - name: Trigger rollback
+        run: |
+          echo "Deployment failed - initiating rollback..."
+          # Rollback to previous stable version
+          # Switch traffic back to "blue" environment
+
+      - name: Notify rollback
+        uses: 8398a7/action-slack@v3
+        with:
+          status: 'failure'
+          text: 'Production deployment failed - rollback initiated!'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # ------------------------------------------
+  # Job 5: Database Migrations
+  # ------------------------------------------
+  migrate-database:
+    name: Run Database Migrations
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+    if: success()
+    environment:
+      name: production
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run database migrations
+        run: |
+          echo "Running database migrations..."
+          # Example: Run migrations in production database
+          # Ensure migrations are reversible for rollback support

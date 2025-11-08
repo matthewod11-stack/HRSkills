@@ -22,3 +22,40 @@ export interface GoogleUser {
   password: string;
   orgUnitPath?: string;
 }
+
+// Drive types
+export interface DriveFolder {
+  id: string;
+  name: string;
+  webViewLink: string;
+}
+
+export interface DriveFile {
+  id: string;
+  name: string;
+  webViewLink: string;
+  mimeType: string;
+  createdTime?: string | null;
+  modifiedTime?: string | null;
+}
+
+export interface FileUploadOptions {
+  fileName: string;
+  mimeType: string;
+  content: string | NodeJS.ReadableStream;
+  folderId?: string;
+}
+
+// Google Docs types
+export interface GoogleDocRequest {
+  title: string;
+  content: string; // markdown content
+  folderId?: string;
+}
+
+export interface GoogleDocResponse {
+  documentId: string;
+  title: string;
+  webViewLink: string;
+  editLink: string;
+}

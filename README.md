@@ -1,6 +1,29 @@
 # HR Command Center
 
-A comprehensive HR automation platform powered by Claude AI, integrating with Rippling, Notion, Google Workspace, Slack, and Calendly.
+> A comprehensive HR automation platform powered by Claude AI, integrating with Rippling, Notion, Google Workspace, Slack, and Calendly.
+
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-18-61dafb)](https://react.dev/)
+[![Python](https://img.shields.io/badge/Python-3.11-blue)](https://www.python.org/)
+
+**Features:** 27 Claude Skills • 23 API Endpoints • 17 Custom Components • Full RBAC • AI Cost Optimized
+
+---
+
+## Table of Contents
+
+- [What This Platform Does](#-what-this-platform-does)
+- [Project Structure](#-project-structure)
+- [Quick Start](#-quick-start)
+- [Configuration](#-configuration)
+- [Documentation](#-documentation)
+- [Features](#-features)
+- [Development Workflow](#-development-workflow)
+- [Architecture](#-architecture)
+- [Contributing](#-contributing)
+
+---
 
 ## 🎯 What This Platform Does
 
@@ -25,29 +48,61 @@ hrskills/
 
 ### Prerequisites
 
-- Node.js 20+ and npm
-- Python 3.10+
-- API keys for: Claude, Rippling, Notion, Google Workspace, Slack, Calendly
+- **Node.js** 20.x+ (check: `node --version`)
+- **npm** 10.x+ (check: `npm --version`)
+- **Python** 3.11+ for automation agents (check: `python3 --version`)
+- **Docker** (optional) for containerized deployment
 
-### Installation
+### Installation (5 minutes)
 
-1. **Clone and setup environment variables**
+1. **Clone the repository**
    ```bash
-   cp .env.example .env.local
-   # Edit .env.local with your actual API keys
+   git clone https://github.com/your-org/hrskills.git
+   cd hrskills
    ```
 
-2. **Install dependencies**
+2. **Set up environment variables**
    ```bash
-   npm run setup
+   cp .env.development .env.local
+   # Edit .env.local with your API keys (see Configuration section below)
    ```
 
-3. **Start the web application**
+3. **Install dependencies**
    ```bash
-   npm run dev
+   # Install all dependencies (webapp + agents)
+   make install
+
+   # Or manually:
+   npm install
+   cd webapp && npm install
+   pip3 install -r requirements.txt
    ```
 
-   The app will be available at `http://localhost:3000`
+4. **Start the development server**
+   ```bash
+   make dev
+
+   # Or manually:
+   cd webapp && npm run dev
+   ```
+
+5. **Access the application**
+   - Web app: http://localhost:3000
+   - Login with demo credentials (see webapp for details)
+
+### Alternative: Docker Setup
+
+```bash
+# Start all services (webapp, postgres, redis, agents)
+make docker-up
+
+# Access at http://localhost:3000
+
+# Stop services
+make docker-down
+```
+
+For detailed setup instructions, see **[Development Setup Guide](docs/guides/DEVELOPMENT_SETUP.md)**.
 
 ## 🔧 Configuration
 
@@ -82,8 +137,29 @@ hrskills/
 
 ## 📚 Documentation
 
-- **[Master Capabilities Document](docs/claude-hr-capabilities-master.md)** - Complete guide to all features
-- **[Quick Reference Card](docs/quick-reference-card.md)** - Fast lookup for common tasks
+### 🚀 Getting Started
+- **[Getting Started Guide](GETTING_STARTED.md)** - Detailed setup and onboarding
+- **[Quick Reference Card](quick-reference-card.md)** - Fast lookup for common tasks
+- **[Development Setup](docs/guides/DEVELOPMENT_SETUP.md)** - Complete development environment setup
+
+### 📖 Core Documentation
+- **[Master Capabilities Document](claude-hr-capabilities-master.md)** - Complete guide to all 27 HR skills
+- **[API Reference](docs/api/API_REFERENCE.md)** - All 23 API endpoints with examples
+- **[Component Library](docs/components/COMPONENT_LIBRARY.md)** - 17 custom components with usage examples
+
+### 🔧 Development & Testing
+- **[Testing Guide](docs/guides/TESTING_GUIDE.md)** - Unit, integration, E2E, and accessibility testing
+- **[Contributing Guidelines](CONTRIBUTING.md)** - Development workflow and code standards
+- **[Architecture Decisions](docs/architecture/ARCHITECTURE_DECISIONS.md)** - Technical decisions and rationale
+
+### 🚢 Deployment & Operations
+- **[Deployment Guide](docs/guides/DEPLOYMENT_GUIDE.md)** - Deploy to Docker, Kubernetes, or cloud platforms
+- **[Operations Guide](docs/guides/OPERATIONS.md)** - Monitoring, maintenance, and incident response
+- **[Security Implementation](docs/guides/SECURITY_IMPLEMENTATION_SUMMARY.md)** - Security features and best practices
+
+### 📑 All Documentation
+- **[Documentation Summary](DOCUMENTATION_SUMMARY.md)** - Quick navigation guide to all docs (60+ files)
+- **[Full Documentation Index](docs/README.md)** - Browse all documentation organized by topic
 
 ## 🎨 Features
 
@@ -140,6 +216,8 @@ npm run start    # Start production server
 
 ## 📊 Architecture
 
+### System Overview
+
 ```
 ┌─────────────────────────────────────────┐
 │         Next.js Web App                 │
@@ -160,9 +238,43 @@ npm run start    # Start production server
 └──────────────┘  └──────────────┘
 ```
 
+### Technology Stack
+
+**Frontend:**
+- Next.js 14 (App Router)
+- React 18
+- TypeScript 5.3
+- Tailwind CSS + shadcn/ui
+- Zustand (state management)
+- Framer Motion (animations)
+
+**Backend:**
+- Next.js API Routes
+- JWT Authentication + RBAC
+- Rate limiting & caching
+- Claude 3.5 Sonnet API
+
+**Infrastructure:**
+- Docker + Docker Compose
+- GitHub Actions (CI/CD)
+- PostgreSQL (future)
+- Redis (caching)
+
+**Testing:**
+- Jest + React Testing Library
+- Playwright (E2E)
+- jest-axe (accessibility)
+
+For detailed architecture decisions, see **[Architecture Decisions](docs/architecture/ARCHITECTURE_DECISIONS.md)**.
+
 ## 🤝 Contributing
 
-This is a private internal tool. For questions or improvements, contact the HR team.
+Want to contribute? Check out our comprehensive guides:
+
+- **[Contributing Guidelines](CONTRIBUTING.md)** - Development workflow, code standards, and PR process
+- **[Development Setup](docs/guides/DEVELOPMENT_SETUP.md)** - Complete setup instructions
+- **[Architecture Decisions](docs/architecture/ARCHITECTURE_DECISIONS.md)** - Technical decisions and rationale
+- **[Changelog](CHANGELOG.md)** - Version history and recent changes
 
 ## 📝 License
 
@@ -170,5 +282,6 @@ MIT License - Internal use only
 
 ## 🆘 Support
 
-- See [Quick Reference Card](docs/quick-reference-card.md) for troubleshooting
+- See [Quick Reference Card](quick-reference-card.md) for troubleshooting
+- Browse [Documentation Index](docs/README.md) for guides and references
 - Contact: hr@yourcompany.com

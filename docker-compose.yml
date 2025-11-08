@@ -1,0 +1,148 @@
+version: '3.9'
+
+# ============================================
+# HR Command Center - Development Environment
+# ============================================
+# Full-stack development setup with hot reload
+# Usage:
+#   docker-compose up -d         # Start all services
+#   docker-compose logs -f web   # Follow webapp logs
+#   docker-compose down          # Stop all services
+
+services:
+  # ==========================================
+  # Next.js Web Application
+  # ==========================================
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: development
+    container_name: hrskills-web
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - RIPPLING_API_KEY=${RIPPLING_API_KEY}
+      - NOTION_TOKEN=${NOTION_TOKEN}
+      - GOOGLE_CREDENTIALS_PATH=/app/credentials/google-credentials.json
+      - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
+      - CALENDLY_API_KEY=${CALENDLY_API_KEY}
+    volumes:
+      # Hot reload - mount source code
+      - ./webapp:/app/webapp:cached
+      - ./integrations:/app/integrations:cached
+      - ./skills:/app/skills:ro
+      # Preserve node_modules in container
+      - /app/node_modules
+      - /app/webapp/node_modules
+      # Mount credentials (read-only)
+      - ./credentials:/app/credentials:ro
+      # Build cache for faster rebuilds
+      - webapp-next-cache:/app/webapp/.next
+    networks:
+      - hrskills-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    depends_on:
+      - redis
+      - postgres
+
+  # ==========================================
+  # PostgreSQL Database (for future use)
+  # ==========================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: hrskills-postgres
+    environment:
+      - POSTGRES_DB=hrskills
+      - POSTGRES_USER=hrskills_user
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme123}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - hrskills-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hrskills_user -d hrskills"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ==========================================
+  # Redis Cache (for session/rate limiting)
+  # ==========================================
+  redis:
+    image: redis:7-alpine
+    container_name: hrskills-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - hrskills-network
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-changeme123}
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ==========================================
+  # Python Agents Container (optional)
+  # ==========================================
+  agents:
+    build:
+      context: .
+      dockerfile: Dockerfile.agents
+    container_name: hrskills-agents
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - RIPPLING_API_KEY=${RIPPLING_API_KEY}
+      - NOTION_TOKEN=${NOTION_TOKEN}
+      - GOOGLE_CREDENTIALS_PATH=/app/credentials/google-credentials.json
+      - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
+    volumes:
+      - ./agents:/app/agents:cached
+      - ./integrations:/app/integrations:cached
+      - ./credentials:/app/credentials:ro
+      - agents-logs:/app/logs
+    networks:
+      - hrskills-network
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    # Agents run on schedule, not continuously
+    command: tail -f /dev/null
+
+# ==========================================
+# Networks
+# ==========================================
+networks:
+  hrskills-network:
+    driver: bridge
+    name: hrskills-network
+
+# ==========================================
+# Persistent Volumes
+# ==========================================
+volumes:
+  postgres-data:
+    name: hrskills-postgres-data
+  redis-data:
+    name: hrskills-redis-data
+  webapp-next-cache:
+    name: hrskills-next-cache
+  agents-logs:
+    name: hrskills-agents-logs

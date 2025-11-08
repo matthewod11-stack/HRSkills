@@ -1,0 +1,35 @@
+# ============================================
+# HR Command Center - Development Dockerfile
+# ============================================
+# Optimized for hot reload and fast iteration
+
+FROM node:20-alpine AS development
+
+# Install development tools
+RUN apk add --no-cache \
+    libc6-compat \
+    curl \
+    git
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json* ./
+COPY webapp/package.json webapp/package-lock.json* ./webapp/
+
+# Install all dependencies (including devDependencies)
+RUN npm install --workspace=webapp --legacy-peer-deps
+
+# Copy source files
+COPY . .
+
+WORKDIR /app/webapp
+
+# Expose development port
+EXPOSE 3000
+
+# Enable Next.js telemetry in development
+ENV NEXT_TELEMETRY_DISABLED=0
+
+# Start development server with hot reload
+CMD ["npm", "run", "dev"]

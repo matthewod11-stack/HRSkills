@@ -25,9 +25,11 @@ export class GoogleClientWrapper {
         'https://www.googleapis.com/auth/calendar',
         'https://www.googleapis.com/auth/gmail.send',
         'https://www.googleapis.com/auth/drive',
+        'https://www.googleapis.com/auth/documents',
         'https://www.googleapis.com/auth/spreadsheets'
-      ],
-      subject: process.env.GOOGLE_ADMIN_EMAIL
+      ]
+      // Note: subject/domain-wide delegation removed for personal use
+      // Add back if you need to impersonate workspace users
     });
   }
 

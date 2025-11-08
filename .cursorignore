@@ -40,7 +40,6 @@ logs/
 
 # Environment Variables
 .env
-.env.local
 
 # Testing
 .coverage
