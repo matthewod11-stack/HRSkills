@@ -62,6 +62,8 @@ async function sendMetric(metric: Metric): Promise<void> {
       return;
     }
 
+    // Note: Web vitals metrics still use dedicated /api/analytics/metrics endpoint
+    // This is separate from business analytics (/api/analytics?metric=X)
     await fetch('/api/analytics/metrics', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -86,6 +88,8 @@ async function sendError(error: ErrorLog): Promise<void> {
       return;
     }
 
+    // Note: Error logs still use dedicated /api/analytics/errors endpoint
+    // This is separate from business analytics (/api/analytics?metric=X)
     await fetch('/api/analytics/errors', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -312,6 +316,8 @@ export function reportCustomMetric(name: string, value: number): void {
     return;
   }
 
+  // Note: Custom metrics still use dedicated /api/analytics/metrics endpoint
+  // This is separate from business analytics (/api/analytics?metric=X)
   fetch('/api/analytics/metrics', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

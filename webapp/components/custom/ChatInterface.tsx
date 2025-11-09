@@ -7,6 +7,19 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { detectSensitivePII } from '@/lib/pii-detector';
 import { useAuth } from '@/lib/auth/auth-context';
+import { WorkflowProgress } from './WorkflowProgress';
+import { ActionButtons } from './ActionButtons';
+import { ContextPanelData } from './ContextPanel';
+import { detectContext } from '@/lib/workflows/context-detector';
+
+interface WorkflowState {
+  currentStep: string | null;
+  progress: number;
+  completedSteps: string[];
+  isComplete: boolean;
+  hasActions: boolean;
+  actionCount: number;
+}
 
 interface Message {
   id: number;
@@ -15,7 +28,10 @@ interface Message {
   timestamp: Date;
   isEditing?: boolean;
   editedContent?: string;
-  detectedSkill?: string;
+  detectedWorkflow?: string;
+  workflowConfidence?: number;
+  workflowState?: WorkflowState;
+  suggestedActions?: any[];
 }
 
 const initialMessages: Message[] = [];
@@ -26,35 +42,7 @@ const suggestions = [
   { icon: Zap, text: 'Write a JD', gradient: 'from-green-500 to-emerald-500' },
 ];
 
-const skills = [
-  { id: 'auto-detect', name: 'Auto-Detect', icon: '🤖' },
-  { id: 'general', name: 'General HR', icon: '💼' },
-  { id: 'hr-document-generator', name: 'Document Generator', icon: '📝' },
-  { id: 'hr-metrics-analyst', name: 'Metrics Analyst', icon: '📊' },
-  { id: 'performance-insights-analyst', name: 'Performance Insights', icon: '🎯' },
-  { id: 'comp-band-designer', name: 'Comp Band Designer', icon: '💰' },
-  { id: 'career-path-planner', name: 'Career Path Planner', icon: '🚀' },
-  { id: 'one-on-one-guide', name: '1:1 Guide', icon: '💬' },
-  { id: 'headcount-planner', name: 'Headcount Planner', icon: '📈' },
-  { id: 'interview-guide-creator', name: 'Interview Guide', icon: '🎤' },
-  { id: 'onboarding-program-builder', name: 'Onboarding Builder', icon: '📚' },
-  { id: 'job-description-writer', name: 'Job Description Writer', icon: '✍️' },
-  { id: 'offboarding-exit-builder', name: 'Offboarding & Exit', icon: '👋' },
-  { id: 'skills-gap-analyzer', name: 'Skills Gap Analyzer', icon: '📋' },
-  { id: 'corporate-communications-strategist', name: 'Corporate Communications', icon: '📢' },
-  { id: 'workforce-reduction-planner', name: 'Workforce Reduction Planner', icon: '📉' },
-  { id: 'employee-relations-case-manager', name: 'Employee Relations & Investigations', icon: '🔍' },
-  { id: 'benefits-leave-coordinator', name: 'Benefits & Leave Coordinator', icon: '🏥' },
-  { id: 'pip-builder-monitor', name: 'PIP Builder & Monitor', icon: '📋' },
-  { id: 'lnd-program-designer', name: 'L&D Program Designer', icon: '📚' },
-  { id: 'survey-analyzer-action-planner', name: 'Survey Analyzer & Action Planner', icon: '📊' },
-  { id: 'recognition-rewards-manager', name: 'Recognition & Rewards Manager', icon: '🏆' },
-  { id: 'org-design-consultant', name: 'Org Design Consultant', icon: '🏗️' },
-  { id: 'policy-lifecycle-manager', name: 'Policy Lifecycle Manager', icon: '📋' },
-  { id: 'compensation-review-cycle-manager', name: 'Comp Review Cycle Manager', icon: '💵' },
-  { id: 'manager-effectiveness-coach', name: 'Manager Effectiveness Coach', icon: '👨‍🏫' },
-  { id: 'dei-program-designer', name: 'DEI Program Designer', icon: '🌈' },
-];
+// Skills array removed - workflow detection is now automatic
 
 /**
  * MessageItem Component
@@ -68,7 +56,7 @@ const skills = [
  */
 const MessageItem = memo(function MessageItem({
   message,
-  skills: skillsProp,
+  conversationId,
   onToggleEdit,
   onUpdateEdit,
   onSaveEdit,
@@ -76,7 +64,7 @@ const MessageItem = memo(function MessageItem({
   onExportToGoogleDocs
 }: {
   message: Message;
-  skills: Array<{ id: string; name: string; icon: string }>;
+  conversationId: string;
   onToggleEdit: (id: number) => void;
   onUpdateEdit: (id: number, content: string) => void;
   onSaveEdit: (id: number) => void;
@@ -143,12 +131,30 @@ const MessageItem = memo(function MessageItem({
             </div>
           ) : (
             <>
-              {message.detectedSkill && (
+              {message.detectedWorkflow && message.detectedWorkflow !== 'general' && (
                 <div className="mb-2 pb-2 border-b border-border">
                   <p className="text-xs text-violet-light flex items-center gap-1 font-medium">
                     <Sparkles className="w-3 h-3" />
-                    Auto-detected: {skillsProp.find(s => s.id === message.detectedSkill)?.name || message.detectedSkill}
+                    Workflow: {message.detectedWorkflow.replace('_', ' ')}
+                    {message.workflowConfidence && ` (${message.workflowConfidence}% confidence)`}
                   </p>
+                </div>
+              )}
+              {message.workflowState && message.role === 'assistant' && (
+                <div className="mb-3">
+                  <WorkflowProgress
+                    workflowId={message.detectedWorkflow || 'general'}
+                    state={message.workflowState}
+                  />
+                </div>
+              )}
+              {message.suggestedActions && message.suggestedActions.length > 0 && message.role === 'assistant' && (
+                <div className="mb-3">
+                  <ActionButtons
+                    actions={message.suggestedActions}
+                    conversationId={conversationId}
+                    workflowId={message.detectedWorkflow || 'general'}
+                  />
                 </div>
               )}
               <div className="prose prose-invert prose-sm max-w-none">
@@ -202,12 +208,16 @@ const MessageItem = memo(function MessageItem({
   );
 });
 
-export function ChatInterface() {
+interface ChatInterfaceProps {
+  onContextPanelChange?: (panelData: ContextPanelData | null) => void;
+}
+
+export function ChatInterface({ onContextPanelChange }: ChatInterfaceProps = {}) {
   const { getAuthHeaders } = useAuth();
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [selectedSkill, setSelectedSkill] = useState('auto-detect');
+  const [conversationId] = useState<string>(() => `conv_${Date.now()}_${Math.random().toString(36).substring(7)}`);
   const [piiWarning, setPiiWarning] = useState<{ show: boolean; types: string[]; message: string; pendingText: string }>({
     show: false,
     types: [],
@@ -255,7 +265,7 @@ export function ChatInterface() {
     setIsTyping(true);
 
     try {
-      // Call chat API with skill context
+      // Call chat API - workflow detection is automatic
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -264,7 +274,7 @@ export function ChatInterface() {
         },
         body: JSON.stringify({
           message: messageText,
-          skill: selectedSkill,
+          conversationId,
           history: messages.map(m => ({ role: m.role, content: m.content }))
         })
       });
@@ -280,10 +290,27 @@ export function ChatInterface() {
         role: 'assistant',
         content: data.reply,
         timestamp: new Date(),
-        detectedSkill: data.detectedSkill,
+        detectedWorkflow: data.detectedWorkflow,
+        workflowConfidence: data.workflowConfidence,
+        workflowState: data.workflowState,
+        suggestedActions: data.suggestedActions,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
+
+      // Detect context and update panel if callback provided
+      if (onContextPanelChange) {
+        // Check if API response includes contextPanel data
+        if (data.contextPanel) {
+          onContextPanelChange(data.contextPanel);
+        } else {
+          // Fallback: client-side detection
+          const detection = detectContext(messageText, data.reply);
+          if (detection.panelData && detection.confidence >= 70) {
+            onContextPanelChange(detection.panelData);
+          }
+        }
+      }
     } catch (error) {
       console.error('Chat error:', error);
       const errorMessage: Message = {
@@ -356,21 +383,21 @@ export function ChatInterface() {
 
   const exportToGoogleDocs = useCallback(async (message: Message) => {
     try {
-      // Detect document type from the message content or detected skill
+      // Detect document type from the message content or detected workflow
       let documentType = 'Document';
 
-      if (message.detectedSkill) {
-        const skillMapping: { [key: string]: string } = {
-          'hr-document-generator': 'Document',
-          'pip-builder-monitor': 'PIP',
-          'job-description-writer': 'Job Description',
-          'interview-guide-creator': 'Interview Guide',
-          'onboarding-program-builder': 'Onboarding Plan',
-          'offboarding-exit-builder': 'Exit Document',
-          'policy-lifecycle-manager': 'Policy',
-          'corporate-communications-strategist': 'Communication'
+      if (message.detectedWorkflow) {
+        const workflowMapping: { [key: string]: string } = {
+          'hiring': 'Job Description',
+          'performance': 'Performance Document',
+          'onboarding': 'Onboarding Plan',
+          'offboarding': 'Exit Document',
+          'compliance': 'Policy Document',
+          'employee_relations': 'ER Document',
+          'compensation': 'Compensation Document',
+          'analytics': 'Analytics Report'
         };
-        documentType = skillMapping[message.detectedSkill] || 'Document';
+        documentType = workflowMapping[message.detectedWorkflow] || 'Document';
       }
 
       // Try to extract document type from content
@@ -466,21 +493,15 @@ export function ChatInterface() {
               </div>
             </div>
 
-            {/* Skill Selector */}
-            <div className="flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-secondary" />
-                <select
-                  value={selectedSkill}
-                  onChange={(e) => setSelectedSkill(e.target.value)}
-                  className="px-3 py-2 bg-card border border-border rounded-lg text-sm hover:border-violet/50 transition-premium cursor-pointer focus:outline-none focus:border-violet font-medium [&>option]:bg-[#1E1B24] [&>option]:text-white [&>option]:py-2"
-                >
-                  {skills.map(skill => (
-                    <option key={skill.id} value={skill.id} className="bg-[#1E1B24] text-white py-2">
-                      {skill.icon} {skill.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {/* Workflow detection indicator - shows when active */}
+            {messages.length > 0 && messages[messages.length - 1].detectedWorkflow && messages[messages.length - 1].detectedWorkflow !== 'general' && (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-violet/10 border border-violet/20 rounded-lg">
+                <Sparkles className="w-3.5 h-3.5 text-violet" />
+                <span className="text-xs font-medium text-violet capitalize">
+                  {messages[messages.length - 1].detectedWorkflow?.replace('_', ' ')} workflow
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -491,7 +512,7 @@ export function ChatInterface() {
               <MessageItem
                 key={message.id}
                 message={message}
-                skills={skills}
+                conversationId={conversationId}
                 onToggleEdit={toggleEdit}
                 onUpdateEdit={updateEditedContent}
                 onSaveEdit={saveEdit}

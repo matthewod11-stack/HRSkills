@@ -7,15 +7,15 @@ import {
   Users,
   TrendingDown,
   Briefcase,
-  Settings,
-  Database,
-  Grid3x3,
-  FolderOpen
+  Settings
 } from 'lucide-react';
 import { FloatingOrbs } from '@/components/custom/FloatingOrbs';
 import { MetricCard } from '@/components/custom/MetricCard';
-import { QuickActionCard } from '@/components/custom/QuickActionCard';
 import { ChatInterface } from '@/components/custom/ChatInterface';
+import { ContextPanel, ContextPanelData } from '@/components/custom/ContextPanel';
+import { DocumentEditorPanel } from '@/components/custom/DocumentEditorPanel';
+import { AnalyticsChartPanel } from '@/components/custom/AnalyticsChartPanel';
+import { PerformanceGridPanel } from '@/components/custom/PerformanceGridPanel';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { logComponentError } from '@/lib/errorLogging';
 import { get } from '@/lib/api-helpers/fetch-with-retry';
@@ -53,6 +53,9 @@ export default function Home() {
   const [selectedMetric, setSelectedMetric] = useState<MetricType>(null);
   const [dialogTitle, setDialogTitle] = useState('');
   const [dialogDescription, setDialogDescription] = useState('');
+
+  // Context panel state for Phase 2 dashboard
+  const [contextPanelData, setContextPanelData] = useState<ContextPanelData | null>(null);
 
   useEffect(() => {
     // Auto-login for development
@@ -218,82 +221,74 @@ export default function Home() {
             </div>
           </section>
 
-          {/* Main Layout - Full Width */}
-          <div className="flex gap-6">
-            {/* Left Column - Quick Actions (narrow) */}
-            <nav aria-label="Quick actions" className="flex flex-col gap-4">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-                className="w-[280px]"
-              >
-                <QuickActionCard
-                  title="Analytics"
-                  description="Ask questions about your data"
-                  icon={TrendingDown}
-                  gradient="from-emerald-500 to-teal-500"
-                  delay={0.5}
-                  href="/analytics"
-                />
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.5 }}
-                className="w-[280px]"
-              >
-                <QuickActionCard
-                  title="Data Center"
-                  description="Upload & manage data"
-                  icon={Database}
-                  gradient="from-emerald-500 to-teal-500"
-                  delay={0.6}
-                  href="/data-sources"
-                />
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.6 }}
-                className="w-[280px]"
-              >
-                <QuickActionCard
-                  title="9-Box"
-                  description="Performance Heatmap"
-                  icon={Grid3x3}
-                  gradient="from-emerald-500 to-teal-500"
-                  delay={0.7}
-                  href="/nine-box"
-                />
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.7 }}
-                className="w-[280px]"
-              >
-                <QuickActionCard
-                  title="Document Library"
-                  description="Policies, handbooks & templates"
-                  icon={FolderOpen}
-                  gradient="from-emerald-500 to-teal-500"
-                  delay={0.8}
-                  href="/documents"
-                />
-              </motion.div>
-            </nav>
+          {/* Main Layout - Chat First with Dynamic Context Panel */}
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Main Chat Interface - Full Width by Default */}
+            <section
+              aria-label="HR Assistant Chat"
+              className="flex-1 order-1 lg:order-2 min-h-[700px]"
+            >
+              <div className="flex flex-col gap-6">
+                {/* Context Panel - Appears above chat when triggered */}
+                {contextPanelData?.type && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="order-1"
+                  >
+                    <ContextPanel
+                      panelData={contextPanelData}
+                      onClose={() => setContextPanelData(null)}
+                    >
+                      {/* Render appropriate panel based on type */}
+                      {contextPanelData.type === 'document' && (
+                        <DocumentEditorPanel
+                          content={contextPanelData.data?.content || ''}
+                          documentType={contextPanelData.config?.documentType}
+                          employeeName={contextPanelData.data?.employeeName}
+                          onExport={async (content) => {
+                            // TODO: Implement Google Docs export
+                            console.log('Export to Google Docs:', content);
+                          }}
+                        />
+                      )}
+                      {contextPanelData.type === 'analytics' && (
+                        <AnalyticsChartPanel
+                          metric={contextPanelData.data?.metric || 'headcount'}
+                          chartType={contextPanelData.config?.chartType}
+                          department={contextPanelData.config?.filters?.department}
+                          dateRange={contextPanelData.config?.filters?.dateRange}
+                        />
+                      )}
+                      {contextPanelData.type === 'performance' && (
+                        <PerformanceGridPanel
+                          department={contextPanelData.config?.filters?.department}
+                          highlights={contextPanelData.config?.highlights}
+                          onEmployeeClick={(employee) => {
+                            console.log('Employee clicked:', employee);
+                            // TODO: Inject employee context into chat
+                          }}
+                        />
+                      )}
+                    </ContextPanel>
+                  </motion.div>
+                )}
 
-            {/* Right Column - Chat Interface (flex-1) */}
-            <section aria-label="HR Assistant Chat" className="flex-1 h-[767px]">
-              <ErrorBoundary
-                level="section"
-                onError={(error, errorInfo) => {
-                  logComponentError(error, errorInfo, 'ChatInterface');
-                }}
-              >
-                <ChatInterface />
-              </ErrorBoundary>
+                {/* Chat Interface - Pushed down when context panel is active */}
+                <div className="order-2 h-[700px]">
+                  <ErrorBoundary
+                    level="section"
+                    onError={(error, errorInfo) => {
+                      logComponentError(error, errorInfo, 'ChatInterface');
+                    }}
+                  >
+                    <ChatInterface
+                      onContextPanelChange={setContextPanelData}
+                    />
+                  </ErrorBoundary>
+                </div>
+              </div>
             </section>
           </div>
         </main>

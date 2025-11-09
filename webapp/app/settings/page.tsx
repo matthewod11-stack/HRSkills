@@ -19,10 +19,15 @@ import {
   XCircle,
   AlertCircle,
   Loader2,
-  Zap
+  Zap,
+  Database,
+  Upload,
+  TrendingUp
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { AIMetricsDashboard } from '@/components/custom/AIMetricsDashboard';
+import { QuotaBanner } from '@/components/custom/QuotaBanner';
+import { getDaysSinceFirstRun } from '@/lib/first-run';
 import useSWR from 'swr';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
@@ -57,11 +62,37 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
+  const [daysSinceFirstRun, setDaysSinceFirstRun] = useState(0);
+  const [hasPersonalApiKey, setHasPersonalApiKey] = useState(false);
+  const [hasUploadedData, setHasUploadedData] = useState(false);
 
   // Fetch AI configuration from API
   const { data: aiConfigData, mutate: mutateAIConfig } = useSWR('/api/ai/config', fetcher, {
     refreshInterval: 30000, // Refresh every 30 seconds
   });
+
+  // Fetch quota status for quota banner
+  const { data: quotaData } = useSWR('/api/ai/quota', fetcher, {
+    refreshInterval: 60000, // Refresh every minute
+  });
+
+  // Fetch first-run status
+  const { data: firstRunData } = useSWR('/api/setup/init', fetcher);
+
+  // Initialize progressive disclosure state
+  useEffect(() => {
+    setDaysSinceFirstRun(getDaysSinceFirstRun());
+
+    // Check if user has uploaded data (more than demo data count)
+    if (firstRunData && firstRunData.employeeCount > 200) {
+      setHasUploadedData(true);
+    }
+
+    // Check if user has personal API key (from quota data)
+    if (quotaData && quotaData.hasPersonalKey) {
+      setHasPersonalApiKey(true);
+    }
+  }, [firstRunData, quotaData]);
 
   const [sections, setSections] = useState<SettingSection[]>([
     {
@@ -330,10 +361,97 @@ export default function SettingsPage() {
       {/* Main Content */}
       <main className="max-w-[1200px] mx-auto px-6 py-12">
         <div className="space-y-6">
+          {/* Quota Banner - Show if using shared key and approaching limit */}
+          {quotaData && !quotaData.hasPersonalKey && (
+            <QuotaBanner quotaStatus={quotaData} />
+          )}
+
+          {/* Data Status Section - Always visible */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="backdrop-blur-xl bg-black/40 border-2 border-blue-500/30 rounded-2xl p-6"
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center">
+                <Database className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold">Your Data</h2>
+                <p className="text-xs text-gray-400">Employee data and analytics status</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {/* Data Status */}
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="p-4 bg-white/5 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Database className="w-4 h-4 text-blue-400" />
+                    <span className="text-xs text-gray-400">Employees</span>
+                  </div>
+                  <p className="text-2xl font-bold">
+                    {firstRunData?.employeeCount || 0}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {hasUploadedData ? 'Your data' : 'Demo data'}
+                  </p>
+                </div>
+
+                <div className="p-4 bg-white/5 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <TrendingUp className="w-4 h-4 text-green-400" />
+                    <span className="text-xs text-gray-400">Analytics</span>
+                  </div>
+                  <p className="text-2xl font-bold">
+                    {firstRunData?.progress?.percentage || 0}%
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">Setup complete</p>
+                </div>
+
+                <div className="p-4 bg-white/5 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CheckCircle2 className="w-4 h-4 text-purple-400" />
+                    <span className="text-xs text-gray-400">Status</span>
+                  </div>
+                  <p className="text-2xl font-bold">Active</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {daysSinceFirstRun > 0
+                      ? `${daysSinceFirstRun} days ago`
+                      : 'Just started'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Upload Data CTA - Only show if using demo data */}
+              {!hasUploadedData && (
+                <div className="p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-lg">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <h3 className="text-sm font-medium mb-1">Upload Your Employee Data</h3>
+                      <p className="text-xs text-gray-400">
+                        Currently using demo data (200 employees). Upload your CSV to unlock
+                        personalized analytics and insights.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => router.push('/data-sources')}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm transition-all whitespace-nowrap"
+                    >
+                      <Upload className="w-4 h-4" />
+                      Upload CSV
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+
           {/* AI Provider Configuration Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
             className="backdrop-blur-xl bg-black/40 border-2 border-purple-500/30 rounded-2xl p-6"
           >
             <div className="flex items-center justify-between mb-6">
@@ -342,8 +460,12 @@ export default function SettingsPage() {
                   <Zap className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold">AI Provider Configuration</h2>
-                  <p className="text-xs text-gray-400">Configure your AI provider preferences and failover settings</p>
+                  <h2 className="text-lg font-bold">AI Configuration</h2>
+                  <p className="text-xs text-gray-400">
+                    {hasPersonalApiKey
+                      ? 'Using your personal API key - unlimited usage'
+                      : 'Using shared key - add yours for unlimited usage'}
+                  </p>
                 </div>
               </div>
 
@@ -562,21 +684,36 @@ export default function SettingsPage() {
             </div>
           </motion.div>
 
-          {/* Other Sections */}
-          {sections.map((section, sectionIndex) => (
-            <motion.div
-              key={section.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: (sectionIndex + 2) * 0.1 }}
-              className="backdrop-blur-xl bg-black/40 border-2 border-white/20 rounded-2xl p-6"
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <section.icon className="w-5 h-5" />
+          {/* Other Sections with Progressive Disclosure */}
+          {sections
+            .filter((section) => {
+              // Hide integrations section until user has been active 7+ days
+              if (section.id === 'integrations' && daysSinceFirstRun < 7) {
+                return false;
+              }
+              return true;
+            })
+            .map((section, sectionIndex) => (
+              <motion.div
+                key={section.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: (sectionIndex + 3) * 0.1 }}
+                className="backdrop-blur-xl bg-black/40 border-2 border-white/20 rounded-2xl p-6"
+              >
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                    <section.icon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold">{section.title}</h2>
+                    {section.id === 'integrations' && (
+                      <p className="text-xs text-gray-400">
+                        Connect external services to enhance your workflow
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <h2 className="text-lg font-bold">{section.title}</h2>
-              </div>
 
               <div className="space-y-4">
                 {section.settings.map((setting) => (

@@ -95,6 +95,8 @@ export default function AnalyticsPage() {
     setIsTyping(true);
 
     try {
+      // Note: Analytics chat still uses dedicated endpoint for conversational AI
+      // The unified /api/analytics?metric=X is for structured metric queries
       const response = await fetch('/api/analytics/chat', {
         method: 'POST',
         headers: {

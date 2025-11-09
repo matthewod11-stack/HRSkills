@@ -176,6 +176,9 @@ export const userPreferences = sqliteTable('user_preferences', {
   // User settings
   preferencesJson: text('preferences_json').notNull(), // Theme, notifications, defaults, etc.
 
+  // API keys (encrypted or for dev use only)
+  anthropicApiKey: text('anthropic_api_key'), // User's personal Anthropic API key
+
   // Timestamps
   updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
 });
@@ -245,6 +248,27 @@ export const aiUsage = sqliteTable('ai_usage', {
 });
 
 // ============================================================================
+// AI QUOTA USAGE TABLE (for shared key rate limiting)
+// ============================================================================
+export const aiQuotaUsage = sqliteTable('ai_quota_usage', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull(), // User ID or 'shared-demo'
+  date: text('date').notNull(), // ISO date string (YYYY-MM-DD)
+
+  // Daily quota tracking
+  requestCount: integer('request_count').notNull().default(0),
+  tokensUsed: integer('tokens_used').notNull().default(0),
+  quotaLimit: integer('quota_limit').notNull(), // Daily limit for this user
+
+  // Timestamps
+  createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  // Unique constraint on user_id + date
+  userDateIdx: sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_quota_user_date ON ai_quota_usage(user_id, date)`,
+}));
+
+// ============================================================================
 // INDEXES FOR QUERY PERFORMANCE
 // ============================================================================
 
@@ -296,6 +320,12 @@ export const aiUsageIndexes = {
   userIdx: sql`CREATE INDEX IF NOT EXISTS idx_ai_usage_user ON ai_usage(user_id)`,
 };
 
+// AI quota usage indexes
+export const aiQuotaIndexes = {
+  userIdx: sql`CREATE INDEX IF NOT EXISTS idx_quota_user ON ai_quota_usage(user_id)`,
+  dateIdx: sql`CREATE INDEX IF NOT EXISTS idx_quota_date ON ai_quota_usage(date)`,
+};
+
 // ============================================================================
 // TYPE EXPORTS (for TypeScript type inference)
 // ============================================================================
@@ -329,3 +359,6 @@ export type NewInsightEvent = typeof insightEvents.$inferInsert;
 
 export type AIUsage = typeof aiUsage.$inferSelect;
 export type NewAIUsage = typeof aiUsage.$inferInsert;
+
+export type AIQuotaUsage = typeof aiQuotaUsage.$inferSelect;
+export type NewAIQuotaUsage = typeof aiQuotaUsage.$inferInsert;

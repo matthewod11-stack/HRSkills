@@ -10,7 +10,9 @@
     "lint": "cd webapp && npm run lint",
     "agent:onboarding": "python3 agents/new-hire-onboarding/agent.py",
     "agent:metrics": "python3 agents/hr-metrics-dashboard/agent.py",
-    "setup": "npm install && cd webapp && npm install"
+    "setup": "npm install && cd webapp && npm install",
+    "seed:demo": "tsx scripts/seed-demo-data.ts",
+    "calculate:metrics": "tsx scripts/calculate-metrics.ts"
   },
   "keywords": [
     "hr",
@@ -25,5 +27,8 @@
   "workspaces": [
     "webapp",
     "integrations"
-  ]
+  ],
+  "dependencies": {
+    "swr": "^2.3.6"
+  }
 }

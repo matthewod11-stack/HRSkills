@@ -11,11 +11,30 @@ import { createMessage, extractTextContent } from '@/lib/api-helpers/anthropic-c
 import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter'
 import type { Anthropic } from '@/lib/api-helpers/anthropic-client'
 import { deidentifyText, DLP_INFO_TYPE_PRESETS } from '@/lib/security/dlp-service'
+import { detectWorkflow, buildDetectionContext } from '@/lib/workflows/detection'
+import { loadWorkflow, buildWorkflowSystemPrompt, buildWorkflowCatalog } from '@/lib/workflows/loader'
+import type { WorkflowId, WorkflowState } from '@/lib/workflows/types'
+import {
+  determineStateMode,
+  loadConversationState,
+  saveConversationState,
+  initializeWorkflowState,
+  createStateSnapshot
+} from '@/lib/workflows/state-machine/persistence'
+import { createStateMachine, loadStateMachine } from '@/lib/workflows/state-machine/machine'
+import type { WorkflowStateMachine } from '@/lib/workflows/state-machine/machine'
+import { checkQuota, trackQuotaUsage, getAnthropicKey } from '@/lib/ai/shared-key-manager'
+import { suggestActions, suggestFollowUpQuestions } from '@/lib/workflows/actions/suggestions'
+import type { SuggestionContext } from '@/lib/workflows/actions/suggestions'
+import { detectContext } from '@/lib/workflows/context-detector'
+import type { ContextPanelData } from '@/components/custom/ContextPanel'
 
 // In-memory response cache (OPTIMIZATION: saves $1,350/month on repeated queries)
 interface CachedResponse {
   reply: string
-  detectedSkill?: string
+  detectedWorkflow?: WorkflowId
+  workflowConfidence?: number
+  contextPanel?: ContextPanelData | null
   timestamp: number
   dataHash: string
 }
@@ -57,134 +76,17 @@ function estimateMaxTokens(message: string): number {
   return 1024
 }
 
-// Skill detection based on user query keywords
+// Legacy function - now deprecated in favor of workflow detection
+// Kept for backward compatibility during migration period
 function detectSkill(message: string): string {
-  const messageLower = message.toLowerCase()
+  console.warn('[DEPRECATED] detectSkill() is deprecated. Use detectWorkflow() instead.')
 
-  // Skill keyword mappings
-  const skillPatterns = [
-    {
-      id: 'skills-gap-analyzer',
-      keywords: ['skills gap', 'skill assessment', 'development plan', 'promotion readiness', 'ready for promotion', 'skill development', 'gap analysis', 'learning plan', 'career development']
-    },
-    {
-      id: 'job-description-writer',
-      keywords: ['job description', 'jd', 'job posting', 'job ad', 'write jd', 'review jd', 'job listing', 'hiring post', 'role description', 'posting']
-    },
-    {
-      id: 'offboarding-exit-builder',
-      keywords: ['offboarding', 'offboard', 'exit', 'resignation', 'leaving', 'departure', 'exit interview', 'last day', 'transition plan', 'knowledge transfer', 'termination', 'layoff']
-    },
-    {
-      id: 'onboarding-program-builder',
-      keywords: ['onboarding', 'onboard', 'new hire', 'first day', '30-60-90', 'pre-boarding', 'buddy system', 'ramp', 'orientation']
-    },
-    {
-      id: 'hr-document-generator',
-      keywords: ['offer letter', 'pip', 'performance improvement', 'termination letter', 'document', 'template', 'write a', 'draft a', 'generate a']
-    },
-    {
-      id: 'interview-guide-creator',
-      keywords: ['interview', 'interviewing', 'interview guide', 'interview questions', 'screening', 'hiring process']
-    },
-    {
-      id: 'hr-metrics-analyst',
-      keywords: ['metrics', 'kpi', 'analytics', 'dashboard', 'measure', 'track', 'data', 'report', 'attrition', 'turnover rate']
-    },
-    {
-      id: 'performance-insights-analyst',
-      keywords: ['performance', 'performance review', 'feedback', 'evaluation', 'rating', 'calibration']
-    },
-    {
-      id: 'comp-band-designer',
-      keywords: ['compensation', 'salary', 'pay band', 'comp band', 'equity', 'stock options', 'benefits', 'market rate']
-    },
-    {
-      id: 'career-path-planner',
-      keywords: ['career', 'promotion', 'career path', 'career ladder', 'growth', 'advancement', 'ic track', 'manager track']
-    },
-    {
-      id: 'one-on-one-guide',
-      keywords: ['1:1', 'one-on-one', '1 on 1', 'check-in', 'skip level', 'coaching']
-    },
-    {
-      id: 'headcount-planner',
-      keywords: ['headcount', 'hiring plan', 'workforce planning', 'staffing', 'team size', 'org growth']
-    },
-    {
-      id: 'corporate-communications-strategist',
-      keywords: ['rif', 'layoff communication', 'message', 'announcement', 'crisis', 'ceo departure', 'leadership change', 'security breach', 'data leak', 'acquisition announcement', 'return to office', 'rto mandate', 'policy change', 'communicate layoff', 'how should we message', 'press release', 'all-hands', 'company announcement']
-    },
-    {
-      id: 'workforce-reduction-planner',
-      keywords: ['workforce reduction', 'layoff planning', 'rif planning', 'headcount reduction', 'reduction in force', 'selection criteria', 'warn act', 'severance calculation', 'severance cost', 'cost reduction', 'cut headcount', 'eliminate roles', 'layoff budget', 'demographic analysis', 'disparate impact', 'legal compliance', 'workforce planning', 'rif timeline', 'how to select', 'who to lay off']
-    },
-    {
-      id: 'employee-relations-case-manager',
-      keywords: ['investigation', 'complaint', 'harassment', 'discrimination', 'employee relations', 'witness interview', 'hr case', 'workplace complaint', 'hostile work environment', 'retaliation', 'sexual harassment', 'misconduct', 'policy violation', 'investigate', 'workplace investigation']
-    },
-    {
-      id: 'benefits-leave-coordinator',
-      keywords: ['benefits', 'benefits enrollment', 'open enrollment', 'fmla', 'family leave', 'medical leave', 'maternity leave', 'paternity leave', 'parental leave', 'life event', 'new baby', 'marriage', 'divorce', 'return to work', 'fitness for duty', 'ada accommodation', 'reasonable accommodation', 'cobra', 'health insurance', 'health plan', 'add spouse', 'add dependent', 'state leave', 'paid leave', 'ca pfl', 'wa pfml', 'ny pfl', 'leave laws', 'qualifying life event', 'return-to-work', 'phased return', 'leave of absence']
-    },
-    {
-      id: 'pip-builder-monitor',
-      keywords: ['pip', 'performance improvement plan', 'performance improvement', 'underperforming', 'performance issues', 'not meeting expectations', 'coaching conversation', 'document performance', 'performance management', 'measurable goals', 'performance goals', 'terminate for performance', 'manage out', 'performance coaching', 'performance plan', 'written warning', 'corrective action']
-    },
-    {
-      id: 'lnd-program-designer',
-      keywords: ['training', 'learning and development', 'l&d', 'training program', 'learning path', 'skill development', 'training design', 'instructional design', 'elearning', 'e-learning', 'training curriculum', 'learning management', 'lms', 'training evaluation', 'kirkpatrick', 'training roi', 'leadership development', 'onboarding training', 'technical training', 'sales training', 'compliance training', 'learning objectives', 'training needs assessment', 'addie', 'blended learning', 'virtual training', 'training effectiveness']
-    },
-    {
-      id: 'survey-analyzer-action-planner',
-      keywords: ['survey', 'engagement survey', 'pulse survey', 'employee survey', 'survey results', 'survey analysis', 'analyze survey', 'enps', 'employee net promoter', 'survey questions', 'survey design', 'engagement score', 'response rate', 'action plan', 'survey action plan', 'onboarding survey', 'exit survey', '360 feedback', '360 survey', 'survey template', 'survey communication', 'survey report', 'engagement metric', 'favorability', 'likert scale', 'survey segmentation', 'heat map', 'key drivers', 'root cause analysis', 'survey follow-up', 'pulse check']
-    },
-    {
-      id: 'recognition-rewards-manager',
-      keywords: ['recognition', 'recognition program', 'employee recognition', 'rewards', 'rewards program', 'peer recognition', 'peer-to-peer recognition', 'shout-out', 'kudos', 'spot bonus', 'service anniversary', 'anniversary gift', 'milestone celebration', 'employee appreciation', 'values award', 'annual awards', 'employee of the month', 'bonusly', 'kazoo', 'achievers', 'recognition platform', 'recognition culture', 'thank you', 'celebrate employee', 'life event', 'new baby', 'wedding gift', 'retirement party', 'promotion celebration', 'award ceremony', 'appreciation program']
-    },
-    {
-      id: 'org-design-consultant',
-      keywords: ['org chart', 'org structure', 'organizational structure', 'organization design', 'org design', 'reporting lines', 'span of control', 'reporting structure', 'reorganization', 'reorg', 're-org', 'org restructuring', 'team structure', 'functional organization', 'divisional organization', 'matrix organization', 'business unit', 'reporting hierarchy', 'dotted line', 'solid line reporting', 'team sizing', 'headcount planning', 'organizational hierarchy', 'functional vs divisional', 'scaling organization', 'layers of management', 'manager to employee ratio', 'flat organization', 'merger integration', 'acquisition integration', 'organizational chart']
-    },
-    {
-      id: 'policy-lifecycle-manager',
-      keywords: ['policy', 'policies', 'employee handbook', 'handbook', 'code of conduct', 'workplace policy', 'company policy', 'policy update', 'policy review', 'compliance', 'employment law', 'labor law', 'at-will employment', 'pto policy', 'vacation policy', 'sick leave policy', 'remote work policy', 'work from home policy', 'dress code', 'anti-harassment', 'harassment policy', 'discrimination policy', 'eeo policy', 'equal employment', 'fmla', 'ada', 'confidentiality policy', 'social media policy', 'drug-free workplace', 'background check policy', 'expense policy', 'travel policy', 'overtime policy', 'timekeeping', 'bereavement', 'jury duty', 'military leave', 'parental leave', 'paid leave', 'unpaid leave', 'acknowledgment form', 'policy rollout', 'handbook update', 'legal compliance', 'state law', 'california policy', 'new york policy', 'poster requirement', 'wage notice', 'meal break', 'rest break', 'final pay', 'termination policy', 'separation policy', 'resignation policy', 'exit interview', 'workers compensation', 'workplace safety', 'osha', 'whistleblower', 'retaliation', 'reasonable accommodation', 'disability accommodation', 'religious accommodation', 'lactation', 'nursing mothers', 'sexual harassment training', 'anti-harassment training', 'conflict of interest', 'ethics policy', 'data security policy', 'byod policy', 'acceptable use', 'email monitoring', 'progressive discipline', 'corrective action', 'pip policy', 'performance policy', 'attendance policy', 'punctuality', 'tardiness']
-    },
-    {
-      id: 'compensation-review-cycle-manager',
-      keywords: ['compensation review', 'comp review', 'merit cycle', 'merit increase', 'annual raise', 'salary review', 'merit budget', 'merit matrix', 'compa-ratio', 'promotion increase', 'equity refresh', 'market adjustment', 'compensation planning', 'pay increase', 'raise budget', 'compensation cycle', 'merit planning', 'compensation calibration', 'promotion budget', 'stock refresh', 'rsu refresh', 'option refresh', 'total compensation review', 'comp cycle', 'merit process', 'performance-based raise', 'compensation adjustment', 'pay review']
-    },
-    {
-      id: 'manager-effectiveness-coach',
-      keywords: ['manager training', 'manager effectiveness', 'new manager', 'first-time manager', 'manager bootcamp', 'leadership training', 'manager coaching', 'leadership development', 'how to manage', 'managing people', 'one on one', '1:1 meeting', 'giving feedback', 'difficult conversation', 'conflict resolution', 'manager skills', 'delegation', 'micromanagement', 'team management', 'people management', 'leadership skills', 'manager development', 'coaching conversation', 'performance conversation', 'manager communication', 'team conflict', 'manage team', 'leadership coaching', 'manager best practices', 'skip level', 'team meeting', 'retrospective', 'team dynamics', 'psychological safety']
-    },
-    {
-      id: 'dei-program-designer',
-      keywords: ['diversity', 'equity', 'inclusion', 'dei', 'edi', 'belonging', 'diverse hiring', 'diversity recruiting', 'inclusive interviewing', 'pay equity', 'pay gap', 'gender pay gap', 'racial pay gap', 'wage gap', 'pay equity audit', 'erg', 'employee resource group', 'affinity group', 'diversity metrics', 'representation', 'underrepresented', 'underrepresented minority', 'urm', 'women in tech', 'black employees', 'latinx', 'hispanic', 'lgbtq', 'lgbtqia', 'pride', 'neurodiversity', 'disability inclusion', 'accessibility', 'ada compliance', 'unconscious bias', 'implicit bias', 'bias training', 'dei strategy', 'dei program', 'dei metrics', 'dei goals', 'dei okr', 'inclusive culture', 'diverse candidates', 'diverse pipeline', 'structured interviewing', 'blind resume', 'blind review', 'inclusive job description', 'pronouns', 'transgender', 'non-binary', 'gender-neutral', 'microaggression', 'psychological safety', 'belonging survey', 'inclusion survey']
-    }
-  ]
+  // Map to workflow detection as fallback
+  const context = buildDetectionContext(message)
+  const workflowMatch = detectWorkflow(context)
 
-  // Score each skill based on keyword matches
-  let bestMatch = 'general'
-  let highestScore = 0
-
-  for (const skill of skillPatterns) {
-    let score = 0
-    for (const keyword of skill.keywords) {
-      if (messageLower.includes(keyword)) {
-        // Longer keywords get higher weight (more specific)
-        score += keyword.length
-      }
-    }
-
-    if (score > highestScore) {
-      highestScore = score
-      bestMatch = skill.id
-    }
-  }
-
-  return highestScore > 0 ? bestMatch : 'general'
+  // Return workflow ID as "skill" for backward compatibility
+  return workflowMatch.workflowId
 }
 
 // Load HR capabilities documentation
@@ -226,9 +128,23 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Check API quota (for shared key users)
+  const quotaCheck = await checkQuota(authResult.user.userId);
+  if (!quotaCheck.allowed) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: quotaCheck.message,
+        quotaExceeded: true,
+        quotaStatus: quotaCheck.status
+      },
+      { status: 429 } // Too Many Requests
+    );
+  }
+
   try {
     const startTime = Date.now() // Track request start time
-    const { message, skill, history } = await request.json()
+    const { message, skill, history, conversationId } = await request.json()
 
     // Generate cache key from message + employee data hash
     const crypto = require('crypto')
@@ -268,8 +184,12 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
           reply: cached.reply,
-          detectedSkill: cached.detectedSkill,
-          cached: true
+          detectedWorkflow: cached.detectedWorkflow,
+          workflowConfidence: cached.workflowConfidence,
+          contextPanel: cached.contextPanel,
+          cached: true,
+          suggestedActions: [], // Cache hits don't generate actions
+          followUpQuestions: []
         })
       } else {
         // Expired or data changed, remove from cache
@@ -277,60 +197,128 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Auto-detect skill if requested
-    let activeSkill = skill
-    if (skill === 'auto-detect') {
-      activeSkill = detectSkill(message)
-      console.log(`Auto-detected skill: ${activeSkill} for message: "${message.substring(0, 50)}..."`)
+    // Workflow detection (automatic - replaces skill selection)
+    // Extract current workflow from conversation history if available
+    let currentWorkflow: WorkflowId | undefined
+    if (history && history.length > 0) {
+      // Check if previous messages had a workflow context
+      const lastUserMessage = history.filter((msg: any) => msg.role === 'user').pop()
+      if (lastUserMessage && lastUserMessage.workflowId) {
+        currentWorkflow = lastUserMessage.workflowId
+      }
     }
 
-    // Build system prompt based on context
-    let systemPrompt = ''
+    // Detect workflow from message
+    const detectionContext = buildDetectionContext(message, history, currentWorkflow)
+    const workflowMatch = detectWorkflow(detectionContext)
 
-    // If a skill is selected, load its context
-    if (activeSkill && activeSkill !== 'general') {
-      // Try to load from Drive first (user-editable templates), fallback to filesystem
-      const skillContext = await loadSkillWithDriveTemplates(activeSkill)
-      if (skillContext) {
-        console.log(`Loaded skill: ${activeSkill}${skillContext.useDriveTemplates ? ' (using Drive templates)' : ''}`)
-        systemPrompt = buildSkillSystemPrompt(skillContext)
+    console.log(`Workflow detection: ${workflowMatch.workflowId} (confidence: ${workflowMatch.confidence}%)`)
+    if (workflowMatch.contextFactors && workflowMatch.contextFactors.length > 0) {
+      console.log(`  Context factors: ${workflowMatch.contextFactors.join(', ')}`)
+    }
 
-        // For analytics-related skills, include data availability info
-        const analyticsSkills = ['hr-metrics-analyst', 'performance-insights-analyst', 'dei-program-designer']
-        if (analyticsSkills.includes(activeSkill)) {
-          try {
-            const metadata = await readMetadata()
+    // ========================================================================
+    // STATE MANAGEMENT (Hybrid Approach with State Machine)
+    // ========================================================================
 
-            if (metadata.files && metadata.files.length > 0) {
-              systemPrompt += `\n\n---\n\n# Available Data Files\n\n`
-              systemPrompt += `The user has uploaded the following data files:\n\n`
+    // Determine if we should use stateful mode
+    const messageCount = history ? history.length + 1 : 1
+    const stateMode = determineStateMode(
+      workflowMatch.workflowId,
+      workflowMatch.confidence,
+      messageCount
+    )
 
-              const filesByType: Record<string, number> = {}
-              metadata.files.forEach(file => {
-                filesByType[file.fileType] = (filesByType[file.fileType] || 0) + 1
-              })
+    console.log(`State mode: ${stateMode.mode} (${stateMode.reason})`)
 
-              Object.entries(filesByType).forEach(([type, count]) => {
-                systemPrompt += `- **${type}**: ${count} file(s) uploaded\n`
-              })
+    let workflowState: WorkflowState | null = null
+    let stateMachine: WorkflowStateMachine | null = null
 
-              systemPrompt += `\nYou can use the analytics endpoints to access pre-calculated metrics from this data.\n`
-            } else {
-              systemPrompt += `\n\n---\n\n# Data Status\n\n`
-              systemPrompt += `**No data files uploaded yet.**\n\n`
-              systemPrompt += `The user needs to upload data files to use analytics features. Direct them to:\n`
-              systemPrompt += `1. Click the "Data Sources" button in the top-right corner\n`
-              systemPrompt += `2. Upload their employee_master.csv and other relevant files\n\n`
-              systemPrompt += `See the DATA_SOURCES_GUIDE.md for file format requirements.\n`
-            }
-          } catch (error) {
-            console.error('Failed to load data metadata:', error)
+    // For stateful mode, load or initialize state machine
+    if (stateMode.mode === 'stateful') {
+      // Generate or use provided conversationId
+      const activeConversationId = conversationId || `conv_${Date.now()}_${Math.random().toString(36).substring(7)}`
+
+      // Try to load existing state from database
+      const existingState = conversationId ? await loadConversationState(conversationId) : null
+
+      if (existingState && existingState.workflowId === workflowMatch.workflowId) {
+        // Load state machine from existing state
+        console.log(`Loading existing workflow state for ${workflowMatch.workflowId}`)
+        stateMachine = await loadStateMachine(activeConversationId, existingState)
+        workflowState = existingState
+      } else {
+        // Create new state machine
+        console.log(`Creating new workflow state machine for ${workflowMatch.workflowId}`)
+        stateMachine = await createStateMachine(workflowMatch.workflowId, activeConversationId)
+
+        if (stateMachine) {
+          workflowState = stateMachine.getState()
+          // Save initial state to database
+          if (conversationId) {
+            await saveConversationState(activeConversationId, workflowState!)
           }
         }
+      }
 
-        // Add CPO persona
-        systemPrompt += `\n\n---\n\n# Your Persona\n\n`
-        systemPrompt += `You are the Chief People Officer helping with this task. Maintain your direct, operator-focused style while following the skill instructions above.\n\n`
+      if (!stateMachine) {
+        console.warn('Failed to create/load state machine, falling back to stateless mode')
+      }
+    }
+
+    // Build system prompt based on workflow
+    let systemPrompt = ''
+
+    // Load the detected workflow
+    const workflow = loadWorkflow(workflowMatch.workflowId)
+    if (workflow && workflow.id !== 'general') {
+      console.log(`Loading workflow: ${workflow.name}`)
+
+      // For analytics workflow, include data availability info
+      if (workflow.id === 'analytics') {
+        try {
+          const metadata = await readMetadata()
+
+          let analyticsContext = ''
+          if (metadata.files && metadata.files.length > 0) {
+            analyticsContext += `\n\n---\n\n# Available Data Files\n\n`
+            analyticsContext += `The user has uploaded the following data files:\n\n`
+
+            const filesByType: Record<string, number> = {}
+            metadata.files.forEach(file => {
+              filesByType[file.fileType] = (filesByType[file.fileType] || 0) + 1
+            })
+
+            Object.entries(filesByType).forEach(([type, count]) => {
+              analyticsContext += `- **${type}**: ${count} file(s) uploaded\n`
+            })
+
+            analyticsContext += `\nYou can use the analytics endpoints to access pre-calculated metrics from this data.\n`
+          } else {
+            analyticsContext += `\n\n---\n\n# Data Status\n\n`
+            analyticsContext += `**No data files uploaded yet.**\n\n`
+            analyticsContext += `The user needs to upload data files to use analytics features. Direct them to:\n`
+            analyticsContext += `1. Click the "Data Sources" button in the top-right corner\n`
+            analyticsContext += `2. Upload their employee_master.csv and other relevant files\n\n`
+            analyticsContext += `See the DATA_SOURCES_GUIDE.md for file format requirements.\n`
+          }
+
+          // Build workflow prompt with analytics context and state
+          systemPrompt = buildWorkflowSystemPrompt(workflow, {
+            companyInfo: analyticsContext,
+            state: workflowState || undefined
+          })
+        } catch (error) {
+          console.error('Failed to load data metadata:', error)
+          systemPrompt = buildWorkflowSystemPrompt(workflow, {
+            state: workflowState || undefined
+          })
+        }
+      } else {
+        // Build standard workflow prompt with state
+        systemPrompt = buildWorkflowSystemPrompt(workflow, {
+          state: workflowState || undefined
+        })
       }
     }
 
@@ -438,13 +426,13 @@ Your goal: Help this startup scale its people, culture, and leadership with the 
       })
     }
 
-    // Add skills catalog (static, ~15,000 tokens, cacheable)
-    // This is the primary optimization from the AI Cost Optimization Report
-    const skillsCatalog = generateCacheableSkillsCatalog()
-    if (skillsCatalog) {
+    // Add workflow catalog (static, ~15,000 tokens, cacheable)
+    // This replaces the legacy skills catalog with the new workflow system
+    const workflowCatalog = buildWorkflowCatalog()
+    if (workflowCatalog) {
       cacheableSystemBlocks.push({
         type: "text" as const,
-        text: skillsCatalog,
+        text: workflowCatalog,
         cache_control: { type: "ephemeral" as const }
       })
     }
@@ -468,6 +456,10 @@ Your goal: Help this startup scale its people, culture, and leadership with the 
     })
 
     const reply = extractTextContent(response)
+
+    // Track quota usage (for shared key users)
+    const totalTokens = response.usage.input_tokens + response.usage.output_tokens
+    await trackQuotaUsage(authResult.user.userId, totalTokens)
 
     // Track performance metrics
     const latency = Date.now() - startTime
@@ -498,19 +490,93 @@ Your goal: Help this startup scale its people, culture, and leadership with the 
 
       responseCache.set(cacheKey, {
         reply,
-        detectedSkill: skill === 'auto-detect' ? activeSkill : undefined,
+        detectedWorkflow: workflowMatch.workflowId,
+        workflowConfidence: workflowMatch.confidence,
+        contextPanel: contextPanelData,
         timestamp: Date.now(),
         dataHash
       })
 
-      console.log(`Cached response for query: "${message.substring(0, 50)}..." (cache size: ${responseCache.size})`)
+      console.log(`Cached response for query: "${message.substring(0, 50)}..." (workflow: ${workflowMatch.workflowId}, panel: ${contextPanelData?.type || 'none'}, cache size: ${responseCache.size})`)
     }
 
-    return NextResponse.json({
+    // ========================================================================
+    // ACTION SUGGESTION SYSTEM (Smart Routing Enhancement)
+    // ========================================================================
+
+    // Get user permissions for action filtering
+    const userPermissions = authResult.user.role?.permissions
+      ? Object.entries(authResult.user.role.permissions)
+          .filter(([_, allowed]) => allowed)
+          .map(([perm, _]) => perm)
+      : []
+
+    // Generate action suggestions based on workflow and context
+    const suggestionContext: SuggestionContext = {
+      workflowId: workflowMatch.workflowId,
+      message,
+      aiResponse: reply,
+      conversationHistory: history,
+      userId: authResult.user.userId,
+      userPermissions,
+    }
+
+    const suggestedActions = suggestActions(suggestionContext)
+
+    // Generate follow-up question suggestions
+    const followUpQuestions = suggestFollowUpQuestions(suggestionContext)
+
+    // ========================================================================
+    // CONTEXT PANEL DETECTION (Smart UI Rendering)
+    // ========================================================================
+
+    // Detect if we should show a context panel based on workflow and response
+    let contextPanelData: ContextPanelData | null = null
+
+    const contextDetection = detectContext(message, reply)
+    if (contextDetection.panelData && contextDetection.confidence >= 70) {
+      contextPanelData = contextDetection.panelData
+      console.log(`Context panel detected: ${contextDetection.panelData.type} (${contextDetection.confidence}% confidence)`)
+    }
+
+    // Build response with workflow state information
+    const apiResponse: any = {
       reply,
-      detectedSkill: skill === 'auto-detect' ? activeSkill : undefined,
-      cached: false
-    })
+      detectedWorkflow: workflowMatch.workflowId,
+      workflowConfidence: workflowMatch.confidence,
+      cached: false,
+      quotaStatus: quotaCheck.status, // Include quota info for UI display
+      suggestedActions: suggestedActions.slice(0, 4), // Limit to top 4 suggestions
+      followUpQuestions: followUpQuestions.slice(0, 3), // Limit to 3 follow-up questions
+      contextPanel: contextPanelData, // NEW: Include context panel data if detected
+    }
+
+    // Include state machine summary if available
+    if (stateMachine) {
+      const summary = stateMachine.getSummary()
+      apiResponse.workflowState = {
+        currentStep: summary.currentStep,
+        progress: summary.progress,
+        completedSteps: summary.completedSteps,
+        isComplete: summary.isComplete,
+        hasActions: summary.nextActions > 0,
+        actionCount: summary.nextActions
+      }
+
+      // Merge state machine actions with generated suggestions
+      const stateActions = stateMachine.getNextActions()
+      if (stateActions.length > 0) {
+        // Prioritize state machine actions (they're workflow-specific)
+        apiResponse.suggestedActions = [
+          ...stateActions,
+          ...suggestedActions.filter(a =>
+            !stateActions.some(sa => sa.type === a.type && sa.label === a.label)
+          )
+        ].slice(0, 4) // Keep max 4 total actions
+      }
+    }
+
+    return NextResponse.json(apiResponse)
   } catch (error: any) {
     return handleApiError(error, {
       endpoint: '/api/chat',

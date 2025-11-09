@@ -1,84 +1,26 @@
 /**
- * Phase 2: SQL-powered Headcount Analytics API
+ * DEPRECATED: /api/analytics/headcount
  *
- * Migrated from JSON file loading to SQLite database queries.
+ * This endpoint is deprecated as of Phase 2.
+ * Use the unified analytics endpoint instead:
+ *   GET /api/analytics?metric=headcount
+ *
+ * This redirect will be removed in 6 months (May 2025).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  calculateHeadcount,
-  calculateHeadcountByDeptAndLevel,
-  calculateHeadcountTrends,
-  calculateSpanOfControl,
-} from '@/lib/analytics/headcount-sql';
-import { requireAuth, hasPermission, authErrorResponse } from '@/lib/auth/middleware';
-import { handleApiError } from '@/lib/api-helpers';
-import { db } from '@/lib/db';
-import { employees } from '@/db/schema';
-import { sql } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
-  // Authenticate
-  const authResult = await requireAuth(request);
-  if (!authResult.success) {
-    return authErrorResponse(authResult);
-  }
+  // Extract query parameters from original request
+  const searchParams = request.nextUrl.searchParams;
+  const department = searchParams.get('department');
 
-  // Check permissions
-  if (!hasPermission(authResult.user, 'analytics', 'read')) {
-    return NextResponse.json(
-      { success: false, error: 'Insufficient permissions to access analytics' },
-      { status: 403 }
-    );
-  }
+  // Build redirect URL
+  const redirectParams = new URLSearchParams({ metric: 'headcount' });
+  if (department) redirectParams.set('department', department);
 
-  try {
-    // Check if we have employee data
-    const countResult = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(employees);
+  const redirectUrl = `/api/analytics?${redirectParams.toString()}`;
 
-    const totalEmployees = countResult[0]?.count || 0;
-
-    if (totalEmployees === 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'No employee data found. Please upload employee data or run the migration.',
-        },
-        { status: 404 }
-      );
-    }
-
-    // Calculate all headcount metrics using SQL
-    const [headcount, headcountByDeptAndLevel, trends, spanOfControl] =
-      await Promise.all([
-        calculateHeadcount(),
-        calculateHeadcountByDeptAndLevel(),
-        calculateHeadcountTrends(),
-        calculateSpanOfControl(),
-      ]);
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        headcount,
-        headcountByDeptAndLevel,
-        trends,
-        spanOfControl,
-      },
-      metadata: {
-        totalEmployees,
-        activeEmployees: headcount.totalHeadcount,
-        calculatedAt: new Date().toISOString(),
-        dataSource: 'SQLite',
-      },
-    });
-  } catch (error) {
-    return handleApiError(error, {
-      endpoint: '/api/analytics/headcount',
-      method: 'GET',
-      userId: authResult.user.userId,
-    });
-  }
+  // Return 308 Permanent Redirect to new endpoint
+  return NextResponse.redirect(new URL(redirectUrl, request.url), 308);
 }

@@ -51,7 +51,8 @@ export default function NineBoxPage() {
 
   const loadNineBoxData = async () => {
     try {
-      const response = await fetch('/api/analytics/nine-box', {
+      // Use unified analytics endpoint with metric parameter
+      const response = await fetch('/api/analytics?metric=nine-box', {
         headers: getAuthHeaders()
       });
       const result = await response.json();
