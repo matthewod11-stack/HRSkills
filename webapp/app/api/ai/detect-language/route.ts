@@ -2,12 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, authErrorResponse } from '@/lib/auth/middleware'
 import { handleApiError, createSuccessResponse } from '@/lib/api-helpers'
 import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter'
-import { detectLanguage, type LanguageDetection } from '@/lib/ai-services/translation-service'
-import type { AIServiceResponse } from '@/lib/types/ai-services'
+import { chatWithAI } from '@/lib/ai/router'
 
 /**
  * POST /api/ai/detect-language
- * Detect the language of provided text
+ * Detect the language of provided text using unified AI provider
  * Requires: Authentication
  */
 export async function POST(request: NextRequest) {
@@ -21,17 +20,6 @@ export async function POST(request: NextRequest) {
   const authResult = await requireAuth(request)
   if (!authResult.success) {
     return authErrorResponse(authResult)
-  }
-
-  // Check if Translation is enabled
-  if (process.env.NEXT_PUBLIC_ENABLE_TRANSLATION !== 'true') {
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Translation service is not enabled. Set NEXT_PUBLIC_ENABLE_TRANSLATION=true to enable.',
-      },
-      { status: 503 }
-    )
   }
 
   try {
@@ -57,10 +45,36 @@ export async function POST(request: NextRequest) {
       }
 
       const detections = await Promise.all(
-        texts.map(async (t: string) => await detectLanguage(t))
+        texts.map(async (t: string) => {
+          const result = await chatWithAI(
+            [
+              {
+                role: 'user',
+                content: `Detect the language of this text. Return ONLY a JSON object with format: {"language": "language_code", "languageName": "Language Name", "confidence": 0.0-1.0}. Text: "${t}"`,
+              },
+            ],
+            {
+              temperature: 0.1,
+              maxTokens: 100,
+              userId: authResult.user.userId,
+              endpoint: '/api/ai/detect-language',
+            }
+          )
+
+          try {
+            const jsonMatch = result.content.match(/\{[\s\S]*\}/)
+            if (jsonMatch) {
+              return JSON.parse(jsonMatch[0])
+            }
+          } catch (error) {
+            console.error('[detect-language] Failed to parse AI response:', error)
+          }
+
+          return { language: 'unknown', languageName: 'Unknown', confidence: 0 }
+        })
       )
 
-      const response: AIServiceResponse<LanguageDetection[]> = {
+      const response = {
         success: true,
         data: detections,
         metadata: {
@@ -79,13 +93,39 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const detection = await detectLanguage(text)
+    const result = await chatWithAI(
+      [
+        {
+          role: 'user',
+          content: `Detect the language of this text. Return ONLY a JSON object with format: {"language": "language_code", "languageName": "Language Name", "confidence": 0.0-1.0}. Text: "${text}"`,
+        },
+      ],
+      {
+        temperature: 0.1,
+        maxTokens: 100,
+        userId: authResult.user.userId,
+        endpoint: '/api/ai/detect-language',
+      }
+    )
 
-    const response: AIServiceResponse<LanguageDetection> = {
+    let detection
+    try {
+      const jsonMatch = result.content.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        detection = JSON.parse(jsonMatch[0])
+      }
+    } catch (error) {
+      console.error('[detect-language] Failed to parse AI response:', error)
+      detection = { language: 'unknown', languageName: 'Unknown', confidence: 0 }
+    }
+
+    const response = {
       success: true,
       data: detection,
       metadata: {
         processingTime: Date.now() - startTime,
+        model: result.model,
+        provider: result.provider,
       },
     }
 

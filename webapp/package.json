@@ -21,17 +21,15 @@
     "test:e2e:ui": "playwright test --ui",
     "test:all": "npm run test:a11y && npm run test:e2e:a11y",
     "validate": "npm run type-check && npm run lint && npm run test",
-    "clean": "rm -rf .next out node_modules/.cache"
+    "clean": "rm -rf .next out node_modules/.cache",
+    "migrate:json-to-sqlite": "tsx ../scripts/migrate-json-to-sqlite.ts",
+    "db:stats": "tsx ../scripts/db-stats.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.68.0",
     "@google-cloud/aiplatform": "^5.12.0",
     "@google-cloud/dlp": "^6.5.0",
-    "@google-cloud/documentai": "^9.5.0",
-    "@google-cloud/language": "^7.2.1",
-    "@google-cloud/speech": "^7.2.1",
-    "@google-cloud/translate": "^9.2.1",
-    "@google-cloud/vision": "^5.3.4",
+    "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -61,10 +59,13 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@tanstack/react-virtual": "^3.13.12",
     "axios": "^1.7.0",
+    "better-sqlite3": "^12.4.1",
     "chart.js": "^4.5.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "drizzle-kit": "^0.31.6",
+    "drizzle-orm": "^0.44.7",
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.23.24",
     "input-otp": "^1.4.2",
@@ -73,6 +74,7 @@
     "next": "^14.2.0",
     "next-pwa": "^5.6.0",
     "next-themes": "^0.4.6",
+    "openai": "^6.8.1",
     "opossum": "^9.0.0",
     "p-retry": "^7.1.0",
     "papaparse": "^5.5.3",
@@ -121,6 +123,7 @@
     "postcss": "^8.4.0",
     "prettier": "^3.6.2",
     "tailwindcss": "^3.4.0",
+    "tsx": "^4.20.6",
     "typescript": "^5.0.0"
   }
 }

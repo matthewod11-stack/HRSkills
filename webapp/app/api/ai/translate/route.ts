@@ -2,20 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, hasPermission, authErrorResponse } from '@/lib/auth/middleware'
 import { handleApiError, createSuccessResponse } from '@/lib/api-helpers'
 import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter'
-import {
-  translateText,
-  translateBatch,
-  detectLanguage,
-  getSupportedLanguages,
-  isTranslationAvailable,
-  type TranslationResult,
-  type BatchTranslationResult,
-} from '@/lib/ai-services/translation-service'
-import type { AIServiceResponse } from '@/lib/types/ai-services'
+import { translateWithAI } from '@/lib/ai/router'
 
 /**
  * POST /api/ai/translate
- * Translate text or batch of texts to target language
+ * Translate text or batch of texts to target language using unified AI provider
  * Requires: Authentication + employees or analytics read permission
  */
 export async function POST(request: NextRequest) {
@@ -39,28 +30,9 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // Check if Translation is enabled
-  if (process.env.NEXT_PUBLIC_ENABLE_TRANSLATION !== 'true') {
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Translation service is not enabled. Set NEXT_PUBLIC_ENABLE_TRANSLATION=true to enable.',
-      },
-      { status: 503 }
-    )
-  }
-
   try {
     const body = await request.json()
-    const {
-      text,
-      texts,
-      targetLanguage,
-      sourceLanguage,
-      format = 'text',
-      enableCaching = true,
-      detectSource = false,
-    } = body
+    const { text, texts, targetLanguage } = body
 
     // Validate input
     if (!text && !texts) {
@@ -72,7 +44,7 @@ export async function POST(request: NextRequest) {
 
     if (!targetLanguage) {
       return NextResponse.json(
-        { success: false, error: '"targetLanguage" is required (e.g., "es", "fr", "zh-CN")' },
+        { success: false, error: '"targetLanguage" is required (e.g., "Spanish", "French", "Chinese")' },
         { status: 400 }
       )
     }
@@ -102,19 +74,32 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      const result = await translateBatch(texts, targetLanguage, {
-        sourceLanguage,
-        format,
-        enableCaching,
-      })
+      const results = await Promise.all(
+        texts.map((t: string) =>
+          translateWithAI(t, targetLanguage, {
+            userId: authResult.user.userId,
+            endpoint: '/api/ai/translate',
+          })
+        )
+      )
 
-      const response: AIServiceResponse<BatchTranslationResult> = {
+      const response = {
         success: true,
-        data: result,
+        data: {
+          translations: results.map((text, i) => ({
+            text,
+            originalText: texts[i],
+            targetLanguage,
+          })),
+          totalTexts: texts.length,
+          metadata: {
+            processingTime: Date.now() - startTime,
+            apiCalls: texts.length,
+          },
+        },
         metadata: {
           processingTime: Date.now() - startTime,
-          apiCalls: result.metadata.apiCalls,
-          cacheHit: result.metadata.cacheHits > 0,
+          apiCalls: texts.length,
         },
       }
 
@@ -129,23 +114,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Detect source language if requested
-    let detectedLanguage
-    if (detectSource && !sourceLanguage) {
-      detectedLanguage = await detectLanguage(text)
-    }
-
-    const result = await translateText(text, targetLanguage, {
-      sourceLanguage: sourceLanguage || detectedLanguage?.language,
-      format,
-      enableCaching,
+    const translatedText = await translateWithAI(text, targetLanguage, {
+      userId: authResult.user.userId,
+      endpoint: '/api/ai/translate',
     })
 
-    const response: AIServiceResponse<TranslationResult & { detection?: typeof detectedLanguage }> = {
+    const response = {
       success: true,
       data: {
-        ...result,
-        ...(detectedLanguage && { detection: detectedLanguage }),
+        text: translatedText,
+        originalText: text,
+        targetLanguage,
       },
       metadata: {
         processingTime: Date.now() - startTime,
@@ -164,7 +143,7 @@ export async function POST(request: NextRequest) {
 
 /**
  * GET /api/ai/translate/languages
- * Get list of supported languages
+ * Get list of commonly supported languages
  */
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth(request)
@@ -173,10 +152,29 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const { searchParams } = new URL(request.url)
-    const displayLanguage = searchParams.get('displayLanguage') || 'en'
-
-    const languages = await getSupportedLanguages(displayLanguage)
+    // Common languages supported by Claude, GPT, and Gemini
+    const languages = [
+      { code: 'es', name: 'Spanish', nativeName: 'Español' },
+      { code: 'fr', name: 'French', nativeName: 'Français' },
+      { code: 'de', name: 'German', nativeName: 'Deutsch' },
+      { code: 'it', name: 'Italian', nativeName: 'Italiano' },
+      { code: 'pt', name: 'Portuguese', nativeName: 'Português' },
+      { code: 'zh', name: 'Chinese', nativeName: '中文' },
+      { code: 'ja', name: 'Japanese', nativeName: '日本語' },
+      { code: 'ko', name: 'Korean', nativeName: '한국어' },
+      { code: 'ar', name: 'Arabic', nativeName: 'العربية' },
+      { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी' },
+      { code: 'ru', name: 'Russian', nativeName: 'Русский' },
+      { code: 'pl', name: 'Polish', nativeName: 'Polski' },
+      { code: 'nl', name: 'Dutch', nativeName: 'Nederlands' },
+      { code: 'sv', name: 'Swedish', nativeName: 'Svenska' },
+      { code: 'tr', name: 'Turkish', nativeName: 'Türkçe' },
+      { code: 'vi', name: 'Vietnamese', nativeName: 'Tiếng Việt' },
+      { code: 'th', name: 'Thai', nativeName: 'ไทย' },
+      { code: 'id', name: 'Indonesian', nativeName: 'Bahasa Indonesia' },
+      { code: 'ms', name: 'Malay', nativeName: 'Bahasa Melayu' },
+      { code: 'he', name: 'Hebrew', nativeName: 'עברית' },
+    ]
 
     return NextResponse.json({
       success: true,

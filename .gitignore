@@ -53,6 +53,10 @@ logs/
 .env.local
 .env.*.local
 
+# Google OAuth Tokens (stored in database instead)
+.google-oauth-token.json
+**/google-oauth-token.json
+
 # Testing
 .coverage
 htmlcov/

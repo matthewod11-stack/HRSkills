@@ -6,14 +6,14 @@
 
 ## EXECUTIVE SUMMARY
 
-Documentation is missing CONTRIBUTING.md, API documentation, and component usage guides.
+Documentation is missing `docs/guides/CONTRIBUTING.md`, API documentation, and component usage guides.
 
 ---
 
 ## MISSING DOCUMENTATION
 
 ### 🔴 CRITICAL
-- CONTRIBUTING.md - How to contribute
+- docs/guides/CONTRIBUTING.md - How to contribute
 - API.md - API endpoint documentation
 - SETUP.md - Development setup guide
 
@@ -27,7 +27,7 @@ Documentation is missing CONTRIBUTING.md, API documentation, and component usage
 
 ## IMPLEMENTATION PLAN
 
-1. Create CONTRIBUTING.md - 2 hours
+1. Create docs/guides/CONTRIBUTING.md - 2 hours
 2. Document all API endpoints - 1 day
 3. Add component examples - 1 day
 4. Write deployment guide - 4 hours

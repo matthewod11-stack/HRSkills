@@ -7,7 +7,7 @@
 [![React](https://img.shields.io/badge/React-18-61dafb)](https://react.dev/)
 [![Python](https://img.shields.io/badge/Python-3.11-blue)](https://www.python.org/)
 
-**Features:** 23 HR Skills • 15+ AI-Powered API Endpoints • 10+ AI Components • Full RBAC • 6 Google Cloud AI Services • Production-Ready
+**Features:** 23 HR Skills • SQLite Database • Multi-Provider AI (Anthropic/OpenAI/Gemini) • Full RBAC • Production-Ready
 
 ---
 
@@ -27,20 +27,21 @@
 
 ## 🎯 What This Platform Does
 
-This is a **complete AI-powered HR automation platform** that combines Claude AI with Google Cloud AI services to provide:
+This is a **complete AI-powered HR automation platform** with multi-provider AI resilience and modern data infrastructure:
 
 1. **Claude Skills** - 23 specialized HR capabilities with domain knowledge
-2. **AI Services** - 6 Google Cloud AI integrations (NLP, Translation, Speech, Document AI, Vertex AI, Vision)
-3. **Automation Agents** - Scheduled scripts that sync data and automate workflows
-4. **Web Dashboard** - Central interface to interact with all capabilities
+2. **SQLite Database** - Production-ready data persistence with Drizzle ORM
+3. **Multi-Provider AI** - Automatic failover across Anthropic, OpenAI, and Gemini
+4. **Google Workspace Integration** - Seamless Drive, Docs, and Sheets connectivity
+5. **Web Dashboard** - Modern Next.js interface with real-time updates
 
-**AI Capabilities:**
-- 📄 Intelligent document processing (resumes, forms, IDs)
-- 💬 Advanced sentiment analysis and entity extraction
-- 🎯 Predictive analytics (attrition, performance, promotion)
-- 🌍 Multilingual support (100+ languages)
-- 🎤 Interview transcription with speaker identification
-- 🔒 ID verification and content moderation
+**Core Capabilities:**
+- 🤖 Intelligent AI routing with automatic provider failover
+- 💾 Normalized SQLite database with sub-50ms analytics queries
+- 📊 Real-time HR metrics and predictive analytics
+- 🔄 Google OAuth integration for Drive/Docs/Sheets
+- ⚡ Production-ready with comprehensive testing
+- 🔒 Built-in security with RBAC and audit logging
 
 ## 📁 Project Structure
 
@@ -48,9 +49,17 @@ This is a **complete AI-powered HR automation platform** that combines Claude AI
 hrskills/
 ├── integrations/        # Shared integration layer for all systems
 ├── skills/             # Claude skills with HR domain knowledge
-├── agents/             # Automation agents (Python scripts)
 ├── webapp/             # Next.js web application
-└── docs/               # Documentation
+│   ├── app/           # Next.js App Router (pages + API routes)
+│   ├── components/    # React components (UI + custom)
+│   ├── lib/           # Core libraries
+│   │   ├── ai/       # Multi-provider AI abstraction layer
+│   │   ├── db/       # SQLite database with Drizzle ORM
+│   │   ├── analytics/# SQL-based analytics queries
+│   │   └── google/   # Google Workspace integration
+│   └── db/           # Database schema definitions
+├── scripts/            # Utility scripts (migrations, seeding)
+└── docs/              # Comprehensive documentation
 ```
 
 ## 🚀 Quick Start
@@ -59,7 +68,6 @@ hrskills/
 
 - **Node.js** 20.x+ (check: `node --version`)
 - **npm** 10.x+ (check: `npm --version`)
-- **Python** 3.11+ for automation agents (check: `python3 --version`)
 - **Docker** (optional) for containerized deployment
 
 ### Installation (5 minutes)
@@ -78,38 +86,23 @@ hrskills/
 
 3. **Install dependencies**
    ```bash
-   # Install all dependencies (webapp + agents)
-   make install
-
-   # Or manually:
-   npm install
+   # Install webapp dependencies
    cd webapp && npm install
-   pip3 install -r requirements.txt
    ```
 
-4. **Start the development server**
+4. **Initialize database with demo data**
    ```bash
-   make dev
+   npm run migrate:json-to-sqlite -- --demo
+   ```
 
-   # Or manually:
+5. **Start the development server**
+   ```bash
    cd webapp && npm run dev
    ```
 
-5. **Access the application**
+6. **Access the application**
    - Web app: http://localhost:3000
    - Login with demo credentials (see webapp for details)
-
-### Alternative: Docker Setup
-
-```bash
-# Start all services (webapp, postgres, redis, agents)
-make docker-up
-
-# Access at http://localhost:3000
-
-# Stop services
-make docker-down
-```
 
 For detailed setup instructions, see **[Development Setup Guide](docs/guides/DEVELOPMENT_SETUP.md)**.
 
@@ -117,39 +110,30 @@ For detailed setup instructions, see **[Development Setup Guide](docs/guides/DEV
 
 ### API Keys Setup
 
-1. **Claude AI**
-   - Get API key from: https://console.anthropic.com/
-   - Set `ANTHROPIC_API_KEY` in `.env.local`
+1. **AI Providers** (Configure at least one)
+   - **Anthropic Claude** (Primary): Get API key from https://console.anthropic.com/
+     - Set `ANTHROPIC_API_KEY` in `.env.local`
+   - **OpenAI** (Fallback): Get API key from https://platform.openai.com/
+     - Set `OPENAI_API_KEY` in `.env.local`
+   - **Google Gemini** (Free tier): Get API key from https://ai.google.dev/
+     - Set `GEMINI_API_KEY` in `.env.local`
 
-2. **Google Cloud AI Services** (6 APIs)
-   - Create project at: https://console.cloud.google.com/
-   - Enable APIs: Natural Language, Translation, Speech-to-Text, Document AI, Vertex AI, Vision
-   - Create service account and download JSON key
-   - Set `GOOGLE_APPLICATION_CREDENTIALS` in `.env.local`
-   - Copy `.env.ai.example` to `.env.local` and configure AI services
-   - See [AI Services Setup](#ai-services-implementation) for detailed instructions
+2. **Google Workspace** (Required for Drive/Docs/Sheets integration)
+   - Create OAuth 2.0 client at: https://console.cloud.google.com/
+   - Download credentials JSON
+   - Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `.env.local`
+   - First login will prompt OAuth flow and store tokens in database
 
-3. **Rippling**
-   - Generate API key in Rippling settings
-   - Set `RIPPLING_API_KEY` in `.env.local`
-
-4. **Notion**
-   - Create integration at: https://www.notion.so/my-integrations
-   - Set `NOTION_TOKEN` in `.env.local`
-
-5. **Slack**
-   - Create app at: https://api.slack.com/apps
-   - Add bot token scopes: `chat:write`, `im:write`, `users:read`
-   - Set `SLACK_BOT_TOKEN` in `.env.local`
-
-6. **Calendly**
-   - Generate API key in Calendly settings
-   - Set `CALENDLY_API_KEY` in `.env.local`
+3. **Optional Integrations**
+   - **Rippling**: Set `RIPPLING_API_KEY` in `.env.local`
+   - **Notion**: Set `NOTION_TOKEN` in `.env.local`
+   - **Slack**: Set `SLACK_BOT_TOKEN` in `.env.local`
+   - **Calendly**: Set `CALENDLY_API_KEY` in `.env.local`
 
 ## 📚 Documentation
 
 ### 🚀 Getting Started
-- **[Getting Started Guide](GETTING_STARTED.md)** - Detailed setup and onboarding
+- **[Getting Started Guide](docs/guides/GETTING_STARTED.md)** - Detailed setup and onboarding
 - **[Quick Reference Card](quick-reference-card.md)** - Fast lookup for common tasks
 - **[Development Setup](docs/guides/DEVELOPMENT_SETUP.md)** - Complete development environment setup
 
@@ -160,7 +144,7 @@ For detailed setup instructions, see **[Development Setup Guide](docs/guides/DEV
 
 ### 🔧 Development & Testing
 - **[Testing Guide](docs/guides/TESTING_GUIDE.md)** - Unit, integration, E2E, and accessibility testing
-- **[Contributing Guidelines](CONTRIBUTING.md)** - Development workflow and code standards
+- **[Contributing Guidelines](docs/guides/CONTRIBUTING.md)** - Development workflow and code standards
 - **[Architecture Decisions](docs/architecture/ARCHITECTURE_DECISIONS.md)** - Technical decisions and rationale
 
 ### 🚢 Deployment & Operations
@@ -169,74 +153,59 @@ For detailed setup instructions, see **[Development Setup Guide](docs/guides/DEV
 - **[Security Implementation](docs/guides/SECURITY_IMPLEMENTATION_SUMMARY.md)** - Security features and best practices
 
 ### 📑 All Documentation
-- **[Documentation Summary](DOCUMENTATION_SUMMARY.md)** - Quick navigation guide to all docs (60+ files)
+- **[Documentation Summary](docs/overview/DOCUMENTATION_SUMMARY.md)** - Quick navigation guide to all docs (60+ files)
 - **[Full Documentation Index](docs/README.md)** - Browse all documentation organized by topic
 
 ## 🎨 Features
 
-### AI Services Implementation
+### Phase 2 Simplification (COMPLETE ✅)
 
-This platform includes **6 Google Cloud AI services** for comprehensive HR automation:
+**Completion Date:** November 8, 2025
 
-#### Phase 1: Natural Language Processing ✅
-- Sentiment analysis for reviews and surveys
-- Entity extraction (people, organizations, locations)
-- Content classification and categorization
-- **Cost:** $5-8/month | **ROI:** 90% time savings on feedback analysis
+This platform has been modernized with a focus on resilience, simplicity, and production-readiness:
 
-#### Phase 2: Multilingual Support ✅
-- Translation API for 100+ languages
-- Automatic language detection
-- Multilingual survey analysis
-- **Cost:** $0/month (free tier) | **ROI:** Global workforce support
+#### 1. SQLite Database Infrastructure ✅
+- **Normalized schema** with 10 tables (employees, metrics, reviews, audit logs, etc.)
+- **Drizzle ORM** for type-safe queries with full TypeScript support
+- **Sub-50ms analytics** with indexed queries for headcount and attrition
+- **Production-ready** with WAL mode, foreign key enforcement, and transactions
+- **Migration tooling** with dry-run support and demo data generation
+- **Cost:** $0 (embedded database)
 
-#### Phase 3: Interview Intelligence ✅
-- Speech-to-text transcription with speaker diarization
-- Real-time voice input for chat
-- Searchable interview transcripts
-- **Cost:** $15-25/month | **ROI:** Automated transcription, searchable archives
+#### 2. Multi-Provider AI Abstraction ✅
+- **Automatic failover** across 3 providers: Anthropic Claude → OpenAI GPT-4o → Google Gemini 2.0 Flash
+- **Health monitoring** with 30-second cache and circuit breaker pattern
+- **Unified interface** for chat, analysis, and translation tasks
+- **Usage tracking** to database for cost monitoring
+- **Provider flexibility** configurable via Settings UI (admin only)
+- **Free tier option** with Gemini 2.0 Flash as fallback
+- **Cost:** Pay only for what you use with intelligent routing
 
-#### Phase 4: Document Intelligence ✅
-- Resume parsing with auto-population
-- Form extraction (W-4, I-9, W-2)
-- General OCR for scanned documents
-- **Cost:** $0-15/month | **ROI:** 90% reduction in manual data entry
+#### 3. Google Workspace Integration ✅
+- **OAuth 2.0 flow** with refresh token storage in database
+- **Drive API** for template storage and document management
+- **Docs API** for offer letters, PIPs, and other HR documents
+- **Sheets API** for employee data exports and analytics dashboards
+- **Secure token storage** with encrypted credentials
+- **Cost:** Free (uses existing Google Workspace)
 
-#### Phase 5: Predictive Analytics ✅
-- Attrition prediction with flight risk scoring
-- Performance forecasting
-- Promotion readiness assessment
-- **Cost:** $0-1/month | **ROI:** Each prevented departure saves $50-100K
-
-#### Phase 6: Vision & OCR ✅
-- ID verification for I-9 compliance
-- Profile photo moderation
-- Evidence analysis for ER cases
-- **Cost:** $0-2/month | **ROI:** Automated verification, compliance
-
-**Total AI Cost:** $20-50/month | **Total ROI:** Hundreds of hours saved monthly
+#### 4. Simplified Architecture ✅
+- **Removed 5 Google AI packages** (NLP, Translation, Speech, Document AI, Vision)
+- **Removed Python agents** and deprecated non-functional automation
+- **Consolidated documentation** into organized `/docs` structure
+- **Unified command center design** documented in `/docs/UNIFIED_COMMAND_CENTER_DESIGN.md`
+- **Production testing** with comprehensive integration tests
 
 ### Available Skills (23 Total)
 
-- **HR Document Generator** - Create offer letters, PIPs, termination letters
+- **HR Document Generator** - Create offer letters, PIPs, termination letters via Google Docs
 - **Rippling Integration** - Pull and analyze employee data
 - **Interview & Hiring** - Generate job descriptions, interview guides, scorecards
-- **Performance Review** - Manage review cycles, synthesize feedback with AI sentiment analysis
-- **HR Analytics** - Turnover analysis, diversity metrics, compensation equity, predictive insights
-- **Onboarding Orchestrator** - Coordinate new hire setup with automated ID verification
-- **Employee Relations** - Case management with AI-powered evidence analysis
-- **Survey Analyzer** - Multilingual survey analysis with translation
-- **Resume Parser** - Automated candidate data extraction
-- **Flight Risk Dashboard** - Proactive retention with ML predictions
-
-### Automation Agents
-
-- **New Hire Onboarding** - Auto-provision accounts and create checklists
-- **HR Metrics Dashboard** - Daily sync of key metrics to Google Sheets
-- **Performance Review Orchestrator** - Manage review cycle logistics
-- **Exit Interview & Offboarding** - Handle employee departures with transcription
-- **Compliance Monitoring** - Track expiring documents and requirements
-- **Candidate Pipeline** - Monitor recruiting funnel health
+- **Performance Review** - Manage review cycles, synthesize feedback with AI
+- **HR Analytics** - SQL-powered turnover analysis, diversity metrics, compensation equity
+- **Employee Relations** - Case management with AI-powered analysis
+- **Survey Analyzer** - AI-powered survey analysis with intelligent routing
+- **Flight Risk Dashboard** - Proactive retention with predictive analytics
 
 ## 🔄 Development Workflow
 
@@ -246,21 +215,19 @@ Skills are located in `skills/[skill-name]/SKILL.md`. Each skill has:
 - Main skill definition (SKILL.md)
 - Reference documents (references/)
 - Assets (assets/)
-- Helper scripts (scripts/)
 
-### Running Agents
-
-Agents can be run manually or scheduled:
+### Database Management
 
 ```bash
-# Run new hire onboarding agent
-npm run agent:onboarding
+# Migrate from JSON to SQLite
+npm run migrate:json-to-sqlite
 
-# Run metrics dashboard agent
-npm run agent:metrics
+# Generate demo data (100 employees)
+npm run migrate:json-to-sqlite -- --demo
+
+# Run dry-run to preview migration
+npm run migrate:json-to-sqlite -- --dry-run
 ```
-
-For production, set up cron jobs or use a scheduler like GitHub Actions.
 
 ### Web Application Development
 
@@ -308,28 +275,30 @@ npm run start    # Start production server
 **Backend:**
 - Next.js API Routes
 - JWT Authentication + RBAC
+- SQLite with Drizzle ORM
 - Rate limiting & caching
-- Claude 3.5 Sonnet API
 
-**AI Services (Google Cloud):**
-- Natural Language API (sentiment, entities, classification)
-- Translation API (100+ languages)
-- Speech-to-Text API (transcription, diarization)
-- Document AI (resume parsing, form extraction, OCR)
-- Vertex AI (predictive analytics, ML models)
-- Vision API (ID verification, image moderation)
+**AI Services:**
+- Multi-provider abstraction layer (Anthropic, OpenAI, Gemini)
+- Automatic failover with health monitoring
+- Usage tracking and cost optimization
+- Claude 3.5 Sonnet primary model
 
-**Infrastructure:**
-- Docker + Docker Compose
-- GitHub Actions (CI/CD)
-- PostgreSQL (future)
-- Redis (caching)
+**Database:**
+- SQLite (embedded, production-ready)
+- Drizzle ORM (type-safe queries)
+- WAL mode for concurrent access
+- Indexed analytics queries (<50ms)
+
+**Integrations:**
+- Google Workspace (Drive, Docs, Sheets) with OAuth 2.0
+- Rippling, Notion, Slack, Calendly (optional)
 
 **Testing:**
 - Jest + React Testing Library
 - Playwright (E2E)
 - jest-axe (accessibility)
-- AI Integration Tests (6 test suites)
+- Integration tests for AI providers
 
 For detailed architecture decisions, see **[Architecture Decisions](docs/architecture/ARCHITECTURE_DECISIONS.md)**.
 
@@ -337,10 +306,10 @@ For detailed architecture decisions, see **[Architecture Decisions](docs/archite
 
 Want to contribute? Check out our comprehensive guides:
 
-- **[Contributing Guidelines](CONTRIBUTING.md)** - Development workflow, code standards, and PR process
+- **[Contributing Guidelines](docs/guides/CONTRIBUTING.md)** - Development workflow, code standards, and PR process
 - **[Development Setup](docs/guides/DEVELOPMENT_SETUP.md)** - Complete setup instructions
 - **[Architecture Decisions](docs/architecture/ARCHITECTURE_DECISIONS.md)** - Technical decisions and rationale
-- **[Changelog](CHANGELOG.md)** - Version history and recent changes
+- **[Changelog](docs/releases/CHANGELOG.md)** - Version history and recent changes
 
 ## 📝 License
 

@@ -1,13 +1,21 @@
+/**
+ * Phase 2: SQL-powered Headcount Analytics API
+ *
+ * Migrated from JSON file loading to SQLite database queries.
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
-import { loadDataFileByType } from '@/lib/analytics/utils';
 import {
   calculateHeadcount,
   calculateHeadcountByDeptAndLevel,
   calculateHeadcountTrends,
-  calculateSpanOfControl
-} from '@/lib/analytics/headcount';
+  calculateSpanOfControl,
+} from '@/lib/analytics/headcount-sql';
 import { requireAuth, hasPermission, authErrorResponse } from '@/lib/auth/middleware';
-import { handleApiError, validationError, notFoundError } from '@/lib/api-helpers';
+import { handleApiError } from '@/lib/api-helpers';
+import { db } from '@/lib/db';
+import { employees } from '@/db/schema';
+import { sql } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   // Authenticate
@@ -23,26 +31,33 @@ export async function GET(request: NextRequest) {
       { status: 403 }
     );
   }
-  try {
-    // Load employee master data
-    const employees = await loadDataFileByType('employee_master');
 
-    if (!employees || employees.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'No employee data found. Please upload employee_master.csv first.'
-      }, { status: 404 });
+  try {
+    // Check if we have employee data
+    const countResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(employees);
+
+    const totalEmployees = countResult[0]?.count || 0;
+
+    if (totalEmployees === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'No employee data found. Please upload employee data or run the migration.',
+        },
+        { status: 404 }
+      );
     }
 
-    // Load optional data
-    const demographics = await loadDataFileByType('demographics');
-    const turnoverData = await loadDataFileByType('turnover');
-
-    // Calculate all headcount metrics
-    const headcount = calculateHeadcount(employees, demographics || undefined);
-    const headcountByDeptAndLevel = calculateHeadcountByDeptAndLevel(employees);
-    const trends = calculateHeadcountTrends(employees, turnoverData || undefined);
-    const spanOfControl = calculateSpanOfControl(employees);
+    // Calculate all headcount metrics using SQL
+    const [headcount, headcountByDeptAndLevel, trends, spanOfControl] =
+      await Promise.all([
+        calculateHeadcount(),
+        calculateHeadcountByDeptAndLevel(),
+        calculateHeadcountTrends(),
+        calculateSpanOfControl(),
+      ]);
 
     return NextResponse.json({
       success: true,
@@ -50,21 +65,20 @@ export async function GET(request: NextRequest) {
         headcount,
         headcountByDeptAndLevel,
         trends,
-        spanOfControl
+        spanOfControl,
       },
       metadata: {
-        employeeCount: employees.length,
-        hasDemographics: !!demographics,
-        hasTurnoverData: !!turnoverData,
-        calculatedAt: new Date().toISOString()
-      }
+        totalEmployees,
+        activeEmployees: headcount.totalHeadcount,
+        calculatedAt: new Date().toISOString(),
+        dataSource: 'SQLite',
+      },
     });
-
   } catch (error) {
     return handleApiError(error, {
       endpoint: '/api/analytics/headcount',
       method: 'GET',
-      userId: authResult.user.userId
+      userId: authResult.user.userId,
     });
   }
 }

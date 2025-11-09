@@ -1119,7 +1119,7 @@ const employees = await client.getEmployees({ department: 'Engineering' });
 
 - [Authentication Guide](./AUTHENTICATION.md) - Detailed authentication and authorization
 - [Error Handling Guide](./ERROR_HANDLING.md) - Comprehensive error handling patterns
-- [Contributing Guidelines](../../CONTRIBUTING.md) - How to contribute
+- [Contributing Guidelines](../guides/CONTRIBUTING.md) - How to contribute
 - [Architecture Decisions](../architecture/ARCHITECTURE_DECISIONS.md) - Technical decisions
 
 ---

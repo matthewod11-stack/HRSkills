@@ -586,7 +586,7 @@ npm run test -- --verbose
 After completing setup:
 
 1. **Explore the codebase:**
-   - Review [Project Structure](../../CONTRIBUTING.md#project-structure)
+   - Review [Project Structure](CONTRIBUTING.md#project-structure)
    - Browse [Documentation Index](../README.md)
 
 2. **Try the application:**
@@ -602,7 +602,7 @@ After completing setup:
    ```
 
 4. **Read documentation:**
-   - [Contributing Guide](../../CONTRIBUTING.md)
+   - [Contributing Guide](CONTRIBUTING.md)
    - [Architecture Decisions](../architecture/ARCHITECTURE_DECISIONS.md)
    - [API Documentation](../api/) (coming soon)
 
@@ -616,8 +616,8 @@ After completing setup:
 
 ## Additional Resources
 
-- [Getting Started Guide](../../GETTING_STARTED.md)
-- [Contributing Guidelines](../../CONTRIBUTING.md)
+- [Getting Started Guide](GETTING_STARTED.md)
+- [Contributing Guidelines](CONTRIBUTING.md)
 - [Security Guide](./SECURITY_IMPLEMENTATION_PLAN.md)
 - [Production Deployment Guide](./PRODUCTION_DEPLOYMENT_GUIDE.md)
 - [Data Sources Guide](./DATA_SOURCES_GUIDE.md)

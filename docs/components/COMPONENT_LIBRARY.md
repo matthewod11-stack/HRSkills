@@ -809,7 +809,7 @@ const MemoizedChart = memo(Chart);
 - [UI Components](./UI_COMPONENTS.md) - shadcn/ui components
 - [Component Patterns](./COMPONENT_PATTERNS.md) - Best practices and patterns
 - [API Reference](../api/API_REFERENCE.md) - API documentation
-- [Contributing Guide](../../CONTRIBUTING.md) - Development guidelines
+- [Contributing Guide](../guides/CONTRIBUTING.md) - Development guidelines
 
 ---
 

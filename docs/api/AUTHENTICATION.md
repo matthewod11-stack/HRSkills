@@ -695,7 +695,7 @@ curl -X POST -H "Authorization: Bearer $TOKEN_ADMIN" \
 - [API Reference](./API_REFERENCE.md) - All API endpoints
 - [Error Handling](./ERROR_HANDLING.md) - Error handling patterns
 - [Security Guide](../guides/SECURITY_IMPLEMENTATION_PLAN.md) - Security architecture
-- [Contributing](../../CONTRIBUTING.md) - Development guidelines
+- [Contributing](../guides/CONTRIBUTING.md) - Development guidelines
 
 ---
 

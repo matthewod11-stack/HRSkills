@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, hasPermission, authErrorResponse } from '@/lib/auth/middleware'
 import { handleApiError, createSuccessResponse } from '@/lib/api-helpers'
 import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter'
-import { extractEntities, analyzeText } from '@/lib/ai-services/nlp-service'
-import type { AIServiceResponse, EntityResult } from '@/lib/types/ai-services'
+import { analyzeWithAI } from '@/lib/ai/router'
+import type { AnalysisTask } from '@/lib/ai/types'
 
 /**
  * POST /api/ai/extract-entities
- * Extract entities (people, places, organizations) from text
+ * Extract entities (people, places, organizations) from text using unified AI provider
  * Requires: Authentication + analytics read permission
  */
 export async function POST(request: NextRequest) {
@@ -31,20 +31,9 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // Check if NLP is enabled
-  if (process.env.NEXT_PUBLIC_ENABLE_NLP !== 'true') {
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'NLP service is not enabled. Set NEXT_PUBLIC_ENABLE_NLP=true to enable.',
-      },
-      { status: 503 }
-    )
-  }
-
   try {
     const body = await request.json()
-    const { text, language, includeEntitySentiment = false, fullAnalysis = false } = body
+    const { text } = body
 
     // Validate input
     if (!text || typeof text !== 'string' || text.trim().length === 0) {
@@ -56,35 +45,23 @@ export async function POST(request: NextRequest) {
 
     const startTime = Date.now()
 
-    // Full analysis (sentiment + entities + categories)
-    if (fullAnalysis) {
-      const result = await analyzeText(text, {
-        language,
-        includeEntitySentiment,
-      })
-
-      const response: AIServiceResponse<typeof result> = {
-        success: true,
-        data: result,
-        metadata: {
-          processingTime: Date.now() - startTime,
-        },
-      }
-
-      return createSuccessResponse(response)
+    const task: AnalysisTask = {
+      type: 'entities',
+      text,
     }
 
-    // Entity extraction only
-    const entities = await extractEntities(text, {
-      language,
-      includeEntitySentiment,
+    const result = await analyzeWithAI(task, {
+      userId: authResult.user.userId,
+      endpoint: '/api/ai/extract-entities',
     })
 
-    const response: AIServiceResponse<EntityResult[]> = {
+    const response = {
       success: true,
-      data: entities,
+      data: result.result,
       metadata: {
         processingTime: Date.now() - startTime,
+        model: result.model,
+        provider: result.provider,
       },
     }
 

@@ -832,7 +832,7 @@ curl -X POST http://localhost:3000/api/employees \
 
 - [API Reference](./API_REFERENCE.md) - All API endpoints
 - [Authentication Guide](./AUTHENTICATION.md) - Authentication and RBAC
-- [Contributing Guidelines](../../CONTRIBUTING.md) - Development guidelines
+- [Contributing Guidelines](../guides/CONTRIBUTING.md) - Development guidelines
 - [Documentation Index](../README.md) - All documentation
 
 ---

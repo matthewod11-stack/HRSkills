@@ -1,11 +1,45 @@
+/**
+ * Phase 2: SQL-powered Attrition/Turnover Analytics API
+ *
+ * Migrated from JSON file loading to SQLite database queries.
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
-import { loadDataFileByType, getDateRange } from '@/lib/analytics/utils';
-import {
-  calculateAttrition,
-  calculateRetention
-} from '@/lib/analytics/attrition';
+import { calculateAttrition, getAttritionByDepartment } from '@/lib/analytics/attrition-sql';
 import { requireAuth, hasPermission, authErrorResponse } from '@/lib/auth/middleware';
-import { handleApiError, validationError, notFoundError } from '@/lib/api-helpers';
+import { handleApiError } from '@/lib/api-helpers';
+import { db } from '@/lib/db';
+import { employees } from '@/db/schema';
+import { eq, sql } from 'drizzle-orm';
+
+/**
+ * Helper: Convert period string to date range
+ */
+function getDateRange(period: string): { start: string; end: string } {
+  const end = new Date();
+  const start = new Date();
+
+  switch (period) {
+    case 'last_30_days':
+      start.setDate(start.getDate() - 30);
+      break;
+    case 'last_90_days':
+      start.setDate(start.getDate() - 90);
+      break;
+    case 'last_6_months':
+      start.setMonth(start.getMonth() - 6);
+      break;
+    case 'last_12_months':
+    default:
+      start.setMonth(start.getMonth() - 12);
+      break;
+  }
+
+  return {
+    start: start.toISOString().split('T')[0],
+    end: end.toISOString().split('T')[0],
+  };
+}
 
 export async function GET(request: NextRequest) {
   // Authenticate
@@ -21,76 +55,117 @@ export async function GET(request: NextRequest) {
       { status: 403 }
     );
   }
+
   try {
     // Get query parameters for date filtering
     const searchParams = request.nextUrl.searchParams;
     const period = searchParams.get('period') || 'last_12_months';
+    const department = searchParams.get('department');
 
-    // Load required data
-    const employees = await loadDataFileByType('employee_master');
-    const turnoverData = await loadDataFileByType('turnover');
+    // Check if we have employee data
+    const countResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(employees);
 
-    if (!employees || employees.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'No employee data found. Please upload employee_master.csv first.'
-      }, { status: 404 });
+    const totalEmployees = countResult[0]?.count || 0;
+
+    if (totalEmployees === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'No employee data found. Please upload employee data or run the migration.',
+        },
+        { status: 404 }
+      );
     }
 
-    if (!turnoverData || turnoverData.length === 0) {
+    // Check for terminated employees
+    const terminatedResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(employees)
+      .where(eq(employees.status, 'terminated'));
+
+    const terminatedCount = terminatedResult[0]?.count || 0;
+
+    if (terminatedCount === 0) {
       return NextResponse.json({
-        success: false,
-        error: 'No turnover data found. Please upload turnover.csv to calculate attrition metrics.'
-      }, { status: 404 });
+        success: true,
+        data: {
+          attrition: {
+            overall: {
+              totalTerminations: 0,
+              attritionRate: 0,
+              voluntaryRate: 0,
+              involuntaryRate: 0,
+            },
+            byDepartment: {},
+            byLevel: {},
+            byLocation: {},
+          },
+        },
+        metadata: {
+          totalEmployees,
+          terminatedCount: 0,
+          period,
+          message: 'No turnover data available for the selected period.',
+          calculatedAt: new Date().toISOString(),
+          dataSource: 'SQLite',
+        },
+      });
     }
 
-    // Load optional demographics
-    const demographics = await loadDataFileByType('demographics');
-
-    // Get date range for filtering
+    // Get date range
     const { start, end } = getDateRange(period);
 
     // Calculate attrition metrics
-    const attrition = calculateAttrition(
-      employees,
-      turnoverData,
-      demographics || undefined,
-      start,
-      end
-    );
-
-    // Calculate retention metrics
-    const periodMonths = period === 'last_12_months' ? 12 :
-                        period === 'last_90_days' ? 3 :
-                        period === 'last_30_days' ? 1 : 12;
-
-    const retention = calculateRetention(employees, turnoverData, periodMonths);
+    let attrition;
+    if (department) {
+      // Single department attrition
+      const deptAttrition = await getAttritionByDepartment(department, start, end);
+      attrition = {
+        overall: {
+          totalTerminations: deptAttrition.terminations,
+          attritionRate: deptAttrition.attritionRate,
+          voluntaryRate: 0,
+          involuntaryRate: 0,
+        },
+        byDepartment: {
+          [department]: deptAttrition,
+        },
+        byLevel: {},
+        byLocation: {},
+      };
+    } else {
+      // Full attrition analysis
+      attrition = await calculateAttrition(start, end);
+    }
 
     return NextResponse.json({
       success: true,
       data: {
         attrition,
-        retention
       },
       metadata: {
-        employeeCount: employees.length,
-        turnoverCount: turnoverData.length,
-        hasDemographics: !!demographics,
+        totalEmployees,
+        terminatedCount,
         period,
         dateRange: {
-          start: start.toISOString(),
-          end: end.toISOString()
+          start,
+          end,
         },
-        calculatedAt: new Date().toISOString()
-      }
+        department: department || 'all',
+        calculatedAt: new Date().toISOString(),
+        dataSource: 'SQLite',
+      },
     });
-
   } catch (error) {
     return handleApiError(error, {
       endpoint: '/api/analytics/attrition',
       method: 'GET',
       userId: authResult.user.userId,
-      requestBody: { period: request.nextUrl.searchParams.get('period') || 'last_12_months' }
+      requestBody: {
+        period: request.nextUrl.searchParams.get('period') || 'last_12_months',
+      },
     });
   }
 }

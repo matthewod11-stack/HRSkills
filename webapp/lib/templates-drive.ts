@@ -1,17 +1,14 @@
-import { googleOAuthClient } from '../../integrations/google/oauth-client';
-import { google } from 'googleapis';
+/**
+ * Google Drive Template Management
+ *
+ * Phase 2: Updated to use unified GoogleWorkspaceClient
+ * - Supports both Service Account and OAuth
+ * - Secure token storage in database
+ * - Template caching for performance
+ */
 
-export interface DriveTemplate {
-  id: string;
-  name: string;
-  skillName: string;
-  content?: string;
-}
-
-export interface SkillTemplates {
-  skillName: string;
-  templates: Record<string, string>; // Map of template name to content
-}
+import { getOAuthClient } from './google/workspace-client';
+import type { DriveTemplate, SkillTemplates } from './google/types';
 
 // In-memory cache for templates (1 hour TTL)
 interface CachedTemplates {
@@ -28,25 +25,21 @@ const TEMPLATE_CONTENT_CACHE_TTL = 60 * 60 * 1000; // 1 hour
 /**
  * Fetch list of all templates from Google Drive (with caching)
  */
-export async function fetchTemplateList(): Promise<DriveTemplate[]> {
+export async function fetchTemplateList(userId: string): Promise<DriveTemplate[]> {
   // Check cache first
   if (templateListCache && Date.now() - templateListCache.timestamp < TEMPLATE_LIST_CACHE_TTL) {
     return templateListCache.templates;
   }
 
-  if (!googleOAuthClient.isAuthenticated()) {
-    throw new Error('Not authenticated with Google Drive');
-  }
-
-  await googleOAuthClient.refreshTokenIfNeeded();
-  const auth = googleOAuthClient.getAuth();
-  const drive = google.drive({ version: 'v3', auth });
+  const client = getOAuthClient(userId);
+  await client.ensureAuthenticated();
+  const drive = await client.getDrive();
 
   // Find the HR Command Center folder
   const searchRootResponse = await drive.files.list({
     q: `name='HR Command Center' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
     fields: 'files(id)',
-    pageSize: 1
+    pageSize: 1,
   });
 
   if (!searchRootResponse.data.files || searchRootResponse.data.files.length === 0) {
@@ -59,10 +52,13 @@ export async function fetchTemplateList(): Promise<DriveTemplate[]> {
   const searchTemplatesResponse = await drive.files.list({
     q: `name='Templates' and '${rootFolderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
     fields: 'files(id)',
-    pageSize: 1
+    pageSize: 1,
   });
 
-  if (!searchTemplatesResponse.data.files || searchTemplatesResponse.data.files.length === 0) {
+  if (
+    !searchTemplatesResponse.data.files ||
+    searchTemplatesResponse.data.files.length === 0
+  ) {
     throw new Error('Templates folder not found');
   }
 
@@ -73,7 +69,7 @@ export async function fetchTemplateList(): Promise<DriveTemplate[]> {
     q: `'${templatesFolderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
     fields: 'files(id, name)',
     pageSize: 100,
-    orderBy: 'name'
+    orderBy: 'name',
   });
 
   const skillFolders = skillFoldersResponse.data.files || [];
@@ -85,7 +81,7 @@ export async function fetchTemplateList(): Promise<DriveTemplate[]> {
       q: `'${skillFolder.id}' in parents and mimeType='application/vnd.google-apps.document' and trashed=false`,
       fields: 'files(id, name)',
       pageSize: 100,
-      orderBy: 'name'
+      orderBy: 'name',
     });
 
     const files = filesResponse.data.files || [];
@@ -94,179 +90,129 @@ export async function fetchTemplateList(): Promise<DriveTemplate[]> {
       templates.push({
         id: file.id!,
         name: file.name!,
-        skillName: skillFolder.name!
+        skillName: skillFolder.name!,
       });
     }
   }
 
-  // Update cache
+  // Cache the results
   templateListCache = {
     templates,
-    timestamp: Date.now()
+    timestamp: Date.now(),
   };
 
   return templates;
 }
 
 /**
- * Fetch content of a specific template (with caching)
+ * Fetch template content by ID (with caching)
  */
-export async function fetchTemplateContent(documentId: string): Promise<string> {
+export async function fetchTemplateContent(
+  userId: string,
+  templateId: string
+): Promise<string> {
   // Check cache first
-  const cached = templateContentCache.get(documentId);
+  const cached = templateContentCache.get(templateId);
   if (cached && Date.now() - cached.timestamp < TEMPLATE_CONTENT_CACHE_TTL) {
     return cached.content;
   }
 
-  if (!googleOAuthClient.isAuthenticated()) {
-    throw new Error('Not authenticated with Google Drive');
-  }
+  const client = getOAuthClient(userId);
+  await client.ensureAuthenticated();
+  const docs = await client.getDocs();
 
-  await googleOAuthClient.refreshTokenIfNeeded();
-  const auth = googleOAuthClient.getAuth();
-  const docs = google.docs({ version: 'v1', auth });
-
-  // Get the document
-  const doc = await docs.documents.get({ documentId });
-
-  // Convert Google Docs content to markdown
-  const markdown = convertDocsToMarkdown(doc.data);
-
-  // Update cache
-  templateContentCache.set(documentId, {
-    content: markdown,
-    timestamp: Date.now()
+  const doc = await docs.documents.get({
+    documentId: templateId,
   });
 
-  return markdown;
+  // Extract plain text content
+  const content = extractTextFromDoc(doc.data);
+
+  // Cache the content
+  templateContentCache.set(templateId, {
+    content,
+    timestamp: Date.now(),
+  });
+
+  return content;
 }
 
 /**
- * Load all templates for a specific skill
+ * Get templates organized by skill
  */
-export async function loadSkillTemplatesFromDrive(skillName: string): Promise<SkillTemplates | null> {
-  try {
-    const allTemplates = await fetchTemplateList();
+export async function getTemplatesBySkill(userId: string): Promise<SkillTemplates[]> {
+  const templates = await fetchTemplateList(userId);
 
-    // Filter templates for this skill
-    const skillTemplates = allTemplates.filter(t =>
-      t.skillName.toLowerCase() === skillName.toLowerCase()
-    );
+  // Group by skill
+  const skillMap = new Map<string, Record<string, string>>();
 
-    if (skillTemplates.length === 0) {
-      return null;
+  for (const template of templates) {
+    if (!skillMap.has(template.skillName)) {
+      skillMap.set(template.skillName, {});
     }
 
-    // Fetch content for each template
-    const templates: Record<string, string> = {};
-
-    for (const template of skillTemplates) {
-      const content = await fetchTemplateContent(template.id);
-      templates[template.name] = content;
-    }
-
-    return {
-      skillName,
-      templates
-    };
-  } catch (error) {
-    console.error(`Error loading templates for skill ${skillName}:`, error);
-    return null;
+    const content = await fetchTemplateContent(userId, template.id);
+    skillMap.get(template.skillName)![template.name] = content;
   }
+
+  // Convert to array
+  return Array.from(skillMap.entries()).map(([skillName, templates]) => ({
+    skillName,
+    templates,
+  }));
 }
 
 /**
- * Convert Google Docs content to markdown
- */
-function convertDocsToMarkdown(doc: any): string {
-  if (!doc.body || !doc.body.content) {
-    return '';
-  }
-
-  let markdown = '';
-
-  for (const element of doc.body.content) {
-    if (!element.paragraph) continue;
-
-    const paragraph = element.paragraph;
-    let text = '';
-    let isBold = false;
-    let isItalic = false;
-
-    // Extract text with inline formatting
-    if (paragraph.elements) {
-      for (const elem of paragraph.elements) {
-        if (elem.textRun) {
-          let runText = elem.textRun.content || '';
-
-          // Check formatting
-          const style = elem.textRun.textStyle || {};
-          isBold = style.bold === true;
-          isItalic = style.italic === true;
-
-          // Apply markdown formatting
-          if (isBold && isItalic) {
-            runText = `***${runText.trim()}***`;
-          } else if (isBold) {
-            runText = `**${runText.trim()}**`;
-          } else if (isItalic) {
-            runText = `*${runText.trim()}*`;
-          }
-
-          text += runText;
-        }
-      }
-    }
-
-    // Clean up extra whitespace
-    text = text.trim();
-
-    if (text === '') {
-      markdown += '\n';
-      continue;
-    }
-
-    // Apply paragraph styles
-    const style = paragraph.paragraphStyle?.namedStyleType;
-
-    switch (style) {
-      case 'HEADING_1':
-        markdown += `# ${text}\n\n`;
-        break;
-      case 'HEADING_2':
-        markdown += `## ${text}\n\n`;
-        break;
-      case 'HEADING_3':
-        markdown += `### ${text}\n\n`;
-        break;
-      case 'HEADING_4':
-        markdown += `#### ${text}\n\n`;
-        break;
-      case 'HEADING_5':
-        markdown += `##### ${text}\n\n`;
-        break;
-      case 'HEADING_6':
-        markdown += `###### ${text}\n\n`;
-        break;
-      default:
-        // Check for bullet lists
-        if (paragraph.bullet) {
-          const indentLevel = paragraph.paragraphStyle?.indentStart?.magnitude || 0;
-          const indent = '  '.repeat(Math.floor(indentLevel / 18)); // 18pt = 1 level
-          markdown += `${indent}- ${text}\n`;
-        } else {
-          markdown += `${text}\n\n`;
-        }
-    }
-  }
-
-  return markdown.trim();
-}
-
-/**
- * Clear template caches (useful for testing or when templates are updated)
+ * Clear template caches
  */
 export function clearTemplateCache(): void {
   templateListCache = null;
   templateContentCache.clear();
+}
+
+/**
+ * Extract plain text from Google Docs document
+ */
+function extractTextFromDoc(doc: any): string {
+  if (!doc.body || !doc.body.content) {
+    return '';
+  }
+
+  const textParts: string[] = [];
+
+  function extractFromElement(element: any): void {
+    if (element.paragraph) {
+      const paragraph = element.paragraph;
+      if (paragraph.elements) {
+        for (const elem of paragraph.elements) {
+          if (elem.textRun && elem.textRun.content) {
+            textParts.push(elem.textRun.content);
+          }
+        }
+      }
+    }
+
+    if (element.table) {
+      const table = element.table;
+      if (table.tableRows) {
+        for (const row of table.tableRows) {
+          if (row.tableCells) {
+            for (const cell of row.tableCells) {
+              if (cell.content) {
+                for (const content of cell.content) {
+                  extractFromElement(content);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  for (const element of doc.body.content) {
+    extractFromElement(element);
+  }
+
+  return textParts.join('');
 }

@@ -9,12 +9,12 @@ Welcome to the HR Command Center documentation! This guide helps you navigate al
 Start here if you're new to the project:
 
 - [Main README](../README.md) - Project overview and quick start
-- [Getting Started Guide](../GETTING_STARTED.md) - Detailed setup and onboarding
-- [Contributing Guidelines](../CONTRIBUTING.md) - How to contribute to the project
+- [Getting Started Guide](./guides/GETTING_STARTED.md) - Detailed setup and onboarding
+- [Contributing Guidelines](./guides/CONTRIBUTING.md) - How to contribute to the project
 - [Development Setup](./guides/DEVELOPMENT_SETUP.md) - Complete development environment setup
 - [Quick Reference Card](../quick-reference-card.md) - Essential commands and features
 - [Claude HR Capabilities](../claude-hr-capabilities-master.md) - Complete feature documentation
-- [Changelog](../CHANGELOG.md) - Version history and recent changes
+- [Changelog](./releases/CHANGELOG.md) - Version history and recent changes
 
 ---
 
@@ -151,7 +151,7 @@ Complete component library documentation:
 
 Want to contribute? Check out our comprehensive guides:
 
-- **[Contributing Guidelines](../CONTRIBUTING.md)** - Development workflow, code standards, and PR process
+- **[Contributing Guidelines](./guides/CONTRIBUTING.md)** - Development workflow, code standards, and PR process
 - **[Development Setup](./guides/DEVELOPMENT_SETUP.md)** - Complete environment setup
 - **[Testing Guide](./guides/TESTING_GUIDE.md)** - Writing and running tests
 - **[Architecture Decisions](./architecture/ARCHITECTURE_DECISIONS.md)** - Technical design rationale
@@ -163,12 +163,20 @@ Want to contribute? Check out our comprehensive guides:
 ```
 /HRSkills/
 ├── README.md                    # Project overview
-├── GETTING_STARTED.md          # Setup guide
 ├── docs/                       # All documentation (you are here!)
-│   ├── architecture/           # Technical design & roadmaps
-│   ├── guides/                 # How-to guides
-│   ├── features/               # Feature documentation
-│   ├── phases/                 # Implementation phases
+│   ├── overview/               # Documentation index & roadmaps
+│   │   └── DOCUMENTATION_SUMMARY.md
+│   ├── guides/                 # How-to guides (includes GETTING_STARTED.md, CONTRIBUTING.md)
+│   ├── releases/               # Release notes & changelog
+│   │   └── CHANGELOG.md
+│   ├── context/                # AI assistant context files
+│   │   ├── claude.md
+│   │   └── cursor.md
+│   ├── integrations/           # Integration plans (e.g., Google AI plan)
+│   │   └── google/
+│   │       └── googleaiplan.md
+│   ├── features/               # Feature documentation (includes dlp/)
+│   ├── phases/                 # Implementation phases (includes google-ai/)
 │   ├── audits/                 # Audit reports
 │   ├── api/                    # API reference
 │   └── components/             # Component library

@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, hasPermission, authErrorResponse } from '@/lib/auth/middleware'
 import { handleApiError } from '@/lib/api-helpers'
 import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter'
-import { analyzeSentimentBatch, extractEntities, type BatchSentimentResult } from '@/lib/ai-services/nlp-service'
-import { translateBatch, detectLanguage } from '@/lib/ai-services/translation-service'
+import { analyzeWithAI } from '@/lib/ai/router'
+import type { AnalysisTask } from '@/lib/ai/types'
 import { loadDataFileByType } from '@/lib/analytics/utils'
 
 interface SurveyResponse {
@@ -41,7 +41,7 @@ interface SurveyAnalysisResult {
     topConcerns: string[]
   }>
   themes: ThemeInsight[]
-  sentiment: BatchSentimentResult
+  sentiments: Array<{ sentiment: string; score: number; reasoning?: string }>
   topConcerns: string[]
   topStrengths: string[]
   actionableInsights: string[]
@@ -71,17 +71,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { success: false, error: 'Insufficient permissions to analyze surveys' },
       { status: 403 }
-    )
-  }
-
-  // Check if NLP is enabled
-  if (process.env.NEXT_PUBLIC_ENABLE_NLP !== 'true') {
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'NLP service is not enabled. Set NEXT_PUBLIC_ENABLE_NLP=true to enable.',
-      },
-      { status: 503 }
     )
   }
 
@@ -115,19 +104,31 @@ export async function POST(request: NextRequest) {
     // Extract response texts for batch sentiment analysis
     const responseTexts = limitedResponses.map((r: SurveyResponse) => r.response)
 
-    // Perform batch sentiment analysis
+    // Perform batch sentiment analysis using unified AI provider
     console.log(`[Survey Analysis] Analyzing ${responseTexts.length} responses...`)
-    const sentimentResults = await analyzeSentimentBatch(responseTexts, {
-      enableCaching: true,
-    })
+    const sentimentAnalyses = await Promise.all(
+      responseTexts.map(async (text) => {
+        const task: AnalysisTask = {
+          type: 'sentiment',
+          text,
+        }
+        const result = await analyzeWithAI(task, {
+          userId: authResult.user.userId,
+          endpoint: '/api/surveys/analyze',
+        })
+        return result.result
+      })
+    )
 
-    // Calculate sentiment distribution
+    // Calculate sentiment distribution and average
+    const avgSentiment = sentimentAnalyses.reduce((acc, s) => acc + (s.score || 0), 0) / sentimentAnalyses.length
+
     const sentimentDistribution = {
-      veryPositive: sentimentResults.results.filter(r => r.sentiment.sentiment === 'very_positive').length,
-      positive: sentimentResults.results.filter(r => r.sentiment.sentiment === 'positive').length,
-      neutral: sentimentResults.results.filter(r => r.sentiment.sentiment === 'neutral').length,
-      negative: sentimentResults.results.filter(r => r.sentiment.sentiment === 'negative').length,
-      veryNegative: sentimentResults.results.filter(r => r.sentiment.sentiment === 'very_negative').length,
+      veryPositive: sentimentAnalyses.filter(s => (s.score || 0) > 0.6).length,
+      positive: sentimentAnalyses.filter(s => (s.score || 0) > 0.2 && (s.score || 0) <= 0.6).length,
+      neutral: sentimentAnalyses.filter(s => (s.score || 0) >= -0.2 && (s.score || 0) <= 0.2).length,
+      negative: sentimentAnalyses.filter(s => (s.score || 0) < -0.2 && (s.score || 0) >= -0.6).length,
+      veryNegative: sentimentAnalyses.filter(s => (s.score || 0) < -0.6).length,
     }
 
     // Group by department if requested
@@ -137,7 +138,7 @@ export async function POST(request: NextRequest) {
 
       for (let i = 0; i < limitedResponses.length; i++) {
         const response = limitedResponses[i]
-        const sentiment = sentimentResults.results[i]
+        const sentiment = sentimentAnalyses[i]
         const dept = response.department || 'Unknown'
 
         if (!byDepartment[dept]) {
@@ -149,10 +150,10 @@ export async function POST(request: NextRequest) {
         }
 
         byDepartment[dept].count++
-        byDepartment[dept].totalSentiment += sentiment.sentiment.score
+        byDepartment[dept].totalSentiment += sentiment.score || 0
         byDepartment[dept].responses.push({
           text: response.response,
-          sentiment: sentiment.sentiment,
+          sentiment: sentiment,
         })
       }
 
@@ -162,8 +163,8 @@ export async function POST(request: NextRequest) {
 
         // Top concerns = most negative responses
         const topConcerns = byDepartment[dept].responses
-          .filter((r: any) => r.sentiment.score < -0.3)
-          .sort((a: any, b: any) => a.sentiment.score - b.sentiment.score)
+          .filter((r: any) => (r.sentiment.score || 0) < -0.3)
+          .sort((a: any, b: any) => (a.sentiment.score || 0) - (b.sentiment.score || 0))
           .slice(0, 3)
           .map((r: any) => r.text.substring(0, 100) + (r.text.length > 100 ? '...' : ''))
 
@@ -177,51 +178,65 @@ export async function POST(request: NextRequest) {
 
     // Extract themes using entity extraction on negative responses
     const negativeResponses = limitedResponses.filter((r: SurveyResponse, i: number) =>
-      sentimentResults.results[i].sentiment.score < -0.25
+      (sentimentAnalyses[i].score || 0) < -0.25
     )
 
     const themes: ThemeInsight[] = []
 
     if (negativeResponses.length > 0) {
       // Combine negative responses for theme extraction
-      const negativeText = negativeResponses.map(r => r.response).join(' ')
-      const entities = await extractEntities(negativeText, { enableCaching: true })
+      const negativeText = negativeResponses.map(r => r.response).join('. ')
 
-      // Group common entities as themes
-      const entityGroups: Record<string, { count: number; examples: string[] }> = {}
-
-      for (const entity of entities.slice(0, 20)) { // Top 20 most salient entities
-        const key = entity.name.toLowerCase()
-        if (!entityGroups[key]) {
-          entityGroups[key] = { count: 0, examples: [] }
+      try {
+        const entityTask: AnalysisTask = {
+          type: 'entities',
+          text: negativeText,
         }
-        entityGroups[key].count += entity.mentions
-      }
+        const entityResult = await analyzeWithAI(entityTask, {
+          userId: authResult.user.userId,
+          endpoint: '/api/surveys/analyze',
+        })
 
-      // Convert to theme insights
-      for (const [theme, data] of Object.entries(entityGroups)) {
-        if (data.count >= 2) { // Only themes mentioned 2+ times
-          themes.push({
-            theme,
-            count: data.count,
-            avgSentiment: sentimentResults.overall.avgScore,
-            examples: negativeResponses.slice(0, 2).map(r => r.response.substring(0, 100)),
-            entities: [{ name: theme, frequency: data.count }],
-          })
+        const entities = entityResult.result.entities || []
+
+        // Group common entities as themes
+        const entityGroups: Record<string, { count: number; examples: string[] }> = {}
+
+        for (const entity of entities.slice(0, 20)) { // Top 20 most salient entities
+          const key = (entity.text || entity.name || '').toLowerCase()
+          if (!entityGroups[key]) {
+            entityGroups[key] = { count: 0, examples: [] }
+          }
+          entityGroups[key].count++
         }
+
+        // Convert to theme insights
+        for (const [theme, data] of Object.entries(entityGroups)) {
+          if (data.count >= 2) { // Only themes mentioned 2+ times
+            themes.push({
+              theme,
+              count: data.count,
+              avgSentiment,
+              examples: negativeResponses.slice(0, 2).map(r => r.response.substring(0, 100)),
+              entities: [{ name: theme, frequency: data.count }],
+            })
+          }
+        }
+      } catch (error) {
+        console.error('[Survey Analysis] Entity extraction failed:', error)
       }
     }
 
     // Extract top concerns (most negative responses)
-    const topConcerns = sentimentResults.results
-      .map((r, i) => ({ text: limitedResponses[i].response, score: r.sentiment.score }))
+    const topConcerns = sentimentAnalyses
+      .map((s, i) => ({ text: limitedResponses[i].response, score: s.score || 0 }))
       .sort((a, b) => a.score - b.score)
       .slice(0, 5)
       .map(r => r.text.substring(0, 150) + (r.text.length > 150 ? '...' : ''))
 
     // Extract top strengths (most positive responses)
-    const topStrengths = sentimentResults.results
-      .map((r, i) => ({ text: limitedResponses[i].response, score: r.sentiment.score }))
+    const topStrengths = sentimentAnalyses
+      .map((s, i) => ({ text: limitedResponses[i].response, score: s.score || 0 }))
       .sort((a, b) => b.score - a.score)
       .slice(0, 5)
       .map(r => r.text.substring(0, 150) + (r.text.length > 150 ? '...' : ''))
@@ -229,13 +244,14 @@ export async function POST(request: NextRequest) {
     // Generate actionable insights
     const actionableInsights: string[] = []
 
-    if (sentimentResults.overall.negativeCount > sentimentResults.overall.totalAnalyzed * 0.3) {
+    const negativeCount = sentimentAnalyses.filter(s => (s.score || 0) < -0.2).length
+    if (negativeCount > sentimentAnalyses.length * 0.3) {
       actionableInsights.push('⚠️ High negative sentiment detected (>30% of responses). Immediate attention recommended.')
     }
 
-    if (sentimentResults.overall.avgScore < -0.3) {
+    if (avgSentiment < -0.3) {
       actionableInsights.push('📉 Overall sentiment is significantly negative. Consider addressing systemic issues.')
-    } else if (sentimentResults.overall.avgScore > 0.5) {
+    } else if (avgSentiment > 0.5) {
       actionableInsights.push('✅ Overall sentiment is positive. Continue current initiatives.')
     }
 
@@ -258,12 +274,12 @@ export async function POST(request: NextRequest) {
     const analysis: SurveyAnalysisResult = {
       overall: {
         totalResponses: limitedResponses.length,
-        avgSentiment: sentimentResults.overall.avgScore,
+        avgSentiment,
         sentimentDistribution,
       },
       byDepartment,
       themes,
-      sentiment: sentimentResults,
+      sentiments: sentimentAnalyses,
       topConcerns,
       topStrengths,
       actionableInsights,
@@ -271,10 +287,8 @@ export async function POST(request: NextRequest) {
 
     console.log('[Survey Analysis] Complete:', {
       responses: limitedResponses.length,
-      avgSentiment: sentimentResults.overall.avgScore.toFixed(2),
+      avgSentiment: avgSentiment.toFixed(2),
       processingTime: `${processingTime}ms`,
-      apiCalls: sentimentResults.metadata.apiCalls,
-      cacheHits: sentimentResults.metadata.cacheHits,
     })
 
     return NextResponse.json({
@@ -284,8 +298,6 @@ export async function POST(request: NextRequest) {
         processingTime,
         responsesAnalyzed: limitedResponses.length,
         responsesTotal: surveyResponses.length,
-        apiCalls: sentimentResults.metadata.apiCalls,
-        cacheHits: sentimentResults.metadata.cacheHits,
       },
     })
   } catch (error) {

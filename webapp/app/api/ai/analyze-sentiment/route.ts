@@ -1,18 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, hasPermission, authErrorResponse } from '@/lib/auth/middleware'
-import { handleApiError, createSuccessResponse, validateRequiredFields } from '@/lib/api-helpers'
+import { handleApiError, createSuccessResponse } from '@/lib/api-helpers'
 import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter'
-import {
-  analyzeSentiment,
-  analyzeSentimentBatch,
-  isNlpAvailable,
-  NLP_ANALYSIS_PRESETS,
-} from '@/lib/ai-services/nlp-service'
-import type { AIServiceResponse, SentimentResult, BatchSentimentResult } from '@/lib/types/ai-services'
+import { analyzeWithAI } from '@/lib/ai/router'
+import type { AnalysisTask } from '@/lib/ai/types'
 
 /**
  * POST /api/ai/analyze-sentiment
- * Analyze sentiment of text or batch of texts
+ * Analyze sentiment of text using unified AI provider
  * Requires: Authentication + analytics read permission
  */
 export async function POST(request: NextRequest) {
@@ -36,20 +31,9 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // Check if NLP is enabled
-  if (process.env.NEXT_PUBLIC_ENABLE_NLP !== 'true') {
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'NLP service is not enabled. Set NEXT_PUBLIC_ENABLE_NLP=true to enable.',
-      },
-      { status: 503 }
-    )
-  }
-
   try {
     const body = await request.json()
-    const { text, texts, language, enableCaching = true } = body
+    const { text, texts } = body
 
     // Validate input
     if (!text && !texts) {
@@ -84,18 +68,33 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      const result = await analyzeSentimentBatch(texts, {
-        language,
-        enableCaching,
-      })
+      // Analyze each text with the AI router
+      const results = await Promise.all(
+        texts.map(async (t: string) => {
+          const task: AnalysisTask = {
+            type: 'sentiment',
+            text: t,
+          }
+          return analyzeWithAI(task, {
+            userId: authResult.user.userId,
+            endpoint: '/api/ai/analyze-sentiment',
+          })
+        })
+      )
 
-      const response: AIServiceResponse<BatchSentimentResult> = {
+      const response = {
         success: true,
-        data: result,
+        data: {
+          results: results.map((r) => r.result),
+          totalTexts: texts.length,
+          metadata: {
+            apiCalls: texts.length,
+            processingTime: Date.now() - startTime,
+          },
+        },
         metadata: {
           processingTime: Date.now() - startTime,
-          apiCalls: result.metadata.apiCalls,
-          cacheHit: result.metadata.cacheHits > 0,
+          apiCalls: texts.length,
         },
       }
 
@@ -110,16 +109,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const result = await analyzeSentiment(text, {
-      language,
-      enableCaching,
+    const task: AnalysisTask = {
+      type: 'sentiment',
+      text,
+    }
+
+    const result = await analyzeWithAI(task, {
+      userId: authResult.user.userId,
+      endpoint: '/api/ai/analyze-sentiment',
     })
 
-    const response: AIServiceResponse<SentimentResult> = {
+    const response = {
       success: true,
-      data: result,
+      data: result.result,
       metadata: {
         processingTime: Date.now() - startTime,
+        model: result.model,
+        provider: result.provider,
       },
     }
 
@@ -135,7 +141,7 @@ export async function POST(request: NextRequest) {
 
 /**
  * GET /api/ai/analyze-sentiment/health
- * Check if NLP service is available
+ * Check AI provider health
  */
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth(request)
@@ -144,14 +150,15 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const available = await isNlpAvailable()
+    const { getAIHealth } = await import('@/lib/ai/router')
+    const health = await getAIHealth()
 
     return NextResponse.json({
       success: true,
       data: {
-        available,
-        enabled: process.env.NEXT_PUBLIC_ENABLE_NLP === 'true',
-        service: 'Google Cloud Natural Language API',
+        available: Object.values(health).some((h) => h.healthy),
+        providers: health,
+        service: 'Unified AI Provider (Claude/GPT/Gemini)',
       },
     })
   } catch (error) {
