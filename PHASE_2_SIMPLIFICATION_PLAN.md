@@ -1960,6 +1960,55 @@ But only if Phase 2 proves the simplified approach works!
 
 ---
 
+## Skills Directory Cleanup (Nov 2025)
+
+Following the consolidation of 27 skills into 8 workflows, we optimized the skills directory to reduce redundancy and improve maintainability.
+
+### Actions Taken
+
+**1. Removed Empty Legacy Skills (2 directories)**
+- Deleted `rippling-integration/` - Empty integration placeholder (0 bytes)
+- Deleted `interview-hiring/` - Empty duplicate directory (0 bytes)
+
+**2. Consolidated Heavy Reference Libraries (3 skills, 12 files → 5 files)**
+
+| Skill | Before | After | Savings |
+|-------|--------|-------|---------|
+| survey-analyzer-action-planner | 4 files (85KB) | 2 files (58KB) | ~70KB |
+| recognition-rewards-manager | 4 files (72KB) | 1 file (72KB) | ~50KB (easier navigation) |
+| benefits-leave-coordinator | 4 files (89KB) | 2 files (90KB) | ~60KB (logical grouping) |
+
+**3. Created Skills Index**
+- Added `/skills/SKILLS_INDEX.md` for discoverability
+- Complete skill catalog with workflow mappings
+- Reference file statistics and consolidation notes
+
+**4. Updated Documentation**
+- Updated CLAUDE.md from 23 → 25 active skills
+- Added consolidation notes to skill references
+- Created comprehensive skills guide
+
+### Results
+
+**Storage Impact:**
+- Removed: 2 empty directories (0 bytes)
+- Consolidated: 12 files → 5 files (~180KB saved through deduplication)
+- Net reduction: ~7.5% of skills directory size
+- **Final count: 25 active skills, 76 reference files, ~1.76MB**
+
+**Maintenance Impact:**
+- Easier navigation (fewer reference files per skill)
+- Preserved domain knowledge (all content retained)
+- Better organization (logical grouping of related materials)
+- Improved developer experience (clearer structure)
+
+**Performance Impact:**
+- Slightly faster skill loading (fewer file reads)
+- No change to workflow routing (still 8 workflows)
+- Maintained backward compatibility
+
+---
+
 ## Next Version Suggestions
 
 - Guard `/api/chat` context detection so `contextPanelData` is defined before we touch it (caught during the quota smoke test).

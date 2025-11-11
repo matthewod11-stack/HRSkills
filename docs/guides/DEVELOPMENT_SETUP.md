@@ -2,7 +2,7 @@
 
 Complete guide to setting up your development environment for HR Command Center.
 
-**Last Updated:** November 6, 2025
+**Last Updated:** November 11, 2025
 
 ---
 
@@ -53,26 +53,7 @@ The project includes a `.nvmrc` file, so you can simply run:
 nvm use
 ```
 
-#### 2. Python 3.10+
-
-**Required for:** Automation agents
-
-**Check current version:**
-```bash
-python3 --version  # Should be 3.10 or higher
-```
-
-**Installation:**
-- **macOS:** `brew install python@3.10`
-- **Windows:** Download from [python.org](https://www.python.org/)
-- **Linux:** `sudo apt install python3.10`
-
-**Install pip packages:**
-```bash
-pip3 install -r requirements.txt
-```
-
-#### 3. Git
+#### 2. Git
 
 **Check current version:**
 ```bash
@@ -361,8 +342,8 @@ From the **root directory:**
 | `npm run start` | Start webapp production server |
 | `npm run lint` | Lint webapp code |
 | `npm run setup` | Install all dependencies |
-| `npm run agent:onboarding` | Run onboarding agent |
-| `npm run agent:metrics` | Run metrics agent |
+
+**Note:** Python automation agents removed in Phase 2 (November 2025). All automation moved to Node.js/TypeScript workflows.
 
 From the **webapp directory:**
 
@@ -604,7 +585,9 @@ After completing setup:
 4. **Read documentation:**
    - [Contributing Guide](CONTRIBUTING.md)
    - [Architecture Decisions](../architecture/ARCHITECTURE_DECISIONS.md)
-   - [API Documentation](../api/) (coming soon)
+   - [Skills Guide](SKILLS_GUIDE.md) - Complete guide to all 25 skills
+   - [Skills Index](../../skills/SKILLS_INDEX.md) - Quick skills catalog
+   - [API Reference](../api/API_REFERENCE.md)
 
 5. **Make your first contribution:**
    - Find a good first issue
@@ -618,6 +601,8 @@ After completing setup:
 
 - [Getting Started Guide](GETTING_STARTED.md)
 - [Contributing Guidelines](CONTRIBUTING.md)
+- [Skills Guide](SKILLS_GUIDE.md) - Skills development and organization
+- [Skills Index](../../skills/SKILLS_INDEX.md) - All 25 skills catalog
 - [Security Guide](./SECURITY_IMPLEMENTATION_PLAN.md)
 - [Production Deployment Guide](./PRODUCTION_DEPLOYMENT_GUIDE.md)
 - [Data Sources Guide](./DATA_SOURCES_GUIDE.md)

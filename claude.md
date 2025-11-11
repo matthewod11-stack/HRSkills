@@ -2,16 +2,16 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Last Updated:** 2025-11-10
+**Last Updated:** 2025-11-11
 **Platform Version:** 0.2.0
-**Status:** Production-Ready (Phase 3.2 Complete)
+**Status:** Production-Ready (Phase 3.2 Complete + Cleanup)
 
 ---
 
 ## 🎯 What You're Working With
 
 This is a **chat-first HR automation platform** powered by Claude AI with:
-- **23 Claude Skills** - Domain-specific HR capabilities (in `/skills/`)
+- **25 Claude Skills** - Domain-specific HR capabilities (in `/skills/`) - optimized Nov 2025
 - **Multi-Provider AI** - Automatic failover: Anthropic → OpenAI → Gemini (99.9% uptime)
 - **SQLite + Drizzle ORM** - Type-safe database with sub-50ms analytics queries
 - **Next.js 14** - Full-stack TypeScript with App Router
@@ -355,7 +355,7 @@ const form = useForm({
 └── db/schema.ts                       # 10 database tables (Drizzle)
 ```
 
-### Skills (23 Total)
+### Skills (25 Total - Optimized Nov 2025)
 
 ```
 /skills/
@@ -364,7 +364,12 @@ const form = useForm({
 ├── interview-guide-creator/           # Interview scorecards
 ├── performance-insights-analyst/      # Review synthesis
 ├── hr-metrics-analyst/                # Analytics & dashboards
-└── ... (18 more skills)
+├── survey-analyzer-action-planner/    # Surveys (consolidated: 4→2 files)
+├── recognition-rewards-manager/       # Recognition (consolidated: 4→1 file)
+├── benefits-leave-coordinator/        # Benefits/leave (consolidated: 4→2 files)
+└── ... (17 more skills)
+
+See /skills/SKILLS_INDEX.md for complete list with workflow mappings
 ```
 
 ### Documentation
@@ -473,6 +478,129 @@ const form = useForm({
    - Integration tests for API routes
    - E2E tests for user flows
    - Accessibility tests for UI changes
+
+---
+
+## 📡 Consolidated API Endpoints (Phase 3.5)
+
+**Last Updated:** November 11, 2025
+
+### Key Consolidations
+
+Phase 3.5 simplified the API surface from 47 endpoints to ~38 by consolidating related operations:
+
+#### 1. AI Services (9 endpoints → 3)
+
+**Use `/api/ai/analyze` for all analysis operations:**
+```typescript
+// ✅ CORRECT: Unified endpoint
+const sentiment = await fetch('/api/ai/analyze', {
+  method: 'POST',
+  body: JSON.stringify({
+    type: 'sentiment',
+    text: 'Great employee feedback!'
+  })
+})
+
+const entities = await fetch('/api/ai/analyze', {
+  method: 'POST',
+  body: JSON.stringify({
+    type: 'entities',
+    text: 'Sarah from Engineering in NYC'
+  })
+})
+
+// ❌ WRONG: Old individual endpoints (deleted)
+// await fetch('/api/ai/analyze-sentiment', ...)
+// await fetch('/api/ai/extract-entities', ...)
+```
+
+**Use `/api/ai/transform` for transformations:**
+```typescript
+// ✅ CORRECT: Unified transformation endpoint
+const translation = await fetch('/api/ai/transform', {
+  method: 'POST',
+  body: JSON.stringify({
+    type: 'translate',
+    text: 'Hello',
+    targetLanguage: 'Spanish'
+  })
+})
+
+// ❌ WRONG: Old endpoint (deleted)
+// await fetch('/api/ai/translate', ...)
+```
+
+**Supported Analysis Types:**
+- `sentiment` - Sentiment analysis
+- `entities` - Entity extraction
+- `language` - Language detection
+- `classification` - Text classification
+- `summarization` - Text summarization
+
+**Supported Transform Types:**
+- `translate` - Translation (implemented)
+- `transcribe` - Audio transcription (planned)
+- `ocr` - OCR processing (planned)
+
+#### 2. Metrics (4 endpoints → 1)
+
+**Use `/api/metrics` with query parameters:**
+```typescript
+// ✅ CORRECT: Unified metrics endpoint
+const dashboard = await fetch('/api/metrics') // Default: dashboard
+const headcount = await fetch('/api/metrics?type=headcount')
+const details = await fetch('/api/metrics?type=headcount&details=true')
+const aiCosts = await fetch('/api/metrics?type=ai-costs')
+
+// ❌ WRONG: Old individual endpoints (deleted)
+// await fetch('/api/metrics/details?metric=headcount')
+// await fetch('/api/metrics/ai-costs')
+```
+
+**Supported Metric Types:**
+- `dashboard` - Summary metrics (default)
+- `headcount` - Headcount data
+- `attrition` - Attrition data
+- `openPositions` - Open positions
+- `ai-costs` - AI cost tracking
+- `performance` - System performance
+
+**Query Parameters:**
+- `type` - Metric type (default: 'dashboard')
+- `details` - Include drill-down data (default: false)
+
+#### 3. Monitoring (Renamed from Performance)
+
+**Use `/api/monitoring` for system metrics:**
+```typescript
+// ✅ CORRECT: New monitoring endpoint
+const systemMetrics = await fetch('/api/monitoring?period=60')
+
+// ❌ WRONG: Old endpoint name (deleted)
+// await fetch('/api/performance', ...)
+```
+
+**Note:** HR performance analysis stays at `/api/performance/analyze`
+
+#### Quick Reference Table
+
+| Old Endpoint | New Endpoint | Notes |
+|-------------|--------------|-------|
+| `/api/ai/analyze-sentiment` | `/api/ai/analyze?type=sentiment` | Unified |
+| `/api/ai/extract-entities` | `/api/ai/analyze?type=entities` | Unified |
+| `/api/ai/detect-language` | `/api/ai/analyze?type=language` | Unified |
+| `/api/ai/translate` | `/api/ai/transform?type=translate` | Unified |
+| `/api/metrics/details` | `/api/metrics?type=X&details=true` | Unified |
+| `/api/metrics/ai-costs` | `/api/metrics?type=ai-costs` | Unified |
+| `/api/performance` (system) | `/api/monitoring` | Renamed |
+| `/api/performance/analyze` (HR) | `/api/performance/analyze` | Unchanged |
+
+### Frontend Component Updates
+
+**Components using old endpoints were updated:**
+- `MetricDetailsDialog.tsx` → Now uses `/api/metrics?type=X&details=true`
+- `AIMetricsDashboard.tsx` → Now uses `/api/metrics?type=ai-costs`
 
 ---
 
@@ -604,6 +732,32 @@ test('ChatInterface has no a11y violations', async () => {
 - `/webapp/lib/ai/router.ts` - Multi-provider routing (352 lines)
 - `/webapp/lib/db/index.ts` - Database client (247 lines)
 - `/webapp/db/schema.ts` - Complete schema (546 lines)
+
+### Codebase Cleanup (Nov 11, 2025) ✅
+
+**What Changed:**
+- Removed 5 disabled/deprecated files (517 lines of dead hooks code)
+- Deleted `deprecated-routes/` directory (800 lines of old Vertex AI endpoints)
+- Deleted backup files and test endpoints
+- Configured ESLint with Next.js core-web-vitals standards
+- Applied Prettier formatting across 215 files
+- Cleaned webpack cache artifacts
+
+**Impact:**
+- Removed ~1,700 lines of unused code
+- Established code quality standards with ESLint
+- Consistent code formatting with Prettier
+- Cleaner repository structure
+
+**Files Removed:**
+- `webapp/lib/hooks/useDebounce.ts.disabled`
+- `webapp/lib/hooks/useAsync.ts.disabled`
+- `webapp/deprecated-routes/` (entire directory)
+- `webapp/components/custom/EmployeeTableEditor.original.tsx`
+- `webapp/app/api/test-env/` (test endpoint)
+
+**Configuration Added:**
+- `/webapp/.eslintrc.json` - ESLint configuration with Next.js standards
 
 ---
 

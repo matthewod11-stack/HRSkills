@@ -7,7 +7,7 @@
 [![React](https://img.shields.io/badge/React-18-61dafb)](https://react.dev/)
 [![SQLite](https://img.shields.io/badge/SQLite-3.0-003B57)](https://www.sqlite.org/)
 
-**Features:** 23 HR Skills • Chat-First Dashboard • Dynamic Context Panels • Multi-Provider AI • SQLite + Drizzle ORM • Production-Ready
+**Features:** 25 HR Skills • Chat-First Dashboard • Dynamic Context Panels • Multi-Provider AI • SQLite + Drizzle ORM • Production-Ready
 
 ---
 
@@ -43,7 +43,7 @@ This is a **chat-first HR automation platform** that eliminates traditional navi
 
 ### Core Infrastructure
 
-1. **23 Claude Skills** - Domain-specific HR expertise (job descriptions, performance reviews, onboarding, etc.)
+1. **25 Claude Skills** - Domain-specific HR expertise (job descriptions, performance reviews, onboarding, etc.)
 2. **Multi-Provider AI** - Automatic failover across Anthropic Claude, OpenAI GPT-4o, and Google Gemini (99.9% uptime)
 3. **SQLite + Drizzle ORM** - Production-ready persistence with sub-50ms analytics queries
 4. **Google Workspace Integration** - OAuth 2.0 for Drive, Docs, and Sheets
@@ -63,11 +63,11 @@ This is a **chat-first HR automation platform** that eliminates traditional navi
 
 ```
 hrskills/
-├── skills/             # 23 Claude skills with HR domain knowledge
+├── skills/             # 25 Claude skills with HR domain knowledge
 │   ├── hr-document-generator/
 │   ├── job-description-writer/
 │   ├── performance-insights-analyst/
-│   └── ... (20 more skills)
+│   └── ... (22 more skills)
 │
 ├── webapp/             # Next.js chat-first application
 │   ├── app/           # Next.js App Router
@@ -231,8 +231,9 @@ Once running, test the chat-first experience with these examples:
 - **[Development Setup](docs/guides/DEVELOPMENT_SETUP.md)** - Complete development environment setup
 
 ### 📖 Core Documentation
-- **[Master Capabilities Document](claude-hr-capabilities-master.md)** - Complete guide to all 27 HR skills
-- **[API Reference](docs/api/API_REFERENCE.md)** - All 23 API endpoints with examples
+- **[Skills Guide](docs/guides/SKILLS_GUIDE.md)** - Complete guide to all 25 HR skills and development workflow
+- **[Skills Index](skills/SKILLS_INDEX.md)** - Quick reference catalog of all skills by workflow
+- **[API Reference](docs/api/API_REFERENCE.md)** - All API endpoints with examples (Phase 3.5 consolidated)
 - **[Component Library](docs/components/COMPONENT_LIBRARY.md)** - 17 custom components with usage examples
 
 ### 🔧 Development & Testing
@@ -312,6 +313,31 @@ The platform has been transformed into a chat-first experience with intelligent 
 
 ---
 
+### Phase 3.5: API Consolidation & Skills Optimization (COMPLETE ✅)
+
+**Completion Date:** November 11, 2025
+
+The platform API and skills were consolidated for improved developer experience and maintainability:
+
+#### API Consolidation
+- **Unified endpoints** reduced from 47→38 endpoints
+- **AI Services:** `/api/ai/analyze` (9→1), `/api/ai/transform` (unified transformations)
+- **Metrics:** `/api/metrics` (4→1 with query parameters)
+- **Monitoring:** Renamed from `/api/performance` for clarity
+- **Better discoverability** with type-based discrimination
+- See [API Reference](docs/api/API_REFERENCE.md) for migration guide
+
+#### Skills Optimization
+- **Consolidated 12→5 reference files** across 3 heavy skills
+- **Survey Analyzer:** 4→2 files (logical grouping: analysis+design, communications+actions)
+- **Recognition Manager:** 4→1 comprehensive playbook
+- **Benefits Coordinator:** 4→2 files (life events+leave, benefits+RTW)
+- **~180KB saved** through deduplication
+- **25 active skills** total (added 2 new: rippling, interview-hiring)
+- See [Skills Guide](docs/guides/SKILLS_GUIDE.md) and [Skills Index](skills/SKILLS_INDEX.md)
+
+---
+
 ### Phase 2: Platform Modernization (COMPLETE ✅)
 
 **Completion Date:** November 8, 2025
@@ -352,7 +378,9 @@ The platform was modernized with a focus on resilience, simplicity, and producti
 
 ---
 
-### Available Skills (23 Total)
+### Available Skills (25 Total)
+
+**Note:** Skills consolidated and optimized in November 2025. See [Skills Guide](docs/guides/SKILLS_GUIDE.md) for complete documentation.
 
 **Document Generation:**
 - **HR Document Generator** - Offer letters, PIPs, termination letters via Google Docs
@@ -372,7 +400,11 @@ The platform was modernized with a focus on resilience, simplicity, and producti
 **Integrations:**
 - **Rippling Integration** - Employee data sync and analysis
 - **Survey Analyzer** - AI-powered survey analysis with sentiment detection
-- **20+ additional specialized skills** for compensation, L&D, compliance, and more
+- **Recognition & Rewards Manager** - Program design and culture building
+- **Benefits & Leave Coordinator** - FMLA, state leave laws, life events
+- **21+ additional specialized skills** for compensation, L&D, compliance, and more
+
+For complete skills catalog, see [Skills Index](skills/SKILLS_INDEX.md).
 
 ## 🔄 Development Workflow
 

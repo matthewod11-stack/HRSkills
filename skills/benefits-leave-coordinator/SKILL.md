@@ -732,3 +732,13 @@ Sincerely,
 6. **Confidentiality is required** - Medical info stays private
 
 Benefits and leave administration protects employees' health and family time while protecting the company from legal liability. Get it right.
+
+---
+
+## Reference Materials
+
+For additional guidance, see:
+- `references/life-events-and-leave-playbook.md` - Life events and leave policies combined guide (consolidated)
+- `references/benefits-and-return-to-work.md` - Benefits enrollment and return-to-work planning (consolidated)
+
+**Note:** Reference files consolidated in November 2025 from 4→2 files for improved navigation. All content including life-events-handbook, leave-policies-and-laws, benefits-enrollment-guide, and return-to-work-planning has been preserved and logically grouped for easier reference.

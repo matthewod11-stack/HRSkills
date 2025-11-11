@@ -563,10 +563,10 @@ See `survey-communication-templates.md` for detailed templates.
 ## Reference Materials
 
 For additional guidance, see:
-- `survey-design-templates.md` - Question banks, sample surveys by type
-- `survey-analysis-playbook.md` - Step-by-step data analysis guide
-- `action-planning-framework.md` - Prioritization, root cause analysis, SMART actions
-- `survey-communication-templates.md` - Results announcement, action plan updates
+- `references/survey-playbook-comprehensive.md` - Complete survey design, analysis, and templates (consolidated)
+- `references/survey-communications-and-actions.md` - Communication templates and action planning framework (consolidated)
+
+**Note:** Reference files consolidated in November 2025 from 4→2 files for improved navigation and maintenance. All content from survey-design-templates, survey-analysis-playbook, action-planning-framework, and survey-communication-templates has been preserved and logically grouped.
 
 ---
 

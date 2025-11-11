@@ -1,10 +1,16 @@
-# Survey Analysis Playbook
+# Survey Playbook: Analysis & Design Comprehensive Guide
+
+Complete guide to designing, analyzing, and extracting insights from employee surveys, from question bank to actionable insights.
+
+---
+
+## Part 1: Survey Analysis Process
 
 Step-by-step guide to analyzing employee survey data, from raw responses to actionable insights.
 
 ---
 
-## Overview: The Survey Analysis Process
+### Overview: The Survey Analysis Process
 
 **The journey:**
 ```
@@ -25,9 +31,9 @@ Raw Survey Data → Clean Data → Calculate Metrics → Segment Analysis → Id
 
 ---
 
-## Step 1: Export and Clean Data
+### Step 1: Export and Clean Data
 
-### Exporting from Survey Platform
+#### Exporting from Survey Platform
 
 **What to export:**
 - ✅ **Response data:** All individual responses (anonymized)
@@ -46,7 +52,7 @@ Raw Survey Data → Clean Data → Calculate Metrics → Segment Analysis → Id
 
 ---
 
-### Data Cleaning Checklist
+#### Data Cleaning Checklist
 
 **1. Remove incomplete responses**
 
@@ -111,9 +117,9 @@ Tags:
 
 ---
 
-## Step 2: Calculate Core Metrics
+### Step 2: Calculate Core Metrics
 
-### Response Rate
+#### Response Rate
 
 **Formula:**
 ```
@@ -136,7 +142,7 @@ Response Rate = (240 / 300) × 100% = 80% ✅ [Excellent]
 
 ---
 
-### Response Rate by Segment
+#### Response Rate by Segment
 
 **Why:** Low response rates in specific groups signal issues
 
@@ -154,7 +160,7 @@ Action: Investigate Operations - do they not trust surveys? Is manager discourag
 
 ---
 
-### Engagement Score (% Favorable)
+#### Engagement Score (% Favorable)
 
 **For each question, calculate % favorable:**
 
@@ -187,7 +193,7 @@ Unfavorable = (15 + 5) / 200 = 20 / 200 = 10%
 
 ---
 
-### Overall Engagement Score
+#### Overall Engagement Score
 
 **Approach 1: Average all questions**
 
@@ -213,7 +219,7 @@ This is your "Engagement Score" (track year-over-year)
 
 ---
 
-### Employee Net Promoter Score (eNPS)
+#### Employee Net Promoter Score (eNPS)
 
 **Question:** "On a scale of 0-10, how likely are you to recommend [Company] as a great place to work?"
 
@@ -249,7 +255,7 @@ eNPS = 50% - 20% = +30
 
 ---
 
-## Step 3: Segmentation Analysis
+### Step 3: Segmentation Analysis
 
 **Why segment?** Company-wide averages hide problems.
 
@@ -270,7 +276,7 @@ Operations has 50 employees - this is a crisis masked by company average.
 
 ---
 
-### Common Segmentation Cuts
+#### Common Segmentation Cuts
 
 **1. By Department**
 
@@ -357,7 +363,7 @@ Fully remote    | 72%        | Isolation/belonging
 
 ---
 
-### Creating Heat Maps
+#### Creating Heat Maps
 
 **Visual representation of scores by segment:**
 
@@ -380,7 +386,7 @@ Fully remote    | 72%        | Isolation/belonging
 
 ---
 
-## Step 4: Identify Key Drivers
+### Step 4: Identify Key Drivers
 
 **Question:** What factors drive engagement most?
 
@@ -388,7 +394,7 @@ Fully remote    | 72%        | Isolation/belonging
 
 ---
 
-### Approach 1: Correlation Analysis (Statistical)
+#### Approach 1: Correlation Analysis (Statistical)
 
 **Goal:** Find which questions correlate most with overall engagement/eNPS
 
@@ -414,7 +420,7 @@ Fully remote    | 72%        | Isolation/belonging
 
 ---
 
-### Approach 2: Gap Analysis (Non-Statistical)
+#### Approach 2: Gap Analysis (Non-Statistical)
 
 **Goal:** Find questions with lowest scores (biggest gaps)
 
@@ -436,7 +442,7 @@ Fully remote    | 72%        | Isolation/belonging
 
 ---
 
-### Combining Both Approaches
+#### Combining Both Approaches
 
 **Prioritization matrix:**
 
@@ -460,7 +466,7 @@ Fully remote    | 72%        | Isolation/belonging
 
 ---
 
-## Step 5: Analyze Open-Ended Comments
+### Step 5: Analyze Open-Ended Comments
 
 **Most valuable data in survey = open-ended comments**
 
@@ -468,7 +474,7 @@ Fully remote    | 72%        | Isolation/belonging
 
 ---
 
-### Step-by-Step Comment Analysis
+#### Step-by-Step Comment Analysis
 
 **1. Read ALL comments (yes, all of them)**
 
@@ -557,13 +563,13 @@ Fully remote    | 72%        | Isolation/belonging
 
 ---
 
-## Step 6: Root Cause Analysis
+### Step 6: Root Cause Analysis
 
 **Don't just identify problems - understand WHY they exist.**
 
 ---
 
-### The 5 Whys Technique
+#### The 5 Whys Technique
 
 **Example:**
 
@@ -586,7 +592,7 @@ Fully remote    | 72%        | Isolation/belonging
 
 ---
 
-### Focus Groups (Post-Survey)
+#### Focus Groups (Post-Survey)
 
 **After analyzing data, run focus groups to dig deeper:**
 
@@ -607,13 +613,13 @@ Fully remote    | 72%        | Isolation/belonging
 
 ---
 
-## Step 7: Create Executive Summary
+### Step 7: Create Executive Summary
 
 **1-page summary for leadership:**
 
 ---
 
-### Template: Survey Results Executive Summary
+#### Template: Survey Results Executive Summary
 
 **Survey:** Annual Engagement Survey 2024
 **Audience:** All employees (300 invited)
@@ -622,7 +628,7 @@ Fully remote    | 72%        | Isolation/belonging
 
 ---
 
-#### Key Metrics
+**Key Metrics**
 
 | Metric | Score | Benchmark | Status |
 |--------|-------|-----------|--------|
@@ -633,7 +639,7 @@ Fully remote    | 72%        | Isolation/belonging
 
 ---
 
-#### Top Strengths (Keep Doing)
+**Top Strengths (Keep Doing)**
 
 1. **Manager Effectiveness** (75% favorable)
    _"My manager is supportive and gives clear direction"_
@@ -646,7 +652,7 @@ Fully remote    | 72%        | Isolation/belonging
 
 ---
 
-#### Top Opportunities (Action Needed)
+**Top Opportunities (Action Needed)**
 
 1. **Career Development** (45% favorable) 🔴
    - 38% of comments mentioned lack of growth opportunities
@@ -664,7 +670,7 @@ Fully remote    | 72%        | Isolation/belonging
 
 ---
 
-#### Segmentation Insights
+**Segmentation Insights**
 
 **By Department:**
 - Engineering: 80% engagement ✅
@@ -678,7 +684,7 @@ Fully remote    | 72%        | Isolation/belonging
 
 ---
 
-#### Next Steps
+**Next Steps**
 
 1. **Week 1:** Share results with leadership, prioritize actions
 2. **Week 2:** Build action plan (career development, workload, comp transparency)
@@ -688,102 +694,7 @@ Fully remote    | 72%        | Isolation/belonging
 
 ---
 
-## Step 8: Create Detailed Analysis Deck
-
-**10-15 slide presentation for broader leadership:**
-
-**Slide structure:**
-
-1. **Slide 1:** Title + Key Metrics Summary
-2. **Slide 2:** Response Rate (overall + by segment)
-3. **Slide 3:** Overall Engagement Score (trend over time if available)
-4. **Slide 4:** eNPS (distribution: Promoters/Passives/Detractors)
-5. **Slide 5:** Top Strengths (highest scoring questions)
-6. **Slide 6:** Top Opportunities (lowest scoring questions)
-7. **Slide 7:** Engagement by Department (heat map)
-8. **Slide 8:** Engagement by Manager (anonymized if <10 reports)
-9. **Slide 9:** Key Drivers Analysis (correlation or gap analysis)
-10. **Slide 10:** Open-Ended Themes (word cloud + top themes)
-11. **Slide 11:** Representative Quotes (by theme)
-12. **Slide 12:** Root Cause Analysis (for top 2-3 issues)
-13. **Slide 13:** Recommended Actions (prioritized)
-14. **Slide 14:** Action Plan Timeline
-15. **Slide 15:** Next Steps + Communication Plan
-
----
-
-## Step 9: Create Team-Level Reports
-
-**For each manager, provide:**
-
-**1. Team Summary**
-- Team response rate
-- Team engagement score vs. company average
-- Team eNPS
-
-**2. Team Strengths**
-- Top 3 questions where team scored highest
-
-**3. Team Opportunities**
-- Top 3 questions where team scored lowest
-
-**4. Team Comments**
-- Anonymized comments from team members (if >5 responses)
-
-**5. Suggested Actions**
-- 2-3 recommended actions based on team data
-
----
-
-**Example Team Report:**
-
-**Manager:** Sarah (Engineering Team)
-**Team Size:** 12 employees
-**Response Rate:** 12/12 (100%) ✅
-
----
-
-**Team Engagement:** 90% favorable (vs. 70% company average) ✅
-
-**Team eNPS:** +60 (vs. +25 company average) ✅
-
----
-
-**Team Strengths:**
-
-1. "My manager provides clear direction" (100% favorable)
-2. "I feel supported by my team" (95% favorable)
-3. "I have the tools I need" (92% favorable)
-
----
-
-**Team Opportunities:**
-
-1. "I have opportunities for career growth" (58% favorable)
-2. "I am paid fairly" (67% favorable)
-3. "My workload is manageable" (75% favorable)
-
----
-
-**What Your Team Said (Anonymized):**
-
-_"Sarah is an amazing manager - clear, supportive, always available."_
-
-_"Love my team, but unclear where my career goes from here."_
-
-_"Wish I had more time for deep work (too many meetings)."_
-
----
-
-**Suggested Actions:**
-
-1. **Career Development:** Discuss career paths in 1:1s, create growth plan for each team member
-2. **Compensation:** Ensure team is paid competitively (review with People team)
-3. **Workload:** Audit meeting load, identify what can be cut or delegated
-
----
-
-## Common Pitfalls to Avoid
+### Common Pitfalls to Avoid
 
 **1. Analyzing too soon**
 
@@ -825,26 +736,477 @@ _"Wish I had more time for deep work (too many meetings)."_
 
 ---
 
-## Tools for Survey Analysis
+## Part 2: Survey Design Templates
 
-**Excel/Google Sheets:**
-- **Pros:** Free, flexible, everyone knows how to use
-- **Cons:** Manual work, limited visualization
+Complete question banks and sample surveys for engagement, pulse, onboarding, exit, and 360 surveys.
 
-**Survey Platform Analytics (Qualtrics, Culture Amp, Glint):**
-- **Pros:** Built-in dashboards, auto-segmentation, benchmarking
-- **Cons:** Expensive, less customizable
+---
 
-**Tableau/Power BI:**
-- **Pros:** Advanced visualization, interactive dashboards
-- **Cons:** Requires technical skill, expensive
+### Annual Engagement Survey Template
 
-**Recommendation:** Start with Excel for small companies (<200 employees), invest in survey platform analytics at scale.
+**Target length:** 40-50 questions (15-20 minutes)
+**Frequency:** Annual
+**Audience:** All employees
+
+---
+
+#### Section 1: Overall Engagement (5 questions)
+
+**1. Overall Satisfaction**
+"Overall, I am satisfied working at [Company]"
+- [ ] Strongly Disagree
+- [ ] Disagree
+- [ ] Neutral
+- [ ] Agree
+- [ ] Strongly Agree
+
+**2. eNPS (Employee Net Promoter Score)**
+"On a scale of 0-10, how likely are you to recommend [Company] as a great place to work?"
+- [0] [1] [2] [3] [4] [5] [6] [7] [8] [9] [10]
+
+**3. Intent to Stay**
+"I see myself working at [Company] in two years"
+- [ ] Strongly Disagree → Strongly Agree
+
+**4. Pride**
+"I am proud to work for [Company]"
+- [ ] Strongly Disagree → Strongly Agree
+
+**5. Alignment**
+"I understand how my work contributes to [Company]'s success"
+- [ ] Strongly Disagree → Strongly Agree
+
+---
+
+#### Section 2: Manager Effectiveness (8 questions)
+
+**6. Clear Direction**
+"My manager provides clear direction and expectations"
+- [ ] Strongly Disagree → Strongly Agree
+
+**7. Feedback**
+"My manager provides me with actionable feedback to help me improve"
+- [ ] Strongly Disagree → Strongly Agree
+
+**8. Recognition**
+"My manager recognizes me when I do good work"
+- [ ] Strongly Disagree → Strongly Agree
+
+**9. Support**
+"My manager supports my professional development"
+- [ ] Strongly Disagree → Strongly Agree
+
+**10. Trust**
+"I trust my manager"
+- [ ] Strongly Disagree → Strongly Agree
+
+**11. Availability**
+"My manager is available when I need support"
+- [ ] Strongly Disagree → Strongly Agree
+
+**12. Fairness**
+"My manager treats all team members fairly"
+- [ ] Strongly Disagree → Strongly Agree
+
+**13. Manager Effectiveness (Overall Rating)**
+"How would you rate your manager's effectiveness?"
+- [ ] Poor [ ] Fair [ ] Good [ ] Very Good [ ] Excellent
+
+---
+
+#### Section 3: Career Development (6 questions)
+
+**14. Growth Opportunities**
+"I have opportunities for career growth at [Company]"
+- [ ] Strongly Disagree → Strongly Agree
+
+**15. Career Path**
+"I have a clear understanding of my career path at [Company]"
+- [ ] Strongly Disagree → Strongly Agree
+
+**16. Skill Development**
+"I have access to learning and development resources to improve my skills"
+- [ ] Strongly Disagree → Strongly Agree
+
+**17. Career Conversations**
+"My manager and I discuss my career goals regularly"
+- [ ] Strongly Disagree → Strongly Agree
+
+**18. Promotion Process**
+"The promotion process at [Company] is fair and transparent"
+- [ ] Strongly Disagree → Strongly Agree
+
+**19. Internal Mobility**
+"I believe I can move to different roles within [Company] if I want to"
+- [ ] Strongly Disagree → Strongly Agree
+
+---
+
+#### Section 4: Work Environment & Resources (6 questions)
+
+**20. Tools & Resources**
+"I have the tools and resources I need to do my job well"
+- [ ] Strongly Disagree → Strongly Agree
+
+**21. Workload**
+"My workload is reasonable and manageable"
+- [ ] Strongly Disagree → Strongly Agree
+
+**22. Work-Life Balance**
+"I am able to maintain a healthy work-life balance"
+- [ ] Strongly Disagree → Strongly Agree
+
+**23. Flexibility**
+"I have flexibility in how and where I work"
+- [ ] Strongly Disagree → Strongly Agree
+
+**24. Physical Environment** (if applicable)
+"My work environment (office, remote setup) supports my productivity"
+- [ ] Strongly Disagree → Strongly Agree
+
+**25. Burnout**
+"I feel energized and motivated by my work (not burned out)"
+- [ ] Strongly Disagree → Strongly Agree
+
+---
+
+#### Section 5: Team & Collaboration (5 questions)
+
+**26. Team Collaboration**
+"My team works well together"
+- [ ] Strongly Disagree → Strongly Agree
+
+**27. Psychological Safety**
+"I feel comfortable sharing my ideas and opinions with my team"
+- [ ] Strongly Disagree → Strongly Agree
+
+**28. Cross-Team Collaboration**
+"I can easily collaborate with people outside my immediate team"
+- [ ] Strongly Disagree → Strongly Agree
+
+**29. Respect**
+"I feel respected by my colleagues"
+- [ ] Strongly Disagree → Strongly Agree
+
+**30. Inclusion**
+"I feel included and valued as part of my team"
+- [ ] Strongly Disagree → Strongly Agree
+
+---
+
+#### Section 6: Company Culture & Values (6 questions)
+
+**31. Culture Fit**
+"[Company]'s culture is a good fit for me"
+- [ ] Strongly Disagree → Strongly Agree
+
+**32. Values Alignment**
+"[Company] lives its values"
+- [ ] Strongly Disagree → Strongly Agree
+
+**33. Diversity & Inclusion**
+"[Company] is committed to diversity and inclusion"
+- [ ] Strongly Disagree → Strongly Agree
+
+**34. Innovation**
+"[Company] encourages innovation and new ideas"
+- [ ] Strongly Disagree → Strongly Agree
+
+**35. Communication**
+"Leadership communicates important information in a timely manner"
+- [ ] Strongly Disagree → Strongly Agree
+
+**36. Transparency**
+"Leadership is transparent about company performance and decisions"
+- [ ] Strongly Disagree → Strongly Agree
+
+---
+
+#### Section 7: Compensation & Benefits (4 questions)
+
+**37. Fair Pay**
+"I am paid fairly for the work I do"
+- [ ] Strongly Disagree → Strongly Agree
+
+**38. Benefits**
+"The benefits offered by [Company] meet my needs"
+- [ ] Strongly Disagree → Strongly Agree
+
+**39. Competitive Compensation**
+"My compensation is competitive compared to similar roles at other companies"
+- [ ] Strongly Disagree → Strongly Agree
+
+**40. Compensation Transparency**
+"I understand how compensation decisions are made at [Company]"
+- [ ] Strongly Disagree → Strongly Agree
+
+---
+
+#### Section 8: Open-Ended Questions (3 questions)
+
+**41. What We Should Start Doing**
+"What is one thing [Company] should START doing to improve your employee experience?"
+[Open text box]
+
+**42. What We Should Stop Doing**
+"What is one thing [Company] should STOP doing?"
+[Open text box]
+
+**43. Additional Comments**
+"Is there anything else you'd like to share?"
+[Open text box]
+
+---
+
+**Total:** 43 questions (40 Likert scale + 3 open-ended)
+**Estimated time:** 15-20 minutes
+
+---
+
+### Pulse Survey Templates
+
+**Target length:** 5-10 questions
+**Frequency:** Monthly or quarterly
+**Purpose:** Track specific themes or trends
+
+---
+
+#### Pulse Survey: Workload & Burnout
+
+**1. Workload**
+"How manageable is your current workload?"
+- [ ] Very unmanageable
+- [ ] Somewhat unmanageable
+- [ ] Manageable
+- [ ] Very manageable
+
+**2. Stress Level**
+"How would you rate your stress level at work this month?"
+- [1] Very low [2] [3] [4] [5] Very high
+
+**3. Energy**
+"I feel energized and motivated by my work"
+- [ ] Strongly Disagree → Strongly Agree
+
+**4. Support**
+"My manager is helping me manage my workload effectively"
+- [ ] Strongly Disagree → Strongly Agree
+
+**5. Open-Ended**
+"What would help you manage your workload better?"
+[Open text]
+
+---
+
+### Onboarding Survey Template
+
+**Target length:** 12-15 questions
+**Frequency:** After 30, 60, 90 days
+**Audience:** New hires
+
+---
+
+#### 30-Day Onboarding Survey
+
+**1. Overall Experience**
+"Overall, how would you rate your onboarding experience?"
+- [ ] Poor [ ] Fair [ ] Good [ ] Very Good [ ] Excellent
+
+**2. Preparedness**
+"My onboarding prepared me to be successful in my role"
+- [ ] Strongly Disagree → Strongly Agree
+
+**3. First Day**
+"I felt welcomed on my first day"
+- [ ] Strongly Disagree → Strongly Agree
+
+**4. Technology Setup**
+"My laptop and tools were set up and ready on my first day"
+- [ ] Strongly Disagree → Strongly Agree
+
+**5. Manager Support**
+"My manager provided clear expectations and direction during my first 30 days"
+- [ ] Strongly Disagree → Strongly Agree
+
+**6. Team Integration**
+"I feel integrated into my team"
+- [ ] Strongly Disagree → Strongly Agree
+
+**7. Training**
+"The training I received was helpful and relevant"
+- [ ] Strongly Disagree → Strongly Agree
+
+**8. Resources**
+"I know where to find information and resources I need"
+- [ ] Strongly Disagree → Strongly Agree
+
+**9. Culture**
+"I have a good understanding of [Company]'s culture and values"
+- [ ] Strongly Disagree → Strongly Agree
+
+**10. Decision Confidence**
+"Joining [Company] was the right decision"
+- [ ] Strongly Disagree → Strongly Agree
+
+**11. Improvement**
+"What could we improve about onboarding?"
+[Open text]
+
+**12. Highlights**
+"What was the best part of your onboarding?"
+[Open text]
+
+---
+
+### Exit Survey Template
+
+**Target length:** 15-20 questions
+**Frequency:** When employee resigns
+**Audience:** Departing employees
+
+---
+
+#### Exit Survey
+
+**Section 1: Departure Reason**
+
+**1. Primary Reason for Leaving**
+"What is your primary reason for leaving [Company]?"
+- [ ] Career advancement opportunity (promotion, new role)
+- [ ] Better compensation elsewhere
+- [ ] Better benefits elsewhere
+- [ ] Work-life balance
+- [ ] Relocation
+- [ ] Manager relationship
+- [ ] Company culture
+- [ ] Lack of career growth at [Company]
+- [ ] Burnout / workload
+- [ ] Return to school
+- [ ] Retirement
+- [ ] Other: ___________
+
+**2. Detailed Reason**
+"Please provide more detail about your reason for leaving"
+[Open text]
+
+---
+
+**Section 2: Experience Ratings**
+
+**3. Manager Relationship**
+"How would you rate your relationship with your manager?"
+- [ ] Poor [ ] Fair [ ] Good [ ] Very Good [ ] Excellent
+
+**4. Team Collaboration**
+"How would you rate collaboration with your team?"
+- [ ] Poor → Excellent
+
+**5. Work-Life Balance**
+"How would you rate your work-life balance at [Company]?"
+- [ ] Poor → Excellent
+
+**6. Career Development**
+"How would you rate career development opportunities at [Company]?"
+- [ ] Poor → Excellent
+
+**7. Compensation**
+"How would you rate your compensation at [Company]?"
+- [ ] Poor → Excellent
+
+---
+
+**Section 3: Retention Insights**
+
+**8. What Could Have Retained You?**
+"What could [Company] have done to retain you?"
+[Open text]
+
+**9. Return Consideration**
+"Would you consider returning to [Company] in the future?"
+- [ ] Yes
+- [ ] Maybe
+- [ ] No
+
+**10. Recommendation**
+"Would you recommend [Company] as a great place to work?"
+- [ ] Yes
+- [ ] No
+
+---
+
+**Section 4: Feedback**
+
+**11. What We Do Well**
+"What does [Company] do well?"
+[Open text]
+
+**12. What We Should Improve**
+"What should [Company] improve?"
+[Open text]
+
+**13. Manager Feedback**
+"Any feedback for your manager?"
+[Open text]
+
+**14. Final Thoughts**
+"Anything else you'd like to share?"
+[Open text]
+
+---
+
+### Question Bank by Theme
+
+#### Career Development Questions
+
+- "I have a clear understanding of my career path at [Company]"
+- "I have opportunities for career growth at [Company]"
+- "My manager supports my career development"
+- "I have access to learning and development resources"
+- "The promotion process is fair and transparent"
+- "I can move to different roles within [Company] if I want to"
+- "I am learning new skills that will help my career"
+
+---
+
+#### Manager Effectiveness Questions
+
+- "My manager provides clear direction and expectations"
+- "My manager gives me actionable feedback"
+- "My manager recognizes me when I do good work"
+- "I trust my manager"
+- "My manager is available when I need support"
+- "My manager treats all team members fairly"
+- "My manager helps me prioritize my work effectively"
+- "My manager advocates for me and my career"
+
+---
+
+#### Work-Life Balance Questions
+
+- "I am able to maintain a healthy work-life balance"
+- "My workload is reasonable and manageable"
+- "I have flexibility in how and where I work"
+- "I feel energized and motivated by my work (not burned out)"
+- "I can disconnect from work when I need to"
+- "My manager respects my personal time"
+
+---
+
+### Survey Length Guidelines
+
+| Survey Type | Questions | Time | Response Rate Target |
+|-------------|-----------|------|----------------------|
+| **Annual Engagement** | 40-60 | 15-20 min | 70-80% |
+| **Pulse Survey** | 5-10 | 2-5 min | 80-90% |
+| **Onboarding** | 12-15 | 8-10 min | 85-95% |
+| **Exit Survey** | 15-20 | 10-15 min | 60-70% |
+| **360 Feedback** | 20-30 | 15-20 min | 90-95% |
 
 ---
 
 ## Key Takeaways
 
+**Analysis:**
 1. **Clean your data first** - Garbage in, garbage out
 2. **Segment ruthlessly** - Company averages hide problems
 3. **Find key drivers** - Focus on what actually moves engagement (not pet projects)
@@ -853,4 +1215,14 @@ _"Wish I had more time for deep work (too many meetings)."_
 6. **Communicate fast** - Don't let survey results sit for months
 7. **Always pair results with action plan** - Surveys without action destroy trust
 
+**Design:**
+1. **Keep it focused:** Every question should have a purpose (actionable insight)
+2. **Balance quantity and quality:** More questions = more data, but lower response rates
+3. **Use consistent scales:** Stick to 5-point Likert or 1-5 rating throughout survey
+4. **Limit open-ended questions:** 2-3 max (time-consuming to answer and analyze)
+5. **Test before launch:** Pilot with 5-10 people, get feedback on clarity and length
+6. **Make it anonymous:** Unless 1:1 feedback (like 360), anonymity drives honest responses
+7. **Benchmark over time:** Ask same core questions each year to track trends
+
+**Great surveys = focused questions, respectful of time, designed for action.**
 **Great analysis = actionable insights delivered fast.**

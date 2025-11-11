@@ -641,10 +641,9 @@ Every $1 spent on recognition saves $6 in turnover costs
 ## Reference Materials
 
 For additional guidance, see:
-- `recognition-program-templates.md` - Sample programs by company size, budgets, implementation guides
-- `peer-recognition-playbook.md` - Building peer-to-peer recognition culture, software options
-- `milestone-rewards-guide.md` - Service anniversary programs, life event recognition
-- `values-awards-framework.md` - Annual awards tied to company values, nomination process
+- `references/recognition-rewards-comprehensive-playbook.md` - Complete recognition program guide including all templates, peer recognition strategies, milestone rewards, and values-based awards frameworks
+
+**Note:** All reference materials consolidated in November 2025 into single comprehensive playbook for easier access and maintenance. All prior content from recognition-program-templates, peer-recognition-playbook, milestone-rewards-guide, and values-awards-framework has been preserved in the comprehensive guide.
 
 ---
 

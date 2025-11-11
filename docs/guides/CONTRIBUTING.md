@@ -457,12 +457,22 @@ HRSkills/
 
 ### Adding a New Claude Skill
 
+**Note:** Skills consolidated in November 2025. See [Skills Guide](SKILLS_GUIDE.md) for comprehensive development workflow.
+
 1. Create directory: `skills/[skill-name]/`
-2. Create `SKILL.md` with skill definition
+2. Create `SKILL.md` with skill definition (see existing skills for template)
 3. Add reference documents in `references/`
-4. Update skills index in `lib/skills.ts`
+   - For heavy skills (>4 reference files), consider logical grouping
+   - Group related content (e.g., "design + templates", "communication + actions")
+4. Add skill to [Skills Index](../../skills/SKILLS_INDEX.md)
 5. Test skill in Claude interface
-6. Document skill in capabilities guide
+6. Document skill in [Skills Guide](SKILLS_GUIDE.md)
+
+**Reference consolidation guidelines:**
+- Keep reference files focused and comprehensive
+- Group logically related content together
+- Use descriptive filenames (e.g., `comprehensive-playbook.md`)
+- See consolidated skills (survey-analyzer, recognition-rewards, benefits-leave) as examples
 
 ### Updating Dependencies
 
@@ -528,11 +538,13 @@ Before requesting review:
 ## Resources
 
 - [Getting Started Guide](GETTING_STARTED.md)
-- [Development Setup Guide](docs/guides/DEVELOPMENT_SETUP.md)
-- [Architecture Decisions](docs/architecture/ARCHITECTURE_DECISIONS.md)
-- [API Documentation](docs/api/) (coming soon)
-- [Component Library](docs/components/) (coming soon)
-- [Full Documentation Index](docs/README.md)
+- [Development Setup Guide](DEVELOPMENT_SETUP.md)
+- [Architecture Decisions](../architecture/ARCHITECTURE_DECISIONS.md)
+- [Skills Guide](SKILLS_GUIDE.md) - Complete guide to all 25 skills
+- [Skills Index](../../skills/SKILLS_INDEX.md) - Quick skills catalog
+- [API Reference](../api/API_REFERENCE.md) - All endpoints (Phase 3.5 consolidated)
+- [Component Library](../components/) (coming soon)
+- [Full Documentation Index](../README.md)
 
 ---
 

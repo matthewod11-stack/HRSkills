@@ -5,7 +5,7 @@ Complete reference for all HR Command Center API endpoints.
 **Base URL:** `http://localhost:3000/api` (development)
 **Production URL:** `https://your-domain.com/api`
 
-**Last Updated:** November 6, 2025
+**Last Updated:** November 11, 2025 (Phase 3.5: API Consolidation Complete)
 
 ---
 
@@ -20,9 +20,11 @@ Complete reference for all HR Command Center API endpoints.
   - [Employee APIs](#employee-apis)
   - [Chat API](#chat-api)
   - [Analytics APIs](#analytics-apis)
-  - [Metrics APIs](#metrics-apis)
+  - [AI Service APIs](#ai-service-apis) ⭐ **NEW: Consolidated**
+  - [Metrics APIs](#metrics-apis) ⭐ **UPDATED: Unified endpoint**
+  - [Monitoring APIs](#monitoring-apis) ⭐ **NEW: Renamed from Performance**
   - [Data Management APIs](#data-management-apis)
-  - [Performance APIs](#performance-apis)
+  - [Performance Review APIs](#performance-review-apis)
   - [Health Check](#health-check)
 
 ---
@@ -763,39 +765,253 @@ Get error tracking and analytics.
 
 ---
 
-## Metrics APIs
+## AI Service APIs
 
-### GET /api/metrics
+⭐ **Phase 3.5 Consolidation:** AI endpoints have been unified for better developer experience.
 
-Get HR metrics dashboard data.
+### POST /api/ai/analyze
+
+**Unified analysis endpoint** supporting sentiment, entity extraction, language detection, classification, and summarization.
+
+**Authentication:** Required
+**Rate Limit:** 30 requests / minute
+**Permissions:** `analytics:read`
+
+#### Request Body
+
+```typescript
+{
+  type: 'sentiment' | 'entities' | 'language' | 'classification' | 'summarization';
+  text?: string;          // Single text analysis
+  texts?: string[];       // Batch analysis (max 100)
+  options?: Record<string, any>;  // Type-specific options
+}
+```
+
+#### Response (200 OK)
+
+**Single Text Analysis:**
+```json
+{
+  "success": true,
+  "data": {
+    "type": "sentiment",
+    "sentiment": "positive",
+    "score": 0.85,
+    "confidence": 0.92
+  },
+  "metadata": {
+    "processingTime": 245,
+    "model": "claude-3-5-sonnet-20241022",
+    "provider": "anthropic"
+  }
+}
+```
+
+**Batch Analysis:**
+```json
+{
+  "success": true,
+  "data": {
+    "type": "sentiment",
+    "results": [
+      { "sentiment": "positive", "score": 0.85 },
+      { "sentiment": "neutral", "score": 0.02 }
+    ],
+    "totalTexts": 2,
+    "metadata": {
+      "apiCalls": 2,
+      "processingTime": 450
+    }
+  }
+}
+```
+
+#### Examples
+
+**Sentiment Analysis:**
+```bash
+curl -X POST http://localhost:3000/api/ai/analyze \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "sentiment",
+    "text": "The new employee onboarding process is fantastic!"
+  }'
+```
+
+**Entity Extraction:**
+```bash
+curl -X POST http://localhost:3000/api/ai/analyze \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "entities",
+    "text": "Sarah Johnson from the Engineering team in San Francisco"
+  }'
+```
+
+**Batch Analysis:**
+```bash
+curl -X POST http://localhost:3000/api/ai/analyze \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "sentiment",
+    "texts": ["Great work!", "Needs improvement", "Outstanding performance"]
+  }'
+```
+
+---
+
+### POST /api/ai/transform
+
+**Unified transformation endpoint** for translation, transcription, and OCR operations.
+
+**Authentication:** Required
+**Rate Limit:** 30 requests / minute
+**Permissions:** `analytics:read`
+
+#### Request Body
+
+```typescript
+{
+  type: 'translate' | 'transcribe' | 'ocr';
+  text?: string;           // Single text transformation
+  texts?: string[];        // Batch transformation (translate only, max 100)
+  targetLanguage?: string; // Required for translation
+  options?: Record<string, any>;
+}
+```
+
+#### Response (200 OK)
+
+**Single Translation:**
+```json
+{
+  "success": true,
+  "data": {
+    "type": "translate",
+    "text": "Hola, ¿cómo estás?",
+    "originalText": "Hello, how are you?",
+    "targetLanguage": "Spanish"
+  },
+  "metadata": {
+    "processingTime": 180
+  }
+}
+```
+
+**Batch Translation:**
+```json
+{
+  "success": true,
+  "data": {
+    "type": "translate",
+    "translations": [
+      {
+        "text": "Bonjour",
+        "originalText": "Hello",
+        "targetLanguage": "French"
+      },
+      {
+        "text": "Au revoir",
+        "originalText": "Goodbye",
+        "targetLanguage": "French"
+      }
+    ],
+    "totalTexts": 2
+  }
+}
+```
+
+#### Examples
+
+**Translation:**
+```bash
+curl -X POST http://localhost:3000/api/ai/transform \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "translate",
+    "text": "Performance review scheduled for next week",
+    "targetLanguage": "Spanish"
+  }'
+```
+
+---
+
+### GET /api/ai/transform/languages
+
+Get list of supported languages for translation.
 
 **Authentication:** Required
 **Rate Limit:** 100 requests / minute
-**Permissions:** `analytics:read`
 
 #### Response (200 OK)
 
 ```json
 {
   "success": true,
-  "metrics": {
-    "totalEmployees": 150,
-    "activeJobs": 12,
-    "avgTimeToFill": 28,
-    "offerAcceptanceRate": 85,
-    "diversity": {
-      "gender": { "male": 55, "female": 45 },
-      "ethnicity": { ... }
-    }
+  "data": {
+    "languages": [
+      { "code": "es", "name": "Spanish", "nativeName": "Español" },
+      { "code": "fr", "name": "French", "nativeName": "Français" },
+      { "code": "zh", "name": "Chinese", "nativeName": "中文" }
+    ],
+    "count": 20
   }
 }
 ```
 
 ---
 
-### GET /api/metrics/details
+### GET /api/ai/analyze/health
 
-Get detailed metrics with drill-down capability.
+Check AI provider health for analysis operations.
+
+**Authentication:** Required
+**Rate Limit:** 100 requests / minute
+
+#### Response (200 OK)
+
+```json
+{
+  "success": true,
+  "data": {
+    "available": true,
+    "providers": {
+      "anthropic": { "healthy": true, "latency": 150 },
+      "openai": { "healthy": true, "latency": 200 },
+      "gemini": { "healthy": true, "latency": 180 }
+    },
+    "service": "Unified AI Analysis (Claude/GPT/Gemini)",
+    "supportedTypes": ["sentiment", "entities", "language", "classification", "summarization"]
+  }
+}
+```
+
+---
+
+### GET/PATCH /api/ai/config
+
+Manage AI provider configuration.
+
+**Authentication:** Required
+**Rate Limit:** 100 requests / minute
+**Permissions:** `settings:write`
+
+See existing documentation for details.
+
+---
+
+## Metrics APIs
+
+⭐ **Phase 3.5 Update:** All metrics endpoints consolidated into a single unified endpoint with query parameters.
+
+### GET /api/metrics
+
+**Unified metrics endpoint** supporting dashboard summary, headcount details, attrition data, AI costs, and system performance.
 
 **Authentication:** Required
 **Rate Limit:** 100 requests / minute
@@ -805,54 +1021,88 @@ Get detailed metrics with drill-down capability.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `metric` | string | Yes | Metric name |
-| `period` | string | No | Time period |
+| `type` | string | No | Metric type: `dashboard`, `headcount`, `attrition`, `openPositions`, `ai-costs`, `performance` (default: `dashboard`) |
+| `details` | boolean | No | Include drill-down data (default: `false`) |
 
 #### Response (200 OK)
 
+**Dashboard Summary** (`?type=dashboard` or no params):
+```json
+{
+  "headcount": 150,
+  "attritionRate": 12.5,
+  "openPositions": 8,
+  "lastUpdated": "2025-11-11T20:30:00.000Z"
+}
+```
+
+**Headcount Details** (`?type=headcount&details=true`):
+```json
+{
+  "success": true,
+  "metric": "headcount",
+  "total": 150,
+  "data": [
+    {
+      "name": "John Doe",
+      "role": "Senior Engineer",
+      "date": "2025-01-15"
+    }
+  ]
+}
+```
+
+**Attrition Details** (`?type=attrition&details=true`):
 ```json
 {
   "success": true,
   "metric": "attrition",
-  "details": {
-    "value": 12.5,
-    "breakdown": { ... },
-    "trend": [ ... ]
-  }
+  "rate": 12.5,
+  "count": 18,
+  "data": [
+    {
+      "name": "Jane Smith",
+      "role": "Product Manager",
+      "date": "2025-03-01"
+    }
+  ]
 }
 ```
 
----
-
-### GET /api/metrics/ai-costs
-
-Get AI cost tracking and optimization metrics.
-
-**Authentication:** Required
-**Rate Limit:** 100 requests / minute
-**Permissions:** `analytics:read`
-
-#### Response (200 OK)
-
+**AI Costs** (`?type=ai-costs`):
 ```json
 {
-  "success": true,
-  "costs": {
-    "total": 1250.50,
-    "byPeriod": [
-      { "month": "2025-01", "cost": 450.25 },
-      { "month": "2025-02", "cost": 485.75 }
-    ],
-    "bySkill": {
-      "job-description-writer": 250.50,
-      "skills-gap-analyzer": 180.25
-    },
-    "optimization": {
-      "cacheSavings": 450.00,
-      "cacheHitRate": 0.35
-    }
-  }
+  "cacheHitRate": 85.5,
+  "avgCachedTokens": 12500,
+  "avgInputTokens": 8000,
+  "avgOutputTokens": 2500,
+  "totalCost": 45.50,
+  "estimatedMonthlyCost": 1250.00,
+  "savingsVsBaseline": 3550.00,
+  "sampleCount": 1250,
+  "periodStart": "2025-11-10T00:00:00.000Z",
+  "periodEnd": "2025-11-11T00:00:00.000Z"
 }
+```
+
+#### Examples
+
+**Dashboard Summary:**
+```bash
+curl http://localhost:3000/api/metrics \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Headcount with Details:**
+```bash
+curl "http://localhost:3000/api/metrics?type=headcount&details=true" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**AI Cost Tracking:**
+```bash
+curl "http://localhost:3000/api/metrics?type=ai-costs" \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ---
@@ -980,21 +1230,100 @@ Delete a data source.
 
 ---
 
-## Performance APIs
+## Monitoring APIs
 
-### GET /api/performance
+⭐ **Phase 3.5 Update:** Renamed from `/api/performance` to `/api/monitoring` for clarity (system monitoring vs HR performance reviews).
 
-Get performance data and metrics.
+### GET /api/monitoring
+
+Get system performance and monitoring metrics.
 
 **Authentication:** Required
 **Rate Limit:** 100 requests / minute
-**Permissions:** `employees:read`
+**Permissions:** `admin`
+
+#### Query Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `period` | number | No | Minutes to aggregate (default: 60) |
+| `format` | string | No | Response format: `json` | `text` (default: `json`) |
+
+#### Response (200 OK)
+
+```json
+{
+  "success": true,
+  "data": {
+    "metrics": {
+      "avgResponseTime": 145,
+      "requestCount": 1250,
+      "errorRate": 0.02,
+      "cacheHitRate": 0.85
+    },
+    "thresholds": {
+      "status": "healthy",
+      "alerts": []
+    },
+    "period": {
+      "minutes": 60,
+      "start": "2025-11-11T19:30:00.000Z",
+      "end": "2025-11-11T20:30:00.000Z"
+    }
+  }
+}
+```
+
+#### Examples
+
+**Get Last Hour:**
+```bash
+curl "http://localhost:3000/api/monitoring?period=60" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Get Text Summary:**
+```bash
+curl "http://localhost:3000/api/monitoring?format=text" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
 
 ---
 
+### POST /api/monitoring
+
+System monitoring operations (export, clear metrics).
+
+**Authentication:** Required
+**Rate Limit:** 100 requests / minute
+**Permissions:** `admin`
+
+#### Request Body
+
+```typescript
+{
+  action: 'export' | 'clear';
+}
+```
+
+#### Response (200 OK)
+
+```json
+{
+  "success": true,
+  "message": "Metrics cleared"
+}
+```
+
+---
+
+## Performance Review APIs
+
+**Note:** HR performance review analysis remains at `/api/performance/analyze` (separate from system monitoring).
+
 ### POST /api/performance/analyze
 
-Analyze performance data.
+Analyze employee performance data.
 
 **Authentication:** Required
 **Rate Limit:** 100 requests / minute
