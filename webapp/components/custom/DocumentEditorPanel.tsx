@@ -1,16 +1,42 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Download, Save, Copy, Check, FileUp } from 'lucide-react';
+import { FileText, Download, Copy, Check, FileUp, ExternalLink, AlertTriangle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+
+type EditorContentSource = 'template' | 'generated' | 'default';
+
+interface DriveTemplateMetadata {
+  id: string;
+  name: string;
+  skillName?: string;
+  webViewLink?: string;
+  matchConfidence?: number;
+  matchReason?: string;
+  source?: 'environment' | 'keyword';
+  content?: string;
+}
+
+export interface DocumentExportPayload {
+  content: string;
+  documentType: string;
+  source: EditorContentSource;
+  templateId?: string;
+  templateName?: string;
+  employeeName?: string;
+}
 
 interface DocumentEditorPanelProps {
   content: string;
   documentType?: string;
   employeeName?: string;
-  onExport?: (content: string) => Promise<void>;
+  generatedContent?: string;
+  driveTemplate?: DriveTemplateMetadata;
+  driveTemplateError?: string;
+  driveTemplateNeedsAuth?: boolean;
+  onExport?: (payload: DocumentExportPayload) => Promise<void>;
 }
 
 function resolveInitialContent(content: string | undefined, fallback: string): string {
@@ -192,32 +218,112 @@ export function DocumentEditorPanel({
   content,
   documentType = 'general',
   employeeName,
+  generatedContent,
+  driveTemplate,
+  driveTemplateError,
+  driveTemplateNeedsAuth,
   onExport,
 }: DocumentEditorPanelProps) {
   const [editMode, setEditMode] = useState(false);
-  const defaultTemplate = useMemo(
-    () => getDefaultDocumentTemplate(documentType, employeeName),
-    [documentType, employeeName]
-  );
-  const [editedContent, setEditedContent] = useState(() =>
-    resolveInitialContent(content, defaultTemplate)
-  );
   const [copied, setCopied] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [isDirty, setIsDirty] = useState(false);
-  const [lastSyncedContent, setLastSyncedContent] = useState(() =>
-    resolveInitialContent(content, defaultTemplate)
+
+  const normalizedDocumentType = documentType ?? 'general';
+  const defaultTemplate = useMemo(
+    () => getDefaultDocumentTemplate(normalizedDocumentType, employeeName),
+    [normalizedDocumentType, employeeName]
   );
 
-  useEffect(() => {
-    const resolved = resolveInitialContent(content, defaultTemplate);
-    const shouldSync = (!editMode || !isDirty) && resolved !== lastSyncedContent;
-    if (shouldSync) {
-      setEditedContent(resolved);
-      setLastSyncedContent(resolved);
-      setIsDirty(false);
+  const normalizedContent = useMemo(
+    () => resolveInitialContent(content, defaultTemplate),
+    [content, defaultTemplate]
+  );
+
+  const sourceBaselines = useMemo(() => {
+    const templateContent =
+      driveTemplate?.content ??
+      (driveTemplate ? normalizedContent : '');
+    const generatedBaseline =
+      generatedContent && generatedContent.trim().length > 0
+        ? generatedContent
+        : !templateContent
+        ? normalizedContent
+        : '';
+
+    return {
+      template: templateContent,
+      generated: generatedBaseline,
+      default: defaultTemplate,
+    };
+  }, [driveTemplate, generatedContent, normalizedContent, defaultTemplate]);
+
+  const availableSources = useMemo<EditorContentSource[]>(() => {
+    const sources: EditorContentSource[] = [];
+
+    if (sourceBaselines.template && sourceBaselines.template.trim().length > 0) {
+      sources.push('template');
     }
-  }, [content, defaultTemplate, editMode, isDirty, lastSyncedContent]);
+
+    if (
+      sourceBaselines.generated &&
+      sourceBaselines.generated.trim().length > 0 &&
+      (!sourceBaselines.template ||
+        sourceBaselines.generated.trim() !== sourceBaselines.template.trim())
+    ) {
+      sources.push('generated');
+    }
+
+    if (sources.length === 0) {
+      sources.push('default');
+    }
+
+    return sources;
+  }, [sourceBaselines]);
+
+  const initialSource = availableSources[0] ?? 'default';
+
+  const [activeSource, setActiveSource] = useState<EditorContentSource>(initialSource);
+  const [sourceDrafts, setSourceDrafts] = useState<Record<EditorContentSource, string>>({
+    template: sourceBaselines.template,
+    generated: sourceBaselines.generated,
+    default: sourceBaselines.default,
+  });
+  const [dirtySources, setDirtySources] = useState<Record<EditorContentSource, boolean>>({
+    template: false,
+    generated: false,
+    default: false,
+  });
+  const [editedContent, setEditedContent] = useState<string>(
+    sourceBaselines[initialSource] ?? ''
+  );
+
+  const activeSourceRef = useRef<EditorContentSource>(initialSource);
+
+  useEffect(() => {
+    activeSourceRef.current = activeSource;
+  }, [activeSource]);
+
+  useEffect(() => {
+    setSourceDrafts({
+      template: sourceBaselines.template,
+      generated: sourceBaselines.generated,
+      default: sourceBaselines.default,
+    });
+
+    const preferredSource = activeSourceRef.current;
+    const nextSource = availableSources.includes(preferredSource)
+      ? preferredSource
+      : availableSources[0] ?? 'default';
+
+    activeSourceRef.current = nextSource;
+    setActiveSource(nextSource);
+    setEditedContent(sourceBaselines[nextSource] ?? '');
+    setDirtySources({
+      template: false,
+      generated: false,
+      default: false,
+    });
+  }, [sourceBaselines, availableSources]);
 
   const handleCopy = async () => {
     try {
@@ -229,12 +335,54 @@ export function DocumentEditorPanel({
     }
   };
 
+  const handleContentChange = (value: string) => {
+    setEditedContent(value);
+    setSourceDrafts((prev) => ({
+      ...prev,
+      [activeSource]: value,
+    }));
+    setDirtySources((prev) => ({
+      ...prev,
+      [activeSource]: value.trim() !== (sourceBaselines[activeSource]?.trim() ?? ''),
+    }));
+  };
+
+  const handleSourceChange = (nextSource: EditorContentSource) => {
+    if (nextSource === activeSource) return;
+
+    const updatedDrafts = {
+      ...sourceDrafts,
+      [activeSource]: editedContent,
+    };
+    const nextContent =
+      updatedDrafts[nextSource] ?? sourceBaselines[nextSource] ?? '';
+
+    setSourceDrafts(updatedDrafts);
+    setActiveSource(nextSource);
+    activeSourceRef.current = nextSource;
+    setEditedContent(nextContent);
+    setDirtySources((prev) => ({
+      ...prev,
+      [activeSource]:
+        editedContent.trim() !== (sourceBaselines[activeSource]?.trim() ?? ''),
+      [nextSource]:
+        nextContent.trim() !== (sourceBaselines[nextSource]?.trim() ?? ''),
+    }));
+  };
+
   const handleExport = async () => {
     if (!onExport) return;
 
     setIsExporting(true);
     try {
-      await onExport(editedContent);
+      await onExport({
+        content: editedContent,
+        documentType: normalizedDocumentType,
+        source: activeSource,
+        templateId: driveTemplate?.id,
+        templateName: driveTemplate?.name,
+        employeeName,
+      });
     } catch (err) {
       console.error('Failed to export:', err);
     } finally {
@@ -247,7 +395,9 @@ export function DocumentEditorPanel({
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${documentType}_${employeeName || 'document'}_${new Date().toISOString().split('T')[0]}.md`;
+    a.download = `${normalizedDocumentType}_${employeeName || 'document'}_${
+      new Date().toISOString().split('T')[0]
+    }.md`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -261,25 +411,66 @@ export function DocumentEditorPanel({
       job_description: 'Job Description',
       policy: 'Policy Document',
       performance_review: 'Performance Review',
+      termination_letter: 'Termination Letter',
+      interview_guide: 'Interview Guide',
+      onboarding_checklist: 'Onboarding Checklist',
+      custom: 'Document',
       general: 'Document',
     };
     return titles[type] || 'Document';
   };
 
+  const sourceLabels: Record<EditorContentSource, string> = {
+    template: 'Template',
+    generated: 'AI Draft',
+    default: 'Starter',
+  };
+
+  const sourceOptions = availableSources.map((source) => ({
+    key: source,
+    label: sourceLabels[source],
+  }));
+
+  const isDirty = dirtySources[activeSource] ?? false;
+
   return (
     <div className="flex flex-col h-full">
       {/* Toolbar */}
-      <div className="flex items-center justify-between mb-4 pb-4 border-b border-emerald-500/20">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-4 border-b border-emerald-500/20">
         <div className="flex items-center gap-2">
           <FileText className="w-5 h-5 text-emerald-400" />
           <div>
-            <h4 className="font-medium text-emerald-100">{getDocumentTitle(documentType)}</h4>
-            {employeeName && <p className="text-xs text-emerald-200/70">For: {employeeName}</p>}
+            <h4 className="font-medium text-emerald-100">
+              {getDocumentTitle(normalizedDocumentType)}
+            </h4>
+            {employeeName && (
+              <p className="text-xs text-emerald-200/70">For: {employeeName}</p>
+            )}
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Edit/Preview Toggle */}
+        <div className="flex flex-wrap items-center gap-2">
+          {sourceOptions.length > 1 && (
+            <div className="flex items-center gap-2 pr-3 mr-1 border-r border-white/10">
+              <span className="text-xs text-emerald-200/70">Source</span>
+              <div className="flex bg-white/5 border border-white/10 rounded-lg p-0.5">
+                {sourceOptions.map((option) => (
+                  <button
+                    key={option.key}
+                    onClick={() => handleSourceChange(option.key)}
+                    className={`px-2.5 py-1 text-xs rounded-md transition-all ${
+                      activeSource === option.key
+                        ? 'bg-emerald-500/30 text-emerald-900 font-medium'
+                        : 'text-emerald-100/80 hover:text-emerald-50 hover:bg-white/10'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <button
             onClick={() => setEditMode(!editMode)}
             className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/20 hover:border-white/30 rounded-lg text-xs transition-all"
@@ -287,7 +478,6 @@ export function DocumentEditorPanel({
             {editMode ? 'Preview' : 'Edit'}
           </button>
 
-          {/* Copy Button */}
           <button
             onClick={handleCopy}
             className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/20 hover:border-white/30 rounded-lg text-xs transition-all flex items-center gap-1"
@@ -305,7 +495,6 @@ export function DocumentEditorPanel({
             )}
           </button>
 
-          {/* Download Button */}
           <button
             onClick={handleDownload}
             className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/20 hover:border-white/30 rounded-lg text-xs transition-all flex items-center gap-1"
@@ -314,7 +503,6 @@ export function DocumentEditorPanel({
             Download
           </button>
 
-          {/* Export to Google Docs */}
           {onExport && (
             <button
               onClick={handleExport}
@@ -328,28 +516,63 @@ export function DocumentEditorPanel({
         </div>
       </div>
 
+      {driveTemplate && (
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs text-emerald-100/80">
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-emerald-200">
+              Google Drive template: {driveTemplate.name}
+            </span>
+            {driveTemplate.matchReason && (
+              <span className="text-emerald-200/60">
+                ({driveTemplate.matchReason})
+              </span>
+            )}
+          </div>
+          {driveTemplate.webViewLink && (
+            <a
+              href={driveTemplate.webViewLink}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-emerald-200 hover:text-emerald-100 transition-colors"
+            >
+              Open in Drive
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          )}
+        </div>
+      )}
+
+      {driveTemplateError && (
+        <div className="mb-3 flex items-start gap-2 rounded-lg border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
+          <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-medium">
+              {driveTemplateNeedsAuth
+                ? 'Connect Google Drive to load the latest company templates.'
+                : 'Unable to load Google Drive templates.'}
+            </p>
+            <p className="opacity-80">{driveTemplateError}</p>
+          </div>
+        </div>
+      )}
+
       {/* Content Area */}
       <div className="flex-1 overflow-y-auto">
         <div className="h-full bg-white text-gray-900 rounded-xl border border-gray-200 shadow-lg">
           {editMode ? (
-            /* Edit Mode - Textarea */
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full">
               <textarea
                 value={editedContent}
-                onChange={(e) => {
-                  setEditedContent(e.target.value);
-                  setIsDirty(true);
-                }}
+                onChange={(e) => handleContentChange(e.target.value)}
                 className="w-full h-full bg-transparent text-gray-900 px-4 py-3 text-sm font-mono resize-none rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/40 border-none"
                 placeholder="Edit document content..."
               />
             </motion.div>
           ) : (
-            /* Preview Mode - Rendered Markdown */
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="px-6 py-5">
               <div className="prose prose-neutral prose-sm max-w-none text-gray-900">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {editedContent || '*No content generated yet*'}
+                  {editedContent || '*No content available yet*'}
                 </ReactMarkdown>
               </div>
             </motion.div>
@@ -359,8 +582,14 @@ export function DocumentEditorPanel({
 
       {/* Footer Info */}
       <div className="mt-4 pt-4 border-t border-emerald-500/20">
-        <div className="flex items-center justify-between text-xs text-emerald-100/80">
-          <div>{editMode ? 'Edit mode - Changes are local' : 'Preview mode'}</div>
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-emerald-100/80">
+          <div className="flex items-center gap-2">
+            <span>{editMode ? 'Edit mode - Changes are local' : 'Preview mode'}</span>
+            {isDirty && <span className="text-amber-200">Unsaved edits</span>}
+            <span className="text-emerald-200/70">
+              Source: {sourceLabels[activeSource]}
+            </span>
+          </div>
           <div>
             {editedContent.split('\n').length} lines • {editedContent.length} characters
           </div>

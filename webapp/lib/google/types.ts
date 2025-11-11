@@ -71,6 +71,7 @@ export interface DriveTemplate {
   name: string;
   skillName: string;
   content?: string;
+  webViewLink?: string;
 }
 
 export interface SkillTemplates {

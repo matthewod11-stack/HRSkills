@@ -128,14 +128,14 @@ export function ContextPanel({ panelData, onClose, children }: ContextPanelProps
           transition={{ duration: 0.3, ease: 'easeInOut' }}
           className="relative flex h-full"
         >
-          <div className="relative group flex-1">
+          <div className="relative group flex h-full flex-1">
             {/* Glassmorphic background with gradient */}
             <div
               className={`absolute inset-0 bg-gradient-to-br ${accent.glow} rounded-3xl blur-2xl group-hover:blur-3xl transition-all duration-500 opacity-70`}
             />
 
             <div
-              className={`relative backdrop-blur-2xl rounded-3xl overflow-hidden border-2 transition-all duration-300 ${accent.containerBg} ${accent.containerBorder}`}
+              className={`relative backdrop-blur-2xl rounded-3xl overflow-hidden border-2 transition-all duration-300 ${accent.containerBg} ${accent.containerBorder} flex h-full flex-col`}
             >
               {/* Header */}
               <div
@@ -171,7 +171,7 @@ export function ContextPanel({ panelData, onClose, children }: ContextPanelProps
               </div>
 
               {/* Content */}
-              <div className="p-6 min-h-[400px] max-h-[600px] overflow-y-auto">
+              <div className="p-6 flex-1 overflow-y-auto">
                 {children || (
                   <div className="flex items-center justify-center h-full text-gray-400">
                     <p>Panel content will appear here</p>

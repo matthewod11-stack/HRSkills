@@ -37,6 +37,7 @@ import { suggestActions, suggestFollowUpQuestions } from '@/lib/workflows/action
 import type { SuggestionContext } from '@/lib/workflows/actions/suggestions';
 import { detectContext } from '@/lib/workflows/context-detector';
 import type { ContextPanelData } from '@/components/custom/ContextPanel';
+import { fetchBestTemplateForDocumentType } from '@/lib/templates-drive';
 
 // In-memory response cache (OPTIMIZATION: saves $1,350/month on repeated queries)
 interface CachedResponse {
@@ -98,6 +99,67 @@ function detectSkill(message: string): string {
   return workflowMatch.workflowId;
 }
 
+async function enrichDocumentPanelWithTemplate(
+  panelData: ContextPanelData | null,
+  userId: string
+): Promise<ContextPanelData | null> {
+  if (!panelData || panelData.type !== 'document') {
+    return panelData;
+  }
+
+  const documentType = panelData.config?.documentType || 'general';
+  const existingData = panelData.data || {};
+  const existingGenerated =
+    existingData.generatedContent ?? existingData.content ?? '';
+
+  try {
+    const match = await fetchBestTemplateForDocumentType(userId, documentType);
+    if (!match) {
+      return {
+        ...panelData,
+        data: {
+          ...existingData,
+          generatedContent: existingGenerated,
+        },
+      };
+    }
+
+    return {
+      ...panelData,
+      data: {
+        ...existingData,
+        content: match.content,
+        generatedContent: existingGenerated,
+        driveTemplate: {
+          id: match.templateId,
+          name: match.name,
+          skillName: match.skillName,
+          webViewLink: match.webViewLink,
+          matchConfidence: match.matchConfidence,
+          matchReason: match.matchReason,
+          source: match.source,
+          content: match.content,
+        },
+      },
+    };
+  } catch (error: any) {
+    const message = error?.message || 'Failed to load Google Drive template';
+    const needsAuth =
+      typeof message === 'string' &&
+      /auth|oauth|credential|token/i.test(message);
+
+    return {
+      ...panelData,
+      data: {
+        ...existingData,
+        generatedContent: existingGenerated,
+        driveTemplateError: message,
+        driveTemplateNeedsAuth: needsAuth,
+      },
+    };
+  }
+}
+
 // Load HR capabilities documentation
 function loadHRCapabilities(): string {
   try {
@@ -156,10 +218,20 @@ export async function POST(request: NextRequest) {
 
     const message = rawMessage.trim();
     const skill = payload?.skill;
-    const history: Array<{ role: string; content: string; workflowId?: WorkflowId }> =
+    const history: Array<{
+      role: string;
+      content: string;
+      workflowId?: WorkflowId;
+      timestamp?: string;
+    }> =
       Array.isArray(payload?.history)
         ? payload.history.filter(
-            (entry: any): entry is { role: string; content: string; workflowId?: WorkflowId } =>
+            (entry: any): entry is {
+              role: string;
+              content: string;
+              workflowId?: WorkflowId;
+              timestamp?: string;
+            } =>
               entry &&
               typeof entry === 'object' &&
               typeof entry.role === 'string' &&
@@ -240,7 +312,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Detect workflow from message
-    const detectionContext = buildDetectionContext(message, history, currentWorkflow);
+    const detectionHistory = history.map((item, index) => ({
+      role: (item.role === 'assistant' ? 'assistant' : 'user') as 'assistant' | 'user',
+      content: item.content,
+      timestamp:
+        item.timestamp ||
+        new Date(Date.now() - (history.length - index) * 1000).toISOString(),
+      workflowId: item.workflowId,
+    }));
+    const detectionContext = buildDetectionContext(message, detectionHistory, currentWorkflow);
     const workflowMatch = detectWorkflow(detectionContext);
 
     console.log(
@@ -479,6 +559,86 @@ Your goal: Help this startup scale its people, culture, and leadership with the 
       });
     }
 
+    // ========================================================================
+    // ON-DEMAND ANALYTICS (Pre-process analytical queries with real data)
+    // ========================================================================
+
+    // Check if this is a flight risk query
+    const isFlightRiskQuery = /flight\s*risk|at[-\s]*risk\s+employee|retention\s+concern|who.*leave|turnover\s+risk/i.test(message);
+
+    // Check if this is a hiring bottleneck query
+    const isHiringBottleneckQuery = /hiring.*bottleneck|slow.*hiring|time[-\s]*to[-\s]*fill|stalled.*position|open.*req|recruiting.*issue/i.test(message);
+
+    // If it's an analytical query, run the analysis first and inject results
+    if (isFlightRiskQuery || isHiringBottleneckQuery) {
+      try {
+        let analyticsResult = '';
+
+        if (isFlightRiskQuery) {
+          const { detectFlightRisks, formatFlightRiskForChat } = await import('@/lib/analytics/flight-risk-detector');
+          const department = message.match(/\b(engineering|product|sales|marketing|finance|hr)\b/i)?.[1];
+          const analysis = await detectFlightRisks({
+            department,
+            minRiskLevel: 'medium',
+            limit: 50,
+          });
+          analyticsResult = formatFlightRiskForChat(analysis);
+        }
+
+        if (isHiringBottleneckQuery) {
+          const { analyzeHiringBottlenecks, formatHiringBottlenecksForChat } = await import('@/lib/analytics/hiring-bottlenecks');
+          const department = message.match(/\b(engineering|product|sales|marketing|finance|hr)\b/i)?.[1];
+          const analysis = await analyzeHiringBottlenecks({
+            department,
+            minDaysOpen: 30,
+            includeStalled: true,
+          });
+          analyticsResult = formatHiringBottlenecksForChat(analysis);
+        }
+
+        // If we got analytics results, use them directly instead of calling Claude
+        if (analyticsResult) {
+          console.log('[OnDemandAnalytics] Using pre-calculated analytics instead of AI call');
+
+          // Still track as chat interaction
+          trackMetric({
+            apiLatency: Date.now() - startTime,
+            cacheHit: false,
+            tokensUsed: { input: 0, output: 0, cached: 0 },
+            endpoint: '/api/chat',
+            timestamp: Date.now(),
+            userId: authResult.user.userId,
+          });
+
+          // Detect context panel
+          const contextDetection = detectContext(message, analyticsResult);
+          let contextPanelData =
+            contextDetection.confidence >= 70 ? contextDetection.panelData : null;
+          contextPanelData = await enrichDocumentPanelWithTemplate(
+            contextPanelData,
+            authResult.user.userId
+          );
+
+          return NextResponse.json({
+            reply: analyticsResult,
+            detectedWorkflow: 'analytics',
+            workflowConfidence: 100,
+            contextPanel: contextPanelData,
+            suggestedActions: [],
+            followUpQuestions: [],
+            analyticsMode: true, // Flag to indicate this was pre-calculated
+          });
+        }
+      } catch (analyticsError) {
+        console.error('[OnDemandAnalytics] Failed to run analytics, falling back to AI:', analyticsError);
+        // Fall through to normal AI call if analytics fails
+      }
+    }
+
+    // ========================================================================
+    // AI CALL (Standard Claude response for non-analytical queries)
+    // ========================================================================
+
     // Use dynamic max_tokens to save costs
     const maxTokens = estimateMaxTokens(message);
 
@@ -516,10 +676,14 @@ Your goal: Help this startup scale its people, culture, and leadership with the 
     // ========================================================================
 
     // Get user permissions for action filtering
-    const userPermissions = authResult.user.role?.permissions
-      ? Object.entries(authResult.user.role.permissions)
-          .filter(([_, allowed]) => allowed)
-          .map(([perm, _]) => perm)
+    const rolePermissions = (authResult.user as any)?.role?.permissions as
+      | Record<string, boolean>
+      | undefined;
+
+    const userPermissions = rolePermissions
+      ? Object.entries(rolePermissions)
+          .filter(([, allowed]) => Boolean(allowed))
+          .map(([perm]) => perm)
       : [];
 
     // Generate action suggestions based on workflow and context
@@ -551,6 +715,11 @@ Your goal: Help this startup scale its people, culture, and leadership with the 
         `Context panel detected: ${contextDetection.panelData.type} (${contextDetection.confidence}% confidence)`
       );
     }
+
+    contextPanelData = await enrichDocumentPanelWithTemplate(
+      contextPanelData,
+      authResult.user.userId
+    );
 
     // Store in cache (only for simple queries without history)
     if (cacheable) {

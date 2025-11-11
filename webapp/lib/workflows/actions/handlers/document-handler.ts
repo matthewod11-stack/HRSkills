@@ -14,6 +14,183 @@ import type {
   CreateDocumentPayload,
 } from '../types';
 import { createDocument, type CreateDocumentInput } from '@/lib/services/document-service';
+import { getServiceAccountClient, getOAuthClient } from '@/lib/google/workspace-client';
+import { Readable } from 'stream';
+
+/**
+ * Helper functions for document handling
+ */
+
+/**
+ * Convert markdown to HTML (simple implementation)
+ */
+function convertMarkdownToHtml(markdown: string): string {
+  // Simple markdown to HTML conversion
+  // In production, use a proper markdown library
+  return markdown
+    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+    .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+    .replace(/\*(.*)\*/gim, '<em>$1</em>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/^(.+)$/gim, '<p>$1</p>');
+}
+
+/**
+ * Strip markdown formatting
+ */
+function stripMarkdown(markdown: string): string {
+  return markdown
+    .replace(/^#+\s+/gm, '')
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/\*(.*?)\*/g, '$1')
+    .replace(/\[(.*?)\]\(.*?\)/g, '$1')
+    .replace(/`(.*?)`/g, '$1');
+}
+
+/**
+ * Get folder name based on document type
+ */
+function getFolderNameForDocumentType(documentType: string): string {
+  const folderMap: Record<string, string> = {
+    job_description: 'Job Descriptions',
+    offer_letter: 'Offer Letters',
+    pip: 'Performance Improvement Plans',
+    termination_letter: 'Termination Letters',
+    interview_guide: 'Interview Guides',
+    performance_review: 'Performance Reviews',
+    onboarding_checklist: 'Onboarding Checklists',
+    custom: 'HR Documents',
+  };
+
+  return folderMap[documentType] || 'HR Documents';
+}
+
+/**
+ * Find or create a folder in Google Drive
+ */
+async function findOrCreateFolder(drive: any, folderName: string): Promise<string> {
+  // Search for existing folder
+  const searchResponse = await drive.files.list({
+    q: `name='${folderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+    fields: 'files(id, name)',
+    spaces: 'drive',
+  });
+
+  // Return existing folder if found
+  if (searchResponse.data.files && searchResponse.data.files.length > 0) {
+    return searchResponse.data.files[0].id;
+  }
+
+  // Create new folder
+  const folderMetadata = {
+    name: folderName,
+    mimeType: 'application/vnd.google-apps.folder',
+  };
+
+  const folder = await drive.files.create({
+    requestBody: folderMetadata,
+    fields: 'id',
+  });
+
+  return folder.data.id;
+}
+
+/**
+ * Export document to Google Drive
+ */
+async function exportToGoogleDrive(
+  documentId: string,
+  title: string,
+  content: string,
+  documentType: string,
+  destination: any,
+  context: ActionContext
+): Promise<{
+  fileId: string;
+  webViewLink: string;
+  folderId?: string;
+  sharedWith?: string[];
+}> {
+  // Get appropriate client based on available credentials
+  let client;
+  const hasServiceAccount = process.env.GOOGLE_CREDENTIALS_PATH;
+
+  if (hasServiceAccount) {
+    client = getServiceAccountClient();
+  } else if (context.userId) {
+    client = getOAuthClient(context.userId);
+  } else {
+    throw new Error('No Google Workspace authentication available');
+  }
+
+  const drive = await client.getDrive();
+
+  // Determine folder based on document type
+  const folderName = getFolderNameForDocumentType(documentType);
+  let folderId = destination.folderId;
+
+  // Create or find folder if not specified
+  if (!folderId && folderName) {
+    folderId = await findOrCreateFolder(drive, folderName);
+  }
+
+  // Create the document as a Google Doc
+  const fileMetadata: any = {
+    name: title,
+    mimeType: 'application/vnd.google-apps.document',
+  };
+
+  if (folderId) {
+    fileMetadata.parents = [folderId];
+  }
+
+  // Convert content to text for upload
+  const media = {
+    mimeType: 'text/plain',
+    body: Readable.from([content]),
+  };
+
+  // Upload to Drive
+  const file = await drive.files.create({
+    requestBody: fileMetadata,
+    media: media,
+    fields: 'id, webViewLink, webContentLink',
+  });
+
+  if (!file.data.id) {
+    throw new Error('Failed to create file in Google Drive');
+  }
+
+  // Share with specified users if provided
+  const sharedWith: string[] = [];
+  if (destination.shareWith && Array.isArray(destination.shareWith)) {
+    for (const email of destination.shareWith) {
+      try {
+        await drive.permissions.create({
+          fileId: file.data.id,
+          requestBody: {
+            type: 'user',
+            role: destination.sharePermission || 'writer',
+            emailAddress: email,
+          },
+          sendNotificationEmail: destination.sendNotification !== false,
+        });
+        sharedWith.push(email);
+      } catch (shareError) {
+        console.error(`Failed to share with ${email}:`, shareError);
+      }
+    }
+  }
+
+  return {
+    fileId: file.data.id,
+    webViewLink: file.data.webViewLink || '',
+    folderId,
+    sharedWith: sharedWith.length > 0 ? sharedWith : undefined,
+  };
+}
 
 /**
  * Document creation handler
@@ -84,10 +261,16 @@ export const documentHandler: ActionHandler<CreateDocumentPayload> = {
         });
       }
 
-      warnings.push({
-        field: 'destination',
-        message: 'Google Drive integration not yet implemented. Document will be saved locally.',
-      });
+      // Check for Google credentials
+      const hasServiceAccount = process.env.GOOGLE_CREDENTIALS_PATH;
+      const hasOAuth = process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET;
+
+      if (!hasServiceAccount && !hasOAuth) {
+        warnings.push({
+          field: 'destination',
+          message: 'Google Workspace credentials not configured. Document will be saved to database only.',
+        });
+      }
     }
 
     // Validate content length
@@ -124,9 +307,9 @@ export const documentHandler: ActionHandler<CreateDocumentPayload> = {
       let formattedContent = payload.content;
 
       if (payload.format === 'html') {
-        formattedContent = this.convertMarkdownToHtml(payload.content);
+        formattedContent = convertMarkdownToHtml(payload.content);
       } else if (payload.format === 'plain') {
-        formattedContent = this.stripMarkdown(payload.content);
+        formattedContent = stripMarkdown(payload.content);
       }
 
       // Prepare metadata
@@ -152,7 +335,8 @@ export const documentHandler: ActionHandler<CreateDocumentPayload> = {
       // Build document URL
       const documentUrl = `/documents/${document.id}`;
 
-      const output = {
+      // Initialize output
+      const output: any = {
         documentId: document.id,
         url: documentUrl,
         title: document.title,
@@ -163,6 +347,27 @@ export const documentHandler: ActionHandler<CreateDocumentPayload> = {
         createdAt: document.createdAt,
         message: `Document "${payload.title}" created successfully as draft`,
       };
+
+      // Export to Google Drive if requested
+      if (payload.destination?.type === 'google_drive') {
+        try {
+          const driveResult = await exportToGoogleDrive(
+            document.id,
+            payload.title,
+            formattedContent,
+            payload.documentType,
+            payload.destination,
+            context
+          );
+
+          output.googleDrive = driveResult;
+          output.message = `Document "${payload.title}" created and exported to Google Drive`;
+        } catch (driveError: any) {
+          // Don't fail the entire action if Drive export fails
+          output.googleDriveError = driveError.message;
+          output.message = `Document "${payload.title}" created but Google Drive export failed: ${driveError.message}`;
+        }
+      }
 
       return {
         success: true,
@@ -175,6 +380,7 @@ export const documentHandler: ActionHandler<CreateDocumentPayload> = {
           userId: context.userId,
           documentType: payload.documentType,
           documentId: document.id,
+          googleDriveFileId: output.googleDrive?.fileId,
         },
       };
     } catch (error: any) {
@@ -197,41 +403,6 @@ export const documentHandler: ActionHandler<CreateDocumentPayload> = {
    */
   estimateDuration(): number {
     return 2000; // 2 seconds average
-  },
-
-  /**
-   * Convert markdown to HTML (simple implementation)
-   */
-  convertMarkdownToHtml(markdown: string): string {
-    // Simple markdown to HTML conversion
-    // In production, use a proper markdown library
-    return markdown
-      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-      .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
-      .replace(/\*(.*)\*/gim, '<em>$1</em>')
-      .replace(/\n\n/g, '</p><p>')
-      .replace(/^(.+)$/gim, '<p>$1</p>');
-  },
-
-  /**
-   * Strip markdown formatting
-   */
-  stripMarkdown(markdown: string): string {
-    return markdown
-      .replace(/^#+\s+/gm, '')
-      .replace(/\*\*(.*?)\*\*/g, '$1')
-      .replace(/\*(.*?)\*/g, '$1')
-      .replace(/\[(.*?)\]\(.*?\)/g, '$1')
-      .replace(/`(.*?)`/g, '$1');
-  },
-
-  /**
-   * Delay helper
-   */
-  delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
   },
 };
 

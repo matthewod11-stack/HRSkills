@@ -8,13 +8,14 @@ import { FloatingOrbs } from '@/components/custom/FloatingOrbs';
 import { MetricCard } from '@/components/custom/MetricCard';
 import { ChatInterface } from '@/components/custom/ChatInterface';
 import { ContextPanel, ContextPanelData } from '@/components/custom/ContextPanel';
-import { DocumentEditorPanel } from '@/components/custom/DocumentEditorPanel';
+import { DocumentEditorPanel, DocumentExportPayload } from '@/components/custom/DocumentEditorPanel';
 import { AnalyticsChartPanel } from '@/components/custom/AnalyticsChartPanel';
 import { PerformanceGridPanel } from '@/components/custom/PerformanceGridPanel';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { logComponentError } from '@/lib/errorLogging';
 import { fetchWithRetry } from '@/lib/api-helpers/fetch-with-retry';
 import { DialogSkeleton } from '@/components/ui/skeletons';
+import { useAuth } from '@/lib/auth/auth-context';
 
 // Lazy load heavy dialog components
 // These are only needed when user interacts, reducing initial bundle size
@@ -77,6 +78,64 @@ export default function Home() {
 
   // Context panel state for Phase 2 dashboard
   const [contextPanelData, setContextPanelData] = useState<ContextPanelData | null>(null);
+  const { getAuthHeaders } = useAuth();
+
+  const handleDocumentExport = useCallback(
+    async (payload: DocumentExportPayload) => {
+      try {
+        const timestamp = new Date();
+        const datePart = timestamp.toISOString().split('T')[0];
+        const typePart = payload.documentType.replace(/_/g, '-');
+        const namePart = payload.employeeName
+          ? `_${payload.employeeName.trim().replace(/\s+/g, '_')}`
+          : '';
+        const title = `${datePart}_${typePart}${namePart}`;
+
+        const response = await fetch('/api/documents/export-to-google-docs', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders(),
+          },
+          body: JSON.stringify({
+            title,
+            content: payload.content,
+            documentType: payload.documentType,
+            metadata: {
+              employeeName: payload.employeeName,
+              source: payload.source,
+              templateId: payload.templateId,
+              templateName: payload.templateName,
+            },
+          }),
+        });
+
+        const data = await response.json();
+
+        if (data.needsAuth) {
+          const shouldConnect = window.confirm(
+            'You need to connect your Google account to export documents. Connect now?'
+          );
+          if (shouldConnect) {
+            window.location.href = '/api/auth/google';
+          }
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error(data.error || data.message || 'Export failed');
+        }
+
+        if (data.editLink) {
+          window.open(data.editLink, '_blank');
+        }
+      } catch (error: any) {
+        console.error('Failed to export to Google Docs:', error);
+        alert(`Failed to export document: ${error.message || 'Unknown error'}`);
+      }
+    },
+    [getAuthHeaders]
+  );
 
   useEffect(() => {
     // Auto-login for development
@@ -430,21 +489,24 @@ export default function Home() {
             {nineBoxError && !nineBoxHasData && (
               <p className="text-sm text-warning font-medium">{nineBoxError}</p>
             )}
-            {metricsHasData && metrics.lastUpdated && (
-              <p className="text-xs text-secondary font-medium">
-                Last updated: {new Date(metrics.lastUpdated).toLocaleString()}
-              </p>
-            )}
           </section>
 
           {/* Main Layout - Chat First with Dynamic Context Panel */}
-          <div className="flex flex-col lg:flex-row gap-6">
+          <div
+            className={`grid grid-cols-1 gap-6 lg:gap-4 ${
+              contextPanelData?.type ? 'lg:grid-cols-12' : 'lg:grid-cols-12'
+            }`}
+          >
             {/* Chat Interface */}
             <section
               aria-label="HR Assistant Chat"
-              className={`order-1 w-full min-h-[700px] ${contextPanelData?.type ? 'lg:order-1 lg:flex-[0_0_60%] lg:max-w-[60%]' : 'lg:order-1 lg:flex-[1_1_100%] lg:max-w-full'}`}
+              className={`order-1 w-full ${
+                contextPanelData?.type
+                  ? 'lg:order-1 lg:col-span-8'
+                  : 'lg:order-1 lg:col-span-12'
+              }`}
             >
-              <div className="h-[700px]">
+              <div className="h-full max-h-[calc(100vh-360px)] min-h-[500px]">
                 <ErrorBoundary
                   level="section"
                   onError={(error, errorInfo) => {
@@ -458,45 +520,48 @@ export default function Home() {
 
             {/* Context / Document Panel */}
             {contextPanelData?.type && (
-              <aside className="order-2 lg:order-2 w-full lg:flex-[0_0_40%] lg:max-w-[40%] shrink-0">
-                <ContextPanel
-                  panelData={contextPanelData}
-                  onClose={() => setContextPanelData(null)}
-                >
-                  {/* Render appropriate panel based on type */}
-                  {contextPanelData.type === 'document' && (
-                    <DocumentEditorPanel
-                      content={contextPanelData.data?.content || ''}
-                      documentType={contextPanelData.config?.documentType}
-                      employeeName={contextPanelData.data?.employeeName}
-                      onExport={async (content) => {
-                        // TODO: Implement Google Docs export
-                        console.log('Export to Google Docs:', content);
-                      }}
-                    />
-                  )}
-                  {contextPanelData.type === 'analytics' && (
-                    <AnalyticsChartPanel
-                      metric={contextPanelData.data?.metric || 'headcount'}
-                      chartType={contextPanelData.config?.chartType}
-                      department={contextPanelData.config?.filters?.department}
-                      dateRange={contextPanelData.config?.filters?.dateRange}
-                      chartConfig={contextPanelData.data?.chartConfig}
-                      analysisSummary={contextPanelData.data?.analysisSummary}
-                      metadata={contextPanelData.data?.metadata}
-                    />
-                  )}
-                  {contextPanelData.type === 'performance' && (
-                    <PerformanceGridPanel
-                      department={contextPanelData.config?.filters?.department}
-                      highlights={contextPanelData.config?.highlights}
-                      onEmployeeClick={(employee) => {
-                        console.log('Employee clicked:', employee);
-                        // TODO: Inject employee context into chat
-                      }}
-                    />
-                  )}
-                </ContextPanel>
+              <aside className="order-2 lg:order-2 w-full lg:col-span-4 lg:col-start-9">
+                <div className="h-full max-h-[calc(100vh-360px)] min-h-[500px]">
+                  <ContextPanel
+                    panelData={contextPanelData}
+                    onClose={() => setContextPanelData(null)}
+                  >
+                    {/* Render appropriate panel based on type */}
+                    {contextPanelData.type === 'document' && (
+                      <DocumentEditorPanel
+                        content={contextPanelData.data?.content || ''}
+                        documentType={contextPanelData.config?.documentType}
+                        employeeName={contextPanelData.data?.employeeName}
+                        generatedContent={contextPanelData.data?.generatedContent}
+                        driveTemplate={contextPanelData.data?.driveTemplate}
+                        driveTemplateError={contextPanelData.data?.driveTemplateError}
+                        driveTemplateNeedsAuth={contextPanelData.data?.driveTemplateNeedsAuth}
+                        onExport={handleDocumentExport}
+                      />
+                    )}
+                    {contextPanelData.type === 'analytics' && (
+                      <AnalyticsChartPanel
+                        metric={contextPanelData.data?.metric || 'headcount'}
+                        chartType={contextPanelData.config?.chartType}
+                        department={contextPanelData.config?.filters?.department}
+                        dateRange={contextPanelData.config?.filters?.dateRange}
+                        chartConfig={contextPanelData.data?.chartConfig}
+                        analysisSummary={contextPanelData.data?.analysisSummary}
+                        metadata={contextPanelData.data?.metadata}
+                      />
+                    )}
+                    {contextPanelData.type === 'performance' && (
+                      <PerformanceGridPanel
+                        department={contextPanelData.config?.filters?.department}
+                        highlights={contextPanelData.config?.highlights}
+                        onEmployeeClick={(employee) => {
+                          console.log('Employee clicked:', employee);
+                          // TODO: Inject employee context into chat
+                        }}
+                      />
+                    )}
+                  </ContextPanel>
+                </div>
               </aside>
             )}
           </div>

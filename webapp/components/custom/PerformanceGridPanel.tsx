@@ -135,15 +135,6 @@ export function PerformanceGridPanel({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={fetchGridData}
-            className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/20 hover:border-white/30 rounded-lg text-xs transition-all flex items-center gap-1"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            Refresh
-          </button>
-        </div>
       </div>
 
       {/* Summary Stats */}
