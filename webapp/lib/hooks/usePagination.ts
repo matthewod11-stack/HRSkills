@@ -128,7 +128,7 @@ export function usePagination({
   totalItems,
   itemsPerPage = 10,
   initialPage = 1,
-  siblingCount = 1
+  siblingCount = 1,
 }: PaginationOptions): PaginationResult {
   const [currentPage, setCurrentPage] = useState(initialPage);
   const [pageSize, setPageSize] = useState(itemsPerPage);
@@ -147,10 +147,7 @@ export function usePagination({
   }, [currentPage, totalPages]);
 
   // Calculate start and end indices
-  const startIndex = useMemo(
-    () => (currentPage - 1) * pageSize,
-    [currentPage, pageSize]
-  );
+  const startIndex = useMemo(() => (currentPage - 1) * pageSize, [currentPage, pageSize]);
 
   const endIndex = useMemo(
     () => Math.min(startIndex + pageSize, totalItems),
@@ -238,7 +235,7 @@ export function usePagination({
 
   // Helper to get current page items
   const getCurrentPageItems = useCallback(
-    <T,>(items: T[]): T[] => {
+    <T>(items: T[]): T[] => {
       return items.slice(startIndex, endIndex);
     },
     [startIndex, endIndex]
@@ -260,7 +257,7 @@ export function usePagination({
     firstPage,
     lastPage,
     setPageSize: handleSetPageSize,
-    getCurrentPageItems
+    getCurrentPageItems,
   };
 }
 
@@ -300,10 +297,7 @@ export function usePagination({
  * }
  * ```
  */
-export function useInfinitePagination(
-  totalItems: number,
-  itemsPerPage: number = 20
-) {
+export function useInfinitePagination(totalItems: number, itemsPerPage: number = 20) {
   const [loadedPages, setLoadedPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -312,10 +306,7 @@ export function useInfinitePagination(
     [loadedPages, itemsPerPage, totalItems]
   );
 
-  const hasMore = useMemo(
-    () => loadedItems < totalItems,
-    [loadedItems, totalItems]
-  );
+  const hasMore = useMemo(() => loadedItems < totalItems, [loadedItems, totalItems]);
 
   const loadMore = useCallback(async () => {
     if (!hasMore || isLoading) return;
@@ -323,7 +314,7 @@ export function useInfinitePagination(
     setIsLoading(true);
 
     // Simulate async loading (remove in production)
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     setLoadedPages((prev) => prev + 1);
     setIsLoading(false);
@@ -340,6 +331,6 @@ export function useInfinitePagination(
     hasMore,
     isLoading,
     loadMore,
-    reset
+    reset,
   };
 }

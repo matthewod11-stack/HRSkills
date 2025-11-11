@@ -52,10 +52,7 @@ export class GeminiAdapter implements AIProvider {
   /**
    * Send chat completion request
    */
-  async chat(
-    messages: ChatMessage[],
-    options?: ChatOptions
-  ): Promise<ChatResponse> {
+  async chat(messages: ChatMessage[], options?: ChatOptions): Promise<ChatResponse> {
     if (!this.isAvailable) {
       throw new Error('Gemini adapter not available - API key not configured');
     }
@@ -64,11 +61,12 @@ export class GeminiAdapter implements AIProvider {
     const model = this.client.getGenerativeModel({ model: modelName });
 
     // Convert messages to Gemini format
-    const systemPrompt = options?.systemPrompt || messages.find(m => m.role === 'system')?.content;
+    const systemPrompt =
+      options?.systemPrompt || messages.find((m) => m.role === 'system')?.content;
 
     const history = messages
-      .filter(m => m.role !== 'system')
-      .map(m => ({
+      .filter((m) => m.role !== 'system')
+      .map((m) => ({
         role: m.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: m.content }],
       }));
@@ -90,7 +88,7 @@ export class GeminiAdapter implements AIProvider {
 
       // Estimate token usage (Gemini doesn't always provide exact counts)
       const inputTokens = this.estimateTokens(
-        messages.map(m => m.content).join(' ') + (systemPrompt || '')
+        messages.map((m) => m.content).join(' ') + (systemPrompt || '')
       );
       const outputTokens = this.estimateTokens(response.text());
       const totalTokens = inputTokens + outputTokens;
@@ -201,10 +199,10 @@ export class GeminiAdapter implements AIProvider {
 
     try {
       // Simple health check: ask for a single word response
-      await this.chat(
-        [{ role: 'user', content: 'Reply with only the word "OK"' }],
-        { model: 'gemini-1.5-flash', maxTokens: 10 }
-      );
+      await this.chat([{ role: 'user', content: 'Reply with only the word "OK"' }], {
+        model: 'gemini-1.5-flash',
+        maxTokens: 10,
+      });
 
       const latency = Date.now() - startTime;
 
@@ -267,14 +265,9 @@ export class GeminiAdapter implements AIProvider {
   /**
    * Calculate estimated cost
    */
-  private calculateCost(
-    model: string,
-    inputTokens: number,
-    outputTokens: number
-  ): number {
+  private calculateCost(model: string, inputTokens: number, outputTokens: number): number {
     const costs =
-      GEMINI_COSTS[model as keyof typeof GEMINI_COSTS] ||
-      GEMINI_COSTS['gemini-1.5-flash'];
+      GEMINI_COSTS[model as keyof typeof GEMINI_COSTS] || GEMINI_COSTS['gemini-1.5-flash'];
 
     const inputCost = (inputTokens / 1_000_000) * costs.input;
     const outputCost = (outputTokens / 1_000_000) * costs.output;

@@ -1,8 +1,21 @@
-'use client'
+'use client';
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, FolderOpen, Upload, Search, Filter, FileText, Download, Eye, Trash2, Calendar, User, Tag } from 'lucide-react';
+import {
+  ArrowLeft,
+  FolderOpen,
+  Upload,
+  Search,
+  Filter,
+  FileText,
+  Download,
+  Eye,
+  Trash2,
+  Calendar,
+  User,
+  Tag,
+} from 'lucide-react';
 import Link from 'next/link';
 
 interface Document {
@@ -24,7 +37,7 @@ const mockDocuments: Document[] = [
     uploadedBy: 'HR Admin',
     uploadedAt: '2025-01-15',
     size: '2.4 MB',
-    tags: ['Onboarding', 'Reference']
+    tags: ['Onboarding', 'Reference'],
   },
   {
     id: '2',
@@ -33,7 +46,7 @@ const mockDocuments: Document[] = [
     uploadedBy: 'Benefits Team',
     uploadedAt: '2025-01-10',
     size: '856 KB',
-    tags: ['Benefits', 'Leave']
+    tags: ['Benefits', 'Leave'],
   },
   {
     id: '3',
@@ -42,7 +55,7 @@ const mockDocuments: Document[] = [
     uploadedBy: 'People Ops',
     uploadedAt: '2025-01-08',
     size: '124 KB',
-    tags: ['Performance', 'Templates']
+    tags: ['Performance', 'Templates'],
   },
   {
     id: '4',
@@ -51,7 +64,7 @@ const mockDocuments: Document[] = [
     uploadedBy: 'Talent Acquisition',
     uploadedAt: '2025-01-07',
     size: '98 KB',
-    tags: ['Recruiting', 'Templates', 'Job Postings']
+    tags: ['Recruiting', 'Templates', 'Job Postings'],
   },
   {
     id: '5',
@@ -60,7 +73,7 @@ const mockDocuments: Document[] = [
     uploadedBy: 'Talent Acquisition',
     uploadedAt: '2025-01-06',
     size: '112 KB',
-    tags: ['Recruiting', 'Templates', 'Onboarding']
+    tags: ['Recruiting', 'Templates', 'Onboarding'],
   },
   {
     id: '6',
@@ -69,7 +82,7 @@ const mockDocuments: Document[] = [
     uploadedBy: 'HR Admin',
     uploadedAt: '2025-01-05',
     size: '1.2 MB',
-    tags: ['Remote', 'Policies']
+    tags: ['Remote', 'Policies'],
   },
 ];
 
@@ -81,11 +94,11 @@ export default function DocumentLibraryPage() {
 
   const getCategoryColor = (category: string) => {
     const colors: Record<string, string> = {
-      'Policy': 'from-blue-500 to-cyan-500',
-      'Handbook': 'from-purple-500 to-pink-500',
-      'Template': 'from-green-500 to-emerald-500',
-      'Form': 'from-orange-500 to-red-500',
-      'Guide': 'from-indigo-500 to-purple-500'
+      Policy: 'from-blue-500 to-cyan-500',
+      Handbook: 'from-purple-500 to-pink-500',
+      Template: 'from-green-500 to-emerald-500',
+      Form: 'from-orange-500 to-red-500',
+      Guide: 'from-indigo-500 to-purple-500',
     };
     return colors[category] || 'from-gray-500 to-gray-600';
   };
@@ -161,7 +174,10 @@ export default function DocumentLibraryPage() {
                     <label htmlFor="document-search" className="sr-only">
                       Search documents by name, category, or tags
                     </label>
-                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" aria-hidden="true" />
+                    <Search
+                      className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+                      aria-hidden="true"
+                    />
                     <input
                       id="document-search"
                       type="search"
@@ -215,12 +231,16 @@ export default function DocumentLibraryPage() {
                 transition={{ delay: index * 0.1 }}
                 className="relative group"
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${getCategoryColor(doc.category)}/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all opacity-60`} />
+                <div
+                  className={`absolute inset-0 bg-gradient-to-br ${getCategoryColor(doc.category)}/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all opacity-60`}
+                />
 
                 <div className="relative backdrop-blur-xl bg-black/40 border-2 border-white/30 rounded-2xl p-6 hover:border-white/40 transition-all h-full flex flex-col">
                   {/* Document Icon & Category */}
                   <div className="flex items-start justify-between mb-4">
-                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${getCategoryColor(doc.category)} flex items-center justify-center`}>
+                    <div
+                      className={`w-14 h-14 rounded-xl bg-gradient-to-br ${getCategoryColor(doc.category)} flex items-center justify-center`}
+                    >
                       {getCategoryIcon(doc.category)}
                     </div>
                     <span className="px-3 py-1 bg-white/10 border border-white/20 rounded-lg text-xs font-medium">
@@ -304,7 +324,9 @@ export default function DocumentLibraryPage() {
               <div className="relative backdrop-blur-2xl bg-black/40 border-2 border-white/30 rounded-3xl p-16 text-center">
                 <FolderOpen className="w-24 h-24 mx-auto mb-6 text-gray-600" aria-hidden="true" />
                 <h2 className="text-2xl font-bold mb-2">No Documents Yet</h2>
-                <p className="text-gray-400 mb-6">Upload your first policy, handbook, or template to get started</p>
+                <p className="text-gray-400 mb-6">
+                  Upload your first policy, handbook, or template to get started
+                </p>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}

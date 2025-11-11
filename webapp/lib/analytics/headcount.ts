@@ -15,13 +15,10 @@ export interface HeadcountResult {
 /**
  * Calculate headcount metrics from employee data
  */
-export function calculateHeadcount(
-  employees: any[],
-  demographics?: any[]
-): HeadcountResult {
+export function calculateHeadcount(employees: any[], demographics?: any[]): HeadcountResult {
   // Filter to active employees only
-  const activeEmployees = employees.filter(emp =>
-    emp.status && emp.status.toLowerCase() === 'active'
+  const activeEmployees = employees.filter(
+    (emp) => emp.status && emp.status.toLowerCase() === 'active'
   );
 
   const result: HeadcountResult = {
@@ -29,20 +26,18 @@ export function calculateHeadcount(
     byDepartment: groupByCount(activeEmployees, 'department'),
     byLevel: groupByCount(activeEmployees, 'level'),
     byLocation: groupByCount(activeEmployees, 'location'),
-    byStatus: groupByCount(employees, 'status')
+    byStatus: groupByCount(employees, 'status'),
   };
 
   // Add demographics if available
   if (demographics && demographics.length > 0) {
     // Join with demographics
-    const employeeMap = new Map(activeEmployees.map(e => [e.employee_id, e]));
-    const activeDemographics = demographics.filter(d =>
-      employeeMap.has(d.employee_id)
-    );
+    const employeeMap = new Map(activeEmployees.map((e) => [e.employee_id, e]));
+    const activeDemographics = demographics.filter((d) => employeeMap.has(d.employee_id));
 
     result.demographics = {
       byGender: groupByCount(activeDemographics, 'gender'),
-      byRace: groupByCount(activeDemographics, 'race_ethnicity')
+      byRace: groupByCount(activeDemographics, 'race_ethnicity'),
     };
   }
 
@@ -55,8 +50,8 @@ export function calculateHeadcount(
 export function calculateHeadcountByDeptAndLevel(
   employees: any[]
 ): Record<string, Record<string, number>> {
-  const activeEmployees = employees.filter(emp =>
-    emp.status && emp.status.toLowerCase() === 'active'
+  const activeEmployees = employees.filter(
+    (emp) => emp.status && emp.status.toLowerCase() === 'active'
   );
 
   const grouped = groupBy(activeEmployees, 'department');
@@ -82,12 +77,12 @@ export function calculateHeadcountTrends(
   netChange?: number;
   growthRate?: number;
 } {
-  const activeEmployees = employees.filter(emp =>
-    emp.status && emp.status.toLowerCase() === 'active'
+  const activeEmployees = employees.filter(
+    (emp) => emp.status && emp.status.toLowerCase() === 'active'
   );
 
   const result = {
-    currentHeadcount: activeEmployees.length
+    currentHeadcount: activeEmployees.length,
   };
 
   if (turnoverData && turnoverData.length > 0) {
@@ -95,29 +90,27 @@ export function calculateHeadcountTrends(
     const oneYearAgo = new Date();
     oneYearAgo.setMonth(oneYearAgo.getMonth() - 12);
 
-    const hires = activeEmployees.filter(emp => {
+    const hires = activeEmployees.filter((emp) => {
       const hireDate = new Date(emp.hire_date);
       return hireDate >= oneYearAgo;
     }).length;
 
     // Count terminations in last 12 months
-    const terminations = turnoverData.filter(t => {
+    const terminations = turnoverData.filter((t) => {
       const termDate = new Date(t.termination_date);
       return termDate >= oneYearAgo;
     }).length;
 
     const netChange = hires - terminations;
     const previousHeadcount = activeEmployees.length - netChange;
-    const growthRate = previousHeadcount > 0
-      ? percentage(netChange, previousHeadcount, 1)
-      : 0;
+    const growthRate = previousHeadcount > 0 ? percentage(netChange, previousHeadcount, 1) : 0;
 
     return {
       ...result,
       hires,
       terminations,
       netChange,
-      growthRate
+      growthRate,
     };
   }
 
@@ -132,8 +125,8 @@ export function calculateSpanOfControl(employees: any[]): {
   byManager: Record<string, { manager: string; directReports: number }>;
   totalManagers: number;
 } {
-  const activeEmployees = employees.filter(emp =>
-    emp.status && emp.status.toLowerCase() === 'active'
+  const activeEmployees = employees.filter(
+    (emp) => emp.status && emp.status.toLowerCase() === 'active'
   );
 
   // Group by manager
@@ -148,22 +141,21 @@ export function calculateSpanOfControl(employees: any[]): {
   let totalDirectReports = 0;
 
   Object.entries(byManager).forEach(([managerId, reports]) => {
-    const manager = activeEmployees.find(e => e.employee_id === managerId);
+    const manager = activeEmployees.find((e) => e.employee_id === managerId);
     managerDetails[managerId] = {
       manager: manager ? `${manager.first_name} ${manager.last_name}` : managerId,
-      directReports: reports.length
+      directReports: reports.length,
     };
     totalDirectReports += reports.length;
   });
 
   const totalManagers = Object.keys(managerDetails).length;
-  const averageSpan = totalManagers > 0
-    ? parseFloat((totalDirectReports / totalManagers).toFixed(1))
-    : 0;
+  const averageSpan =
+    totalManagers > 0 ? parseFloat((totalDirectReports / totalManagers).toFixed(1)) : 0;
 
   return {
     averageSpan,
     byManager: managerDetails,
-    totalManagers
+    totalManagers,
   };
 }

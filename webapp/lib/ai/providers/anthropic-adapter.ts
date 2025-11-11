@@ -66,27 +66,22 @@ export class AnthropicAdapter implements AIProvider {
   /**
    * Send chat completion request
    */
-  async chat(
-    messages: ChatMessage[],
-    options?: ChatOptions
-  ): Promise<ChatResponse> {
+  async chat(messages: ChatMessage[], options?: ChatOptions): Promise<ChatResponse> {
     const model = options?.model || 'claude-3-5-sonnet-20241022';
     const maxTokens = options?.maxTokens || 4096;
     const temperature = options?.temperature ?? 1.0;
 
     // Convert to Anthropic message format
     const anthropicMessages: Anthropic.MessageParam[] = messages
-      .filter(m => m.role !== 'system')
-      .map(m => ({
+      .filter((m) => m.role !== 'system')
+      .map((m) => ({
         role: m.role as 'user' | 'assistant',
         content: m.content,
       }));
 
     // Extract system prompt
     const systemPrompt =
-      options?.systemPrompt ||
-      messages.find(m => m.role === 'system')?.content ||
-      undefined;
+      options?.systemPrompt || messages.find((m) => m.role === 'system')?.content || undefined;
 
     try {
       const response = await this.breaker.fire({
@@ -191,10 +186,10 @@ export class AnthropicAdapter implements AIProvider {
 
     try {
       // Simple health check: ask for a single word response
-      await this.chat(
-        [{ role: 'user', content: 'Reply with only the word "OK"' }],
-        { model: 'claude-3-5-haiku-20241022', maxTokens: 10 }
-      );
+      await this.chat([{ role: 'user', content: 'Reply with only the word "OK"' }], {
+        model: 'claude-3-5-haiku-20241022',
+        maxTokens: 10,
+      });
 
       const latency = Date.now() - startTime;
 
@@ -281,11 +276,7 @@ export class AnthropicAdapter implements AIProvider {
   /**
    * Calculate estimated cost
    */
-  private calculateCost(
-    model: string,
-    inputTokens: number,
-    outputTokens: number
-  ): number {
+  private calculateCost(model: string, inputTokens: number, outputTokens: number): number {
     const costs =
       CLAUDE_COSTS[model as keyof typeof CLAUDE_COSTS] ||
       CLAUDE_COSTS['claude-3-5-sonnet-20241022'];

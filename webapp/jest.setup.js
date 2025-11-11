@@ -1,8 +1,8 @@
-import '@testing-library/jest-dom'
-import { toHaveNoViolations } from 'jest-axe'
+import '@testing-library/jest-dom';
+import { toHaveNoViolations } from 'jest-axe';
 
 // Extend Jest matchers with jest-axe
-expect.extend(toHaveNoViolations)
+expect.extend(toHaveNoViolations);
 
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
@@ -11,20 +11,20 @@ jest.mock('next/navigation', () => ({
       push: jest.fn(),
       replace: jest.fn(),
       prefetch: jest.fn(),
-    }
+    };
   },
   useSearchParams() {
-    return new URLSearchParams()
+    return new URLSearchParams();
   },
   usePathname() {
-    return '/'
+    return '/';
   },
-}))
+}));
 
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: jest.fn().mockImplementation(query => ({
+  value: jest.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -34,4 +34,4 @@ Object.defineProperty(window, 'matchMedia', {
     removeEventListener: jest.fn(),
     dispatchEvent: jest.fn(),
   })),
-})
+});

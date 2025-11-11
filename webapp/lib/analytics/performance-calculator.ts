@@ -110,14 +110,20 @@ export function calculateEmployeeRating(
 
   if (tenureYears > 0) {
     // Senior roles with short tenure = high performer (hired for expertise)
-    if ((level.includes('senior') || level.includes('staff') || level.includes('principal')) && tenureYears < 2) {
+    if (
+      (level.includes('senior') || level.includes('staff') || level.includes('principal')) &&
+      tenureYears < 2
+    ) {
       performanceScore += 0.5;
       factors.push('Senior hire');
       confidence += 10;
     }
 
     // Long tenure at entry level = potential concern
-    if ((level.includes('junior') || level.includes('entry') || level.includes('associate')) && tenureYears > 4) {
+    if (
+      (level.includes('junior') || level.includes('entry') || level.includes('associate')) &&
+      tenureYears > 4
+    ) {
       performanceScore -= 0.3;
       factors.push('Long tenure at entry level');
     }
@@ -125,11 +131,13 @@ export function calculateEmployeeRating(
     // Fast promotion track
     if (employee.promotions && tenureYears > 0) {
       const promotionRate = employee.promotions / tenureYears;
-      if (promotionRate >= 0.5) { // Promoted every 2 years or faster
+      if (promotionRate >= 0.5) {
+        // Promoted every 2 years or faster
         performanceScore += 0.7;
         factors.push('Fast promotion track');
         confidence += 15;
-      } else if (promotionRate >= 0.33) { // Promoted every 3 years
+      } else if (promotionRate >= 0.33) {
+        // Promoted every 3 years
         performanceScore += 0.3;
         factors.push('Regular promotions');
         confidence += 5;
@@ -205,7 +213,11 @@ export function calculateEmployeeRating(
   }
 
   // Factor 4: Senior level with stagnation
-  if ((level.includes('senior') || level.includes('staff')) && tenureYears > 6 && (!employee.promotions || employee.promotions === 0)) {
+  if (
+    (level.includes('senior') || level.includes('staff')) &&
+    tenureYears > 6 &&
+    (!employee.promotions || employee.promotions === 0)
+  ) {
     potentialScore = 1.5; // Limited growth potential
     factors.push('Senior plateau');
   }
@@ -258,21 +270,27 @@ export function calculateDepartmentStats(employees: EmployeeDataForRating[]): {
   avgTenure: number;
   promotionRate: number;
 } {
-  const validComp = employees.filter(e => e.compensation_base && e.compensation_base > 0);
-  const validTenure = employees.filter(e => e.tenure_years && e.tenure_years > 0);
-  const validPromotions = employees.filter(e => e.promotions !== undefined && e.tenure_years && e.tenure_years > 0);
+  const validComp = employees.filter((e) => e.compensation_base && e.compensation_base > 0);
+  const validTenure = employees.filter((e) => e.tenure_years && e.tenure_years > 0);
+  const validPromotions = employees.filter(
+    (e) => e.promotions !== undefined && e.tenure_years && e.tenure_years > 0
+  );
 
-  const avgCompensation = validComp.length > 0
-    ? validComp.reduce((sum, e) => sum + (e.compensation_base || 0), 0) / validComp.length
-    : 0;
+  const avgCompensation =
+    validComp.length > 0
+      ? validComp.reduce((sum, e) => sum + (e.compensation_base || 0), 0) / validComp.length
+      : 0;
 
-  const avgTenure = validTenure.length > 0
-    ? validTenure.reduce((sum, e) => sum + (e.tenure_years || 0), 0) / validTenure.length
-    : 0;
+  const avgTenure =
+    validTenure.length > 0
+      ? validTenure.reduce((sum, e) => sum + (e.tenure_years || 0), 0) / validTenure.length
+      : 0;
 
-  const promotionRate = validPromotions.length > 0
-    ? validPromotions.reduce((sum, e) => sum + (e.promotions || 0) / (e.tenure_years || 1), 0) / validPromotions.length
-    : 0;
+  const promotionRate =
+    validPromotions.length > 0
+      ? validPromotions.reduce((sum, e) => sum + (e.promotions || 0) / (e.tenure_years || 1), 0) /
+        validPromotions.length
+      : 0;
 
   return {
     avgCompensation,
@@ -294,7 +312,7 @@ export function calculateBatchRatings(
     // Group by department for relative scoring
     const byDepartment = new Map<string, EmployeeDataForRating[]>();
 
-    employees.forEach(emp => {
+    employees.forEach((emp) => {
       const dept = emp.department || 'Unknown';
       if (!byDepartment.has(dept)) {
         byDepartment.set(dept, []);
@@ -306,7 +324,7 @@ export function calculateBatchRatings(
     byDepartment.forEach((deptEmployees, dept) => {
       const deptStats = calculateDepartmentStats(deptEmployees);
 
-      deptEmployees.forEach(emp => {
+      deptEmployees.forEach((emp) => {
         const rating = calculateEmployeeRating(emp, deptStats);
         results.set(emp.employee_id, rating);
       });
@@ -315,7 +333,7 @@ export function calculateBatchRatings(
     // Calculate globally (less accurate)
     const globalStats = calculateDepartmentStats(employees);
 
-    employees.forEach(emp => {
+    employees.forEach((emp) => {
       const rating = calculateEmployeeRating(emp, globalStats);
       results.set(emp.employee_id, rating);
     });
@@ -327,7 +345,10 @@ export function calculateBatchRatings(
 /**
  * Identify employees with significant rating inflation (manager leniency/strictness)
  */
-export function identifyRatingInflation(ratings: Map<string, PerformanceRatings>, threshold: number = 1.0): {
+export function identifyRatingInflation(
+  ratings: Map<string, PerformanceRatings>,
+  threshold: number = 1.0
+): {
   overRated: PerformanceRatings[]; // Manager too generous
   underRated: PerformanceRatings[]; // Manager too strict
   aligned: PerformanceRatings[]; // Close alignment
@@ -336,7 +357,7 @@ export function identifyRatingInflation(ratings: Map<string, PerformanceRatings>
   const underRated: PerformanceRatings[] = [];
   const aligned: PerformanceRatings[] = [];
 
-  ratings.forEach(rating => {
+  ratings.forEach((rating) => {
     if (rating.rating_inflation === null) {
       return; // No manager rating to compare
     }

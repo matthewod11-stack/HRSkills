@@ -1,16 +1,11 @@
-'use client'
+'use client';
 
-import { useReducer, useEffect, useMemo, useCallback, useRef, memo, useState } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
-import {
-  Save, X, Plus, Trash2, ArrowLeft, Eye, ArrowUp, ArrowDown,
-  Search
-} from 'lucide-react';
+import { useReducer, useMemo, useCallback, memo, useState } from 'react';
+import { Save, X, Plus, Trash2, ArrowLeft, Eye, ArrowUp, ArrowDown, Search } from 'lucide-react';
 import Link from 'next/link';
 import { MasterEmployeeRecord, CANONICAL_FIELDS } from '@/lib/types/master-employee';
 import { generateEmployeeId } from '@/lib/analytics/column-mapper';
-import { AnimatedButton } from '@/components/ui/animated';
-import { useEmployeeStore } from '@/lib/stores/employee-store';
+import { useEmployeesData } from '@/lib/hooks/use-employees';
 import { AnimatePresence, motion } from 'framer-motion';
 
 // ============================================================================
@@ -75,7 +70,7 @@ function tableReducer(state: TableState, action: TableAction): TableState {
 
     case 'SELECT_ALL': {
       const allIds = new Set(action.payload);
-      const isAllSelected = action.payload.every(id => state.selectedIds.has(id));
+      const isAllSelected = action.payload.every((id) => state.selectedIds.has(id));
       return { ...state, selectedIds: isAllSelected ? new Set() : allIds };
     }
 
@@ -131,7 +126,7 @@ const EmployeeRow = memo(function EmployeeRow({
   editedCells,
   onToggleSelect,
   onCellEdit,
-  onComplexFieldClick
+  onComplexFieldClick,
 }: EmployeeRowProps) {
   const handleCheckboxChange = useCallback(() => {
     onToggleSelect(employee.employee_id);
@@ -139,9 +134,7 @@ const EmployeeRow = memo(function EmployeeRow({
 
   return (
     <tr
-      className={`border-b border-white/10 hover:bg-white/5 ${
-        isSelected ? 'bg-blue-500/10' : ''
-      }`}
+      className={`border-b border-white/10 hover:bg-white/5 ${isSelected ? 'bg-blue-500/10' : ''}`}
     >
       <td className="px-1 py-0">
         <input
@@ -152,7 +145,7 @@ const EmployeeRow = memo(function EmployeeRow({
         />
       </td>
       <td className="px-1 py-0 text-gray-500 text-xs leading-tight">{index + 1}</td>
-      {visibleColumns.map(fieldKey => {
+      {visibleColumns.map((fieldKey) => {
         const cellKey = `${employee.employee_id}:${fieldKey}`;
         // Use edited value if exists, otherwise use employee data
         const value = editedCells.has(cellKey)
@@ -195,11 +188,14 @@ const EmployeeCell = memo(function EmployeeCell({
   value,
   isEdited,
   onCellEdit,
-  onComplexFieldClick
+  onComplexFieldClick,
 }: EmployeeCellProps) {
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    onCellEdit(employeeId, fieldKey, e.target.value);
-  }, [employeeId, fieldKey, onCellEdit]);
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      onCellEdit(employeeId, fieldKey, e.target.value);
+    },
+    [employeeId, fieldKey, onCellEdit]
+  );
 
   // Handle complex data types (arrays, objects)
   const displayValue = useMemo(() => {
@@ -243,14 +239,15 @@ const EmployeeCell = memo(function EmployeeCell({
 // ============================================================================
 
 export function EmployeeTableEditor() {
-  // Global employee store
-  const employees = useEmployeeStore(state => state.employees);
-  const isLoading = useEmployeeStore(state => state.isLoading);
-  const fetchEmployees = useEmployeeStore(state => state.fetchEmployees);
-  const bulkUpdateEmployees = useEmployeeStore(state => state.bulkUpdateEmployees);
-  const bulkDeleteEmployees = useEmployeeStore(state => state.bulkDeleteEmployees);
-  const addEmployee = useEmployeeStore(state => state.addEmployee);
-  const invalidateCache = useEmployeeStore(state => state.invalidateCache);
+  const {
+    employees,
+    isLoading,
+    error: employeesError,
+    refresh,
+    addEmployee,
+    bulkUpdateEmployees,
+    bulkDeleteEmployees,
+  } = useEmployeesData();
 
   // Local UI state
   const [state, dispatch] = useReducer(tableReducer, {
@@ -261,13 +258,16 @@ export function EmployeeTableEditor() {
     sortOrder: 'asc' as 'asc' | 'desc',
     searchTerm: '',
     visibleColumns: new Set<string>([
-      'employee_id', 'full_name', 'email', 'department', 'job_title',
-      'level', 'status', 'hire_date'
-    ])
+      'employee_id',
+      'full_name',
+      'email',
+      'department',
+      'job_title',
+      'level',
+      'status',
+      'hire_date',
+    ]),
   });
-
-  // Virtualization setup
-  const parentRef = useRef<HTMLDivElement>(null);
 
   // Complex field modal state
   const [complexFieldModal, setComplexFieldModal] = useState<{
@@ -278,22 +278,17 @@ export function EmployeeTableEditor() {
   // Column dropdown state
   const [isColumnDropdownOpen, setIsColumnDropdownOpen] = useState(false);
 
-  // Load employees on mount
-  useEffect(() => {
-    fetchEmployees();
-  }, [fetchEmployees]);
-
   // Memoized column list
   const allColumns = useMemo(() => {
     return Object.entries(CANONICAL_FIELDS).map(([key, meta]) => ({
       key,
       label: meta.display_name,
-      category: meta.category
+      category: meta.category,
     }));
   }, []);
 
-  const visibleColumnsArray = useMemo(() =>
-    Array.from(state.visibleColumns),
+  const visibleColumnsArray = useMemo(
+    () => Array.from(state.visibleColumns),
     [state.visibleColumns]
   );
 
@@ -304,11 +299,12 @@ export function EmployeeTableEditor() {
     // Apply search
     if (state.searchTerm) {
       const term = state.searchTerm.toLowerCase();
-      filtered = filtered.filter(emp =>
-        emp.full_name?.toLowerCase().includes(term) ||
-        emp.email?.toLowerCase().includes(term) ||
-        emp.employee_id?.toLowerCase().includes(term) ||
-        emp.department?.toLowerCase().includes(term)
+      filtered = filtered.filter(
+        (emp) =>
+          emp.full_name?.toLowerCase().includes(term) ||
+          emp.email?.toLowerCase().includes(term) ||
+          emp.employee_id?.toLowerCase().includes(term) ||
+          emp.department?.toLowerCase().includes(term)
       );
     }
 
@@ -329,14 +325,6 @@ export function EmployeeTableEditor() {
     return filtered;
   }, [employees, state.searchTerm, state.sortField, state.sortOrder]);
 
-  // Virtual scrolling
-  const rowVirtualizer = useVirtualizer({
-    count: displayedEmployees.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 20, // Row height in pixels - extremely compact
-    overscan: 5
-  });
-
   // Callbacks
   const handleCellEdit = useCallback((employeeId: string, field: string, value: any) => {
     dispatch({ type: 'EDIT_CELL', payload: { employeeId, field, value } });
@@ -351,7 +339,7 @@ export function EmployeeTableEditor() {
   }, []);
 
   const handleSelectAll = useCallback(() => {
-    const allIds = displayedEmployees.map(emp => emp.employee_id);
+    const allIds = displayedEmployees.map((emp) => emp.employee_id);
     dispatch({ type: 'SELECT_ALL', payload: allIds });
   }, [displayedEmployees]);
 
@@ -394,7 +382,7 @@ export function EmployeeTableEditor() {
       employee_id: generateEmployeeId(),
       status: 'Active',
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     };
 
     // Add to store
@@ -402,7 +390,7 @@ export function EmployeeTableEditor() {
 
     if (result.success) {
       // Mark all visible fields as edited so user can fill them in
-      state.visibleColumns.forEach(field => {
+      state.visibleColumns.forEach((field) => {
         handleCellEdit(newEmployee.employee_id, field, (newEmployee as any)[field]);
       });
     } else {
@@ -444,17 +432,37 @@ export function EmployeeTableEditor() {
     );
   }
 
+  if (employeesError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center space-y-3">
+          <h2 className="text-xl font-semibold text-red-300">Unable to load employees</h2>
+          <p className="text-sm text-red-200">
+            {employeesError instanceof Error ? employeesError.message : 'Please try again later.'}
+          </p>
+          <button
+            onClick={() => refresh()}
+            className="inline-flex items-center gap-2 rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/20 to-blue-900/20 text-white p-6">
       <div className="max-w-[98%] mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <Link href="/data-sources">
-              <AnimatedButton className="flex items-center gap-2 px-4 py-2 mb-3 bg-white/10 hover:bg-white/20 border-2 border-white/20 rounded-xl transition-colors">
-                <ArrowLeft className="w-4 h-4" />
-                Back to Data Sources
-              </AnimatedButton>
+            <Link
+              href="/data-sources"
+              className="inline-flex items-center gap-2 px-4 py-2 mb-3 rounded-xl border-2 border-white/20 bg-white/10 transition-colors hover:bg-white/20"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Data Sources
             </Link>
             <h1 className="text-3xl font-bold">Employee Records</h1>
             <p className="text-gray-400 mt-1">
@@ -465,24 +473,24 @@ export function EmployeeTableEditor() {
           <div className="flex gap-3">
             {state.editedCells.size > 0 && (
               <>
-                <AnimatedButton
-                  onClick={() => {
+                <button
+                  onClick={async () => {
                     dispatch({ type: 'CLEAR_EDITS' });
-                    fetchEmployees({ force: true });
+                    await refresh();
                   }}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border-2 border-red-500/30 rounded-lg transition-colors"
+                  className="flex items-center gap-2 rounded-lg border-2 border-red-500/30 bg-red-500/20 px-4 py-2 transition-colors hover:bg-red-500/30"
                 >
                   <X className="w-4 h-4" />
                   Discard Changes
-                </AnimatedButton>
-                <AnimatedButton
+                </button>
+                <button
                   onClick={handleSave}
                   disabled={state.saving}
-                  className="flex items-center gap-2 px-6 py-2 bg-green-500 hover:bg-green-600 rounded-lg font-medium transition-colors disabled:opacity-50"
+                  className="flex items-center gap-2 rounded-lg bg-green-500 px-6 py-2 font-medium text-white transition-colors hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Save className="w-4 h-4" />
                   {state.saving ? 'Saving...' : 'Save Changes'}
-                </AnimatedButton>
+                </button>
               </>
             )}
           </div>
@@ -495,7 +503,10 @@ export function EmployeeTableEditor() {
             <label htmlFor="employee-search" className="sr-only">
               Search employees by name, title, or department
             </label>
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" aria-hidden="true" />
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"
+              aria-hidden="true"
+            />
             <input
               id="employee-search"
               type="search"
@@ -512,22 +523,22 @@ export function EmployeeTableEditor() {
           </div>
 
           {/* Actions */}
-          <AnimatedButton
+          <button
             onClick={handleAddEmployee}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors"
+            className="flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-white transition-colors hover:bg-blue-600"
           >
             <Plus className="w-4 h-4" />
             Add Employee
-          </AnimatedButton>
+          </button>
 
           {state.selectedIds.size > 0 && (
-            <AnimatedButton
+            <button
               onClick={handleDeleteSelected}
-              className="flex items-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border-2 border-red-500/30 rounded-lg transition-colors"
+              className="flex items-center gap-2 rounded-lg border-2 border-red-500/30 bg-red-500/20 px-4 py-2 transition-colors hover:bg-red-500/30"
             >
               <Trash2 className="w-4 h-4" />
               Delete ({state.selectedIds.size})
-            </AnimatedButton>
+            </button>
           )}
 
           {/* Column Visibility */}
@@ -541,8 +552,11 @@ export function EmployeeTableEditor() {
             </button>
             {isColumnDropdownOpen && (
               <div className="fixed right-4 top-auto mt-2 w-64 bg-gray-800 border-2 border-white/20 rounded-lg p-3 shadow-xl z-50 max-h-96 overflow-y-auto">
-                {allColumns.map(col => (
-                  <label key={col.key} className="flex items-center gap-2 py-1 hover:bg-white/5 px-2 rounded cursor-pointer">
+                {allColumns.map((col) => (
+                  <label
+                    key={col.key}
+                    className="flex items-center gap-2 py-1 hover:bg-white/5 px-2 rounded cursor-pointer"
+                  >
                     <input
                       type="checkbox"
                       checked={state.visibleColumns.has(col.key)}
@@ -566,13 +580,16 @@ export function EmployeeTableEditor() {
                   <th className="px-1 py-0.5 text-left w-10">
                     <input
                       type="checkbox"
-                      checked={state.selectedIds.size === displayedEmployees.length && displayedEmployees.length > 0}
+                      checked={
+                        state.selectedIds.size === displayedEmployees.length &&
+                        displayedEmployees.length > 0
+                      }
                       onChange={handleSelectAll}
                       className="rounded scale-75"
                     />
                   </th>
                   <th className="px-1 py-0.5 text-left w-10 text-xs leading-tight">#</th>
-                  {visibleColumnsArray.map(fieldKey => {
+                  {visibleColumnsArray.map((fieldKey) => {
                     const meta = CANONICAL_FIELDS[fieldKey];
                     if (!meta) return null;
 
@@ -584,9 +601,12 @@ export function EmployeeTableEditor() {
                       >
                         <div className="flex items-center gap-1">
                           {meta.display_name}
-                          {state.sortField === fieldKey && (
-                            state.sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
-                          )}
+                          {state.sortField === fieldKey &&
+                            (state.sortOrder === 'asc' ? (
+                              <ArrowUp className="w-3 h-3" />
+                            ) : (
+                              <ArrowDown className="w-3 h-3" />
+                            ))}
                         </div>
                       </th>
                     );
@@ -595,26 +615,22 @@ export function EmployeeTableEditor() {
               </thead>
             </table>
 
-            {/* Virtual Scrolling Container */}
-            <div ref={parentRef} style={{ height: '600px', overflow: 'auto' }}>
+            <div className="max-h-[600px] overflow-auto">
               <table className="w-full text-sm">
-                <tbody style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative' }}>
-                  {rowVirtualizer.getVirtualItems().map(virtualRow => {
-                    const employee = displayedEmployees[virtualRow.index];
-                    return (
-                      <EmployeeRow
-                        key={employee.employee_id}
-                        employee={employee}
-                        index={virtualRow.index}
-                        visibleColumns={visibleColumnsArray}
-                        isSelected={state.selectedIds.has(employee.employee_id)}
-                        editedCells={state.editedCells}
-                        onToggleSelect={handleToggleSelect}
-                        onCellEdit={handleCellEdit}
-                        onComplexFieldClick={handleComplexFieldClick}
-                      />
-                    );
-                  })}
+                <tbody>
+                  {displayedEmployees.map((employee, index) => (
+                    <EmployeeRow
+                      key={employee.employee_id}
+                      employee={employee}
+                      index={index}
+                      visibleColumns={visibleColumnsArray}
+                      isSelected={state.selectedIds.has(employee.employee_id)}
+                      editedCells={state.editedCells}
+                      onToggleSelect={handleToggleSelect}
+                      onCellEdit={handleCellEdit}
+                      onComplexFieldClick={handleComplexFieldClick}
+                    />
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -648,7 +664,8 @@ export function EmployeeTableEditor() {
             >
               <div className="flex items-start justify-between mb-4">
                 <h3 className="text-xl font-bold">
-                  {CANONICAL_FIELDS[complexFieldModal.fieldKey]?.display_name || complexFieldModal.fieldKey}
+                  {CANONICAL_FIELDS[complexFieldModal.fieldKey]?.display_name ||
+                    complexFieldModal.fieldKey}
                 </h3>
                 <button
                   onClick={() => setComplexFieldModal(null)}
@@ -663,7 +680,9 @@ export function EmployeeTableEditor() {
                   <div className="space-y-4">
                     {complexFieldModal.value.map((item: any, index: number) => (
                       <div key={index} className="p-4 bg-white/5 border border-white/10 rounded-lg">
-                        <div className="text-sm font-semibold text-blue-400 mb-2">Item {index + 1}</div>
+                        <div className="text-sm font-semibold text-blue-400 mb-2">
+                          Item {index + 1}
+                        </div>
                         <pre className="text-sm whitespace-pre-wrap overflow-auto max-h-96">
                           {JSON.stringify(item, null, 2)}
                         </pre>

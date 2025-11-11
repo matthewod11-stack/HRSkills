@@ -5,6 +5,7 @@ This directory contains documentation specific to the web application.
 ## Directory Structure
 
 ### `/features`
+
 Documentation for specific features and modules.
 
 - `ACCESSIBILITY_AUDIT_SUMMARY.md` - Summary of accessibility improvements
@@ -13,6 +14,7 @@ Documentation for specific features and modules.
 - `DEPENDENCY_UPDATE_COMPLETE.md` - Record of dependency updates
 
 ### `/phases`
+
 Phase-by-phase development documentation tracking the build progress.
 
 - Phase 1: Error boundaries and initial build
@@ -24,6 +26,7 @@ Phase-by-phase development documentation tracking the build progress.
 - Phase 7: QA and developer experience
 
 ### `/quick-reference`
+
 Quick reference guides for common patterns and best practices.
 
 - `CODE_SPLITTING_QUICK_REFERENCE.md` - Code splitting patterns
@@ -38,4 +41,3 @@ Quick reference guides for common patterns and best practices.
 ## Related Documentation
 
 For project-wide documentation, see the `/docs` directory at the repository root.
-

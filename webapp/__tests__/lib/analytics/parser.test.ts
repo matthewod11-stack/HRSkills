@@ -2,7 +2,13 @@
  * Unit tests for analytics parser functions
  * Tests CSV and Excel parsing with focus on date handling
  */
-import { parseCSV, parseExcel, validateSchema, detectPIIColumns, maskPII } from '@/lib/analytics/parser';
+import {
+  parseCSV,
+  parseExcel,
+  validateSchema,
+  detectPIIColumns,
+  maskPII,
+} from '@/lib/analytics/parser';
 import * as XLSX from 'xlsx';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -43,12 +49,7 @@ E001,John,Smith,2020-01-15`;
       const result = parseCSV(csvContent);
 
       expect(result.success).toBe(true);
-      expect(result.columns).toEqual([
-        'employee_id',
-        'first_name',
-        'last_name',
-        'hire_date'
-      ]);
+      expect(result.columns).toEqual(['employee_id', 'first_name', 'last_name', 'hire_date']);
     });
 
     it('should handle empty CSV', () => {
@@ -79,15 +80,15 @@ E001,John,Smith,2020-01-15`;
           first_name: 'John',
           last_name: 'Smith',
           hire_date: new Date('2020-01-15'),
-          termination_date: null
+          termination_date: null,
         },
         {
           employee_id: 'E002',
           first_name: 'Sarah',
           last_name: 'Johnson',
           hire_date: new Date('2021-03-22'),
-          termination_date: null
-        }
+          termination_date: null,
+        },
       ];
 
       const ws = XLSX.utils.json_to_sheet(data);
@@ -113,14 +114,14 @@ E001,John,Smith,2020-01-15`;
           employee_id: 'E001',
           first_name: 'John',
           hire_date: new Date('2020-01-15'),
-          termination_date: null
+          termination_date: null,
         },
         {
           employee_id: 'E002',
           first_name: 'Sarah',
           hire_date: null,
-          termination_date: null
-        }
+          termination_date: null,
+        },
       ];
 
       const ws = XLSX.utils.json_to_sheet(data);
@@ -141,8 +142,8 @@ E001,John,Smith,2020-01-15`;
         {
           employee_id: 'E001',
           first_name: 'Leap',
-          hire_date: new Date('2020-02-29') // Leap year
-        }
+          hire_date: new Date('2020-02-29'), // Leap year
+        },
       ];
 
       const ws = XLSX.utils.json_to_sheet(data);
@@ -161,8 +162,8 @@ E001,John,Smith,2020-01-15`;
         {
           'Employee ID': 'E001',
           'First Name': 'John',
-          'Hire Date': new Date('2020-01-15')
-        }
+          'Hire Date': new Date('2020-01-15'),
+        },
       ];
 
       const ws = XLSX.utils.json_to_sheet(data);
@@ -173,11 +174,7 @@ E001,John,Smith,2020-01-15`;
       const result = parseExcel(buffer);
 
       expect(result.success).toBe(true);
-      expect(result.columns).toEqual([
-        'employee_id',
-        'first_name',
-        'hire_date'
-      ]);
+      expect(result.columns).toEqual(['employee_id', 'first_name', 'hire_date']);
     });
 
     it('should handle empty Excel file', () => {
@@ -208,13 +205,13 @@ E001,John,Smith,2020-01-15`;
         {
           employee_id: 'E001',
           event: 'Spring Forward',
-          date: new Date('2024-03-10') // DST start in US
+          date: new Date('2024-03-10'), // DST start in US
         },
         {
           employee_id: 'E002',
           event: 'Fall Back',
-          date: new Date('2024-11-03') // DST end in US
-        }
+          date: new Date('2024-11-03'), // DST end in US
+        },
       ];
 
       const ws = XLSX.utils.json_to_sheet(data);
@@ -278,8 +275,8 @@ E001,John,Smith,2020-01-15`;
           employee_id: 'E001',
           first_name: 'John',
           email: 'john@company.com',
-          ssn: '123-45-6789'
-        }
+          ssn: '123-45-6789',
+        },
       ];
 
       const masked = maskPII(data);
@@ -294,8 +291,8 @@ E001,John,Smith,2020-01-15`;
       const data = [
         {
           employee_id: 'E001',
-          email: null
-        }
+          email: null,
+        },
       ];
 
       const masked = maskPII(data);

@@ -11,13 +11,13 @@
  * wait for the updated implementation in Phase 2.2.
  */
 
-import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth, authErrorResponse } from '@/lib/auth/middleware'
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth, authErrorResponse } from '@/lib/auth/middleware';
 
 export async function POST(request: NextRequest) {
-  const authResult = await requireAuth(request)
+  const authResult = await requireAuth(request);
   if (!authResult.success) {
-    return authErrorResponse(authResult)
+    return authErrorResponse(authResult);
   }
 
   return NextResponse.json(
@@ -32,5 +32,5 @@ export async function POST(request: NextRequest) {
       },
     },
     { status: 501 }
-  )
+  );
 }

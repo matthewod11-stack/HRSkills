@@ -160,30 +160,39 @@ describe('Performance Calculator', () => {
   describe('identifyRatingInflation', () => {
     it('should identify over-rated and under-rated employees', () => {
       const ratings = new Map([
-        ['emp1', {
-          employee_id: 'emp1',
-          ai_performance_score: 3.0,
-          ai_potential_score: 2.0,
-          rating_inflation: 1.5, // Manager over-rated by 1.5
-          confidence: 75,
-          factors: [],
-        }],
-        ['emp2', {
-          employee_id: 'emp2',
-          ai_performance_score: 4.5,
-          ai_potential_score: 3.0,
-          rating_inflation: -1.2, // Manager under-rated by 1.2
-          confidence: 80,
-          factors: [],
-        }],
-        ['emp3', {
-          employee_id: 'emp3',
-          ai_performance_score: 3.5,
-          ai_potential_score: 2.5,
-          rating_inflation: 0.3, // Well aligned
-          confidence: 70,
-          factors: [],
-        }],
+        [
+          'emp1',
+          {
+            employee_id: 'emp1',
+            ai_performance_score: 3.0,
+            ai_potential_score: 2.0,
+            rating_inflation: 1.5, // Manager over-rated by 1.5
+            confidence: 75,
+            factors: [],
+          },
+        ],
+        [
+          'emp2',
+          {
+            employee_id: 'emp2',
+            ai_performance_score: 4.5,
+            ai_potential_score: 3.0,
+            rating_inflation: -1.2, // Manager under-rated by 1.2
+            confidence: 80,
+            factors: [],
+          },
+        ],
+        [
+          'emp3',
+          {
+            employee_id: 'emp3',
+            ai_performance_score: 3.5,
+            ai_potential_score: 2.5,
+            rating_inflation: 0.3, // Well aligned
+            confidence: 70,
+            factors: [],
+          },
+        ],
       ]);
 
       const analysis = identifyRatingInflation(ratings, 1.0);
@@ -200,27 +209,35 @@ describe('Performance Calculator', () => {
 
     it('should sort over-rated employees by inflation magnitude', () => {
       const ratings = new Map([
-        ['emp1', {
-          employee_id: 'emp1',
-          ai_performance_score: 3.0,
-          ai_potential_score: 2.0,
-          rating_inflation: 2.0,
-          confidence: 75,
-          factors: [],
-        }],
-        ['emp2', {
-          employee_id: 'emp2',
-          ai_performance_score: 3.5,
-          ai_potential_score: 2.0,
-          rating_inflation: 1.2,
-          confidence: 70,
-          factors: [],
-        }],
+        [
+          'emp1',
+          {
+            employee_id: 'emp1',
+            ai_performance_score: 3.0,
+            ai_potential_score: 2.0,
+            rating_inflation: 2.0,
+            confidence: 75,
+            factors: [],
+          },
+        ],
+        [
+          'emp2',
+          {
+            employee_id: 'emp2',
+            ai_performance_score: 3.5,
+            ai_potential_score: 2.0,
+            rating_inflation: 1.2,
+            confidence: 70,
+            factors: [],
+          },
+        ],
       ]);
 
       const analysis = identifyRatingInflation(ratings, 1.0);
 
-      expect(analysis.overRated[0].rating_inflation).toBeGreaterThan(analysis.overRated[1].rating_inflation!);
+      expect(analysis.overRated[0].rating_inflation).toBeGreaterThan(
+        analysis.overRated[1].rating_inflation!
+      );
     });
   });
 });

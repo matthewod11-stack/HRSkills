@@ -67,10 +67,10 @@ webapp/
 
 ```tsx
 // components/MyComponent.tsx
-'use client'
+'use client';
 
 export default function MyComponent() {
-  return <div>My Component</div>
+  return <div>My Component</div>;
 }
 ```
 
@@ -78,10 +78,10 @@ export default function MyComponent() {
 
 ```typescript
 // app/api/myroute/route.ts
-import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server';
 
 export async function GET() {
-  return NextResponse.json({ message: 'Hello' })
+  return NextResponse.json({ message: 'Hello' });
 }
 ```
 
@@ -103,6 +103,7 @@ vercel deploy
 ### Deploy to Other Platforms
 
 The app can be deployed to:
+
 - Vercel (easiest)
 - Netlify
 - AWS (containerized)
@@ -116,14 +117,17 @@ Skills are loaded from `../skills/` directory. The chat API loads skill context 
 ## Troubleshooting
 
 **Chat not working**
+
 - Check ANTHROPIC_API_KEY in .env.local
 - Verify API key has credits
 
 **Metrics showing mock data**
+
 - Implement Rippling integration in /api/metrics/route.ts
 - Add RIPPLING_API_KEY to .env.local
 
 **Build errors**
+
 - Run `npm install` to ensure all dependencies are installed
 - Check Node.js version (need 18+)
 

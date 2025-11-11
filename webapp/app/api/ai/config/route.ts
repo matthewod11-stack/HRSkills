@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, hasPermission, authErrorResponse } from '@/lib/auth/middleware';
+import { requireAuth, authErrorResponse } from '@/lib/auth/middleware';
 import { handleApiError } from '@/lib/api-helpers';
 import { getAIHealth, getAIConfig, configureAI } from '@/lib/ai/router';
 import { db } from '@/lib/db';
@@ -82,12 +82,7 @@ export async function PATCH(request: NextRequest) {
   }
 
   // Only admins can change global AI configuration
-  if (!hasPermission(authResult.user, 'settings', 'write')) {
-    return NextResponse.json(
-      { success: false, error: 'Admin permissions required to change AI configuration' },
-      { status: 403 }
-    );
-  }
+  // Single-user model: authenticated = authorized
 
   try {
     const body = await request.json();
@@ -160,7 +155,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       results: testResults,
-      overallHealth: Object.values(health).some(h => h.healthy),
+      overallHealth: Object.values(health).some((h) => h.healthy),
     });
   } catch (error) {
     return handleApiError(error, {

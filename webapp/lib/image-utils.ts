@@ -11,14 +11,14 @@ export const IMAGE_SIZES = {
   medium: 256,
   large: 512,
   xlarge: 1024,
-  full: 1920
+  full: 1920,
 } as const;
 
 export const IMAGE_QUALITY = {
   low: 60,
   medium: 75,
   high: 90,
-  max: 100
+  max: 100,
 } as const;
 
 /**
@@ -41,9 +41,7 @@ function shimmer(w: number, h: number): string {
 }
 
 function toBase64(str: string): string {
-  return typeof window === 'undefined'
-    ? Buffer.from(str).toString('base64')
-    : window.btoa(str);
+  return typeof window === 'undefined' ? Buffer.from(str).toString('base64') : window.btoa(str);
 }
 
 /**
@@ -84,7 +82,7 @@ export const IMAGE_BEST_PRACTICES = {
    */
   loadingStrategy: {
     aboveFold: { priority: true, loading: 'eager' as const },
-    belowFold: { priority: false, loading: 'lazy' as const }
+    belowFold: { priority: false, loading: 'lazy' as const },
   },
 
   /**
@@ -95,6 +93,6 @@ export const IMAGE_BEST_PRACTICES = {
     thumbnail: IMAGE_SIZES.small,
     card: IMAGE_SIZES.medium,
     hero: IMAGE_SIZES.xlarge,
-    fullscreen: IMAGE_SIZES.full
-  }
+    fullscreen: IMAGE_SIZES.full,
+  },
 } as const;

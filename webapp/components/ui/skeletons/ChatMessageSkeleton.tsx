@@ -18,11 +18,13 @@ export function ChatMessageSkeleton({ isUser = false }: ChatMessageSkeletonProps
       )}
 
       <div className={`flex-1 max-w-[80%] ${isUser ? 'flex justify-end' : ''}`}>
-        <div className={`rounded-2xl p-4 animate-pulse ${
-          isUser
-            ? 'bg-gradient-to-r from-purple-500/20 to-blue-500/20'
-            : 'bg-white/5 border border-white/10'
-        }`}>
+        <div
+          className={`rounded-2xl p-4 animate-pulse ${
+            isUser
+              ? 'bg-gradient-to-r from-purple-500/20 to-blue-500/20'
+              : 'bg-white/5 border border-white/10'
+          }`}
+        >
           {/* Message content skeleton */}
           <div className="space-y-2">
             <div className="h-4 bg-white/10 rounded w-full" />

@@ -32,7 +32,9 @@ test.describe('Homepage', () => {
     await expect(metricsSection).toBeVisible();
 
     // Metrics should be present (even if showing loading or empty states)
-    const cards = page.locator('.group.relative').filter({ hasText: /Attrition|Headcount|Engagement/ });
+    const cards = page
+      .locator('.group.relative')
+      .filter({ hasText: /Attrition|Headcount|Engagement/ });
     expect(await cards.count()).toBeGreaterThan(0);
   });
 

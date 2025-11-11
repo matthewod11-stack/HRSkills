@@ -114,7 +114,7 @@ export function useBoolean(initialValue: boolean = false) {
     toggle,
     on: setTrue,
     off: setFalse,
-    setValue
+    setValue,
   };
 }
 
@@ -203,7 +203,7 @@ export function useCounter(
     increment,
     decrement,
     reset,
-    setValue
+    setValue,
   };
 }
 
@@ -285,9 +285,7 @@ export function useArray<T>(initialValue: T[] = []) {
   }, []);
 
   const updateById = useCallback((id: any, updater: (item: T) => T) => {
-    setValue((arr) =>
-      arr.map((item: any) => (item.id === id ? updater(item) : item))
-    );
+    setValue((arr) => arr.map((item: any) => (item.id === id ? updater(item) : item)));
   }, []);
 
   const clear = useCallback(() => {
@@ -308,7 +306,7 @@ export function useArray<T>(initialValue: T[] = []) {
     update,
     updateById,
     clear,
-    reset
+    reset,
   };
 }
 
@@ -402,6 +400,6 @@ export function useSet<T>(initialValue?: Set<T> | T[]) {
     has,
     clear,
     reset,
-    size: set.size
+    size: set.size,
   };
 }

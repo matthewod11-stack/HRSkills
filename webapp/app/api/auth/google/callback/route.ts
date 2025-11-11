@@ -16,17 +16,12 @@ export async function GET(request: NextRequest) {
 
     // Handle user denial
     if (error) {
-      return NextResponse.redirect(
-        new URL(`/?auth=cancelled&error=${error}`, request.url)
-      );
+      return NextResponse.redirect(new URL(`/?auth=cancelled&error=${error}`, request.url));
     }
 
     // Validate code
     if (!code) {
-      return NextResponse.json(
-        { error: 'No authorization code received' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'No authorization code received' }, { status: 400 });
     }
 
     // Exchange code for tokens
@@ -36,7 +31,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(
       new URL('/?auth=success&message=Google+Docs+connected', request.url)
     );
-
   } catch (error: any) {
     console.error('OAuth callback error:', error);
     return NextResponse.redirect(

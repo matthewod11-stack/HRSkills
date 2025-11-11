@@ -1,22 +1,22 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Globe, Check, ChevronDown, Search, Loader2 } from 'lucide-react'
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Globe, Check, ChevronDown, Search, Loader2 } from 'lucide-react';
 
 interface Language {
-  code: string
-  name: string
+  code: string;
+  name: string;
 }
 
 interface LanguageSelectorProps {
-  value: string
-  onChange: (languageCode: string) => void
-  label?: string
-  placeholder?: string
-  className?: string
-  showSearch?: boolean
-  preset?: 'global_hr' | 'european' | 'asian' | 'americas' | 'top_5'
+  value: string;
+  onChange: (languageCode: string) => void;
+  label?: string;
+  placeholder?: string;
+  className?: string;
+  showSearch?: boolean;
+  preset?: 'global_hr' | 'european' | 'asian' | 'americas' | 'top_5';
 }
 
 /**
@@ -31,10 +31,10 @@ export function LanguageSelector({
   showSearch = true,
   preset,
 }: LanguageSelectorProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [languages, setLanguages] = useState<Language[]>([])
-  const [loading, setLoading] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [languages, setLanguages] = useState<Language[]>([]);
+  const [loading, setLoading] = useState(false);
 
   // Predefined language presets
   const PRESETS: Record<string, Language[]> = {
@@ -86,32 +86,29 @@ export function LanguageSelector({
       { code: 'fr', name: 'French' },
       { code: 'de', name: 'German' },
     ],
-  }
+  };
 
   useEffect(() => {
     // Use preset if provided, otherwise fetch all languages
     if (preset && PRESETS[preset]) {
-      setLanguages(PRESETS[preset])
+      setLanguages(PRESETS[preset]);
     } else {
       // In a real app, fetch from API
-      setLanguages(PRESETS.global_hr)
+      setLanguages(PRESETS.global_hr);
     }
-  }, [preset])
+  }, [preset]);
 
-  const filteredLanguages = languages.filter(lang =>
-    lang.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    lang.code.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredLanguages = languages.filter(
+    (lang) =>
+      lang.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      lang.code.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  const selectedLanguage = languages.find(lang => lang.code === value)
+  const selectedLanguage = languages.find((lang) => lang.code === value);
 
   return (
     <div className={`relative ${className}`}>
-      {label && (
-        <label className="block text-sm font-medium text-gray-300 mb-2">
-          {label}
-        </label>
-      )}
+      {label && <label className="block text-sm font-medium text-gray-300 mb-2">{label}</label>}
 
       {/* Dropdown trigger */}
       <button
@@ -126,9 +123,7 @@ export function LanguageSelector({
           </span>
         </div>
         <ChevronDown
-          className={`w-5 h-5 text-gray-400 transition-transform ${
-            isOpen ? 'rotate-180' : ''
-          }`}
+          className={`w-5 h-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
 
@@ -137,10 +132,7 @@ export function LanguageSelector({
         {isOpen && (
           <>
             {/* Backdrop */}
-            <div
-              className="fixed inset-0 z-40"
-              onClick={() => setIsOpen(false)}
-            />
+            <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
 
             {/* Menu */}
             <motion.div
@@ -166,25 +158,21 @@ export function LanguageSelector({
 
               <div className="max-h-64 overflow-y-auto">
                 {filteredLanguages.length === 0 ? (
-                  <div className="p-4 text-center text-gray-500">
-                    No languages found
-                  </div>
+                  <div className="p-4 text-center text-gray-500">No languages found</div>
                 ) : (
                   filteredLanguages.map((lang) => (
                     <button
                       key={lang.code}
                       type="button"
                       onClick={() => {
-                        onChange(lang.code)
-                        setIsOpen(false)
-                        setSearchQuery('')
+                        onChange(lang.code);
+                        setIsOpen(false);
+                        setSearchQuery('');
                       }}
                       className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/10 transition-colors"
                     >
                       <span className="text-white">{lang.name}</span>
-                      {value === lang.code && (
-                        <Check className="w-5 h-5 text-green-400" />
-                      )}
+                      {value === lang.code && <Check className="w-5 h-5 text-green-400" />}
                     </button>
                   ))
                 )}
@@ -194,17 +182,17 @@ export function LanguageSelector({
         )}
       </AnimatePresence>
     </div>
-  )
+  );
 }
 
 interface TranslationPreviewProps {
-  originalText: string
-  translatedText: string
-  sourceLanguage: string
-  targetLanguage: string
-  onClose: () => void
-  onConfirm?: () => void
-  isOpen: boolean
+  originalText: string;
+  translatedText: string;
+  sourceLanguage: string;
+  targetLanguage: string;
+  onClose: () => void;
+  onConfirm?: () => void;
+  isOpen: boolean;
 }
 
 /**
@@ -219,7 +207,7 @@ export function TranslationPreview({
   onConfirm,
   isOpen,
 }: TranslationPreviewProps) {
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <AnimatePresence>
@@ -278,8 +266,8 @@ export function TranslationPreview({
             {onConfirm && (
               <button
                 onClick={() => {
-                  onConfirm()
-                  onClose()
+                  onConfirm();
+                  onClose();
                 }}
                 className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg hover:shadow-lg hover:shadow-blue-500/50 transition-all"
               >
@@ -290,15 +278,15 @@ export function TranslationPreview({
         </motion.div>
       </div>
     </AnimatePresence>
-  )
+  );
 }
 
 interface TranslationButtonProps {
-  text: string
-  targetLanguage?: string
-  onTranslated?: (result: { text: string; sourceLanguage: string; targetLanguage: string }) => void
-  className?: string
-  variant?: 'button' | 'icon'
+  text: string;
+  targetLanguage?: string;
+  onTranslated?: (result: { text: string; sourceLanguage: string; targetLanguage: string }) => void;
+  className?: string;
+  variant?: 'button' | 'icon';
 }
 
 /**
@@ -311,12 +299,12 @@ export function TranslationButton({
   className = '',
   variant = 'button',
 }: TranslationButtonProps) {
-  const [isTranslating, setIsTranslating] = useState(false)
-  const [showPreview, setShowPreview] = useState(false)
-  const [translationResult, setTranslationResult] = useState<any>(null)
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [translationResult, setTranslationResult] = useState<any>(null);
 
   const handleTranslate = async () => {
-    setIsTranslating(true)
+    setIsTranslating(true);
     try {
       const response = await fetch('/api/ai/translate', {
         method: 'POST',
@@ -326,23 +314,23 @@ export function TranslationButton({
           targetLanguage,
           detectSource: true,
         }),
-      })
+      });
 
-      const result = await response.json()
+      const result = await response.json();
 
       if (result.success) {
-        setTranslationResult(result.data)
-        setShowPreview(true)
+        setTranslationResult(result.data);
+        setShowPreview(true);
         if (onTranslated) {
-          onTranslated(result.data)
+          onTranslated(result.data);
         }
       }
     } catch (error) {
-      console.error('Translation failed:', error)
+      console.error('Translation failed:', error);
     } finally {
-      setIsTranslating(false)
+      setIsTranslating(false);
     }
-  }
+  };
 
   if (variant === 'icon') {
     return (
@@ -371,7 +359,7 @@ export function TranslationButton({
           />
         )}
       </>
-    )
+    );
   }
 
   return (
@@ -405,5 +393,5 @@ export function TranslationButton({
         />
       )}
     </>
-  )
+  );
 }

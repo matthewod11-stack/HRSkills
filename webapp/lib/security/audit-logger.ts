@@ -92,7 +92,7 @@ export async function logAuditEvent(entry: Omit<AuditLogEntry, 'timestamp'>): Pr
 
     const fullEntry: AuditLogEntry = {
       ...entry,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     // DLP: Validate that audit logs don't contain PII
@@ -105,8 +105,10 @@ export async function logAuditEvent(entry: Omit<AuditLogEntry, 'timestamp'>): Pr
       // PII detected in audit log - this is a serious issue
       console.error(
         '🚨 [SECURITY] PII detected in audit log entry!',
-        'EventType:', entry.eventType,
-        'Error:', dlpError instanceof Error ? dlpError.message : 'Unknown'
+        'EventType:',
+        entry.eventType,
+        'Error:',
+        dlpError instanceof Error ? dlpError.message : 'Unknown'
       );
 
       // In production, you might want to:
@@ -118,7 +120,7 @@ export async function logAuditEvent(entry: Omit<AuditLogEntry, 'timestamp'>): Pr
       const sanitizedEntry = {
         ...fullEntry,
         message: '[REDACTED - PII detected]',
-        metadata: { error: 'PII detected in original log entry' }
+        metadata: { error: 'PII detected in original log entry' },
       };
 
       const sanitizedLogLine = formatLogEntry(sanitizedEntry);
@@ -141,10 +143,14 @@ export async function logAuditEvent(entry: Omit<AuditLogEntry, 'timestamp'>): Pr
       'security.rate_limit',
       'security.permission_denied',
       'data.delete',
-      'upload.rejected'
+      'upload.rejected',
     ];
 
-    if (criticalEvents.includes(entry.eventType) || entry.severity === 'critical' || entry.severity === 'error') {
+    if (
+      criticalEvents.includes(entry.eventType) ||
+      entry.severity === 'critical' ||
+      entry.severity === 'error'
+    ) {
       const securityLogPath = getLogFilePath('security');
       await appendFile(securityLogPath, logLine, 'utf-8');
     }
@@ -152,7 +158,11 @@ export async function logAuditEvent(entry: Omit<AuditLogEntry, 'timestamp'>): Pr
     // Log to console in development
     if (process.env.NODE_ENV === 'development') {
       const emoji = entry.success ? '✅' : '❌';
-      console.log(`${emoji} [AUDIT] ${entry.eventType}:`, entry.message || '', entry.metadata || '');
+      console.log(
+        `${emoji} [AUDIT] ${entry.eventType}:`,
+        entry.message || '',
+        entry.metadata || ''
+      );
     }
   } catch (error) {
     console.error('Failed to write audit log:', error);
@@ -176,7 +186,7 @@ export function getRequestMetadata(request: NextRequest): {
     ip,
     userAgent,
     method: request.method,
-    endpoint: request.nextUrl.pathname
+    endpoint: request.nextUrl.pathname,
   };
 }
 
@@ -197,11 +207,11 @@ export async function logAuthEvent(
     severity: success ? 'info' : 'warning',
     userId: user?.userId,
     userEmail: user?.email,
-    userRoles: user?.roles.map(r => r.name),
+    userRoles: user?.roles.map((r) => r.name),
     sessionId: user?.sessionId,
     success,
     message,
-    ...requestMeta
+    ...requestMeta,
   });
 }
 
@@ -224,13 +234,13 @@ export async function logDataAccess(
     severity: action === 'delete' ? 'warning' : 'info',
     userId: user.userId,
     userEmail: user.email,
-    userRoles: user.roles.map(r => r.name),
+    userRoles: user.roles.map((r) => r.name),
     sessionId: user.sessionId,
     resource,
     action,
     success,
     metadata,
-    ...requestMeta
+    ...requestMeta,
   });
 }
 
@@ -251,12 +261,12 @@ export async function logSecurityEvent(
     severity: 'warning',
     userId: user?.userId,
     userEmail: user?.email,
-    userRoles: user?.roles.map(r => r.name),
+    userRoles: user?.roles.map((r) => r.name),
     sessionId: user?.sessionId,
     success: false,
     message,
     metadata,
-    ...requestMeta
+    ...requestMeta,
   });
 }
 
@@ -276,12 +286,12 @@ export async function logApiRequest(
     severity: statusCode >= 500 ? 'error' : statusCode >= 400 ? 'warning' : 'info',
     userId: user?.userId,
     userEmail: user?.email,
-    userRoles: user?.roles.map(r => r.name),
+    userRoles: user?.roles.map((r) => r.name),
     sessionId: user?.sessionId,
     statusCode,
     success: statusCode < 400,
     metadata,
-    ...requestMeta
+    ...requestMeta,
   });
 }
 
@@ -304,16 +314,16 @@ export async function logFileUpload(
     severity: success ? 'info' : 'warning',
     userId: user.userId,
     userEmail: user.email,
-    userRoles: user.roles.map(r => r.name),
+    userRoles: user.roles.map((r) => r.name),
     sessionId: user.sessionId,
     success,
     message,
     metadata: {
       fileName,
       fileSize,
-      fileType
+      fileType,
     },
-    ...requestMeta
+    ...requestMeta,
   });
 }
 

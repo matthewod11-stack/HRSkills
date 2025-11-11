@@ -1,8 +1,19 @@
-'use client'
+'use client';
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Grid3x3, TrendingUp, TrendingDown, AlertCircle, Download, Upload, Sparkles, X, Users as UsersIcon } from 'lucide-react';
+import {
+  ArrowLeft,
+  Grid3x3,
+  TrendingUp,
+  TrendingDown,
+  AlertCircle,
+  Download,
+  Upload,
+  Sparkles,
+  X,
+  Users as UsersIcon,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth/auth-context';
 
@@ -53,7 +64,7 @@ export default function NineBoxPage() {
     try {
       // Use unified analytics endpoint with metric parameter
       const response = await fetch('/api/analytics?metric=nine-box', {
-        headers: getAuthHeaders()
+        headers: getAuthHeaders(),
       });
       const result = await response.json();
 
@@ -76,10 +87,16 @@ export default function NineBoxPage() {
     }
   };
 
-  const getCellData = (performance: 'High' | 'Medium' | 'Low', potential: 'High' | 'Medium' | 'Low'): NineBoxCell => {
-    if (!nineBoxData) return { performance, potential, count: 0, employees: [], category: '', color: '' };
+  const getCellData = (
+    performance: 'High' | 'Medium' | 'Low',
+    potential: 'High' | 'Medium' | 'Low'
+  ): NineBoxCell => {
+    if (!nineBoxData)
+      return { performance, potential, count: 0, employees: [], category: '', color: '' };
 
-    const cell = nineBoxData.grid.find(c => c.performance === performance && c.potential === potential);
+    const cell = nineBoxData.grid.find(
+      (c) => c.performance === performance && c.potential === potential
+    );
     if (!cell) return { performance, potential, count: 0, employees: [], category: '', color: '' };
 
     // Filter by department if selected
@@ -87,8 +104,8 @@ export default function NineBoxPage() {
 
     return {
       ...cell,
-      employees: cell.employees.filter(e => e.department === selectedDepartment),
-      count: cell.employees.filter(e => e.department === selectedDepartment).length
+      employees: cell.employees.filter((e) => e.department === selectedDepartment),
+      count: cell.employees.filter((e) => e.department === selectedDepartment).length,
     };
   };
 
@@ -103,7 +120,7 @@ export default function NineBoxPage() {
       'Medium-Low': 'from-yellow-500/15 to-orange-500/15 border-yellow-500/40',
       'Low-High': 'from-orange-500/20 to-red-500/20 border-orange-500/50',
       'Low-Medium': 'from-red-500/15 to-orange-500/15 border-red-500/40',
-      'Low-Low': 'from-red-500/20 to-pink-500/20 border-red-500/50'
+      'Low-Low': 'from-red-500/20 to-pink-500/20 border-red-500/50',
     };
     return colorMap[key] || 'from-gray-500/10 to-gray-500/10 border-gray-500/30';
   };
@@ -119,7 +136,7 @@ export default function NineBoxPage() {
       'Medium-Low': 'Core Employee',
       'Low-High': 'Inconsistent',
       'Low-Medium': 'Development Needed',
-      'Low-Low': 'Underperformer'
+      'Low-Low': 'Underperformer',
     };
     return categories[key] || 'Unknown';
   };
@@ -127,11 +144,7 @@ export default function NineBoxPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-black text-white flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center"
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
           <Grid3x3 className="w-16 h-16 mx-auto mb-4 animate-pulse text-purple-400" />
           <p className="text-lg">Loading 9-Box Grid...</p>
         </motion.div>
@@ -198,7 +211,7 @@ export default function NineBoxPage() {
                   onChange={(e) => setSelectedDepartment(e.target.value)}
                   className="px-4 py-2 bg-white/5 border-2 border-white/20 rounded-lg text-sm hover:border-white/40 transition-all cursor-pointer focus:outline-none focus:border-blue-500 text-white"
                 >
-                  {departments.map(dept => (
+                  {departments.map((dept) => (
                     <option key={dept} value={dept} className="bg-gray-900 text-white">
                       {dept === 'all' ? 'All Departments' : dept}
                     </option>
@@ -236,7 +249,9 @@ export default function NineBoxPage() {
                   <TrendingUp className="w-6 h-6 text-green-400" />
                   <span className="text-xs text-gray-400">Top Performers</span>
                 </div>
-                <div className="text-3xl font-bold text-green-400">{nineBoxData.summary.highPerformers}</div>
+                <div className="text-3xl font-bold text-green-400">
+                  {nineBoxData.summary.highPerformers}
+                </div>
                 <div className="text-sm text-gray-400 mt-1">High Performance</div>
               </div>
             </motion.div>
@@ -253,7 +268,9 @@ export default function NineBoxPage() {
                   <UsersIcon className="w-6 h-6 text-blue-400" />
                   <span className="text-xs text-gray-400">Solid Contributors</span>
                 </div>
-                <div className="text-3xl font-bold text-blue-400">{nineBoxData.summary.coreEmployees}</div>
+                <div className="text-3xl font-bold text-blue-400">
+                  {nineBoxData.summary.coreEmployees}
+                </div>
                 <div className="text-sm text-gray-400 mt-1">Core Team</div>
               </div>
             </motion.div>
@@ -270,7 +287,9 @@ export default function NineBoxPage() {
                   <TrendingDown className="w-6 h-6 text-orange-400" />
                   <span className="text-xs text-gray-400">Needs Support</span>
                 </div>
-                <div className="text-3xl font-bold text-orange-400">{nineBoxData.summary.developmentNeeded}</div>
+                <div className="text-3xl font-bold text-orange-400">
+                  {nineBoxData.summary.developmentNeeded}
+                </div>
                 <div className="text-sm text-gray-400 mt-1">Development Focus</div>
               </div>
             </motion.div>
@@ -287,7 +306,9 @@ export default function NineBoxPage() {
                   <Sparkles className="w-6 h-6 text-purple-400" />
                   <span className="text-xs text-gray-400">Total Analyzed</span>
                 </div>
-                <div className="text-3xl font-bold text-purple-400">{nineBoxData.summary.totalAnalyzed}</div>
+                <div className="text-3xl font-bold text-purple-400">
+                  {nineBoxData.summary.totalAnalyzed}
+                </div>
                 <div className="text-sm text-gray-400 mt-1">Employees</div>
               </div>
             </motion.div>
@@ -363,7 +384,9 @@ export default function NineBoxPage() {
 
               {/* Legend */}
               <div className="mt-8 pt-6 border-t border-white/20">
-                <div className="text-sm text-gray-400 mb-4">Performance scoring based on AI analysis of review text + Manager ratings</div>
+                <div className="text-sm text-gray-400 mb-4">
+                  Performance scoring based on AI analysis of review text + Manager ratings
+                </div>
                 <div className="grid grid-cols-3 gap-4 text-xs">
                   <div>
                     <span className="font-semibold text-green-400">High Performance (4-5):</span>
@@ -408,7 +431,9 @@ export default function NineBoxPage() {
                 <X className="w-5 h-5" />
               </button>
 
-              <h3 className="text-xl font-bold mb-2">{getCategoryName(selectedCell.performance, selectedCell.potential)}</h3>
+              <h3 className="text-xl font-bold mb-2">
+                {getCategoryName(selectedCell.performance, selectedCell.potential)}
+              </h3>
               <p className="text-sm text-gray-400 mb-6">
                 {selectedCell.performance} Performance × {selectedCell.potential} Potential
               </p>
@@ -429,7 +454,9 @@ export default function NineBoxPage() {
                       <div className="text-right">
                         <div className="text-sm">
                           <span className="text-gray-400">Performance:</span>
-                          <span className="ml-2 font-medium">{emp.aiPerformanceScore.toFixed(1)}/5</span>
+                          <span className="ml-2 font-medium">
+                            {emp.aiPerformanceScore.toFixed(1)}/5
+                          </span>
                         </div>
                         <div className="text-sm">
                           <span className="text-gray-400">Potential:</span>

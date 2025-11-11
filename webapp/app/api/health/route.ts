@@ -49,7 +49,7 @@ export async function GET() {
     };
 
     // Determine overall health
-    const allHealthy = Object.values(checks).every(check => check === true);
+    const allHealthy = Object.values(checks).every((check) => check === true);
 
     const healthStatus: HealthStatus = {
       status: allHealthy ? 'healthy' : 'unhealthy',
@@ -72,13 +72,13 @@ export async function GET() {
         headers: {
           'Cache-Control': 'no-store, no-cache, must-revalidate',
           'X-Response-Time': `${responseTime}ms`,
-        }
+        },
       }
     );
   } catch (error) {
     return handleApiError(error, {
       endpoint: '/api/health',
-      method: 'GET'
+      method: 'GET',
     });
   }
 }

@@ -16,7 +16,7 @@
  * ```
  */
 
-'use client'
+'use client';
 
 import Image from 'next/image';
 import { useState } from 'react';
@@ -43,7 +43,7 @@ export function OptimizedImage({
   className = '',
   objectFit = 'cover',
   quality = 75,
-  onLoad
+  onLoad,
 }: OptimizedImageProps) {
   const [isLoading, setIsLoading] = useState(true);
 
@@ -66,9 +66,7 @@ export function OptimizedImage({
         }}
         className={`duration-300 ${isLoading ? 'blur-sm scale-105' : 'blur-0 scale-100'}`}
       />
-      {isLoading && (
-        <div className="absolute inset-0 bg-white/5 animate-pulse" />
-      )}
+      {isLoading && <div className="absolute inset-0 bg-white/5 animate-pulse" />}
     </div>
   );
 }

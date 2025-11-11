@@ -15,11 +15,7 @@
 // } from './useDebounce';  // TODO: Fix TypeScript JSX comment parsing issue
 
 // LocalStorage hooks
-export {
-  useLocalStorage,
-  useSessionStorage,
-  useLocalStorageWithExpiry
-} from './useLocalStorage';
+export { useLocalStorage, useSessionStorage, useLocalStorageWithExpiry } from './useLocalStorage';
 
 // Pagination hooks
 // export {

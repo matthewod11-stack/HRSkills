@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 /**
  * ActionButtons Component
@@ -7,16 +7,27 @@
  * Shows action buttons with status indicators and execution feedback.
  */
 
-import React, { useState } from 'react'
-import { CheckCircle2, XCircle, Loader2, AlertCircle, FileText, Mail, MessageSquare, Calendar, Database, Zap } from 'lucide-react'
-import type { BaseAction, ActionResult } from '@/lib/workflows/actions/types'
+import React, { useState } from 'react';
+import {
+  CheckCircle2,
+  XCircle,
+  Loader2,
+  AlertCircle,
+  FileText,
+  Mail,
+  MessageSquare,
+  Calendar,
+  Database,
+  Zap,
+} from 'lucide-react';
+import type { BaseAction, ActionResult } from '@/lib/workflows/actions/types';
 
 interface ActionButtonsProps {
-  actions: BaseAction[]
-  conversationId: string
-  workflowId: string
-  onActionComplete?: (actionId: string, result: ActionResult) => void
-  className?: string
+  actions: BaseAction[];
+  conversationId: string;
+  workflowId: string;
+  onActionComplete?: (actionId: string, result: ActionResult) => void;
+  className?: string;
 }
 
 /**
@@ -31,9 +42,9 @@ function getActionIcon(type: string) {
     update_database: Database,
     api_call: Zap,
     webhook: Zap,
-    custom: Zap
-  }
-  return icons[type] || Zap
+    custom: Zap,
+  };
+  return icons[type] || Zap;
 }
 
 /**
@@ -45,28 +56,28 @@ function getPriorityColors(priority?: string) {
       bg: 'bg-red-50',
       border: 'border-red-200',
       text: 'text-red-700',
-      hover: 'hover:bg-red-100'
+      hover: 'hover:bg-red-100',
     },
     high: {
       bg: 'bg-orange-50',
       border: 'border-orange-200',
       text: 'text-orange-700',
-      hover: 'hover:bg-orange-100'
+      hover: 'hover:bg-orange-100',
     },
     medium: {
       bg: 'bg-blue-50',
       border: 'border-blue-200',
       text: 'text-blue-700',
-      hover: 'hover:bg-blue-100'
+      hover: 'hover:bg-blue-100',
     },
     low: {
       bg: 'bg-gray-50',
       border: 'border-gray-200',
       text: 'text-gray-700',
-      hover: 'hover:bg-gray-100'
-    }
-  }
-  return colors[priority || 'medium']
+      hover: 'hover:bg-gray-100',
+    },
+  };
+  return colors[priority || 'medium'];
 }
 
 export function ActionButtons({
@@ -74,56 +85,56 @@ export function ActionButtons({
   conversationId,
   workflowId,
   onActionComplete,
-  className = ''
+  className = '',
 }: ActionButtonsProps) {
-  const [executingActions, setExecutingActions] = useState<Set<string>>(new Set())
-  const [completedActions, setCompletedActions] = useState<Map<string, ActionResult>>(new Map())
-  const [authHeaders, setAuthHeaders] = useState<Record<string, string>>({})
+  const [executingActions, setExecutingActions] = useState<Set<string>>(new Set());
+  const [completedActions, setCompletedActions] = useState<Map<string, ActionResult>>(new Map());
+  const [authHeaders, setAuthHeaders] = useState<Record<string, string>>({});
 
   // Get auth headers on mount
   React.useEffect(() => {
-    const token = localStorage.getItem('auth_token')
+    const token = localStorage.getItem('auth_token');
     if (token) {
-      setAuthHeaders({ 'Authorization': `Bearer ${token}` })
+      setAuthHeaders({ Authorization: `Bearer ${token}` });
     }
-  }, [])
+  }, []);
 
   /**
    * Execute an action
    */
   const executeAction = async (action: BaseAction) => {
     // Mark as executing
-    setExecutingActions(prev => new Set(prev).add(action.id))
+    setExecutingActions((prev) => new Set(prev).add(action.id));
 
     try {
       const response = await fetch('/api/actions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...authHeaders
+          ...authHeaders,
         },
         body: JSON.stringify({
           action,
           conversationId,
-          workflowId
-        })
-      })
+          workflowId,
+        }),
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!data.success) {
-        throw new Error(data.result?.error?.message || 'Action execution failed')
+        throw new Error(data.result?.error?.message || 'Action execution failed');
       }
 
       // Mark as completed
-      setCompletedActions(prev => new Map(prev).set(action.id, data.result))
+      setCompletedActions((prev) => new Map(prev).set(action.id, data.result));
 
       // Notify parent
       if (onActionComplete) {
-        onActionComplete(action.id, data.result)
+        onActionComplete(action.id, data.result);
       }
     } catch (error: any) {
-      console.error('Action execution error:', error)
+      console.error('Action execution error:', error);
 
       // Record error result
       const errorResult: ActionResult = {
@@ -133,27 +144,27 @@ export function ActionButtons({
         duration: 0,
         error: {
           code: 'execution_error',
-          message: error.message || 'Unknown error'
-        }
-      }
+          message: error.message || 'Unknown error',
+        },
+      };
 
-      setCompletedActions(prev => new Map(prev).set(action.id, errorResult))
+      setCompletedActions((prev) => new Map(prev).set(action.id, errorResult));
 
       if (onActionComplete) {
-        onActionComplete(action.id, errorResult)
+        onActionComplete(action.id, errorResult);
       }
     } finally {
       // Remove from executing
-      setExecutingActions(prev => {
-        const next = new Set(prev)
-        next.delete(action.id)
-        return next
-      })
+      setExecutingActions((prev) => {
+        const next = new Set(prev);
+        next.delete(action.id);
+        return next;
+      });
     }
-  }
+  };
 
   if (actions.length === 0) {
-    return null
+    return null;
   }
 
   return (
@@ -165,11 +176,11 @@ export function ActionButtons({
 
       <div className="space-y-2">
         {actions.map((action) => {
-          const Icon = getActionIcon(action.type)
-          const colors = getPriorityColors(action.priority)
-          const isExecuting = executingActions.has(action.id)
-          const result = completedActions.get(action.id)
-          const isCompleted = result !== undefined
+          const Icon = getActionIcon(action.type);
+          const colors = getPriorityColors(action.priority);
+          const isExecuting = executingActions.has(action.id);
+          const result = completedActions.get(action.id);
+          const isCompleted = result !== undefined;
 
           return (
             <div
@@ -184,13 +195,15 @@ export function ActionButtons({
             >
               <div className="flex items-start gap-3">
                 {/* Icon */}
-                <div className={`mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg ${
-                  isCompleted
-                    ? result.success
-                      ? 'bg-green-100 text-green-600'
-                      : 'bg-red-100 text-red-600'
-                    : `bg-white ${colors.text}`
-                }`}>
+                <div
+                  className={`mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg ${
+                    isCompleted
+                      ? result.success
+                        ? 'bg-green-100 text-green-600'
+                        : 'bg-red-100 text-red-600'
+                      : `bg-white ${colors.text}`
+                  }`}
+                >
                   {isExecuting ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : isCompleted ? (
@@ -208,22 +221,26 @@ export function ActionButtons({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
-                      <h4 className={`text-sm font-semibold ${
-                        isCompleted
-                          ? result.success
-                            ? 'text-green-900'
-                            : 'text-red-900'
-                          : colors.text
-                      }`}>
+                      <h4
+                        className={`text-sm font-semibold ${
+                          isCompleted
+                            ? result.success
+                              ? 'text-green-900'
+                              : 'text-red-900'
+                            : colors.text
+                        }`}
+                      >
                         {action.label}
                       </h4>
-                      <p className={`mt-1 text-xs ${
-                        isCompleted
-                          ? result.success
-                            ? 'text-green-600'
-                            : 'text-red-600'
-                          : 'text-gray-600'
-                      }`}>
+                      <p
+                        className={`mt-1 text-xs ${
+                          isCompleted
+                            ? result.success
+                              ? 'text-green-600'
+                              : 'text-red-600'
+                            : 'text-gray-600'
+                        }`}
+                      >
                         {action.description}
                       </p>
 
@@ -247,9 +264,7 @@ export function ActionButtons({
                           {result.output.message && (
                             <p className="mt-1 text-gray-600">{result.output.message}</p>
                           )}
-                          <p className="mt-1 text-gray-500">
-                            Completed in {result.duration}ms
-                          </p>
+                          <p className="mt-1 text-gray-500">Completed in {result.duration}ms</p>
                         </div>
                       )}
 
@@ -282,11 +297,11 @@ export function ActionButtons({
 
                     {/* Completed badge */}
                     {isCompleted && (
-                      <div className={`flex-shrink-0 rounded-full px-2 py-1 text-xs font-medium ${
-                        result.success
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-red-100 text-red-700'
-                      }`}>
+                      <div
+                        className={`flex-shrink-0 rounded-full px-2 py-1 text-xs font-medium ${
+                          result.success ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                        }`}
+                      >
                         {result.success ? 'Done' : 'Failed'}
                       </div>
                     )}
@@ -295,21 +310,24 @@ export function ActionButtons({
                   {/* Priority badge */}
                   {action.priority && action.priority !== 'medium' && !isCompleted && (
                     <div className="mt-2">
-                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                        action.priority === 'critical'
-                          ? 'bg-red-100 text-red-700'
-                          : action.priority === 'high'
-                          ? 'bg-orange-100 text-orange-700'
-                          : 'bg-gray-100 text-gray-700'
-                      }`}>
-                        {action.priority.charAt(0).toUpperCase() + action.priority.slice(1)} Priority
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                          action.priority === 'critical'
+                            ? 'bg-red-100 text-red-700'
+                            : action.priority === 'high'
+                              ? 'bg-orange-100 text-orange-700'
+                              : 'bg-gray-100 text-gray-700'
+                        }`}
+                      >
+                        {action.priority.charAt(0).toUpperCase() + action.priority.slice(1)}{' '}
+                        Priority
                       </span>
                     </div>
                   )}
                 </div>
               </div>
             </div>
-          )
+          );
         })}
       </div>
 
@@ -334,25 +352,27 @@ export function ActionButtons({
               {completedActions.size} of {actions.length} completed
             </span>
             <span>
-              {Array.from(completedActions.values()).filter(r => r.success).length} successful
+              {Array.from(completedActions.values()).filter((r) => r.success).length} successful
             </span>
           </div>
         </div>
       )}
     </div>
-  )
+  );
 }
 
 /**
  * Compact action indicator for inline display
  */
 export function ActionIndicator({ actionCount }: { actionCount: number }) {
-  if (actionCount === 0) return null
+  if (actionCount === 0) return null;
 
   return (
     <div className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">
       <Zap className="h-3 w-3" />
-      <span>{actionCount} action{actionCount > 1 ? 's' : ''}</span>
+      <span>
+        {actionCount} action{actionCount > 1 ? 's' : ''}
+      </span>
     </div>
-  )
+  );
 }

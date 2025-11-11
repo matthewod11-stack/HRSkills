@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { memo } from 'react';
 import { motion } from 'framer-motion';
@@ -50,9 +50,9 @@ const colorMap = {
 const EventItem = memo(function EventItem({
   event,
   index,
-  colorMap: colorMapProp
+  colorMap: colorMapProp,
 }: {
-  event: typeof events[0];
+  event: (typeof events)[0];
   index: number;
   colorMap: Record<string, string>;
 }) {
@@ -85,7 +85,7 @@ export function UpcomingEvents() {
       className="relative group"
     >
       <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300 opacity-0 group-hover:opacity-100" />
-      
+
       <div className="relative backdrop-blur-xl bg-black/40 border-2 border-white/30 rounded-2xl p-6 hover:border-white/40 transition-all duration-300">
         <div className="flex items-center gap-2 mb-6">
           <Calendar className="w-5 h-5 text-purple-400" />
@@ -94,12 +94,7 @@ export function UpcomingEvents() {
 
         <div className="space-y-4">
           {events.map((event, index) => (
-            <EventItem
-              key={event.id}
-              event={event}
-              index={index}
-              colorMap={colorMap}
-            />
+            <EventItem key={event.id} event={event} index={index} colorMap={colorMap} />
           ))}
         </div>
       </div>

@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
@@ -21,7 +21,7 @@ export function MappingPreviewModal({ preview, onConfirm, onCancel }: MappingPre
       ...updated[index],
       canonical_field: newCanonicalField,
       is_custom: newCanonicalField === null,
-      confidence: newCanonicalField ? 1.0 : 0
+      confidence: newCanonicalField ? 1.0 : 0,
     };
     setMappings(updated);
   };
@@ -41,15 +41,18 @@ export function MappingPreviewModal({ preview, onConfirm, onCancel }: MappingPre
   const canonicalFieldOptions = Object.entries(CANONICAL_FIELDS).map(([key, meta]) => ({
     value: key,
     label: meta.display_name,
-    category: meta.category
+    category: meta.category,
   }));
 
   // Group by category
-  const groupedOptions = canonicalFieldOptions.reduce((acc, option) => {
-    if (!acc[option.category]) acc[option.category] = [];
-    acc[option.category].push(option);
-    return acc;
-  }, {} as Record<string, typeof canonicalFieldOptions>);
+  const groupedOptions = canonicalFieldOptions.reduce(
+    (acc, option) => {
+      if (!acc[option.category]) acc[option.category] = [];
+      acc[option.category].push(option);
+      return acc;
+    },
+    {} as Record<string, typeof canonicalFieldOptions>
+  );
 
   return (
     <motion.div
@@ -74,23 +77,14 @@ export function MappingPreviewModal({ preview, onConfirm, onCancel }: MappingPre
               {preview.file_name} • {preview.row_count} rows
             </p>
             <div className="flex gap-4 mt-2 text-sm">
-              <span className="text-green-400">
-                {preview.new_employees} new employees
-              </span>
-              <span className="text-blue-400">
-                {preview.existing_employees} updates
-              </span>
+              <span className="text-green-400">{preview.new_employees} new employees</span>
+              <span className="text-blue-400">{preview.existing_employees} updates</span>
               {preview.conflicts.length > 0 && (
-                <span className="text-yellow-400">
-                  {preview.conflicts.length} conflicts
-                </span>
+                <span className="text-yellow-400">{preview.conflicts.length} conflicts</span>
               )}
             </div>
           </div>
-          <button
-            onClick={onCancel}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-          >
+          <button onClick={onCancel} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -143,7 +137,11 @@ export function MappingPreviewModal({ preview, onConfirm, onCancel }: MappingPre
                   <div className="flex-1">
                     <div className="font-medium">{mapping.source_column}</div>
                     <div className="text-xs text-gray-500 mt-1">
-                      Sample: {mapping.sample_values.slice(0, 2).map(v => String(v || '—')).join(', ')}
+                      Sample:{' '}
+                      {mapping.sample_values
+                        .slice(0, 2)
+                        .map((v) => String(v || '—'))
+                        .join(', ')}
                     </div>
                   </div>
 
@@ -153,14 +151,17 @@ export function MappingPreviewModal({ preview, onConfirm, onCancel }: MappingPre
                     <select
                       value={mapping.canonical_field || 'custom'}
                       onChange={(e) =>
-                        handleMappingChange(index, e.target.value === 'custom' ? null : e.target.value)
+                        handleMappingChange(
+                          index,
+                          e.target.value === 'custom' ? null : e.target.value
+                        )
                       }
                       className="w-full px-3 py-2 bg-gray-800 border border-white/20 rounded-lg text-sm"
                     >
                       <option value="custom">→ Custom Field (Not Mapped)</option>
                       {Object.entries(groupedOptions).map(([category, options]) => (
                         <optgroup key={category} label={category.toUpperCase()}>
-                          {options.map(opt => (
+                          {options.map((opt) => (
                             <option key={opt.value} value={opt.value}>
                               {opt.label}
                             </option>
@@ -242,7 +243,8 @@ export function MappingPreviewModal({ preview, onConfirm, onCancel }: MappingPre
                     <tr key={idx} className="border-b border-white/10 hover:bg-white/5">
                       {mappings.map((mapping, colIdx) => (
                         <td key={colIdx} className="px-3 py-2 whitespace-nowrap">
-                          {row[mapping.source_column] !== null && row[mapping.source_column] !== undefined
+                          {row[mapping.source_column] !== null &&
+                          row[mapping.source_column] !== undefined
                             ? String(row[mapping.source_column])
                             : '—'}
                         </td>

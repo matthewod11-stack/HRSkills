@@ -33,6 +33,7 @@ npm run test:e2e:ui
 **Location:** `__tests__/accessibility/`
 
 **What it tests:**
+
 - Component-level WCAG violations
 - ARIA attribute validation
 - Form label presence
@@ -40,11 +41,13 @@ npm run test:e2e:ui
 - Focus indicator visibility
 
 **Run tests:**
+
 ```bash
 npm run test:a11y
 ```
 
 **Example test:**
+
 ```typescript
 it('should have no axe violations', async () => {
   const { container } = render(<ChatInterface />);
@@ -58,6 +61,7 @@ it('should have no axe violations', async () => {
 **Location:** `e2e/accessibility.spec.ts`
 
 **What it tests:**
+
 - Full page WCAG compliance
 - Keyboard navigation flows
 - Focus management in modals
@@ -66,11 +70,13 @@ it('should have no axe violations', async () => {
 - Heading hierarchy
 
 **Run tests:**
+
 ```bash
 npm run test:e2e:a11y
 ```
 
 **View results:**
+
 ```bash
 npx playwright show-report
 ```
@@ -104,6 +110,7 @@ npx playwright show-report
   - Jumps to main content when activated
 
 **How to test:**
+
 1. Load page
 2. Press Tab repeatedly
 3. Verify blue focus ring appears on each interactive element
@@ -112,6 +119,7 @@ npx playwright show-report
 ### Screen Reader Testing
 
 **Recommended tools:**
+
 - **macOS**: VoiceOver (Cmd+F5)
 - **Windows**: NVDA (free) or JAWS
 - **Chrome**: ChromeVox extension
@@ -147,6 +155,7 @@ npx playwright show-report
 - [ ] **Images**: Have alt text (when added)
 
 **How to test with VoiceOver:**
+
 1. Enable VoiceOver: Cmd+F5
 2. Navigate with: Ctrl+Option+→ (next item)
 3. Activate with: Ctrl+Option+Space
@@ -155,20 +164,24 @@ npx playwright show-report
 ### Color Contrast Testing
 
 **Tools:**
+
 - [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/)
 - Browser DevTools (Chrome: Lighthouse, Firefox: Accessibility Inspector)
 
 **Requirements:**
+
 - Normal text (< 18pt): **4.5:1** minimum
 - Large text (≥ 18pt or 14pt bold): **3:1** minimum
 
 **How to test:**
+
 1. Open Chrome DevTools
 2. Run Lighthouse audit
 3. Check "Accessibility" category
 4. Review contrast failures
 
 **Key areas to check:**
+
 - Gray text (`text-muted-foreground`) - **Fixed to 5.2:1**
 - Button text on colored backgrounds
 - Link colors
@@ -179,12 +192,14 @@ npx playwright show-report
 **Requirement:** All interactive elements must have visible focus indicators when navigated via keyboard.
 
 **How to test:**
+
 1. Tab through the page
 2. Verify blue outline appears on each element
 3. Check outline is clearly visible against background
 4. Minimum 3px outline on buttons, 2px on other elements
 
 **Visual check:**
+
 - Outline color: Blue (#3B82F6)
 - Outline width: 2-3px
 - Outline offset: 2-3px from element
@@ -193,11 +208,13 @@ npx playwright show-report
 ### Zoom & Text Resize Testing
 
 **Requirements:**
+
 - Page must work at 200% text size
 - Page must work at 400% browser zoom
 - No horizontal scrolling at standard viewport
 
 **How to test:**
+
 1. **Text Resize**: Browser settings → Increase text size to 200%
 2. **Browser Zoom**: Cmd/Ctrl + (+) to 400%
 3. Verify:
@@ -215,16 +232,19 @@ npx playwright show-report
 **Location:** `.github/workflows/accessibility-tests.yml`
 
 **Triggers:**
+
 - Push to `main` or `develop` branches
 - Pull requests to `main` or `develop`
 
 **What it does:**
+
 1. Runs Jest accessibility tests
 2. Runs Playwright E2E accessibility tests
 3. Uploads test results as artifacts
 4. Comments on PR if tests fail
 
 **Viewing results:**
+
 1. Go to GitHub Actions tab
 2. Click on workflow run
 3. Download test artifacts
@@ -235,7 +255,9 @@ npx playwright show-report
 ## Common Issues & Fixes
 
 ### Issue: Form input has no label
+
 **Fix:**
+
 ```tsx
 <label htmlFor="input-id" className="sr-only">
   Descriptive label text
@@ -248,7 +270,9 @@ npx playwright show-report
 ```
 
 ### Issue: Button has no accessible name
+
 **Fix:**
+
 ```tsx
 <button aria-label="Close dialog">
   <X className="w-4 h-4" aria-hidden="true" />
@@ -256,13 +280,17 @@ npx playwright show-report
 ```
 
 ### Issue: Decorative icon confuses screen readers
+
 **Fix:**
+
 ```tsx
 <Icon className="w-5 h-5" aria-hidden="true" />
 ```
 
 ### Issue: Color contrast too low
+
 **Fix:**
+
 ```css
 /* Before: 3.8:1 */
 --muted-foreground: oklch(0.708 0 0);
@@ -272,10 +300,13 @@ npx playwright show-report
 ```
 
 ### Issue: Modal focus not trapped
+
 **Fix:** Use Radix UI Dialog component (already implemented)
 
 ### Issue: No focus indicator visible
+
 **Fix:** Already implemented in `globals.css`:
+
 ```css
 *:focus-visible {
   outline: 2px solid hsl(217 91% 60%);
@@ -290,12 +321,14 @@ npx playwright show-report
 ### Current Coverage
 
 ✅ **Week 1 - Critical (Level A)**
+
 - Form labels (12 instances fixed)
 - Skip-to-main link
 - Language attribute
 - Screen reader only utilities
 
 ✅ **Week 2 - High Priority (Level AA)**
+
 - Color contrast (5.2:1 ratio)
 - Global focus indicators
 - Live region announcements
@@ -303,12 +336,14 @@ npx playwright show-report
 - Decorative icons (aria-hidden)
 
 ✅ **Week 3 - Testing & Validation**
+
 - Automated axe testing (jest-axe)
 - E2E accessibility tests (Playwright)
 - CI/CD integration (GitHub Actions)
 - Manual testing procedures
 
 🔄 **Week 4 - Polish (Pending)**
+
 - ARIA landmarks
 - Accessibility statement page
 - Keyboard shortcuts documentation
@@ -318,16 +353,19 @@ npx playwright show-report
 ## Resources
 
 ### Official Specifications
+
 - [WCAG 2.1](https://www.w3.org/WAI/WCAG21/quickref/)
 - [ARIA Authoring Practices](https://www.w3.org/WAI/ARIA/apg/)
 - [WebAIM Articles](https://webaim.org/articles/)
 
 ### Testing Tools
+
 - [axe DevTools](https://www.deque.com/axe/devtools/)
 - [WAVE Browser Extension](https://wave.webaim.org/extension/)
 - [Lighthouse (Chrome)](https://developers.google.com/web/tools/lighthouse)
 
 ### Screen Readers
+
 - [NVDA (Windows - Free)](https://www.nvaccess.org/)
 - [JAWS (Windows - Paid)](https://www.freedomscientific.com/products/software/jaws/)
 - [VoiceOver (macOS - Built-in)](https://www.apple.com/accessibility/voiceover/)
@@ -337,6 +375,7 @@ npx playwright show-report
 ## Contact & Support
 
 For accessibility questions or to report issues:
+
 - Create an issue in the repository
 - Tag with `accessibility` label
 - Include WCAG criterion reference if known

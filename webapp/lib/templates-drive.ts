@@ -55,10 +55,7 @@ export async function fetchTemplateList(userId: string): Promise<DriveTemplate[]
     pageSize: 1,
   });
 
-  if (
-    !searchTemplatesResponse.data.files ||
-    searchTemplatesResponse.data.files.length === 0
-  ) {
+  if (!searchTemplatesResponse.data.files || searchTemplatesResponse.data.files.length === 0) {
     throw new Error('Templates folder not found');
   }
 
@@ -107,10 +104,7 @@ export async function fetchTemplateList(userId: string): Promise<DriveTemplate[]
 /**
  * Fetch template content by ID (with caching)
  */
-export async function fetchTemplateContent(
-  userId: string,
-  templateId: string
-): Promise<string> {
+export async function fetchTemplateContent(userId: string, templateId: string): Promise<string> {
   // Check cache first
   const cached = templateContentCache.get(templateId);
   if (cached && Date.now() - cached.timestamp < TEMPLATE_CONTENT_CACHE_TTL) {

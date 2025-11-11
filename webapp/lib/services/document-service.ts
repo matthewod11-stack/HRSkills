@@ -5,45 +5,44 @@
  * and soft delete capabilities.
  */
 
-import { db } from '@/lib/db'
-import { documents, type Document, type NewDocument } from '@/db/schema'
-import { eq, and, desc, like, or, sql, SQL } from 'drizzle-orm'
-import { v4 as uuidv4 } from 'uuid'
+import { db } from '@/lib/db';
+import { documents, type Document, type NewDocument } from '@/db/schema';
+import { eq, and, desc, like, or, sql, SQL } from 'drizzle-orm';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface CreateDocumentInput {
-  type: string
-  title: string
-  content: string
-  employeeId?: string | null
-  status?: 'draft' | 'final'
-  metadataJson?: string | null
-  googleDocId?: string | null
-  googleDriveUrl?: string | null
+  type: string;
+  title: string;
+  content: string;
+  employeeId?: string | null;
+  status?: 'draft' | 'final';
+  metadataJson?: string | null;
+  googleDocId?: string | null;
+  googleDriveUrl?: string | null;
 }
 
 export interface UpdateDocumentInput {
-  title?: string
-  content?: string
-  status?: 'draft' | 'final'
-  employeeId?: string | null
-  metadataJson?: string | null
-  googleDocId?: string | null
-  googleDriveUrl?: string | null
+  title?: string;
+  content?: string;
+  status?: 'draft' | 'final';
+  employeeId?: string | null;
+  metadataJson?: string | null;
+  googleDocId?: string | null;
+  googleDriveUrl?: string | null;
 }
 
 export interface DocumentFilters {
-  type?: string
-  status?: 'draft' | 'final'
-  employeeId?: string
-  search?: string
-  limit?: number
-  offset?: number
+  type?: string;
+  status?: 'draft' | 'final';
+  search?: string;
+  limit?: number;
+  offset?: number;
 }
 
 export interface DocumentListResult {
-  documents: Document[]
-  total: number
-  hasMore: boolean
+  documents: Document[];
+  total: number;
+  hasMore: boolean;
 }
 
 /**
@@ -51,7 +50,7 @@ export interface DocumentListResult {
  * Defaults to 'draft' status for chat-created documents
  */
 export async function createDocument(data: CreateDocumentInput): Promise<Document> {
-  const id = `doc_${uuidv4()}`
+  const id = `doc_${uuidv4()}`;
 
   const newDocument: NewDocument = {
     id,
@@ -63,86 +62,64 @@ export async function createDocument(data: CreateDocumentInput): Promise<Documen
     metadataJson: data.metadataJson || null,
     googleDocId: data.googleDocId || null,
     googleDriveUrl: data.googleDriveUrl || null,
-  }
+  };
 
-  const result = await db.insert(documents).values(newDocument).returning()
+  const result = await db.insert(documents).values(newDocument).returning();
 
   if (!result || result.length === 0) {
-    throw new Error('Failed to create document')
+    throw new Error('Failed to create document');
   }
 
-  return result[0]
+  return result[0];
 }
 
 /**
  * Update an existing document
  * Updates the updatedAt timestamp automatically
  */
-export async function updateDocument(
-  id: string,
-  updates: UpdateDocumentInput
-): Promise<Document> {
+export async function updateDocument(id: string, updates: UpdateDocumentInput): Promise<Document> {
   const updateData: Partial<NewDocument> = {
     ...updates,
     updatedAt: new Date().toISOString(),
-  }
+  };
 
-  const result = await db
-    .update(documents)
-    .set(updateData)
-    .where(eq(documents.id, id))
-    .returning()
+  const result = await db.update(documents).set(updateData).where(eq(documents.id, id)).returning();
 
   if (!result || result.length === 0) {
-    throw new Error(`Document not found: ${id}`)
+    throw new Error(`Document not found: ${id}`);
   }
 
-  return result[0]
+  return result[0];
 }
 
 /**
  * List documents with optional filters and pagination
  * Supports search by title and content
+ * Single-user mode: removed employeeId filtering
  */
-export async function listDocuments(
-  filters: DocumentFilters = {}
-): Promise<DocumentListResult> {
-  const {
-    type,
-    status,
-    employeeId,
-    search,
-    limit = 20,
-    offset = 0,
-  } = filters
+export async function listDocuments(filters: DocumentFilters = {}): Promise<DocumentListResult> {
+  const { type, status, search, limit = 20, offset = 0 } = filters;
 
   // Build WHERE clauses
-  const conditions: SQL[] = []
+  const conditions: SQL[] = [];
 
   if (type) {
-    conditions.push(eq(documents.type, type))
+    conditions.push(eq(documents.type, type));
   }
 
   if (status) {
-    conditions.push(eq(documents.status, status))
-  }
-
-  if (employeeId) {
-    conditions.push(eq(documents.employeeId, employeeId))
+    conditions.push(eq(documents.status, status));
   }
 
   if (search) {
     // Search in title and content (case-insensitive)
-    const searchPattern = `%${search}%`
+    const searchPattern = `%${search}%`;
     conditions.push(
-      or(
-        like(documents.title, searchPattern),
-        like(documents.content, searchPattern)
-      )!
-    )
+      or(like(documents.title, searchPattern), like(documents.content, searchPattern))!
+    );
   }
 
-  const whereClause = conditions.length > 0 ? and(...conditions) : undefined
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
   // Execute query with pagination
   const [documentsResult, countResult] = await Promise.all([
@@ -157,29 +134,25 @@ export async function listDocuments(
       .select({ count: sql<number>`count(*)` })
       .from(documents)
       .where(whereClause),
-  ])
+  ]);
 
-  const total = countResult[0]?.count || 0
-  const hasMore = offset + documentsResult.length < total
+  const total = countResult[0]?.count || 0;
+  const hasMore = offset + documentsResult.length < total;
 
   return {
     documents: documentsResult,
     total,
     hasMore,
-  }
+  };
 }
 
 /**
  * Get a single document by ID
  */
 export async function getDocument(id: string): Promise<Document | null> {
-  const result = await db
-    .select()
-    .from(documents)
-    .where(eq(documents.id, id))
-    .limit(1)
+  const result = await db.select().from(documents).where(eq(documents.id, id)).limit(1);
 
-  return result[0] || null
+  return result[0] || null;
 }
 
 /**
@@ -187,17 +160,17 @@ export async function getDocument(id: string): Promise<Document | null> {
  * This operation is one-way and cannot be reversed
  */
 export async function finalizeDocument(id: string): Promise<Document> {
-  const document = await getDocument(id)
+  const document = await getDocument(id);
 
   if (!document) {
-    throw new Error(`Document not found: ${id}`)
+    throw new Error(`Document not found: ${id}`);
   }
 
   if (document.status === 'final') {
-    throw new Error('Document is already finalized')
+    throw new Error('Document is already finalized');
   }
 
-  return await updateDocument(id, { status: 'final' })
+  return await updateDocument(id, { status: 'final' });
 }
 
 /**
@@ -206,13 +179,10 @@ export async function finalizeDocument(id: string): Promise<Document> {
  * For now, we'll use hard delete with audit logging
  */
 export async function deleteDocument(id: string): Promise<void> {
-  const result = await db
-    .delete(documents)
-    .where(eq(documents.id, id))
-    .returning()
+  const result = await db.delete(documents).where(eq(documents.id, id)).returning();
 
   if (!result || result.length === 0) {
-    throw new Error(`Document not found: ${id}`)
+    throw new Error(`Document not found: ${id}`);
   }
 
   // TODO: Add audit log entry for document deletion
@@ -229,12 +199,15 @@ export async function getDocumentCountByType(): Promise<Record<string, number>> 
       count: sql<number>`count(*)`,
     })
     .from(documents)
-    .groupBy(documents.type)
+    .groupBy(documents.type);
 
-  return result.reduce((acc, row) => {
-    acc[row.type] = row.count
-    return acc
-  }, {} as Record<string, number>)
+  return result.reduce(
+    (acc, row) => {
+      acc[row.type] = row.count;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 }
 
 /**
@@ -249,5 +222,5 @@ export async function getEmployeeDocuments(
     .from(documents)
     .where(eq(documents.employeeId, employeeId))
     .orderBy(desc(documents.createdAt))
-    .limit(limit)
+    .limit(limit);
 }

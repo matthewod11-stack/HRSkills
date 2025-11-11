@@ -21,10 +21,7 @@ export async function POST(request: NextRequest) {
 
     // Validate error structure
     if (!error.message || !error.timestamp) {
-      return NextResponse.json(
-        { error: 'Invalid error data' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid error data' }, { status: 400 });
     }
 
     // Log to console (in production, send to error tracking service)
@@ -86,7 +83,7 @@ export async function POST(request: NextRequest) {
     return handleApiError(err, {
       endpoint: '/api/analytics/errors',
       method: 'POST',
-      requestBody: { errorType: error?.type }
+      requestBody: { errorType: error?.type },
     });
   }
 }
@@ -114,7 +111,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     return handleApiError(error, {
       endpoint: '/api/analytics/errors',
-      method: 'GET'
+      method: 'GET',
     });
   }
 }

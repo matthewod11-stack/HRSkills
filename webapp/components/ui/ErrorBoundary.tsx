@@ -57,12 +57,14 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       }
 
       // Default fallback UI based on boundary level
-      return <DefaultErrorFallback
-        error={this.state.error}
-        errorInfo={this.state.errorInfo}
-        onReset={this.handleReset}
-        level={this.props.level || 'section'}
-      />;
+      return (
+        <DefaultErrorFallback
+          error={this.state.error}
+          errorInfo={this.state.errorInfo}
+          onReset={this.handleReset}
+          level={this.props.level || 'section'}
+        />
+      );
     }
 
     return this.props.children;
@@ -76,7 +78,7 @@ function DefaultErrorFallback({
   error,
   errorInfo,
   onReset,
-  level
+  level,
 }: {
   error?: Error;
   errorInfo?: ErrorInfo;
@@ -89,7 +91,8 @@ function DefaultErrorFallback({
   const containerClasses = {
     app: 'min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-8',
     page: 'min-h-[60vh] flex items-center justify-center p-8',
-    section: 'p-8 rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/20'
+    section:
+      'p-8 rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/20',
   };
 
   return (
@@ -122,8 +125,7 @@ function DefaultErrorFallback({
         <p className="text-gray-600 dark:text-gray-400 mb-6">
           {level === 'app'
             ? "We're sorry, but the application encountered an unexpected error."
-            : "This section couldn't load properly. Try refreshing or contact support if the problem persists."
-          }
+            : "This section couldn't load properly. Try refreshing or contact support if the problem persists."}
         </p>
 
         {/* Error Details (only in development) */}
@@ -133,7 +135,9 @@ function DefaultErrorFallback({
               Error Details (Development Only)
             </summary>
             <div className="text-sm text-red-600 dark:text-red-400 font-mono space-y-2">
-              <p><strong>Error:</strong> {error.message}</p>
+              <p>
+                <strong>Error:</strong> {error.message}
+              </p>
               {error.stack && (
                 <pre className="text-xs overflow-auto max-h-40 bg-gray-900 dark:bg-gray-950 text-gray-100 p-2 rounded">
                   {error.stack}
@@ -159,7 +163,7 @@ function DefaultErrorFallback({
 
           {level === 'app' && (
             <button
-              onClick={() => window.location.href = '/'}
+              onClick={() => (window.location.href = '/')}
               className="px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
             >
               Go to Home

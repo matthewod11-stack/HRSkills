@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
         {
           error: 'Not authenticated',
           message: 'Please connect your Google account first',
-          needsAuth: true
+          needsAuth: true,
         },
         { status: 401 }
       );
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     const doc = await docsOAuthService.createDocumentFromMarkdown({
       title: documentTitle,
       content,
-      folderId
+      folderId,
     });
 
     // Return success response
@@ -56,16 +56,19 @@ export async function POST(request: NextRequest) {
       documentId: doc.documentId,
       title: doc.title,
       webViewLink: doc.webViewLink,
-      editLink: doc.editLink
+      editLink: doc.editLink,
     });
-
   } catch (error: any) {
     console.error('Error exporting to Google Docs:', error);
 
     // Handle auth errors
     if (error.message?.includes('Not authenticated') || error.message?.includes('expired')) {
       return NextResponse.json(
-        { error: 'Authentication expired', message: 'Please reconnect your Google account', needsAuth: true },
+        {
+          error: 'Authentication expired',
+          message: 'Please reconnect your Google account',
+          needsAuth: true,
+        },
         { status: 401 }
       );
     }

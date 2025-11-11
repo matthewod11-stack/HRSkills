@@ -274,7 +274,7 @@ export function useLocalStorageWithExpiry<T>(
           const now = Date.now();
           const item = {
             value: valueToStore,
-            expiry: now + expiryMs
+            expiry: now + expiryMs,
           };
           window.localStorage.setItem(key, JSON.stringify(item));
         }

@@ -9,7 +9,7 @@ const DEFAULT_DATA_DIRECTORIES = [
   path.join(process.cwd(), 'data'),
   path.join(process.cwd(), '..', 'data'),
   path.join(process.cwd(), '..', '..', 'data'),
-  path.resolve(__dirname, '../../../../../data')
+  path.resolve(__dirname, '../../../../../data'),
 ].filter((dir): dir is string => Boolean(dir));
 
 export function resolveDataPath(...segments: string[]): string | null {
@@ -43,7 +43,7 @@ export async function readMetadata(): Promise<DataMetadata> {
  */
 export async function loadDataFile(fileId: string): Promise<any[]> {
   const metadata = await readMetadata();
-  const file = metadata.files.find(f => f.fileId === fileId);
+  const file = metadata.files.find((f) => f.fileId === fileId);
 
   if (!file) {
     throw new Error(`File not found: ${fileId}`);
@@ -85,8 +85,8 @@ export async function loadDataFileByType(fileType: string): Promise<any[] | null
   if (fileType === 'employee_master') {
     console.warn(
       '[DEPRECATED] loadDataFileByType("employee_master") is deprecated. ' +
-      'Use SQLite database with Drizzle ORM instead. ' +
-      'See /lib/db/index.ts for database access.'
+        'Use SQLite database with Drizzle ORM instead. ' +
+        'See /lib/db/index.ts for database access.'
     );
     const candidateFiles = [
       resolveDataPath('master-employees.json'),
@@ -115,7 +115,7 @@ export async function loadDataFileByType(fileType: string): Promise<any[] | null
 
   // Find most recent file of this type
   const file = metadata.files
-    .filter(f => f.fileType === fileType)
+    .filter((f) => f.fileType === fileType)
     .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())[0];
 
   if (!file) {
@@ -128,17 +128,15 @@ export async function loadDataFileByType(fileType: string): Promise<any[] | null
 /**
  * Join two datasets on employee_id
  */
-export function joinData(
-  data1: any[],
-  data2: any[],
-  key: string = 'employee_id'
-): any[] {
-  const map2 = new Map(data2.map(row => [row[key], row]));
+export function joinData(data1: any[], data2: any[], key: string = 'employee_id'): any[] {
+  const map2 = new Map(data2.map((row) => [row[key], row]));
 
-  return data1.map(row1 => ({
-    ...row1,
-    ...map2.get(row1[key])
-  })).filter(row => row[key]); // Filter out rows without matching key
+  return data1
+    .map((row1) => ({
+      ...row1,
+      ...map2.get(row1[key]),
+    }))
+    .filter((row) => row[key]); // Filter out rows without matching key
 }
 
 /**
@@ -147,7 +145,7 @@ export function joinData(
 export function groupByCount(data: any[], field: string): Record<string, number> {
   const grouped: Record<string, number> = {};
 
-  data.forEach(row => {
+  data.forEach((row) => {
     const value = row[field] || 'Unknown';
     grouped[value] = (grouped[value] || 0) + 1;
   });
@@ -161,7 +159,7 @@ export function groupByCount(data: any[], field: string): Record<string, number>
 export function groupBy(data: any[], field: string): Record<string, any[]> {
   const grouped: Record<string, any[]> = {};
 
-  data.forEach(row => {
+  data.forEach((row) => {
     const value = row[field] || 'Unknown';
     if (!grouped[value]) {
       grouped[value] = [];
@@ -189,7 +187,7 @@ export function filterByDateRange(
   startDate?: Date,
   endDate?: Date
 ): any[] {
-  return data.filter(row => {
+  return data.filter((row) => {
     const rowDate = new Date(row[dateField]);
     if (isNaN(rowDate.getTime())) return false;
 

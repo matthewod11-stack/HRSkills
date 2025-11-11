@@ -58,20 +58,23 @@ function extractEntities(message: string): {
   const entities: any = {};
 
   // Department extraction
-  const deptMatch = message.match(/\b(engineering|sales|marketing|product|hr|finance|operations|customer success)\b/i);
+  const deptMatch = message.match(
+    /\b(engineering|sales|marketing|product|hr|finance|operations|customer success)\b/i
+  );
   if (deptMatch) {
-    entities.department = deptMatch[1].charAt(0).toUpperCase() + deptMatch[1].slice(1).toLowerCase();
+    entities.department =
+      deptMatch[1].charAt(0).toUpperCase() + deptMatch[1].slice(1).toLowerCase();
   }
 
   // Date range extraction
   const dateRangePatterns = {
-    'last_30_days': /last (30|thirty) days?|past month/i,
-    'last_90_days': /last (90|ninety) days?|past (3|three) months?|last quarter/i,
-    'last_6_months': /last (6|six) months?|past half year/i,
-    'last_12_months': /last (12|twelve) months?|past year|last year/i,
-    'ytd': /year to date|ytd/i,
-    'qtd': /quarter to date|qtd/i,
-    'mtd': /month to date|mtd/i,
+    last_30_days: /last (30|thirty) days?|past month/i,
+    last_90_days: /last (90|ninety) days?|past (3|three) months?|last quarter/i,
+    last_6_months: /last (6|six) months?|past half year/i,
+    last_12_months: /last (12|twelve) months?|past year|last year/i,
+    ytd: /year to date|ytd/i,
+    qtd: /quarter to date|qtd/i,
+    mtd: /month to date|mtd/i,
   };
 
   for (const [range, pattern] of Object.entries(dateRangePatterns)) {

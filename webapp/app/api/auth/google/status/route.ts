@@ -16,12 +16,9 @@ export async function GET() {
       authenticated: isAuthenticated,
       message: isAuthenticated
         ? 'Google Docs integration is connected'
-        : 'Please connect Google Docs to export documents'
+        : 'Please connect Google Docs to export documents',
     });
   } catch (error: any) {
-    return NextResponse.json(
-      { authenticated: false, error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ authenticated: false, error: error.message }, { status: 500 });
   }
 }

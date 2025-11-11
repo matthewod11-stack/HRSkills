@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -51,7 +51,7 @@ export function ContextPanel({ panelData, onClose, children }: ContextPanelProps
           headerGradient: 'from-emerald-500/15 to-teal-500/10',
           iconBg: 'from-emerald-500 to-teal-500',
           closeButtonBorder: 'border-emerald-500/40 hover:border-emerald-400/70',
-          closeButtonBg: 'bg-emerald-500/10 hover:bg-emerald-500/20'
+          closeButtonBg: 'bg-emerald-500/10 hover:bg-emerald-500/20',
         };
       case 'analytics':
         return {
@@ -61,7 +61,7 @@ export function ContextPanel({ panelData, onClose, children }: ContextPanelProps
           headerGradient: 'from-blue-500/15 to-purple-500/10',
           iconBg: 'from-blue-500 to-purple-600',
           closeButtonBorder: 'border-blue-400/40 hover:border-blue-300/60',
-          closeButtonBg: 'bg-white/5 hover:bg-white/10'
+          closeButtonBg: 'bg-white/5 hover:bg-white/10',
         };
       case 'performance':
         return {
@@ -71,7 +71,7 @@ export function ContextPanel({ panelData, onClose, children }: ContextPanelProps
           headerGradient: 'from-orange-500/15 to-rose-500/10',
           iconBg: 'from-orange-500 to-rose-500',
           closeButtonBorder: 'border-orange-400/40 hover:border-orange-300/60',
-          closeButtonBg: 'bg-white/5 hover:bg-white/10'
+          closeButtonBg: 'bg-white/5 hover:bg-white/10',
         };
       default:
         return {
@@ -81,7 +81,7 @@ export function ContextPanel({ panelData, onClose, children }: ContextPanelProps
           headerGradient: 'from-blue-500/10 to-purple-500/10',
           iconBg: 'from-blue-500 to-purple-600',
           closeButtonBorder: 'border-white/20 hover:border-white/40',
-          closeButtonBg: 'bg-white/5 hover:bg-white/10'
+          closeButtonBg: 'bg-white/5 hover:bg-white/10',
         };
     }
   };
@@ -142,7 +142,9 @@ export function ContextPanel({ panelData, onClose, children }: ContextPanelProps
                 className={`flex items-center justify-between px-6 py-4 border-b-2 border-white/10 bg-gradient-to-r ${accent.headerGradient}`}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${accent.iconBg} flex items-center justify-center`}>
+                  <div
+                    className={`w-10 h-10 rounded-xl bg-gradient-to-br ${accent.iconBg} flex items-center justify-center`}
+                  >
                     {getPanelIcon(panelData.type)}
                   </div>
                   <div>
@@ -151,7 +153,8 @@ export function ContextPanel({ panelData, onClose, children }: ContextPanelProps
                     </h3>
                     {panelData.config?.filters && (
                       <p className="text-xs text-gray-400">
-                        {panelData.config.filters.department && `${panelData.config.filters.department} • `}
+                        {panelData.config.filters.department &&
+                          `${panelData.config.filters.department} • `}
                         {panelData.config.filters.dateRange || 'All time'}
                       </p>
                     )}

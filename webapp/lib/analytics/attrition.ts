@@ -7,18 +7,27 @@ export interface AttritionResult {
     voluntaryRate: number;
     involuntaryRate: number;
   };
-  byDepartment: Record<string, {
-    terminations: number;
-    attritionRate: number;
-  }>;
-  byLevel: Record<string, {
-    terminations: number;
-    attritionRate: number;
-  }>;
-  byLocation: Record<string, {
-    terminations: number;
-    attritionRate: number;
-  }>;
+  byDepartment: Record<
+    string,
+    {
+      terminations: number;
+      attritionRate: number;
+    }
+  >;
+  byLevel: Record<
+    string,
+    {
+      terminations: number;
+      attritionRate: number;
+    }
+  >;
+  byLocation: Record<
+    string,
+    {
+      terminations: number;
+      attritionRate: number;
+    }
+  >;
   byTerminationType: Record<string, number>;
   byReason: Record<string, number>;
   regrettable?: {
@@ -48,8 +57,8 @@ export function calculateAttrition(
   }
 
   // Get active employees for denominator
-  const activeEmployees = employees.filter(emp =>
-    emp.status && emp.status.toLowerCase() === 'active'
+  const activeEmployees = employees.filter(
+    (emp) => emp.status && emp.status.toLowerCase() === 'active'
   );
 
   // Calculate average headcount (current + terminated)
@@ -57,40 +66,28 @@ export function calculateAttrition(
 
   // Overall metrics
   const totalTerminations = filteredTurnover.length;
-  const voluntaryTerminations = filteredTurnover.filter(t =>
-    t.termination_type && t.termination_type.toLowerCase() === 'voluntary'
+  const voluntaryTerminations = filteredTurnover.filter(
+    (t) => t.termination_type && t.termination_type.toLowerCase() === 'voluntary'
   ).length;
-  const involuntaryTerminations = filteredTurnover.filter(t =>
-    t.termination_type && t.termination_type.toLowerCase() === 'involuntary'
+  const involuntaryTerminations = filteredTurnover.filter(
+    (t) => t.termination_type && t.termination_type.toLowerCase() === 'involuntary'
   ).length;
 
   const overall = {
     totalTerminations,
     attritionRate: percentage(totalTerminations, avgHeadcount, 1),
     voluntaryRate: percentage(voluntaryTerminations, avgHeadcount, 1),
-    involuntaryRate: percentage(involuntaryTerminations, avgHeadcount, 1)
+    involuntaryRate: percentage(involuntaryTerminations, avgHeadcount, 1),
   };
 
   // Attrition by department
-  const byDepartment = calculateAttritionByField(
-    employees,
-    filteredTurnover,
-    'department'
-  );
+  const byDepartment = calculateAttritionByField(employees, filteredTurnover, 'department');
 
   // Attrition by level
-  const byLevel = calculateAttritionByField(
-    employees,
-    filteredTurnover,
-    'level'
-  );
+  const byLevel = calculateAttritionByField(employees, filteredTurnover, 'level');
 
   // Attrition by location
-  const byLocation = calculateAttritionByField(
-    employees,
-    filteredTurnover,
-    'location'
-  );
+  const byLocation = calculateAttritionByField(employees, filteredTurnover, 'location');
 
   // Termination type and reasons
   const byTerminationType = groupByCount(filteredTurnover, 'termination_type');
@@ -102,31 +99,34 @@ export function calculateAttrition(
     byLevel,
     byLocation,
     byTerminationType,
-    byReason
+    byReason,
   };
 
   // Regrettable turnover (if field exists)
-  const regrettableTerminations = filteredTurnover.filter(t =>
-    t.regrettable && (t.regrettable === true || t.regrettable.toLowerCase() === 'yes')
+  const regrettableTerminations = filteredTurnover.filter(
+    (t) => t.regrettable && (t.regrettable === true || t.regrettable.toLowerCase() === 'yes')
   );
 
-  if (regrettableTerminations.length > 0 || filteredTurnover.some(t => t.regrettable !== undefined)) {
+  if (
+    regrettableTerminations.length > 0 ||
+    filteredTurnover.some((t) => t.regrettable !== undefined)
+  ) {
     result.regrettable = {
       count: regrettableTerminations.length,
-      percentage: percentage(regrettableTerminations.length, totalTerminations, 1)
+      percentage: percentage(regrettableTerminations.length, totalTerminations, 1),
     };
   }
 
   // Demographics breakdown (if available)
   if (demographics && demographics.length > 0) {
-    const employeeMap = new Map(employees.map(e => [e.employee_id, e]));
+    const employeeMap = new Map(employees.map((e) => [e.employee_id, e]));
     const terminatedWithDemographics = filteredTurnover
-      .map(t => {
+      .map((t) => {
         const emp = employeeMap.get(t.employee_id);
-        const demo = demographics.find(d => d.employee_id === t.employee_id);
+        const demo = demographics.find((d) => d.employee_id === t.employee_id);
         return { ...t, ...emp, ...demo };
       })
-      .filter(t => t.gender || t.race_ethnicity);
+      .filter((t) => t.gender || t.race_ethnicity);
 
     result.demographics = {
       byGender: calculateDemographicAttrition(
@@ -140,7 +140,7 @@ export function calculateAttrition(
         demographics,
         terminatedWithDemographics,
         'race_ethnicity'
-      )
+      ),
     };
   }
 
@@ -158,17 +158,17 @@ function calculateAttritionByField(
   const result: Record<string, { terminations: number; attritionRate: number }> = {};
 
   // Get all employees (active + terminated) grouped by field
-  const employeeMap = new Map(employees.map(e => [e.employee_id, e]));
+  const employeeMap = new Map(employees.map((e) => [e.employee_id, e]));
 
   // Enrich turnover data with employee info
-  const enrichedTurnover = turnoverData.map(t => ({
+  const enrichedTurnover = turnoverData.map((t) => ({
     ...t,
-    ...employeeMap.get(t.employee_id)
+    ...employeeMap.get(t.employee_id),
   }));
 
   // Group active employees by field
   const activeByField = groupBy(
-    employees.filter(e => e.status && e.status.toLowerCase() === 'active'),
+    employees.filter((e) => e.status && e.status.toLowerCase() === 'active'),
     field
   );
 
@@ -178,17 +178,17 @@ function calculateAttritionByField(
   // Calculate rate for each field value
   const allFieldValues = new Set([
     ...Object.keys(activeByField),
-    ...Object.keys(terminatedByField)
+    ...Object.keys(terminatedByField),
   ]);
 
-  allFieldValues.forEach(value => {
+  allFieldValues.forEach((value) => {
     const activeCount = (activeByField[value] || []).length;
     const terminatedCount = (terminatedByField[value] || []).length;
     const avgHeadcount = activeCount + terminatedCount;
 
     result[value] = {
       terminations: terminatedCount,
-      attritionRate: avgHeadcount > 0 ? percentage(terminatedCount, avgHeadcount, 1) : 0
+      attritionRate: avgHeadcount > 0 ? percentage(terminatedCount, avgHeadcount, 1) : 0,
     };
   });
 
@@ -207,31 +207,30 @@ function calculateDemographicAttrition(
   const result: Record<string, { terminations: number; rate: number }> = {};
 
   // Join active employees with demographics
-  const employeeMap = new Map(employees.map(e => [e.employee_id, e]));
-  const activeEmployees = employees.filter(e =>
-    e.status && e.status.toLowerCase() === 'active'
-  );
+  const employeeMap = new Map(employees.map((e) => [e.employee_id, e]));
+  const activeEmployees = employees.filter((e) => e.status && e.status.toLowerCase() === 'active');
   const activeWithDemographics = demographics
-    .filter(d => employeeMap.has(d.employee_id) && employeeMap.get(d.employee_id)?.status?.toLowerCase() === 'active')
-    .map(d => ({ ...d, ...employeeMap.get(d.employee_id) }));
+    .filter(
+      (d) =>
+        employeeMap.has(d.employee_id) &&
+        employeeMap.get(d.employee_id)?.status?.toLowerCase() === 'active'
+    )
+    .map((d) => ({ ...d, ...employeeMap.get(d.employee_id) }));
 
   // Group by demographic field
   const activeByDemo = groupBy(activeWithDemographics, field);
   const terminatedByDemo = groupBy(terminatedWithDemographics, field);
 
-  const allDemoValues = new Set([
-    ...Object.keys(activeByDemo),
-    ...Object.keys(terminatedByDemo)
-  ]);
+  const allDemoValues = new Set([...Object.keys(activeByDemo), ...Object.keys(terminatedByDemo)]);
 
-  allDemoValues.forEach(value => {
+  allDemoValues.forEach((value) => {
     const activeCount = (activeByDemo[value] || []).length;
     const terminatedCount = (terminatedByDemo[value] || []).length;
     const avgHeadcount = activeCount + terminatedCount;
 
     result[value] = {
       terminations: terminatedCount,
-      rate: avgHeadcount > 0 ? percentage(terminatedCount, avgHeadcount, 1) : 0
+      rate: avgHeadcount > 0 ? percentage(terminatedCount, avgHeadcount, 1) : 0,
     };
   });
 
@@ -247,57 +246,57 @@ export interface TimeToFillResult {
   byLevel: Record<string, number>;
 }
 
-export function calculateTimeToFill(
-  requisitions: any[]
-): TimeToFillResult {
+export function calculateTimeToFill(requisitions: any[]): TimeToFillResult {
   // Calculate time-to-fill for filled positions
-  const filledRequisitions = requisitions.filter(req =>
-    req.status && req.status.toLowerCase() === 'filled' &&
-    req.open_date && req.fill_date
+  const filledRequisitions = requisitions.filter(
+    (req) => req.status && req.status.toLowerCase() === 'filled' && req.open_date && req.fill_date
   );
 
-  const timeToFillDays = filledRequisitions.map(req => {
+  const timeToFillDays = filledRequisitions.map((req) => {
     const openDate = new Date(req.open_date);
     const fillDate = new Date(req.fill_date);
     return Math.floor((fillDate.getTime() - openDate.getTime()) / (1000 * 60 * 60 * 24));
   });
 
-  const averageDays = timeToFillDays.length > 0
-    ? Math.round(timeToFillDays.reduce((sum, days) => sum + days, 0) / timeToFillDays.length)
-    : 0;
+  const averageDays =
+    timeToFillDays.length > 0
+      ? Math.round(timeToFillDays.reduce((sum, days) => sum + days, 0) / timeToFillDays.length)
+      : 0;
 
   // By department
   const byDepartment: Record<string, number> = {};
   const deptGroups = groupBy(filledRequisitions, 'department');
   Object.entries(deptGroups).forEach(([dept, reqs]) => {
-    const deptDays = reqs.map(req => {
+    const deptDays = reqs.map((req) => {
       const openDate = new Date(req.open_date);
       const fillDate = new Date(req.fill_date);
       return Math.floor((fillDate.getTime() - openDate.getTime()) / (1000 * 60 * 60 * 24));
     });
-    byDepartment[dept] = deptDays.length > 0
-      ? Math.round(deptDays.reduce((sum, days) => sum + days, 0) / deptDays.length)
-      : 0;
+    byDepartment[dept] =
+      deptDays.length > 0
+        ? Math.round(deptDays.reduce((sum, days) => sum + days, 0) / deptDays.length)
+        : 0;
   });
 
   // By level
   const byLevel: Record<string, number> = {};
   const levelGroups = groupBy(filledRequisitions, 'level');
   Object.entries(levelGroups).forEach(([level, reqs]) => {
-    const levelDays = reqs.map(req => {
+    const levelDays = reqs.map((req) => {
       const openDate = new Date(req.open_date);
       const fillDate = new Date(req.fill_date);
       return Math.floor((fillDate.getTime() - openDate.getTime()) / (1000 * 60 * 60 * 24));
     });
-    byLevel[level] = levelDays.length > 0
-      ? Math.round(levelDays.reduce((sum, days) => sum + days, 0) / levelDays.length)
-      : 0;
+    byLevel[level] =
+      levelDays.length > 0
+        ? Math.round(levelDays.reduce((sum, days) => sum + days, 0) / levelDays.length)
+        : 0;
   });
 
   return {
     averageDays,
     byDepartment,
-    byLevel
+    byLevel,
   };
 }
 
@@ -306,10 +305,13 @@ export function calculateTimeToFill(
  */
 export interface RetentionResult {
   overallRetentionRate: number;
-  byTenure: Record<string, {
-    count: number;
-    retentionRate: number;
-  }>;
+  byTenure: Record<
+    string,
+    {
+      count: number;
+      retentionRate: number;
+    }
+  >;
   newHireRetention: {
     hired: number;
     retained: number;
@@ -322,8 +324,8 @@ export function calculateRetention(
   turnoverData: any[],
   periodMonths: number = 12
 ): RetentionResult {
-  const activeEmployees = employees.filter(emp =>
-    emp.status && emp.status.toLowerCase() === 'active'
+  const activeEmployees = employees.filter(
+    (emp) => emp.status && emp.status.toLowerCase() === 'active'
   );
 
   // Calculate period start date
@@ -331,11 +333,7 @@ export function calculateRetention(
   periodStartDate.setMonth(periodStartDate.getMonth() - periodMonths);
 
   // Filter turnover to period
-  const periodTurnover = filterByDateRange(
-    turnoverData,
-    'termination_date',
-    periodStartDate
-  );
+  const periodTurnover = filterByDateRange(turnoverData, 'termination_date', periodStartDate);
 
   // Overall retention
   const totalHeadcount = activeEmployees.length + periodTurnover.length;
@@ -344,7 +342,7 @@ export function calculateRetention(
   // Retention by tenure
   const byTenure: Record<string, { count: number; retentionRate: number }> = {};
 
-  activeEmployees.forEach(emp => {
+  activeEmployees.forEach((emp) => {
     if (!emp.hire_date) return;
 
     const hireDate = new Date(emp.hire_date);
@@ -365,20 +363,20 @@ export function calculateRetention(
   });
 
   // Calculate retention rates for each bucket
-  Object.keys(byTenure).forEach(bucket => {
+  Object.keys(byTenure).forEach((bucket) => {
     // This is simplified - actual retention rate would need historical cohort data
     byTenure[bucket].retentionRate = 100; // Placeholder
   });
 
   // New hire retention (hired in last 12 months and still active)
-  const newHires = activeEmployees.filter(emp => {
+  const newHires = activeEmployees.filter((emp) => {
     if (!emp.hire_date) return false;
     const hireDate = new Date(emp.hire_date);
     return hireDate >= periodStartDate;
   });
 
-  const newHireTerminations = periodTurnover.filter(t => {
-    const emp = employees.find(e => e.employee_id === t.employee_id);
+  const newHireTerminations = periodTurnover.filter((t) => {
+    const emp = employees.find((e) => e.employee_id === t.employee_id);
     if (!emp || !emp.hire_date) return false;
     const hireDate = new Date(emp.hire_date);
     return hireDate >= periodStartDate;
@@ -388,12 +386,12 @@ export function calculateRetention(
   const newHireRetention = {
     hired: totalNewHires,
     retained: newHires.length,
-    retentionRate: totalNewHires > 0 ? percentage(newHires.length, totalNewHires, 1) : 0
+    retentionRate: totalNewHires > 0 ? percentage(newHires.length, totalNewHires, 1) : 0,
   };
 
   return {
     overallRetentionRate,
     byTenure,
-    newHireRetention
+    newHireRetention,
   };
 }

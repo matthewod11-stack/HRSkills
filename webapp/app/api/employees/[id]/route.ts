@@ -9,10 +9,7 @@ import { eq } from 'drizzle-orm';
  *
  * Get single employee by ID with metrics and reviews
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const employeeId = params.id;
 
@@ -24,10 +21,13 @@ export async function GET(
       .limit(1);
 
     if (!employee) {
-      return NextResponse.json({
-        success: false,
-        error: 'Employee not found'
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Employee not found',
+        },
+        { status: 404 }
+      );
     }
 
     // Get employee metrics
@@ -47,10 +47,9 @@ export async function GET(
       employee: {
         ...employee,
         metrics,
-        performanceReviews: reviews
-      }
+        performanceReviews: reviews,
+      },
     });
-
   } catch (error: any) {
     return handleApiError(error, {
       endpoint: `/api/employees/${params.id}`,
@@ -64,10 +63,7 @@ export async function GET(
  *
  * Update single employee
  */
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const employeeId = params.id;
     const updates = await request.json();
@@ -80,10 +76,13 @@ export async function PATCH(
       .limit(1);
 
     if (!existingEmployee) {
-      return NextResponse.json({
-        success: false,
-        error: 'Employee not found'
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Employee not found',
+        },
+        { status: 404 }
+      );
     }
 
     // Update employee with timestamp
@@ -91,16 +90,15 @@ export async function PATCH(
       .update(employees)
       .set({
         ...updates,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       })
       .where(eq(employees.id, employeeId))
       .returning();
 
     return NextResponse.json({
       success: true,
-      employee: updatedEmployee
+      employee: updatedEmployee,
     });
-
   } catch (error: any) {
     return handleApiError(error, {
       endpoint: `/api/employees/${params.id}`,
@@ -114,10 +112,7 @@ export async function PATCH(
  *
  * Soft delete employee (set status to terminated)
  */
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const employeeId = params.id;
 
@@ -129,10 +124,13 @@ export async function DELETE(
       .limit(1);
 
     if (!existingEmployee) {
-      return NextResponse.json({
-        success: false,
-        error: 'Employee not found'
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Employee not found',
+        },
+        { status: 404 }
+      );
     }
 
     // Soft delete: set status to terminated
@@ -141,7 +139,7 @@ export async function DELETE(
       .set({
         status: 'terminated',
         terminationDate: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       })
       .where(eq(employees.id, employeeId))
       .returning();
@@ -149,9 +147,8 @@ export async function DELETE(
     return NextResponse.json({
       success: true,
       message: 'Employee marked as terminated',
-      employee: deletedEmployee
+      employee: deletedEmployee,
     });
-
   } catch (error: any) {
     return handleApiError(error, {
       endpoint: `/api/employees/${params.id}`,

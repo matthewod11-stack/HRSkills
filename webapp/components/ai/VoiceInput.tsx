@@ -1,15 +1,15 @@
-'use client'
+'use client';
 
-import { useState, useRef, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Mic, MicOff, Loader2, Upload, X } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Mic, MicOff, Loader2, Upload, X } from 'lucide-react';
 
 interface VoiceInputProps {
-  onTranscript: (text: string) => void
-  onError?: (error: string) => void
-  className?: string
-  variant?: 'button' | 'icon'
-  languageCode?: string
+  onTranscript: (text: string) => void;
+  onError?: (error: string) => void;
+  className?: string;
+  variant?: 'button' | 'icon';
+  languageCode?: string;
 }
 
 /**
@@ -23,118 +23,119 @@ export function VoiceInput({
   variant = 'icon',
   languageCode = 'en-US',
 }: VoiceInputProps) {
-  const [isRecording, setIsRecording] = useState(false)
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [transcript, setTranscript] = useState('')
-  const [showUploadModal, setShowUploadModal] = useState(false)
-  const recognitionRef = useRef<any>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isRecording, setIsRecording] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const recognitionRef = useRef<any>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Initialize Web Speech API
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+      const SpeechRecognition =
+        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
       if (SpeechRecognition) {
-        const recognition = new SpeechRecognition()
-        recognition.continuous = true
-        recognition.interimResults = true
-        recognition.lang = languageCode
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = languageCode;
 
         recognition.onresult = (event: any) => {
-          let interimTranscript = ''
-          let finalTranscript = ''
+          let interimTranscript = '';
+          let finalTranscript = '';
 
           for (let i = event.resultIndex; i < event.results.length; i++) {
-            const transcriptPiece = event.results[i][0].transcript
+            const transcriptPiece = event.results[i][0].transcript;
             if (event.results[i].isFinal) {
-              finalTranscript += transcriptPiece + ' '
+              finalTranscript += transcriptPiece + ' ';
             } else {
-              interimTranscript += transcriptPiece
+              interimTranscript += transcriptPiece;
             }
           }
 
-          const fullTranscript = (finalTranscript || interimTranscript).trim()
-          setTranscript(fullTranscript)
-        }
+          const fullTranscript = (finalTranscript || interimTranscript).trim();
+          setTranscript(fullTranscript);
+        };
 
         recognition.onerror = (event: any) => {
-          console.error('Speech recognition error:', event.error)
-          onError?.(`Speech recognition error: ${event.error}`)
-          setIsRecording(false)
-        }
+          console.error('Speech recognition error:', event.error);
+          onError?.(`Speech recognition error: ${event.error}`);
+          setIsRecording(false);
+        };
 
         recognition.onend = () => {
-          setIsRecording(false)
+          setIsRecording(false);
           if (transcript) {
-            onTranscript(transcript)
-            setTranscript('')
+            onTranscript(transcript);
+            setTranscript('');
           }
-        }
+        };
 
-        recognitionRef.current = recognition
+        recognitionRef.current = recognition;
       }
     }
 
     return () => {
       if (recognitionRef.current) {
-        recognitionRef.current.stop()
+        recognitionRef.current.stop();
       }
-    }
-  }, [languageCode])
+    };
+  }, [languageCode]);
 
   const toggleRecording = () => {
     if (!recognitionRef.current) {
       // Fallback to file upload if Web Speech API not supported
-      setShowUploadModal(true)
-      return
+      setShowUploadModal(true);
+      return;
     }
 
     if (isRecording) {
-      recognitionRef.current.stop()
-      setIsRecording(false)
+      recognitionRef.current.stop();
+      setIsRecording(false);
     } else {
-      setTranscript('')
-      recognitionRef.current.start()
-      setIsRecording(true)
+      setTranscript('');
+      recognitionRef.current.start();
+      setIsRecording(true);
     }
-  }
+  };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-    setIsProcessing(true)
-    setShowUploadModal(false)
+    setIsProcessing(true);
+    setShowUploadModal(false);
 
     try {
-      const formData = new FormData()
-      formData.append('audio', file)
-      formData.append('languageCode', languageCode)
-      formData.append('preset', 'COMMAND')
+      const formData = new FormData();
+      formData.append('audio', file);
+      formData.append('languageCode', languageCode);
+      formData.append('preset', 'COMMAND');
 
       const response = await fetch('/api/ai/transcribe', {
         method: 'POST',
         body: formData,
-      })
+      });
 
-      const result = await response.json()
+      const result = await response.json();
 
       if (result.success && result.data.transcript) {
-        onTranscript(result.data.transcript)
+        onTranscript(result.data.transcript);
       } else {
-        onError?.('Transcription failed')
+        onError?.('Transcription failed');
       }
     } catch (error) {
-      onError?.('Failed to upload and transcribe audio')
-      console.error('Transcription error:', error)
+      onError?.('Failed to upload and transcribe audio');
+      console.error('Transcription error:', error);
     } finally {
-      setIsProcessing(false)
+      setIsProcessing(false);
       if (fileInputRef.current) {
-        fileInputRef.current.value = ''
+        fileInputRef.current.value = '';
       }
     }
-  }
+  };
 
   if (variant === 'button') {
     return (
@@ -186,7 +187,7 @@ export function VoiceInput({
           onFileSelect={() => fileInputRef.current?.click()}
         />
       </>
-    )
+    );
   }
 
   // Icon variant
@@ -238,17 +239,17 @@ export function VoiceInput({
         onFileSelect={() => fileInputRef.current?.click()}
       />
     </>
-  )
+  );
 }
 
 interface UploadAudioModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onFileSelect: () => void
+  isOpen: boolean;
+  onClose: () => void;
+  onFileSelect: () => void;
 }
 
 function UploadAudioModal({ isOpen, onClose, onFileSelect }: UploadAudioModalProps) {
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <AnimatePresence>
@@ -279,7 +280,8 @@ function UploadAudioModal({ isOpen, onClose, onFileSelect }: UploadAudioModalPro
           <h3 className="text-xl font-bold mb-4">Voice Input Not Available</h3>
 
           <p className="text-gray-300 mb-6">
-            Your browser doesn't support real-time voice input. You can upload an audio file instead.
+            Your browser doesn't support real-time voice input. You can upload an audio file
+            instead.
           </p>
 
           <div className="space-y-3">
@@ -299,20 +301,18 @@ function UploadAudioModal({ isOpen, onClose, onFileSelect }: UploadAudioModalPro
             </button>
           </div>
 
-          <p className="text-xs text-gray-500 mt-4">
-            Supported formats: MP3, WAV, M4A, FLAC, OGG
-          </p>
+          <p className="text-xs text-gray-500 mt-4">Supported formats: MP3, WAV, M4A, FLAC, OGG</p>
         </motion.div>
       </div>
     </AnimatePresence>
-  )
+  );
 }
 
 interface AudioRecorderProps {
-  onRecordingComplete: (audioBlob: Blob) => void
-  onError?: (error: string) => void
-  maxDuration?: number // in seconds
-  className?: string
+  onRecordingComplete: (audioBlob: Blob) => void;
+  onError?: (error: string) => void;
+  maxDuration?: number; // in seconds
+  className?: string;
 }
 
 /**
@@ -325,94 +325,94 @@ export function AudioRecorder({
   maxDuration = 3600, // 1 hour default
   className = '',
 }: AudioRecorderProps) {
-  const [isRecording, setIsRecording] = useState(false)
-  const [recordingTime, setRecordingTime] = useState(0)
-  const [isPaused, setIsPaused] = useState(false)
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
-  const chunksRef = useRef<Blob[]>([])
-  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     return () => {
       if (timerRef.current) {
-        clearInterval(timerRef.current)
+        clearInterval(timerRef.current);
       }
       if (mediaRecorderRef.current && isRecording) {
-        mediaRecorderRef.current.stop()
+        mediaRecorderRef.current.stop();
       }
-    }
-  }, [isRecording])
+    };
+  }, [isRecording]);
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const mediaRecorder = new MediaRecorder(stream)
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
 
-      mediaRecorderRef.current = mediaRecorder
-      chunksRef.current = []
+      mediaRecorderRef.current = mediaRecorder;
+      chunksRef.current = [];
 
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
-          chunksRef.current.push(event.data)
+          chunksRef.current.push(event.data);
         }
-      }
+      };
 
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' })
-        onRecordingComplete(audioBlob)
+        const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        onRecordingComplete(audioBlob);
 
-        stream.getTracks().forEach(track => track.stop())
+        stream.getTracks().forEach((track) => track.stop());
 
         if (timerRef.current) {
-          clearInterval(timerRef.current)
+          clearInterval(timerRef.current);
         }
-      }
+      };
 
-      mediaRecorder.start()
-      setIsRecording(true)
-      setRecordingTime(0)
+      mediaRecorder.start();
+      setIsRecording(true);
+      setRecordingTime(0);
 
       // Start timer
       timerRef.current = setInterval(() => {
-        setRecordingTime(prev => {
-          const newTime = prev + 1
+        setRecordingTime((prev) => {
+          const newTime = prev + 1;
           if (newTime >= maxDuration) {
-            stopRecording()
+            stopRecording();
           }
-          return newTime
-        })
-      }, 1000)
+          return newTime;
+        });
+      }, 1000);
     } catch (error) {
-      console.error('Failed to start recording:', error)
-      onError?.('Failed to access microphone. Please check permissions.')
+      console.error('Failed to start recording:', error);
+      onError?.('Failed to access microphone. Please check permissions.');
     }
-  }
+  };
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop()
-      setIsRecording(false)
-      setIsPaused(false)
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      setIsPaused(false);
     }
-  }
+  };
 
   const togglePause = () => {
-    if (!mediaRecorderRef.current) return
+    if (!mediaRecorderRef.current) return;
 
     if (isPaused) {
-      mediaRecorderRef.current.resume()
-      setIsPaused(false)
+      mediaRecorderRef.current.resume();
+      setIsPaused(false);
     } else {
-      mediaRecorderRef.current.pause()
-      setIsPaused(true)
+      mediaRecorderRef.current.pause();
+      setIsPaused(true);
     }
-  }
+  };
 
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins}:${secs.toString().padStart(2, '0')}`
-  }
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   return (
     <div className={`flex items-center gap-3 ${className}`}>
@@ -447,5 +447,5 @@ export function AudioRecorder({
         </>
       )}
     </div>
-  )
+  );
 }

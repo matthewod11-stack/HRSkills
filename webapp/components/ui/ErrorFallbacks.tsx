@@ -29,7 +29,8 @@ export function DataLoadingError({ error, onRetry }: ErrorFallbackProps) {
       </h3>
 
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 max-w-md">
-        {error?.message || "We couldn't load the data you requested. This might be a temporary issue."}
+        {error?.message ||
+          "We couldn't load the data you requested. This might be a temporary issue."}
       </p>
 
       <button
@@ -59,7 +60,8 @@ export function ChartRenderError({ error, onReset }: ErrorFallbackProps) {
       </h3>
 
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 max-w-md">
-        The chart couldn't be displayed. This might be due to invalid data format or a rendering issue.
+        The chart couldn't be displayed. This might be due to invalid data format or a rendering
+        issue.
       </p>
 
       <div className="flex gap-3">
@@ -104,7 +106,8 @@ export function FormSubmissionError({ error, onRetry }: ErrorFallbackProps) {
           </h3>
 
           <p className="text-sm text-red-700 dark:text-red-300 mb-3">
-            {error?.message || "Your form couldn't be submitted. Please check your entries and try again."}
+            {error?.message ||
+              "Your form couldn't be submitted. Please check your entries and try again."}
           </p>
 
           <button
@@ -137,19 +140,20 @@ export function AuthenticationError({ error }: ErrorFallbackProps) {
         </h2>
 
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-          {error?.message || "You need to be authenticated to access this content. Please sign in to continue."}
+          {error?.message ||
+            'You need to be authenticated to access this content. Please sign in to continue.'}
         </p>
 
         <div className="space-y-3">
           <button
-            onClick={() => window.location.href = '/api/auth/signin'}
+            onClick={() => (window.location.href = '/api/auth/signin')}
             className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
           >
             Sign In
           </button>
 
           <button
-            onClick={() => window.location.href = '/'}
+            onClick={() => (window.location.href = '/')}
             className="w-full px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 font-medium rounded-lg transition-colors inline-flex items-center justify-center gap-2"
           >
             <Home className="w-4 h-4" />
@@ -169,8 +173,18 @@ export function NetworkError({ onRetry }: ErrorFallbackProps) {
   return (
     <div className="flex flex-col items-center justify-center p-8 text-center">
       <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
-        <svg className="w-8 h-8 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414" />
+        <svg
+          className="w-8 h-8 text-gray-600 dark:text-gray-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414"
+          />
         </svg>
       </div>
 
@@ -179,7 +193,8 @@ export function NetworkError({ onRetry }: ErrorFallbackProps) {
       </h3>
 
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 max-w-md">
-        It looks like you're offline or experiencing network issues. Please check your connection and try again.
+        It looks like you're offline or experiencing network issues. Please check your connection
+        and try again.
       </p>
 
       <button
@@ -209,7 +224,8 @@ export function SectionError({ error, onReset }: ErrorFallbackProps) {
           </h3>
 
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-            This section couldn't load properly. You can continue using other parts of the application.
+            This section couldn't load properly. You can continue using other parts of the
+            application.
           </p>
 
           <button

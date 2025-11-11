@@ -74,16 +74,24 @@ export function logError(
   const errorMessage = error instanceof Error ? error.message : String(error);
   const errorStack = error instanceof Error ? error.stack : undefined;
 
-  console.error(JSON.stringify({
-    timestamp,
-    level: 'ERROR',
-    endpoint: context.endpoint,
-    method: context.method || 'UNKNOWN',
-    userId: context.userId || 'ANONYMOUS',
-    error: errorMessage,
-    stack: errorStack,
-    requestBody: context.requestBody ? JSON.stringify(context.requestBody).substring(0, 500) : undefined,
-  }, null, 2));
+  console.error(
+    JSON.stringify(
+      {
+        timestamp,
+        level: 'ERROR',
+        endpoint: context.endpoint,
+        method: context.method || 'UNKNOWN',
+        userId: context.userId || 'ANONYMOUS',
+        error: errorMessage,
+        stack: errorStack,
+        requestBody: context.requestBody
+          ? JSON.stringify(context.requestBody).substring(0, 500)
+          : undefined,
+      },
+      null,
+      2
+    )
+  );
 }
 
 /**
@@ -178,9 +186,7 @@ export function validationError(
 /**
  * Not found error helper
  */
-export function notFoundError(
-  resource: string = 'Resource'
-): NextResponse<ErrorResponse> {
+export function notFoundError(resource: string = 'Resource'): NextResponse<ErrorResponse> {
   return createErrorResponse(`${resource} not found`, HttpStatus.NOT_FOUND);
 }
 
@@ -205,9 +211,7 @@ export function forbiddenError(
 /**
  * Conflict error helper
  */
-export function conflictError(
-  message: string
-): NextResponse<ErrorResponse> {
+export function conflictError(message: string): NextResponse<ErrorResponse> {
   return createErrorResponse(message, HttpStatus.CONFLICT);
 }
 

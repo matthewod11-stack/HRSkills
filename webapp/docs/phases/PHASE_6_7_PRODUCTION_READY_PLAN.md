@@ -28,6 +28,7 @@ Phase 6/7 represents the final stages of production readiness. This hybrid phase
 ## 📦 IMPLEMENTATION ROADMAP
 
 ### PHASE 6: Core Production Features (2.5 hours)
+
 Focus on user-facing features and production stability.
 
 **Round 1: PWA & Service Worker** (1 hour)
@@ -35,6 +36,7 @@ Focus on user-facing features and production stability.
 **Round 3: Accessibility Audit** (30 min)
 
 ### PHASE 7: Quality Assurance & DX (2 hours)
+
 Focus on testing, developer experience, and final polish.
 
 **Round 1: Test Coverage** (1 hour)
@@ -48,17 +50,20 @@ Focus on testing, developer experience, and final polish.
 ### Round 1: PWA & Service Worker (1 hour)
 
 #### Objectives:
+
 - ✅ Make app installable on mobile/desktop
 - ✅ Offline support for cached pages
 - ✅ Background sync for API requests
 - ✅ Push notifications infrastructure (optional)
 
 #### Step 1: Install next-pwa
+
 ```bash
 npm install next-pwa
 ```
 
 #### Step 2: Configure Service Worker
+
 **File:** `next.config.js`
 
 ```javascript
@@ -75,9 +80,9 @@ const withPWA = require('next-pwa')({
         cacheName: 'google-fonts',
         expiration: {
           maxEntries: 10,
-          maxAgeSeconds: 365 * 24 * 60 * 60 // 1 year
-        }
-      }
+          maxAgeSeconds: 365 * 24 * 60 * 60, // 1 year
+        },
+      },
     },
     {
       urlPattern: /^https:\/\/api\.anthropic\.com\/.*/i,
@@ -87,9 +92,9 @@ const withPWA = require('next-pwa')({
         networkTimeoutSeconds: 10,
         expiration: {
           maxEntries: 50,
-          maxAgeSeconds: 5 * 60 // 5 minutes
-        }
-      }
+          maxAgeSeconds: 5 * 60, // 5 minutes
+        },
+      },
     },
     {
       urlPattern: /\.(?:jpg|jpeg|png|gif|webp|svg|ico)$/i,
@@ -98,9 +103,9 @@ const withPWA = require('next-pwa')({
         cacheName: 'image-cache',
         expiration: {
           maxEntries: 100,
-          maxAgeSeconds: 30 * 24 * 60 * 60 // 30 days
-        }
-      }
+          maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+        },
+      },
     },
     {
       urlPattern: /^\/(?!api).*$/,
@@ -109,17 +114,18 @@ const withPWA = require('next-pwa')({
         cacheName: 'pages-cache',
         networkTimeoutSeconds: 3,
         expiration: {
-          maxEntries: 50
-        }
-      }
-    }
-  ]
+          maxEntries: 50,
+        },
+      },
+    },
+  ],
 });
 
 module.exports = withBundleAnalyzer(withPWA(nextConfig));
 ```
 
 #### Step 3: Create Web App Manifest
+
 **File:** `public/manifest.json`
 
 ```json
@@ -164,11 +170,13 @@ module.exports = withBundleAnalyzer(withPWA(nextConfig));
 ```
 
 #### Step 4: Create App Icons
+
 - Generate 192x192 and 512x512 PNG icons
 - Place in `public/` directory
 - Use brand colors (purple gradient)
 
 #### Step 5: Add Offline Fallback Page
+
 **File:** `app/offline/page.tsx`
 
 ```tsx
@@ -178,7 +186,12 @@ export default function OfflinePage() {
       <div className="text-center max-w-md px-6">
         <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center">
           <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414"
+            />
           </svg>
         </div>
 
@@ -209,6 +222,7 @@ export default function OfflinePage() {
 ```
 
 #### Step 6: Update Layout with Manifest Link
+
 **File:** `app/layout.tsx`
 
 ```tsx
@@ -220,12 +234,13 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'HR Center'
-  }
-}
+    title: 'HR Center',
+  },
+};
 ```
 
 **Expected Benefits:**
+
 - ✅ Installable on mobile/desktop
 - ✅ Offline support for cached pages
 - ✅ Faster repeat visits (service worker cache)
@@ -236,6 +251,7 @@ export const metadata: Metadata = {
 ### Round 2: Monitoring & Error Tracking (1 hour)
 
 #### Objectives:
+
 - ✅ Track performance metrics in production
 - ✅ Catch and log JavaScript errors
 - ✅ Monitor Core Web Vitals
@@ -274,7 +290,7 @@ const THRESHOLDS = {
   FID: { good: 100, poor: 300 },
   CLS: { good: 0.1, poor: 0.25 },
   FCP: { good: 1800, poor: 3000 },
-  TTFB: { good: 800, poor: 1800 }
+  TTFB: { good: 800, poor: 1800 },
 };
 
 /**
@@ -302,7 +318,7 @@ async function sendMetric(metric: PerformanceMetric) {
     await fetch('/api/analytics/metrics', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(metric)
+      body: JSON.stringify(metric),
     });
   } catch (error) {
     // Silent fail - don't impact user experience
@@ -323,7 +339,7 @@ async function sendError(errorLog: ErrorLog) {
     await fetch('/api/analytics/errors', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(errorLog)
+      body: JSON.stringify(errorLog),
     });
   } catch (error) {
     // Silent fail
@@ -347,7 +363,7 @@ export function trackWebVitals() {
         name: 'LCP',
         value,
         rating: getRating('LCP', value),
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     }
   });
@@ -364,7 +380,7 @@ export function trackWebVitals() {
         name: 'FID',
         value,
         rating: getRating('FID', value),
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     }
   });
@@ -391,7 +407,7 @@ export function trackWebVitals() {
         name: 'CLS',
         value: clsValue,
         rating: getRating('CLS', clsValue),
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     }
   });
@@ -404,7 +420,7 @@ export function trackWebVitals() {
       name: 'FCP',
       value: fcp,
       rating: getRating('FCP', fcp),
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 }
@@ -422,7 +438,7 @@ export function trackErrors() {
       stack: event.error?.stack,
       timestamp: Date.now(),
       url: window.location.href,
-      userAgent: navigator.userAgent
+      userAgent: navigator.userAgent,
     });
   });
 
@@ -433,7 +449,7 @@ export function trackErrors() {
       stack: event.reason?.stack,
       timestamp: Date.now(),
       url: window.location.href,
-      userAgent: navigator.userAgent
+      userAgent: navigator.userAgent,
     });
   });
 }
@@ -502,7 +518,7 @@ export async function POST(request: Request) {
 **File:** `app/layout.tsx`
 
 ```tsx
-'use client'
+'use client';
 
 import { useEffect } from 'react';
 import { initMonitoring } from '@/lib/monitoring';
@@ -517,6 +533,7 @@ export function MonitoringProvider({ children }: { children: React.ReactNode }) 
 ```
 
 **Expected Benefits:**
+
 - ✅ Track Core Web Vitals in production
 - ✅ Catch all JavaScript errors
 - ✅ Monitor performance over time
@@ -527,6 +544,7 @@ export function MonitoringProvider({ children }: { children: React.ReactNode }) 
 ### Round 3: Accessibility Audit (30 min)
 
 #### Objectives:
+
 - ✅ Run automated accessibility tests
 - ✅ Fix critical issues
 - ✅ Document accessibility features
@@ -568,9 +586,9 @@ export default function AccessibilityStatement() {
       <section className="mb-8">
         <h2 className="text-2xl font-semibold mb-4">Our Commitment</h2>
         <p className="mb-4">
-          HR Command Center is committed to ensuring digital accessibility for people with disabilities.
-          We are continually improving the user experience for everyone and applying the relevant
-          accessibility standards.
+          HR Command Center is committed to ensuring digital accessibility for people with
+          disabilities. We are continually improving the user experience for everyone and applying
+          the relevant accessibility standards.
         </p>
       </section>
 
@@ -591,8 +609,8 @@ export default function AccessibilityStatement() {
       <section className="mb-8">
         <h2 className="text-2xl font-semibold mb-4">Feedback</h2>
         <p className="mb-4">
-          We welcome your feedback on the accessibility of HR Command Center. Please let us know
-          if you encounter accessibility barriers.
+          We welcome your feedback on the accessibility of HR Command Center. Please let us know if
+          you encounter accessibility barriers.
         </p>
       </section>
     </div>
@@ -607,6 +625,7 @@ export default function AccessibilityStatement() {
 ### Round 1: Complete Test Coverage (1 hour)
 
 #### Current Test Status:
+
 - ✅ Memoization tests (27 tests) - Phase 3
 - ✅ Code splitting tests (31 tests) - Phase 4
 - ✅ Accessibility tests (existing) - Phase 1
@@ -625,6 +644,7 @@ npm install --save-dev jest @testing-library/react @testing-library/jest-dom @te
 **File:** `__tests__/integration/navigation.test.tsx`
 
 Test critical user flows:
+
 - Homepage → Analytics navigation
 - Analytics → Nine-Box navigation
 - Data upload flow
@@ -642,6 +662,7 @@ npm run test:all
 ```
 
 **Target Coverage:**
+
 - Unit tests: 80%+
 - Integration tests: Critical paths covered
 - E2E tests: User journeys covered
@@ -705,6 +726,7 @@ npm run test:all
 **File:** `DEVELOPMENT.md`
 
 Document:
+
 - Setup instructions
 - Available scripts
 - Testing guidelines
@@ -720,6 +742,7 @@ Document:
 **File:** `IMPLEMENTATION_COMPLETE.md`
 
 Summary of all phases:
+
 - Phase 1-5 achievements
 - Total performance improvements
 - Test coverage stats
@@ -731,6 +754,7 @@ Summary of all phases:
 ## 📊 SUCCESS METRICS
 
 ### Phase 6 Targets:
+
 - ✅ PWA score > 90 (Lighthouse)
 - ✅ Offline support working
 - ✅ Core Web Vitals tracked
@@ -738,6 +762,7 @@ Summary of all phases:
 - ✅ WCAG AA compliance
 
 ### Phase 7 Targets:
+
 - ✅ Test coverage > 80%
 - ✅ All E2E tests passing
 - ✅ TypeScript strict mode
@@ -749,6 +774,7 @@ Summary of all phases:
 ## 🎯 PRODUCTION DEPLOYMENT CHECKLIST
 
 ### Pre-Deployment:
+
 - [ ] All tests passing
 - [ ] Bundle analysis run
 - [ ] Performance audit completed
@@ -759,6 +785,7 @@ Summary of all phases:
 - [ ] Analytics configured
 
 ### Deployment:
+
 - [ ] Production build successful
 - [ ] Service worker registered
 - [ ] PWA installable
@@ -766,6 +793,7 @@ Summary of all phases:
 - [ ] Performance baselines set
 
 ### Post-Deployment:
+
 - [ ] Monitor Core Web Vitals
 - [ ] Check error logs
 - [ ] Verify all features work
@@ -774,6 +802,6 @@ Summary of all phases:
 
 ---
 
-*Created: November 5, 2025*
-*Status: Ready to implement*
-*Estimated Time: 4-5 hours total*
+_Created: November 5, 2025_
+_Status: Ready to implement_
+_Estimated Time: 4-5 hours total_

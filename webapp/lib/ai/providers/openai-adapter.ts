@@ -52,10 +52,7 @@ export class OpenAIAdapter implements AIProvider {
   /**
    * Send chat completion request
    */
-  async chat(
-    messages: ChatMessage[],
-    options?: ChatOptions
-  ): Promise<ChatResponse> {
+  async chat(messages: ChatMessage[], options?: ChatOptions): Promise<ChatResponse> {
     if (!this.isAvailable) {
       throw new Error('OpenAI adapter not available - API key not configured');
     }
@@ -65,7 +62,7 @@ export class OpenAIAdapter implements AIProvider {
     const temperature = options?.temperature ?? 1.0;
 
     // Convert to OpenAI message format
-    const openaiMessages: OpenAI.ChatCompletionMessageParam[] = messages.map(m => ({
+    const openaiMessages: OpenAI.ChatCompletionMessageParam[] = messages.map((m) => ({
       role: m.role,
       content: m.content,
     }));
@@ -93,11 +90,7 @@ export class OpenAIAdapter implements AIProvider {
         total_tokens: 0,
       };
 
-      const cost = this.calculateCost(
-        model,
-        usage.prompt_tokens,
-        usage.completion_tokens
-      );
+      const cost = this.calculateCost(model, usage.prompt_tokens, usage.completion_tokens);
 
       return {
         content: choice.message.content || '',
@@ -203,10 +196,10 @@ export class OpenAIAdapter implements AIProvider {
 
     try {
       // Simple health check: ask for a single word response
-      await this.chat(
-        [{ role: 'user', content: 'Reply with only the word "OK"' }],
-        { model: 'gpt-4o-mini', maxTokens: 10 }
-      );
+      await this.chat([{ role: 'user', content: 'Reply with only the word "OK"' }], {
+        model: 'gpt-4o-mini',
+        maxTokens: 10,
+      });
 
       const latency = Date.now() - startTime;
 
@@ -262,13 +255,8 @@ export class OpenAIAdapter implements AIProvider {
   /**
    * Calculate estimated cost
    */
-  private calculateCost(
-    model: string,
-    inputTokens: number,
-    outputTokens: number
-  ): number {
-    const costs =
-      GPT_COSTS[model as keyof typeof GPT_COSTS] || GPT_COSTS['gpt-4o'];
+  private calculateCost(model: string, inputTokens: number, outputTokens: number): number {
+    const costs = GPT_COSTS[model as keyof typeof GPT_COSTS] || GPT_COSTS['gpt-4o'];
 
     const inputCost = (inputTokens / 1_000_000) * costs.input;
     const outputCost = (outputTokens / 1_000_000) * costs.output;

@@ -6,7 +6,7 @@
  * to continue working seamlessly.
  */
 
-import type { WorkflowId, SkillToWorkflowMapping } from './types'
+import type { WorkflowId, SkillToWorkflowMapping } from './types';
 
 /**
  * Complete mapping of legacy skill IDs to new workflow IDs
@@ -20,28 +20,28 @@ export const SKILL_TO_WORKFLOW_MAP: Record<string, SkillToWorkflowMapping> = {
     skillId: 'job-description-writer',
     workflowId: 'hiring',
     capability: 'job_descriptions',
-    notes: 'Primary skill for job description creation'
+    notes: 'Primary skill for job description creation',
   },
 
   'interview-guide-creator': {
     skillId: 'interview-guide-creator',
     workflowId: 'hiring',
     capability: 'interview_guides',
-    notes: 'Creates structured interview guides and scorecards'
+    notes: 'Creates structured interview guides and scorecards',
   },
 
   'interview-hiring': {
     skillId: 'interview-hiring',
     workflowId: 'hiring',
     capability: 'interview_guides',
-    notes: 'Duplicate of interview-guide-creator'
+    notes: 'Duplicate of interview-guide-creator',
   },
 
   'headcount-planner': {
     skillId: 'headcount-planner',
     workflowId: 'hiring',
     capability: 'headcount_planning',
-    notes: 'Workforce planning for hiring needs'
+    notes: 'Workforce planning for hiring needs',
   },
 
   // ========================================================================
@@ -52,56 +52,56 @@ export const SKILL_TO_WORKFLOW_MAP: Record<string, SkillToWorkflowMapping> = {
     skillId: 'performance-insights-analyst',
     workflowId: 'performance',
     capability: 'performance_reviews',
-    notes: 'Analyzes performance data and reviews'
+    notes: 'Analyzes performance data and reviews',
   },
 
   'pip-builder-monitor': {
     skillId: 'pip-builder-monitor',
     workflowId: 'performance',
     capability: 'pip_creation',
-    notes: 'Creates and monitors performance improvement plans'
+    notes: 'Creates and monitors performance improvement plans',
   },
 
   'one-on-one-guide': {
     skillId: 'one-on-one-guide',
     workflowId: 'performance',
     capability: 'one_on_ones',
-    notes: '1:1 meeting frameworks and agendas'
+    notes: '1:1 meeting frameworks and agendas',
   },
 
   'manager-effectiveness-coach': {
     skillId: 'manager-effectiveness-coach',
     workflowId: 'performance',
     capability: 'coaching_plans',
-    notes: 'Manager training and coaching programs'
+    notes: 'Manager training and coaching programs',
   },
 
   'recognition-rewards-manager': {
     skillId: 'recognition-rewards-manager',
     workflowId: 'performance',
     capability: 'recognition_programs',
-    notes: 'Employee recognition and rewards programs'
+    notes: 'Employee recognition and rewards programs',
   },
 
   'skills-gap-analyzer': {
     skillId: 'skills-gap-analyzer',
     workflowId: 'performance',
     capability: 'coaching_plans',
-    notes: 'Maps to performance for development plans; also used in hiring'
+    notes: 'Maps to performance for development plans; also used in hiring',
   },
 
   'career-path-planner': {
     skillId: 'career-path-planner',
     workflowId: 'performance',
     capability: 'coaching_plans',
-    notes: 'Career development and progression planning'
+    notes: 'Career development and progression planning',
   },
 
   'lnd-program-designer': {
     skillId: 'lnd-program-designer',
     workflowId: 'performance',
     capability: 'coaching_plans',
-    notes: 'Learning & development program design'
+    notes: 'Learning & development program design',
   },
 
   // ========================================================================
@@ -112,14 +112,14 @@ export const SKILL_TO_WORKFLOW_MAP: Record<string, SkillToWorkflowMapping> = {
     skillId: 'hr-metrics-analyst',
     workflowId: 'analytics',
     capability: 'hr_metrics',
-    notes: 'Primary HR metrics and analytics skill'
+    notes: 'Primary HR metrics and analytics skill',
   },
 
   'survey-analyzer-action-planner': {
     skillId: 'survey-analyzer-action-planner',
     workflowId: 'analytics',
     capability: 'survey_analysis',
-    notes: 'Engagement survey analysis and action planning'
+    notes: 'Engagement survey analysis and action planning',
   },
 
   // ========================================================================
@@ -130,7 +130,7 @@ export const SKILL_TO_WORKFLOW_MAP: Record<string, SkillToWorkflowMapping> = {
     skillId: 'onboarding-program-builder',
     workflowId: 'onboarding',
     capability: 'onboarding_plans',
-    notes: 'Comprehensive onboarding program creation'
+    notes: 'Comprehensive onboarding program creation',
   },
 
   // ========================================================================
@@ -141,20 +141,20 @@ export const SKILL_TO_WORKFLOW_MAP: Record<string, SkillToWorkflowMapping> = {
     skillId: 'offboarding-exit-builder',
     workflowId: 'offboarding',
     capability: 'exit_processes',
-    notes: 'Exit processes and knowledge transfer'
+    notes: 'Exit processes and knowledge transfer',
   },
 
   'workforce-reduction-planner': {
     skillId: 'workforce-reduction-planner',
     workflowId: 'offboarding',
     capability: 'rif_planning',
-    notes: 'RIF and layoff planning with WARN Act compliance'
+    notes: 'RIF and layoff planning with WARN Act compliance',
   },
 
   'corporate-communications-strategist': {
     skillId: 'corporate-communications-strategist',
     workflowId: 'offboarding',
-    notes: 'RIF announcements and crisis communications (primarily offboarding)'
+    notes: 'RIF announcements and crisis communications (primarily offboarding)',
   },
 
   // ========================================================================
@@ -165,14 +165,14 @@ export const SKILL_TO_WORKFLOW_MAP: Record<string, SkillToWorkflowMapping> = {
     skillId: 'comp-band-designer',
     workflowId: 'compensation',
     capability: 'salary_bands',
-    notes: 'Salary band and compensation structure design'
+    notes: 'Salary band and compensation structure design',
   },
 
   'compensation-review-cycle-manager': {
     skillId: 'compensation-review-cycle-manager',
     workflowId: 'compensation',
     capability: 'merit_cycles',
-    notes: 'Merit review and raise cycles'
+    notes: 'Merit review and raise cycles',
   },
 
   // ========================================================================
@@ -183,21 +183,21 @@ export const SKILL_TO_WORKFLOW_MAP: Record<string, SkillToWorkflowMapping> = {
     skillId: 'employee-relations-case-manager',
     workflowId: 'employee_relations',
     capability: 'er_case_management',
-    notes: 'ER case management and investigations'
+    notes: 'ER case management and investigations',
   },
 
   'benefits-leave-coordinator': {
     skillId: 'benefits-leave-coordinator',
     workflowId: 'employee_relations',
     capability: 'leave_administration',
-    notes: 'FMLA, parental leave, and benefits coordination'
+    notes: 'FMLA, parental leave, and benefits coordination',
   },
 
   'policy-lifecycle-manager': {
     skillId: 'policy-lifecycle-manager',
     workflowId: 'employee_relations',
     capability: 'policy_management',
-    notes: 'Employee handbook and policy management'
+    notes: 'Employee handbook and policy management',
   },
 
   // ========================================================================
@@ -208,7 +208,7 @@ export const SKILL_TO_WORKFLOW_MAP: Record<string, SkillToWorkflowMapping> = {
     skillId: 'dei-program-designer',
     workflowId: 'compliance',
     capability: 'eeo_reporting',
-    notes: 'DEI programs, pay equity, EEO compliance (spans multiple workflows)'
+    notes: 'DEI programs, pay equity, EEO compliance (spans multiple workflows)',
   },
 
   // ========================================================================
@@ -218,7 +218,8 @@ export const SKILL_TO_WORKFLOW_MAP: Record<string, SkillToWorkflowMapping> = {
   'hr-document-generator': {
     skillId: 'hr-document-generator',
     workflowId: 'hiring', // Default, but context-based routing applies
-    notes: 'Routes to appropriate workflow based on document type: offer letter→hiring, PIP→performance, termination→offboarding'
+    notes:
+      'Routes to appropriate workflow based on document type: offer letter→hiring, PIP→performance, termination→offboarding',
   },
 
   // ========================================================================
@@ -228,7 +229,7 @@ export const SKILL_TO_WORKFLOW_MAP: Record<string, SkillToWorkflowMapping> = {
   'org-design-consultant': {
     skillId: 'org-design-consultant',
     workflowId: 'general',
-    notes: 'Org charts and reporting structures - doesn\'t fit cleanly into a single workflow'
+    notes: "Org charts and reporting structures - doesn't fit cleanly into a single workflow",
   },
 
   // ========================================================================
@@ -238,9 +239,9 @@ export const SKILL_TO_WORKFLOW_MAP: Record<string, SkillToWorkflowMapping> = {
   'rippling-integration': {
     skillId: 'rippling-integration',
     workflowId: 'general',
-    notes: 'Integration, not a skill - kept for reference only'
-  }
-}
+    notes: 'Integration, not a skill - kept for reference only',
+  },
+};
 
 /**
  * Get workflow ID for a legacy skill ID
@@ -249,8 +250,8 @@ export const SKILL_TO_WORKFLOW_MAP: Record<string, SkillToWorkflowMapping> = {
  * @returns Workflow ID or null if not found
  */
 export function getWorkflowForSkill(skillId: string): WorkflowId | null {
-  const mapping = SKILL_TO_WORKFLOW_MAP[skillId]
-  return mapping ? mapping.workflowId : null
+  const mapping = SKILL_TO_WORKFLOW_MAP[skillId];
+  return mapping ? mapping.workflowId : null;
 }
 
 /**
@@ -262,7 +263,7 @@ export function getWorkflowForSkill(skillId: string): WorkflowId | null {
 export function getSkillsForWorkflow(workflowId: WorkflowId): string[] {
   return Object.entries(SKILL_TO_WORKFLOW_MAP)
     .filter(([_, mapping]) => mapping.workflowId === workflowId)
-    .map(([skillId, _]) => skillId)
+    .map(([skillId, _]) => skillId);
 }
 
 /**
@@ -272,8 +273,8 @@ export function getSkillsForWorkflow(workflowId: WorkflowId): string[] {
  * @returns Capability ID or null
  */
 export function getCapabilityForSkill(skillId: string): string | null {
-  const mapping = SKILL_TO_WORKFLOW_MAP[skillId]
-  return mapping?.capability || null
+  const mapping = SKILL_TO_WORKFLOW_MAP[skillId];
+  return mapping?.capability || null;
 }
 
 /**
@@ -283,7 +284,7 @@ export function getCapabilityForSkill(skillId: string): string | null {
  * @returns true if valid skill ID
  */
 export function isValidSkillId(skillId: string): boolean {
-  return skillId in SKILL_TO_WORKFLOW_MAP
+  return skillId in SKILL_TO_WORKFLOW_MAP;
 }
 
 /**
@@ -292,7 +293,7 @@ export function isValidSkillId(skillId: string): boolean {
  * @returns Array of all legacy skill IDs
  */
 export function getAllSkillIds(): string[] {
-  return Object.keys(SKILL_TO_WORKFLOW_MAP)
+  return Object.keys(SKILL_TO_WORKFLOW_MAP);
 }
 
 /**
@@ -302,7 +303,7 @@ export function getAllSkillIds(): string[] {
  * @returns Migration information or null
  */
 export function getSkillMigrationInfo(skillId: string): SkillToWorkflowMapping | null {
-  return SKILL_TO_WORKFLOW_MAP[skillId] || null
+  return SKILL_TO_WORKFLOW_MAP[skillId] || null;
 }
 
 /**
@@ -311,28 +312,26 @@ export function getSkillMigrationInfo(skillId: string): SkillToWorkflowMapping |
  * @returns Statistics about skill-to-workflow mapping
  */
 export function getWorkflowMappingStats(): {
-  totalSkills: number
-  skillsByWorkflow: Record<WorkflowId, number>
-  multiWorkflowSkills: string[]
+  totalSkills: number;
+  skillsByWorkflow: Record<WorkflowId, number>;
+  multiWorkflowSkills: string[];
 } {
-  const totalSkills = Object.keys(SKILL_TO_WORKFLOW_MAP).length
+  const totalSkills = Object.keys(SKILL_TO_WORKFLOW_MAP).length;
 
-  const skillsByWorkflow: Record<string, number> = {}
+  const skillsByWorkflow: Record<string, number> = {};
   for (const mapping of Object.values(SKILL_TO_WORKFLOW_MAP)) {
-    const workflowId = mapping.workflowId
-    skillsByWorkflow[workflowId] = (skillsByWorkflow[workflowId] || 0) + 1
+    const workflowId = mapping.workflowId;
+    skillsByWorkflow[workflowId] = (skillsByWorkflow[workflowId] || 0) + 1;
   }
 
   // Skills that could map to multiple workflows (based on notes)
   const multiWorkflowSkills = Object.entries(SKILL_TO_WORKFLOW_MAP)
-    .filter(([_, mapping]) =>
-      mapping.notes?.includes('also') || mapping.notes?.includes('spans')
-    )
-    .map(([skillId, _]) => skillId)
+    .filter(([_, mapping]) => mapping.notes?.includes('also') || mapping.notes?.includes('spans'))
+    .map(([skillId, _]) => skillId);
 
   return {
     totalSkills,
     skillsByWorkflow: skillsByWorkflow as Record<WorkflowId, number>,
-    multiWorkflowSkills
-  }
+    multiWorkflowSkills,
+  };
 }

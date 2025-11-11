@@ -7,7 +7,7 @@ export enum ErrorSeverity {
   LOW = 'low',
   MEDIUM = 'medium',
   HIGH = 'high',
-  CRITICAL = 'critical'
+  CRITICAL = 'critical',
 }
 
 /**
@@ -58,14 +58,14 @@ class ErrorLoggingService {
       timestamp: new Date().toISOString(),
       url: typeof window !== 'undefined' ? window.location.href : undefined,
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
-      ...context
+      ...context,
     };
 
     const errorLog: ErrorLog = {
       error,
       errorInfo,
       severity,
-      context: enrichedContext
+      context: enrichedContext,
     };
 
     // Store in memory (last 100 errors)
@@ -97,10 +97,10 @@ class ErrorLoggingService {
     const { error, errorInfo, severity, context } = errorLog;
 
     const colors = {
-      [ErrorSeverity.LOW]: '#3b82f6',      // blue
-      [ErrorSeverity.MEDIUM]: '#f59e0b',   // orange
-      [ErrorSeverity.HIGH]: '#ef4444',     // red
-      [ErrorSeverity.CRITICAL]: '#dc2626'  // dark red
+      [ErrorSeverity.LOW]: '#3b82f6', // blue
+      [ErrorSeverity.MEDIUM]: '#f59e0b', // orange
+      [ErrorSeverity.HIGH]: '#ef4444', // red
+      [ErrorSeverity.CRITICAL]: '#dc2626', // dark red
     };
 
     console.group(
@@ -138,7 +138,7 @@ class ErrorLoggingService {
     console.log('[ErrorLogging] Would send to monitoring service:', {
       message: errorLog.error.message,
       severity: errorLog.severity,
-      component: errorLog.context.component
+      component: errorLog.context.component,
     });
   }
 
@@ -186,34 +186,20 @@ export function logComponentError(
   errorInfo: ErrorInfo,
   componentName?: string
 ): void {
-  errorLogger.logError(
-    error,
-    errorInfo,
-    ErrorSeverity.HIGH,
-    {
-      component: componentName,
-      action: 'component_render'
-    }
-  );
+  errorLogger.logError(error, errorInfo, ErrorSeverity.HIGH, {
+    component: componentName,
+    action: 'component_render',
+  });
 }
 
 /**
  * Log API/fetch errors
  */
-export function logApiError(
-  error: Error,
-  endpoint: string,
-  method: string = 'GET'
-): void {
-  errorLogger.logError(
-    error,
-    undefined,
-    ErrorSeverity.MEDIUM,
-    {
-      action: 'api_call',
-      additionalData: { endpoint, method }
-    }
-  );
+export function logApiError(error: Error, endpoint: string, method: string = 'GET'): void {
+  errorLogger.logError(error, undefined, ErrorSeverity.MEDIUM, {
+    action: 'api_call',
+    additionalData: { endpoint, method },
+  });
 }
 
 /**
@@ -224,13 +210,8 @@ export function logUserActionError(
   action: string,
   context?: Record<string, unknown>
 ): void {
-  errorLogger.logError(
-    error,
-    undefined,
-    ErrorSeverity.LOW,
-    {
-      action,
-      additionalData: context
-    }
-  );
+  errorLogger.logError(error, undefined, ErrorSeverity.LOW, {
+    action,
+    additionalData: context,
+  });
 }

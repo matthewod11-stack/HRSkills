@@ -32,7 +32,7 @@ export interface ChatResponse {
 }
 
 export interface AnalysisTask {
-  type: 'sentiment' | 'entities' | 'classification' | 'summarization' | 'translation';
+  type: 'sentiment' | 'entities' | 'language' | 'classification' | 'summarization' | 'translation';
   text: string;
   options?: Record<string, any>;
 }

@@ -8,11 +8,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 interface RateLimitConfig {
-  windowMs: number;      // Time window in milliseconds
-  maxRequests: number;   // Maximum requests per window
-  message?: string;      // Custom error message
-  skipSuccessfulRequests?: boolean;  // Don't count successful requests
-  skipFailedRequests?: boolean;      // Don't count failed requests
+  windowMs: number; // Time window in milliseconds
+  maxRequests: number; // Maximum requests per window
+  message?: string; // Custom error message
+  skipSuccessfulRequests?: boolean; // Don't count successful requests
+  skipFailedRequests?: boolean; // Don't count failed requests
 }
 
 interface RateLimitStore {
@@ -24,14 +24,17 @@ interface RateLimitStore {
 const store = new Map<string, RateLimitStore>();
 
 // Cleanup old entries every 10 minutes
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, value] of store.entries()) {
-    if (value.resetTime < now) {
-      store.delete(key);
+setInterval(
+  () => {
+    const now = Date.now();
+    for (const [key, value] of store.entries()) {
+      if (value.resetTime < now) {
+        store.delete(key);
+      }
     }
-  }
-}, 10 * 60 * 1000);
+  },
+  10 * 60 * 1000
+);
 
 /**
  * Get client identifier from request
@@ -40,9 +43,7 @@ function getClientIdentifier(request: NextRequest): string {
   // Use IP address as identifier
   // In production, might want to use user ID for authenticated requests
   const forwarded = request.headers.get('x-forwarded-for');
-  const ip = forwarded ? forwarded.split(',')[0] :
-             request.headers.get('x-real-ip') ||
-             'unknown';
+  const ip = forwarded ? forwarded.split(',')[0] : request.headers.get('x-real-ip') || 'unknown';
 
   // Include user-agent to prevent IP spoofing
   const userAgent = request.headers.get('user-agent') || 'unknown';
@@ -59,7 +60,7 @@ export function rateLimit(config: RateLimitConfig) {
     maxRequests,
     message = 'Too many requests, please try again later',
     skipSuccessfulRequests = false,
-    skipFailedRequests = false
+    skipFailedRequests = false,
   } = config;
 
   return async (request: NextRequest): Promise<NextResponse | null> => {
@@ -72,7 +73,7 @@ export function rateLimit(config: RateLimitConfig) {
     if (!limitInfo || limitInfo.resetTime < now) {
       limitInfo = {
         count: 0,
-        resetTime: now + windowMs
+        resetTime: now + windowMs,
       };
       store.set(identifier, limitInfo);
     }
@@ -85,7 +86,7 @@ export function rateLimit(config: RateLimitConfig) {
         {
           success: false,
           error: message,
-          retryAfter
+          retryAfter,
         },
         {
           status: 429,
@@ -93,8 +94,8 @@ export function rateLimit(config: RateLimitConfig) {
             'Retry-After': retryAfter.toString(),
             'X-RateLimit-Limit': maxRequests.toString(),
             'X-RateLimit-Remaining': '0',
-            'X-RateLimit-Reset': limitInfo.resetTime.toString()
-          }
+            'X-RateLimit-Reset': limitInfo.resetTime.toString(),
+          },
         }
       );
     }
@@ -114,43 +115,43 @@ export const RateLimitPresets = {
   strict: {
     windowMs: 60 * 1000,
     maxRequests: 10,
-    message: 'Rate limit exceeded. Maximum 10 requests per minute.'
+    message: 'Rate limit exceeded. Maximum 10 requests per minute.',
   },
 
   // Standard: 100 requests per minute
   standard: {
     windowMs: 60 * 1000,
     maxRequests: 100,
-    message: 'Rate limit exceeded. Maximum 100 requests per minute.'
+    message: 'Rate limit exceeded. Maximum 100 requests per minute.',
   },
 
   // Lenient: 1000 requests per minute
   lenient: {
     windowMs: 60 * 1000,
     maxRequests: 1000,
-    message: 'Rate limit exceeded. Maximum 1000 requests per minute.'
+    message: 'Rate limit exceeded. Maximum 1000 requests per minute.',
   },
 
   // Auth endpoints: 5 attempts per 15 minutes
   auth: {
     windowMs: 15 * 60 * 1000,
     maxRequests: 5,
-    message: 'Too many authentication attempts. Please try again in 15 minutes.'
+    message: 'Too many authentication attempts. Please try again in 15 minutes.',
   },
 
   // File uploads: 10 per hour
   upload: {
     windowMs: 60 * 60 * 1000,
     maxRequests: 10,
-    message: 'Upload limit exceeded. Maximum 10 uploads per hour.'
+    message: 'Upload limit exceeded. Maximum 10 uploads per hour.',
   },
 
   // AI/LLM endpoints: 30 per minute (expensive operations)
   ai: {
     windowMs: 60 * 1000,
     maxRequests: 30,
-    message: 'AI request limit exceeded. Maximum 30 AI requests per minute.'
-  }
+    message: 'AI request limit exceeded. Maximum 30 AI requests per minute.',
+  },
 };
 
 /**
@@ -174,7 +175,7 @@ export async function applyRateLimit(
   if (!limitInfo || limitInfo.resetTime < now) {
     limitInfo = {
       count: 0,
-      resetTime: now + config.windowMs
+      resetTime: now + config.windowMs,
     };
     store.set(identifier, limitInfo);
   }
@@ -191,7 +192,7 @@ export async function applyRateLimit(
         {
           success: false,
           error: config.message || 'Too many requests',
-          retryAfter
+          retryAfter,
         },
         {
           status: 429,
@@ -199,12 +200,12 @@ export async function applyRateLimit(
             'Retry-After': retryAfter.toString(),
             'X-RateLimit-Limit': config.maxRequests.toString(),
             'X-RateLimit-Remaining': '0',
-            'X-RateLimit-Reset': limitInfo.resetTime.toString()
-          }
+            'X-RateLimit-Reset': limitInfo.resetTime.toString(),
+          },
         }
       ),
       remaining: 0,
-      resetTime: limitInfo.resetTime
+      resetTime: limitInfo.resetTime,
     };
   }
 
@@ -214,7 +215,7 @@ export async function applyRateLimit(
   return {
     allowed: true,
     remaining: remaining - 1,
-    resetTime: limitInfo.resetTime
+    resetTime: limitInfo.resetTime,
   };
 }
 

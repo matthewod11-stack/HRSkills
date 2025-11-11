@@ -7,7 +7,7 @@ import {
   ErrorSeverity,
   logComponentError,
   logApiError,
-  logUserActionError
+  logUserActionError,
 } from '@/lib/errorLogging';
 
 // Mock console methods
@@ -15,7 +15,7 @@ const originalConsole = {
   log: console.log,
   error: console.error,
   group: console.group,
-  groupEnd: console.groupEnd
+  groupEnd: console.groupEnd,
 };
 
 beforeEach(() => {
@@ -60,7 +60,7 @@ describe('ErrorLoggingService', () => {
       errorLogger.logError(error, undefined, ErrorSeverity.MEDIUM, {
         component: 'TestComponent',
         action: 'button_click',
-        userId: 'user123'
+        userId: 'user123',
       });
 
       const logs = errorLogger.getRecentLogs(1);
@@ -169,7 +169,7 @@ describe('Convenience logging functions', () => {
     it('should log component errors with HIGH severity', () => {
       const error = new Error('Component error');
       const errorInfo = {
-        componentStack: 'at Component\n  at Parent'
+        componentStack: 'at Component\n  at Parent',
       };
 
       logComponentError(error, errorInfo, 'TestComponent');
@@ -191,7 +191,7 @@ describe('Convenience logging functions', () => {
       expect(logs[0].context.action).toBe('api_call');
       expect(logs[0].context.additionalData).toEqual({
         endpoint: '/api/users',
-        method: 'POST'
+        method: 'POST',
       });
     });
 
@@ -202,7 +202,7 @@ describe('Convenience logging functions', () => {
       const logs = errorLogger.getRecentLogs(1);
       expect(logs[0].context.additionalData).toEqual({
         endpoint: '/api/users',
-        method: 'GET'
+        method: 'GET',
       });
     });
   });
@@ -212,7 +212,7 @@ describe('Convenience logging functions', () => {
       const error = new Error('User action error');
       logUserActionError(error, 'button_click', {
         buttonId: 'submit-btn',
-        formName: 'contact-form'
+        formName: 'contact-form',
       });
 
       const logs = errorLogger.getRecentLogs(1);
@@ -220,7 +220,7 @@ describe('Convenience logging functions', () => {
       expect(logs[0].context.action).toBe('button_click');
       expect(logs[0].context.additionalData).toEqual({
         buttonId: 'submit-btn',
-        formName: 'contact-form'
+        formName: 'contact-form',
       });
     });
   });
@@ -256,7 +256,7 @@ describe('Error context enrichment', () => {
     const error = new Error('Test error');
     errorLogger.logError(error, undefined, ErrorSeverity.MEDIUM, {
       component: 'CustomComponent',
-      userId: 'user123'
+      userId: 'user123',
     });
 
     const logs = errorLogger.getRecentLogs(1);

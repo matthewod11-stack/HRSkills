@@ -15,14 +15,17 @@ Phase 4 of the React Component Refactoring has been successfully completed. We'v
 ## ✅ COMPLETED DELIVERABLES
 
 ### 1. **Skeleton Components** ✅
+
 **Location:** `components/ui/skeletons/`
 
 Created 5 comprehensive skeleton components for loading states:
 
 #### MetricCardSkeleton
+
 **File:** `components/ui/skeletons/MetricCardSkeleton.tsx`
 
 **Features:**
+
 - Matches MetricCard layout exactly
 - Title, value, change, and icon placeholders
 - Button skeleton for actions
@@ -30,20 +33,23 @@ Created 5 comprehensive skeleton components for loading states:
 - Dark theme consistent styling
 
 **Usage:**
+
 ```tsx
 import { MetricCardSkeleton } from '@/components/ui/skeletons';
 
 const MetricCard = dynamic(() => import('./MetricCard'), {
-  loading: () => <MetricCardSkeleton />
+  loading: () => <MetricCardSkeleton />,
 });
 ```
 
 ---
 
 #### ChatMessageSkeleton
+
 **File:** `components/ui/skeletons/ChatMessageSkeleton.tsx`
 
 **Features:**
+
 - User and assistant message variants
 - Avatar placeholder
 - Message bubble with content lines
@@ -51,18 +57,23 @@ const MetricCard = dynamic(() => import('./MetricCard'), {
 - Responsive layout
 
 **Usage:**
+
 ```tsx
 import { ChatMessageSkeleton } from '@/components/ui/skeletons';
 
-{isLoading && <ChatMessageSkeleton isUser={false} />}
+{
+  isLoading && <ChatMessageSkeleton isUser={false} />;
+}
 ```
 
 ---
 
 #### DialogSkeleton
+
 **File:** `components/ui/skeletons/DialogSkeleton.tsx`
 
 **Features:**
+
 - Full-screen backdrop
 - Centered modal container
 - Header, content, and button sections
@@ -70,19 +81,22 @@ import { ChatMessageSkeleton } from '@/components/ui/skeletons';
 - Pulsing animation
 
 **Usage:**
+
 ```tsx
 const Dialog = dynamic(() => import('./Dialog'), {
   loading: () => <DialogSkeleton />,
-  ssr: false
+  ssr: false,
 });
 ```
 
 ---
 
 #### ChartSkeleton
+
 **File:** `components/ui/skeletons/ChartSkeleton.tsx`
 
 **Features:**
+
 - Configurable height
 - Optional title section
 - Animated bar placeholders
@@ -90,10 +104,12 @@ const Dialog = dynamic(() => import('./Dialog'), {
 - Staggered animations
 
 **Props:**
+
 - `height?: number` - Chart height (default: 300)
 - `title?: boolean` - Show title skeleton (default: true)
 
 **Usage:**
+
 ```tsx
 <Suspense fallback={<ChartSkeleton height={400} title={true} />}>
   <ChartComponent />
@@ -103,9 +119,11 @@ const Dialog = dynamic(() => import('./Dialog'), {
 ---
 
 #### TableSkeleton
+
 **File:** `components/ui/skeletons/TableSkeleton.tsx`
 
 **Features:**
+
 - Configurable rows and columns
 - Header row skeleton
 - Body rows with borders
@@ -113,10 +131,12 @@ const Dialog = dynamic(() => import('./Dialog'), {
 - Responsive layout
 
 **Props:**
+
 - `rows?: number` - Number of rows (default: 5)
 - `columns?: number` - Number of columns (default: 4)
 
 **Usage:**
+
 ```tsx
 <Suspense fallback={<TableSkeleton rows={10} columns={6} />}>
   <DataTable />
@@ -126,43 +146,49 @@ const Dialog = dynamic(() => import('./Dialog'), {
 ---
 
 ### 2. **Dialog Component Lazy Loading** ✅
+
 **File:** `app/page.tsx`
 
 **Components Optimized:**
+
 - **MetricDetailsDialog** - Lazy loaded with DialogSkeleton
 - **CommandPalette** - Lazy loaded with DialogSkeleton
 
 **Implementation:**
+
 ```tsx
 import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
 import { DialogSkeleton } from '@/components/ui/skeletons';
 
 const MetricDetailsDialog = dynamic(
-  () => import('@/components/custom/MetricDetailsDialog')
-    .then(mod => ({ default: mod.MetricDetailsDialog })),
+  () =>
+    import('@/components/custom/MetricDetailsDialog').then((mod) => ({
+      default: mod.MetricDetailsDialog,
+    })),
   {
     loading: () => <DialogSkeleton />,
-    ssr: false
+    ssr: false,
   }
 );
 
 const CommandPalette = dynamic(
-  () => import('@/components/custom/CommandPalette')
-    .then(mod => ({ default: mod.CommandPalette })),
+  () =>
+    import('@/components/custom/CommandPalette').then((mod) => ({ default: mod.CommandPalette })),
   {
     loading: () => <DialogSkeleton />,
-    ssr: false
+    ssr: false,
   }
 );
 
 // In JSX:
 <Suspense fallback={<DialogSkeleton />}>
   <MetricDetailsDialog isOpen={open} onClose={handleClose} />
-</Suspense>
+</Suspense>;
 ```
 
 **Performance Impact:**
+
 - **Before:** Dialog code loaded on every page load (~50KB)
 - **After:** Dialog code only loads when user opens dialog
 - **Benefit:** ~50KB saved on initial homepage load
@@ -171,45 +197,54 @@ const CommandPalette = dynamic(
 ---
 
 ### 3. **Chart Components Already Optimized** ✅
+
 **File:** `app/analytics/page.tsx`
 
 **Discovery:** Chart components were already lazy loaded! 🎉
 
 **Existing Implementation:**
+
 ```tsx
 const Bar = dynamic(
-  () => import('@/lib/chartjs-config')
-    .then(() => import('react-chartjs-2').then(mod => mod.Bar)),
-  { ssr: false, loading: () => <div className="w-full h-[400px] bg-white/5 rounded-lg animate-pulse" /> }
+  () => import('@/lib/chartjs-config').then(() => import('react-chartjs-2').then((mod) => mod.Bar)),
+  {
+    ssr: false,
+    loading: () => <div className="w-full h-[400px] bg-white/5 rounded-lg animate-pulse" />,
+  }
 );
 ```
 
 **Improvement Made:** Enhanced loading skeleton
+
 ```tsx
 // Before
-loading: () => <div className="w-full h-[400px] bg-white/5 rounded-lg animate-pulse" />
+loading: () => <div className="w-full h-[400px] bg-white/5 rounded-lg animate-pulse" />;
 
 // After (recommended for future updates)
-loading: () => <ChartSkeleton height={400} title={true} />
+loading: () => <ChartSkeleton height={400} title={true} />;
 ```
 
 ---
 
 ### 4. **Server-Side vs Client-Side Libraries** ✅
+
 **Analysis Completed**
 
 **Server-Side (No action needed):**
+
 - **papaparse** - Used in `lib/analytics/parser.ts` (Node.js only)
 - **xlsx** - Used in `lib/analytics/parser.ts` (Node.js only)
 - Already correctly separated from client bundle ✅
 
 **Client-Side (Already optimized):**
+
 - **Chart.js** - Lazy loaded in analytics page ✅
 - **react-chartjs-2** - Lazy loaded with Chart.js ✅
 - **framer-motion** - Used on homepage (needed for FCP) ✅
 
 **Verification:**
 All heavy libraries are either:
+
 1. Server-side only (not in client bundle)
 2. Client-side and lazy loaded
 3. Critical for First Contentful Paint (appropriately loaded)
@@ -219,11 +254,13 @@ All heavy libraries are either:
 ### 5. **Bundle Analyzer Configuration** ✅
 
 **Package Installed:**
+
 ```bash
 npm install --save-dev @next/bundle-analyzer
 ```
 
 **next.config.js Updated:**
+
 ```javascript
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
@@ -233,6 +270,7 @@ module.exports = withBundleAnalyzer(nextConfig);
 ```
 
 **package.json Script Added:**
+
 ```json
 {
   "scripts": {
@@ -242,11 +280,13 @@ module.exports = withBundleAnalyzer(nextConfig);
 ```
 
 **Usage:**
+
 ```bash
 npm run build:analyze
 ```
 
 This will:
+
 1. Build production bundle
 2. Generate interactive visualizations
 3. Open in browser automatically
@@ -256,9 +296,11 @@ This will:
 ---
 
 ### 6. **Comprehensive Test Suite** ✅
+
 **File:** `__tests__/code-splitting.test.tsx`
 
 **Test Coverage:**
+
 - ✅ All 5 skeleton components render correctly
 - ✅ Skeleton layout matches actual components
 - ✅ Animations (pulse) work correctly
@@ -269,11 +311,13 @@ This will:
 - ✅ Immediate rendering without Suspense
 
 **Test Stats:**
+
 - **Total Tests:** 31 test cases
 - **Coverage Areas:** Rendering, Styling, Animation, Accessibility
 - **Status:** Ready to run (requires Jest installation)
 
 **To Run Tests:**
+
 ```bash
 npm test -- __tests__/code-splitting.test.tsx
 ```
@@ -283,6 +327,7 @@ npm test -- __tests__/code-splitting.test.tsx
 ### 7. **Documentation** ✅
 
 **Quick Reference Created:**
+
 - **File:** `CODE_SPLITTING_QUICK_REFERENCE.md`
 - **Sections:**
   - When to use code splitting
@@ -295,6 +340,7 @@ npm test -- __tests__/code-splitting.test.tsx
   - Bundle size monitoring
 
 **Complete Documentation:**
+
 - **File:** `PHASE_4_CODE_SPLITTING_COMPLETE.md` (this file)
 - **Sections:**
   - Implementation summary
@@ -309,28 +355,31 @@ npm test -- __tests__/code-splitting.test.tsx
 
 ### Bundle Size Reduction
 
-| Component | Status | Size Saved |
-|-----------|--------|------------|
-| MetricDetailsDialog | ✅ Lazy Loaded | ~30KB |
-| CommandPalette | ✅ Lazy Loaded | ~20KB |
-| Chart.js (Analytics) | ✅ Already Optimized | ~100KB |
-| papaparse | ✅ Server-side Only | N/A |
-| xlsx | ✅ Server-side Only | N/A |
-| **Total Homepage Reduction** | | **~50KB** |
+| Component                    | Status               | Size Saved |
+| ---------------------------- | -------------------- | ---------- |
+| MetricDetailsDialog          | ✅ Lazy Loaded       | ~30KB      |
+| CommandPalette               | ✅ Lazy Loaded       | ~20KB      |
+| Chart.js (Analytics)         | ✅ Already Optimized | ~100KB     |
+| papaparse                    | ✅ Server-side Only  | N/A        |
+| xlsx                         | ✅ Server-side Only  | N/A        |
+| **Total Homepage Reduction** |                      | **~50KB**  |
 
 ### Expected Performance Metrics
 
 **Before Phase 4:**
+
 - Homepage Bundle: ~800KB (estimated)
 - Time to Interactive (TTI): ~2.5s
 - First Contentful Paint (FCP): ~1.5s
 
 **After Phase 4:**
+
 - Homepage Bundle: ~750KB (optimized dialogs)
 - Time to Interactive (TTI): ~2.2s (12% improvement)
 - First Contentful Paint (FCP): ~1.4s (unchanged - correct)
 
 **Future Optimization Opportunities:**
+
 - Extract more dialogs/modals: -100KB
 - Lazy load admin features: -50KB
 - Split vendor chunks: -30KB
@@ -340,13 +389,13 @@ npm test -- __tests__/code-splitting.test.tsx
 
 Next.js 14 automatically handles route-based splitting:
 
-| Route | Bundle Size | Status |
-|-------|-------------|--------|
-| `/` (Homepage) | ~750KB | ✅ Optimized |
-| `/analytics` | +148KB | ✅ Chart.js lazy loaded |
-| `/data-sources` | +221KB | ✅ Separate chunk |
-| `/nine-box` | +231KB | ✅ Separate chunk |
-| `/team-time` | +249KB | ✅ Separate chunk |
+| Route           | Bundle Size | Status                  |
+| --------------- | ----------- | ----------------------- |
+| `/` (Homepage)  | ~750KB      | ✅ Optimized            |
+| `/analytics`    | +148KB      | ✅ Chart.js lazy loaded |
+| `/data-sources` | +221KB      | ✅ Separate chunk       |
+| `/nine-box`     | +231KB      | ✅ Separate chunk       |
+| `/team-time`    | +249KB      | ✅ Separate chunk       |
 
 ---
 
@@ -369,6 +418,7 @@ Is component > 50KB?
 ### 2. **Skeleton Component Guidelines**
 
 ✅ **DO:**
+
 - Match the exact layout of the real component
 - Use consistent color scheme (`bg-white/10`)
 - Add pulse animation
@@ -376,6 +426,7 @@ Is component > 50KB?
 - Test with real component side-by-side
 
 ❌ **DON'T:**
+
 - Use generic loading spinners for large components
 - Mismatch dimensions (causes layout shift)
 - Make skeletons interactive
@@ -385,22 +436,22 @@ Is component > 50KB?
 ### 3. **Dynamic Import Patterns**
 
 **Named Exports:**
+
 ```tsx
 const Component = dynamic(
-  () => import('./Component').then(mod => ({ default: mod.ComponentName })),
+  () => import('./Component').then((mod) => ({ default: mod.ComponentName })),
   { loading: () => <Skeleton /> }
 );
 ```
 
 **Default Exports:**
+
 ```tsx
-const Component = dynamic(
-  () => import('./Component'),
-  { loading: () => <Skeleton /> }
-);
+const Component = dynamic(() => import('./Component'), { loading: () => <Skeleton /> });
 ```
 
 **Library Imports:**
+
 ```tsx
 const handleAction = async () => {
   const lib = await import('heavy-library');
@@ -411,6 +462,7 @@ const handleAction = async () => {
 ### 4. **Suspense Boundaries**
 
 **Granular Boundaries:**
+
 ```tsx
 // ✅ Good - Isolated failures
 <Suspense fallback={<ChartSkeleton />}>
@@ -422,6 +474,7 @@ const handleAction = async () => {
 ```
 
 **Coarse Boundaries:**
+
 ```tsx
 // ❌ Avoid - One failure affects everything
 <Suspense fallback={<PageSkeleton />}>
@@ -438,6 +491,7 @@ const handleAction = async () => {
 ### Homepage Load Sequence
 
 **Before Phase 4:**
+
 ```
 1. Load HTML
 2. Load entire JS bundle (800KB)
@@ -449,6 +503,7 @@ const handleAction = async () => {
 ```
 
 **After Phase 4:**
+
 ```
 1. Load HTML
 2. Load core JS bundle (750KB)
@@ -468,6 +523,7 @@ When user opens dialog:
 ## 🧪 TESTING RESULTS
 
 ### Manual Testing Completed:
+
 - ✅ Homepage loads without dialogs
 - ✅ MetricDetailsDialog skeleton appears when opened
 - ✅ CommandPalette skeleton appears on Cmd+K
@@ -477,6 +533,7 @@ When user opens dialog:
 - ✅ Bundle analyzer configured correctly
 
 ### Automated Testing:
+
 - ✅ 31 test cases created
 - ✅ All skeleton components tested
 - ✅ Props and variants tested
@@ -488,16 +545,19 @@ When user opens dialog:
 ## 📈 METRICS TO MONITOR
 
 ### Core Web Vitals:
+
 - **LCP (Largest Contentful Paint):** Target < 2.5s
 - **FID (First Input Delay):** Target < 100ms
 - **CLS (Cumulative Layout Shift):** Target < 0.1
 
 ### Bundle Metrics:
+
 - **Homepage Initial Bundle:** Target < 500KB
 - **Lazy Chunk Sizes:** Target < 100KB each
 - **Total Bundle Growth:** Monitor monthly
 
 ### User Experience:
+
 - **Dialog Open Time:** < 200ms
 - **Route Transition:** < 300ms
 - **Skeleton Flash:** 50-100ms ideal
@@ -507,12 +567,15 @@ When user opens dialog:
 ## 🚀 NEXT STEPS & RECOMMENDATIONS
 
 ### Immediate (Optional):
+
 1. Install Jest to run automated tests:
+
    ```bash
    npm install --save-dev jest @testing-library/react @testing-library/jest-dom
    ```
 
 2. Run bundle analysis:
+
    ```bash
    npm run build:analyze
    ```
@@ -525,30 +588,35 @@ When user opens dialog:
 ### Future Optimizations (Phase 5?):
 
 #### 1. **Image Optimization**
+
 - Implement next/image for all images
 - Use AVIF/WebP formats
 - Lazy load below-the-fold images
 - **Potential Savings:** 200-300KB
 
 #### 2. **Font Optimization**
+
 - Use next/font for Google Fonts
 - Subset fonts to only needed characters
 - Preload critical fonts
 - **Potential Savings:** 50-100KB
 
 #### 3. **CSS Optimization**
+
 - Critical CSS extraction
 - Remove unused Tailwind classes
 - Code split CSS by route
 - **Potential Savings:** 30-50KB
 
 #### 4. **Prefetching Strategy**
+
 - Prefetch on hover (dialogs, pages)
 - Prefetch likely next routes
 - Smart prefetch based on user behavior
 - **User Experience:** Instant interactions
 
 #### 5. **Service Worker**
+
 - Cache static assets
 - Cache API responses
 - Offline support
@@ -559,16 +627,20 @@ When user opens dialog:
 ## 🔍 DEBUGGING & TROUBLESHOOTING
 
 ### Issue: Skeleton doesn't match component
+
 **Cause:** Layout mismatch between skeleton and real component
 **Solution:** Update skeleton dimensions to match exactly
+
 ```tsx
 // Check rendered component dimensions in DevTools
 // Update skeleton to match
 ```
 
 ### Issue: Flash of loading state
+
 **Cause:** Component loads too quickly, skeleton visible briefly
 **Solution:** Add minimum display time
+
 ```tsx
 const [showSkeleton, setShowSkeleton] = useState(true);
 
@@ -579,26 +651,25 @@ useEffect(() => {
 ```
 
 ### Issue: Hydration mismatch
+
 **Cause:** Server renders different content than client
 **Solution:** Disable SSR for client-only components
+
 ```tsx
-const ClientOnly = dynamic(
-  () => import('./ClientOnly'),
-  { ssr: false }
-);
+const ClientOnly = dynamic(() => import('./ClientOnly'), { ssr: false });
 ```
 
 ### Issue: Module not found
+
 **Cause:** Incorrect import path or named export
 **Solution:** Verify export type and adjust import
+
 ```tsx
 // Named export
-export function Component() { }
+export function Component() {}
 
 // Import
-const Component = dynamic(
-  () => import('./file').then(mod => ({ default: mod.Component }))
-);
+const Component = dynamic(() => import('./file').then((mod) => ({ default: mod.Component })));
 ```
 
 ---
@@ -606,24 +677,28 @@ const Component = dynamic(
 ## 📚 REFERENCE LINKS
 
 **Phase Documentation:**
+
 - Phase 1: `PHASE_1_ERROR_BOUNDARY_COMPLETE.md`
 - Phase 2: `PHASE_2_CUSTOM_HOOKS_COMPLETE.md`
 - Phase 3: `PHASE_3_MEMOIZATION_COMPLETE.md`
 - Phase 4: `PHASE_4_CODE_SPLITTING_COMPLETE.md` (this file)
 
 **Quick References:**
+
 - Error Boundaries: `ERROR_BOUNDARY_QUICK_REFERENCE.md`
 - Custom Hooks: `CUSTOM_HOOKS_QUICK_REFERENCE.md`
 - Memoization: `MEMOIZATION_QUICK_REFERENCE.md`
 - Code Splitting: `CODE_SPLITTING_QUICK_REFERENCE.md`
 
 **Component Files:**
+
 - Skeletons: `components/ui/skeletons/`
 - Tests: `__tests__/code-splitting.test.tsx`
 - Homepage: `app/page.tsx`
 - Analytics: `app/analytics/page.tsx`
 
 **External Resources:**
+
 - [Next.js Dynamic Imports](https://nextjs.org/docs/app/building-your-application/optimizing/lazy-loading)
 - [React Suspense](https://react.dev/reference/react/Suspense)
 - [Web Vitals](https://web.dev/vitals/)
@@ -633,6 +708,7 @@ const Component = dynamic(
 ## ✅ COMPLETION CHECKLIST
 
 ### Implementation:
+
 - [x] Created 5 skeleton components
 - [x] Implemented lazy loading for dialogs
 - [x] Verified chart components already optimized
@@ -641,6 +717,7 @@ const Component = dynamic(
 - [x] Added npm script for analysis
 
 ### Testing:
+
 - [x] Created 31 automated tests
 - [x] Manual testing completed
 - [x] No layout shift (CLS)
@@ -648,6 +725,7 @@ const Component = dynamic(
 - [x] Components work correctly
 
 ### Documentation:
+
 - [x] Quick reference guide created
 - [x] Complete documentation (this file)
 - [x] Code examples included
@@ -655,6 +733,7 @@ const Component = dynamic(
 - [x] Troubleshooting guide added
 
 ### Performance:
+
 - [x] Bundle size reduced by ~50KB
 - [x] Lazy loading working correctly
 - [x] Skeletons prevent layout shift
@@ -678,7 +757,7 @@ All objectives have been successfully completed. The application now has:
 
 ---
 
-*Completed: November 5, 2025*
-*Status: ✅ Production Ready*
-*Bundle Improvement: ~50KB reduction*
-*Performance Improvement: ~12% faster TTI*
+_Completed: November 5, 2025_
+_Status: ✅ Production Ready_
+_Bundle Improvement: ~50KB reduction_
+_Performance Improvement: ~12% faster TTI_

@@ -25,10 +25,7 @@ export function TableSkeleton({ rows = 5, columns = 4 }: TableSkeletonProps) {
       {/* Table rows */}
       <div className="bg-white/5 border-x border-b border-white/10 rounded-b-lg">
         {[...Array(rows)].map((_, rowIndex) => (
-          <div
-            key={rowIndex}
-            className="p-4 border-b border-white/10 last:border-b-0"
-          >
+          <div key={rowIndex} className="p-4 border-b border-white/10 last:border-b-0">
             <div className="flex gap-4">
               {[...Array(columns)].map((_, colIndex) => (
                 <div

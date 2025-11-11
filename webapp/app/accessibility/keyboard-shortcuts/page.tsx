@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { motion } from 'framer-motion';
 import { ArrowLeft, Keyboard } from 'lucide-react';
@@ -13,8 +13,16 @@ interface Shortcut {
 const shortcuts: Shortcut[] = [
   // Navigation
   { keys: ['Tab'], description: 'Move focus to next interactive element', category: 'Navigation' },
-  { keys: ['Shift', 'Tab'], description: 'Move focus to previous interactive element', category: 'Navigation' },
-  { keys: ['Tab'], description: 'Skip to main content (first Tab from page load)', category: 'Navigation' },
+  {
+    keys: ['Shift', 'Tab'],
+    description: 'Move focus to previous interactive element',
+    category: 'Navigation',
+  },
+  {
+    keys: ['Tab'],
+    description: 'Skip to main content (first Tab from page load)',
+    category: 'Navigation',
+  },
 
   // Global
   { keys: ['Cmd/Ctrl', 'K'], description: 'Open command palette', category: 'Global' },
@@ -37,13 +45,25 @@ const shortcuts: Shortcut[] = [
   { keys: ['Enter'], description: 'Edit selected row', category: 'Tables' },
 
   // Screen Reader
-  { keys: ['H'], description: 'Navigate to next heading (screen reader)', category: 'Screen Reader' },
-  { keys: ['1-6'], description: 'Navigate by heading level (screen reader)', category: 'Screen Reader' },
-  { keys: ['R'], description: 'Navigate to regions/landmarks (screen reader)', category: 'Screen Reader' },
+  {
+    keys: ['H'],
+    description: 'Navigate to next heading (screen reader)',
+    category: 'Screen Reader',
+  },
+  {
+    keys: ['1-6'],
+    description: 'Navigate by heading level (screen reader)',
+    category: 'Screen Reader',
+  },
+  {
+    keys: ['R'],
+    description: 'Navigate to regions/landmarks (screen reader)',
+    category: 'Screen Reader',
+  },
   { keys: ['F'], description: 'Navigate to forms (screen reader)', category: 'Screen Reader' },
 ];
 
-const categories = Array.from(new Set(shortcuts.map(s => s.category)));
+const categories = Array.from(new Set(shortcuts.map((s) => s.category)));
 
 export default function KeyboardShortcuts() {
   return (
@@ -103,8 +123,9 @@ export default function KeyboardShortcuts() {
             <h2 className="text-xl font-semibold mb-2 text-blue-300">Quick Tip</h2>
             <p className="text-gray-300">
               Most keyboard shortcuts use standard web conventions. Focus indicators (blue outlines)
-              show where you are on the page. Press <kbd className="px-2 py-1 bg-white/10 rounded text-sm">Tab</kbd> to
-              navigate and <kbd className="px-2 py-1 bg-white/10 rounded text-sm">Enter</kbd> or{' '}
+              show where you are on the page. Press{' '}
+              <kbd className="px-2 py-1 bg-white/10 rounded text-sm">Tab</kbd> to navigate and{' '}
+              <kbd className="px-2 py-1 bg-white/10 rounded text-sm">Enter</kbd> or{' '}
               <kbd className="px-2 py-1 bg-white/10 rounded text-sm">Space</kbd> to activate.
             </p>
           </motion.div>
@@ -135,7 +156,7 @@ export default function KeyboardShortcuts() {
                     </thead>
                     <tbody>
                       {shortcuts
-                        .filter(s => s.category === category)
+                        .filter((s) => s.category === category)
                         .map((shortcut, index) => (
                           <tr
                             key={index}
@@ -176,13 +197,21 @@ export default function KeyboardShortcuts() {
             <div className="grid md:grid-cols-2 gap-6 text-sm text-gray-400">
               <div>
                 <h3 className="font-semibold text-white mb-2">macOS</h3>
-                <p>Use <strong className="text-white">Cmd</strong> (⌘) instead of Ctrl</p>
-                <p className="mt-2">VoiceOver: <strong className="text-white">Cmd + F5</strong> to toggle</p>
+                <p>
+                  Use <strong className="text-white">Cmd</strong> (⌘) instead of Ctrl
+                </p>
+                <p className="mt-2">
+                  VoiceOver: <strong className="text-white">Cmd + F5</strong> to toggle
+                </p>
               </div>
               <div>
                 <h3 className="font-semibold text-white mb-2">Windows/Linux</h3>
-                <p>Use <strong className="text-white">Ctrl</strong> for most shortcuts</p>
-                <p className="mt-2">NVDA: <strong className="text-white">Ctrl + Alt + N</strong> to toggle</p>
+                <p>
+                  Use <strong className="text-white">Ctrl</strong> for most shortcuts
+                </p>
+                <p className="mt-2">
+                  NVDA: <strong className="text-white">Ctrl + Alt + N</strong> to toggle
+                </p>
               </div>
             </div>
           </motion.div>
@@ -194,9 +223,7 @@ export default function KeyboardShortcuts() {
             transition={{ duration: 0.5, delay: 0.9 }}
             className="mt-8 text-center"
           >
-            <p className="text-gray-400 mb-4">
-              Need help or have suggestions for new shortcuts?
-            </p>
+            <p className="text-gray-400 mb-4">Need help or have suggestions for new shortcuts?</p>
             <Link href="/accessibility">
               <motion.button
                 whileHover={{ scale: 1.05 }}

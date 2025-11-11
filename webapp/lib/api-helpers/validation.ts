@@ -78,7 +78,9 @@ export function isOneOf(value: string, allowedValues: string[]): boolean {
  */
 export async function parseRequestBody<T = any>(
   request: NextRequest
-): Promise<{ success: true; data: T } | { success: false; error: ReturnType<typeof validationError> }> {
+): Promise<
+  { success: true; data: T } | { success: false; error: ReturnType<typeof validationError> }
+> {
   try {
     const body = await request.json();
     return { success: true, data: body };

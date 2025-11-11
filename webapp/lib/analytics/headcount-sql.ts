@@ -44,7 +44,7 @@ export async function calculateHeadcount(): Promise<HeadcountResult> {
     .groupBy(employees.department);
 
   const byDepartment: Record<string, number> = {};
-  byDeptResult.forEach(row => {
+  byDeptResult.forEach((row) => {
     if (row.department) {
       byDepartment[row.department] = row.count;
     }
@@ -61,7 +61,7 @@ export async function calculateHeadcount(): Promise<HeadcountResult> {
     .groupBy(employees.level);
 
   const byLevel: Record<string, number> = {};
-  byLevelResult.forEach(row => {
+  byLevelResult.forEach((row) => {
     if (row.level) {
       byLevel[row.level] = row.count;
     }
@@ -78,7 +78,7 @@ export async function calculateHeadcount(): Promise<HeadcountResult> {
     .groupBy(employees.location);
 
   const byLocation: Record<string, number> = {};
-  byLocationResult.forEach(row => {
+  byLocationResult.forEach((row) => {
     if (row.location) {
       byLocation[row.location] = row.count;
     }
@@ -94,7 +94,7 @@ export async function calculateHeadcount(): Promise<HeadcountResult> {
     .groupBy(employees.status);
 
   const byStatus: Record<string, number> = {};
-  byStatusResult.forEach(row => {
+  byStatusResult.forEach((row) => {
     byStatus[row.status] = row.count;
   });
 
@@ -109,7 +109,7 @@ export async function calculateHeadcount(): Promise<HeadcountResult> {
     .groupBy(employees.gender);
 
   const byGender: Record<string, number> = {};
-  byGenderResult.forEach(row => {
+  byGenderResult.forEach((row) => {
     if (row.gender) {
       byGender[row.gender] = row.count;
     }
@@ -125,7 +125,7 @@ export async function calculateHeadcount(): Promise<HeadcountResult> {
     .groupBy(employees.raceEthnicity);
 
   const byRace: Record<string, number> = {};
-  byRaceResult.forEach(row => {
+  byRaceResult.forEach((row) => {
     if (row.race) {
       byRace[row.race] = row.count;
     }
@@ -162,7 +162,7 @@ export async function calculateHeadcountByDeptAndLevel(): Promise<
 
   const crosstab: Record<string, Record<string, number>> = {};
 
-  result.forEach(row => {
+  result.forEach((row) => {
     if (!row.department || !row.level) return;
 
     if (!crosstab[row.department]) {
@@ -202,12 +202,7 @@ export async function calculateHeadcountTrends(): Promise<{
   const hiresResult = await db
     .select({ count: sql<number>`count(*)` })
     .from(employees)
-    .where(
-      and(
-        eq(employees.status, 'active'),
-        gte(employees.hireDate, oneYearAgoStr)
-      )
-    );
+    .where(and(eq(employees.status, 'active'), gte(employees.hireDate, oneYearAgoStr)));
 
   const hires = hiresResult[0]?.count || 0;
 
@@ -216,10 +211,7 @@ export async function calculateHeadcountTrends(): Promise<{
     .select({ count: sql<number>`count(*)` })
     .from(employees)
     .where(
-      and(
-        eq(employees.status, 'terminated'),
-        gte(employees.terminationDate || '', oneYearAgoStr)
-      )
+      and(eq(employees.status, 'terminated'), gte(employees.terminationDate || '', oneYearAgoStr))
     );
 
   const terminations = terminationsResult[0]?.count || 0;
@@ -227,9 +219,7 @@ export async function calculateHeadcountTrends(): Promise<{
   const netChange = hires - terminations;
   const previousHeadcount = currentHeadcount - netChange;
   const growthRate =
-    previousHeadcount > 0
-      ? parseFloat(((netChange / previousHeadcount) * 100).toFixed(1))
-      : 0;
+    previousHeadcount > 0 ? parseFloat(((netChange / previousHeadcount) * 100).toFixed(1)) : 0;
 
   return {
     currentHeadcount,
@@ -245,10 +235,7 @@ export async function calculateHeadcountTrends(): Promise<{
  */
 export async function calculateSpanOfControl(): Promise<{
   averageSpan: number;
-  byManager: Record<
-    string,
-    { manager: string; directReports: number; managerEmail: string }
-  >;
+  byManager: Record<string, { manager: string; directReports: number; managerEmail: string }>;
   totalManagers: number;
 }> {
   // Get all active employees with manager info
@@ -298,9 +285,7 @@ export async function calculateSpanOfControl(): Promise<{
 
   const totalManagers = Object.keys(byManager).length;
   const averageSpan =
-    totalManagers > 0
-      ? parseFloat((totalDirectReports / totalManagers).toFixed(1))
-      : 0;
+    totalManagers > 0 ? parseFloat((totalDirectReports / totalManagers).toFixed(1)) : 0;
 
   return {
     averageSpan,
@@ -312,9 +297,7 @@ export async function calculateSpanOfControl(): Promise<{
 /**
  * Get headcount for a specific department
  */
-export async function getHeadcountByDepartment(
-  department: string
-): Promise<number> {
+export async function getHeadcountByDepartment(department: string): Promise<number> {
   const result = await db
     .select({ count: sql<number>`count(*)` })
     .from(employees)

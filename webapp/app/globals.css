@@ -6,7 +6,9 @@
 
 :root {
   --font-size: 16px;
-  --font-family: var(--font-roboto), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-family:
+    var(--font-roboto), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, sans-serif;
   --background: #ffffff;
   --foreground: oklch(0.145 0 0);
   --card: #ffffff;
@@ -49,42 +51,42 @@
 .dark {
   /* Violet-Slate Design System */
   --background: #121212;
-  --foreground: #F3F4F6;
-  --card: #1E1B24;
-  --card-foreground: #F3F4F6;
-  --popover: #1E1B24;
-  --popover-foreground: #F3F4F6;
-  --primary: #8B5CF6;
-  --primary-foreground: #F9FAFB;
-  --secondary: #9CA3AF;
-  --secondary-foreground: #F3F4F6;
-  --muted: #9CA3AF;
-  --muted-foreground: #9CA3AF;
-  --accent: #8B5CF6;
-  --accent-foreground: #F9FAFB;
-  --accent-highlight: #A78BFA;
-  --destructive: #EF4444;
-  --destructive-foreground: #F9FAFB;
-  --success: #10B981;
-  --warning: #FACC15;
+  --foreground: #f3f4f6;
+  --card: #1e1b24;
+  --card-foreground: #f3f4f6;
+  --popover: #1e1b24;
+  --popover-foreground: #f3f4f6;
+  --primary: #8b5cf6;
+  --primary-foreground: #f9fafb;
+  --secondary: #9ca3af;
+  --secondary-foreground: #f3f4f6;
+  --muted: #9ca3af;
+  --muted-foreground: #9ca3af;
+  --accent: #8b5cf6;
+  --accent-foreground: #f9fafb;
+  --accent-highlight: #a78bfa;
+  --destructive: #ef4444;
+  --destructive-foreground: #f9fafb;
+  --success: #10b981;
+  --warning: #facc15;
   --border: rgba(255, 255, 255, 0.08);
   --input: rgba(255, 255, 255, 0.08);
-  --ring: #8B5CF6;
+  --ring: #8b5cf6;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --chart-1: #8B5CF6;
-  --chart-2: #10B981;
-  --chart-3: #FACC15;
-  --chart-4: #A78BFA;
-  --chart-5: #EF4444;
-  --sidebar: #1E1B24;
-  --sidebar-foreground: #F3F4F6;
-  --sidebar-primary: #8B5CF6;
-  --sidebar-primary-foreground: #F9FAFB;
-  --sidebar-accent: #A78BFA;
-  --sidebar-accent-foreground: #F9FAFB;
+  --chart-1: #8b5cf6;
+  --chart-2: #10b981;
+  --chart-3: #facc15;
+  --chart-4: #a78bfa;
+  --chart-5: #ef4444;
+  --sidebar: #1e1b24;
+  --sidebar-foreground: #f3f4f6;
+  --sidebar-primary: #8b5cf6;
+  --sidebar-primary-foreground: #f9fafb;
+  --sidebar-accent: #a78bfa;
+  --sidebar-accent-foreground: #f9fafb;
   --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-ring: #8B5CF6;
+  --sidebar-ring: #8b5cf6;
 }
 
 @theme inline {
@@ -169,7 +171,7 @@
  * Base typography. This is not applied to elements which have an ancestor with a Tailwind text class.
  */
 @layer base {
-  :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) {
+  :where(:not(:has([class*=' text-']), :not(:has([class^='text-'])))) {
     h1 {
       font-size: var(--text-2xl);
       font-weight: var(--font-weight-medium);
@@ -241,7 +243,7 @@ html {
   /* Enhanced focus for buttons and interactive elements */
   button:focus-visible,
   a:focus-visible,
-  [role="button"]:focus-visible {
+  [role='button']:focus-visible {
     outline: 3px solid hsl(217 91% 60%);
     outline-offset: 3px;
     box-shadow: 0 0 0 5px hsl(217 91% 60% / 0.2);
@@ -370,6 +372,6 @@ html {
   }
 
   .bg-radial-dark {
-    background: radial-gradient(circle at center, #121212 0%, #0B0B0B 100%);
+    background: radial-gradient(circle at center, #121212 0%, #0b0b0b 100%);
   }
 }

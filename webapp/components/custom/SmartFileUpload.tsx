@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, FileText, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import { UploadPreview, ColumnMapping } from '@/lib/types/master-employee';
 import { MappingPreviewModal } from './MappingPreviewModal';
-import { useEmployeeStore } from '@/lib/stores/employee-store';
+import { useEmployeesData } from '@/lib/hooks/use-employees';
 import { useAuth } from '@/lib/auth/auth-context';
 
 interface SmartFileUploadProps {
@@ -27,8 +27,8 @@ interface ImportResult {
 }
 
 export function SmartFileUpload({ onUploadSuccess }: SmartFileUploadProps) {
-  // Employee store - invalidate cache after successful import
-  const invalidateCache = useEmployeeStore(state => state.invalidateCache);
+  // Employee data hook - refresh cache after successful import
+  const { refresh: refreshEmployees } = useEmployeesData({ enabled: false });
 
   // Auth context for authentication headers
   const { getAuthHeaders } = useAuth();
@@ -39,43 +39,46 @@ export function SmartFileUpload({ onUploadSuccess }: SmartFileUploadProps) {
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
 
   // Step 1: Get mapping preview
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    if (acceptedFiles.length === 0) return;
+  const onDrop = useCallback(
+    async (acceptedFiles: File[]) => {
+      if (acceptedFiles.length === 0) return;
 
-    const file = acceptedFiles[0];
-    setCurrentFile(file);
-    setUploading(true);
-    setImportResult(null);
+      const file = acceptedFiles[0];
+      setCurrentFile(file);
+      setUploading(true);
+      setImportResult(null);
 
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
 
-      const response = await fetch('/api/data/preview-upload', {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: formData
-      });
+        const response = await fetch('/api/data/preview-upload', {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: formData,
+        });
 
-      const result = await response.json();
+        const result = await response.json();
 
-      if (result.success) {
-        setPreview(result.preview);
-      } else {
+        if (result.success) {
+          setPreview(result.preview);
+        } else {
+          setImportResult({
+            success: false,
+            error: result.error || 'Failed to preview upload',
+          });
+        }
+      } catch (error) {
         setImportResult({
           success: false,
-          error: result.error || 'Failed to preview upload'
+          error: error instanceof Error ? error.message : 'Upload preview failed',
         });
+      } finally {
+        setUploading(false);
       }
-    } catch (error) {
-      setImportResult({
-        success: false,
-        error: error instanceof Error ? error.message : 'Upload preview failed'
-      });
-    } finally {
-      setUploading(false);
-    }
-  }, [getAuthHeaders]);
+    },
+    [getAuthHeaders]
+  );
 
   // Step 2: Confirm and import with adjusted mappings
   const handleConfirmImport = async (adjustedMappings: ColumnMapping[]) => {
@@ -92,15 +95,15 @@ export function SmartFileUpload({ onUploadSuccess }: SmartFileUploadProps) {
       const response = await fetch('/api/data/import', {
         method: 'POST',
         headers: getAuthHeaders(),
-        body: formData
+        body: formData,
       });
 
       const result: ImportResult = await response.json();
       setImportResult(result);
 
       if (result.success) {
-        // Invalidate employee cache so components fetch fresh data
-        invalidateCache();
+        // Refresh employee cache so components fetch fresh data
+        await refreshEmployees();
         onUploadSuccess();
         // Auto-clear success message after 5 seconds
         setTimeout(() => setImportResult(null), 5000);
@@ -108,7 +111,7 @@ export function SmartFileUpload({ onUploadSuccess }: SmartFileUploadProps) {
     } catch (error) {
       setImportResult({
         success: false,
-        error: error instanceof Error ? error.message : 'Import failed'
+        error: error instanceof Error ? error.message : 'Import failed',
       });
     } finally {
       setUploading(false);
@@ -126,10 +129,10 @@ export function SmartFileUpload({ onUploadSuccess }: SmartFileUploadProps) {
     accept: {
       'text/csv': ['.csv'],
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
-      'application/vnd.ms-excel': ['.xls']
+      'application/vnd.ms-excel': ['.xls'],
     },
     maxFiles: 1,
-    disabled: uploading
+    disabled: uploading,
   });
 
   return (
@@ -142,9 +145,10 @@ export function SmartFileUpload({ onUploadSuccess }: SmartFileUploadProps) {
           whileTap={{ scale: uploading ? 1 : 0.98 }}
           className={`
             p-12 border-2 border-dashed rounded-2xl text-center cursor-pointer transition-all
-            ${isDragActive
-              ? 'border-blue-500 bg-blue-500/10'
-              : 'border-white/20 hover:border-blue-500/50 bg-white/5 hover:bg-white/10'
+            ${
+              isDragActive
+                ? 'border-blue-500 bg-blue-500/10'
+                : 'border-white/20 hover:border-blue-500/50 bg-white/5 hover:bg-white/10'
             }
             ${uploading ? 'opacity-50 cursor-not-allowed' : ''}
           `}
@@ -200,7 +204,9 @@ export function SmartFileUpload({ onUploadSuccess }: SmartFileUploadProps) {
                   <AlertCircle className="w-5 h-5 text-red-400 mt-0.5" />
                 )}
                 <div className="flex-1">
-                  <div className={`font-medium ${importResult.success ? 'text-green-200' : 'text-red-200'}`}>
+                  <div
+                    className={`font-medium ${importResult.success ? 'text-green-200' : 'text-red-200'}`}
+                  >
                     {importResult.success ? 'Import Successful!' : 'Import Failed'}
                   </div>
 
@@ -223,9 +229,7 @@ export function SmartFileUpload({ onUploadSuccess }: SmartFileUploadProps) {
                   )}
 
                   {!importResult.success && importResult.error && (
-                    <div className="mt-1 text-sm text-red-300">
-                      {importResult.error}
-                    </div>
+                    <div className="mt-1 text-sm text-red-300">{importResult.error}</div>
                   )}
                 </div>
               </div>

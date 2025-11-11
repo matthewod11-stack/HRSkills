@@ -6,11 +6,11 @@ import { TABLE_SCHEMAS, ChartType, QueryIntent } from './config';
  */
 export function buildSchemaContext(dataSources: string[]): string {
   const schemas = dataSources
-    .filter(source => TABLE_SCHEMAS[source as keyof typeof TABLE_SCHEMAS])
-    .map(source => {
+    .filter((source) => TABLE_SCHEMAS[source as keyof typeof TABLE_SCHEMAS])
+    .map((source) => {
       const schema = TABLE_SCHEMAS[source as keyof typeof TABLE_SCHEMAS];
       const columns = schema.columns
-        .map(col => `  - ${col.name} (${col.type}): ${col.description}`)
+        .map((col) => `  - ${col.name} (${col.type}): ${col.description}`)
         .join('\n');
       return `### Table: ${schema.name}\n**Description:** ${schema.description}\n**Columns:**\n${columns}`;
     });
@@ -32,8 +32,17 @@ export function validateSQL(sql: string): { valid: boolean; error?: string } {
 
   // Block dangerous operations
   const dangerousPatterns = [
-    'DROP', 'DELETE', 'INSERT', 'UPDATE', 'ALTER',
-    'CREATE', 'TRUNCATE', 'EXEC', 'EXECUTE', '--', ';--'
+    'DROP',
+    'DELETE',
+    'INSERT',
+    'UPDATE',
+    'ALTER',
+    'CREATE',
+    'TRUNCATE',
+    'EXEC',
+    'EXECUTE',
+    '--',
+    ';--',
   ];
 
   for (const pattern of dangerousPatterns) {
@@ -67,32 +76,34 @@ export function generateChartConfig(intent: QueryIntent, rows: any[]): any {
 
   const chartType = selectChartType(intent, rows.length);
 
-  const labels = rows.map(row => String(row[labelKey]));
-  const data = rows.map(row => Number(row[valueKey]) || 0);
+  const labels = rows.map((row) => String(row[labelKey]));
+  const data = rows.map((row) => Number(row[valueKey]) || 0);
 
   const colors = [
-    'rgba(59, 130, 246, 0.8)',   // blue
-    'rgba(139, 92, 246, 0.8)',   // purple
-    'rgba(236, 72, 153, 0.8)',   // pink
-    'rgba(34, 197, 94, 0.8)',    // green
-    'rgba(251, 146, 60, 0.8)',   // orange
-    'rgba(14, 165, 233, 0.8)',   // cyan
-    'rgba(168, 85, 247, 0.8)',   // violet
-    'rgba(244, 63, 94, 0.8)',    // rose
+    'rgba(59, 130, 246, 0.8)', // blue
+    'rgba(139, 92, 246, 0.8)', // purple
+    'rgba(236, 72, 153, 0.8)', // pink
+    'rgba(34, 197, 94, 0.8)', // green
+    'rgba(251, 146, 60, 0.8)', // orange
+    'rgba(14, 165, 233, 0.8)', // cyan
+    'rgba(168, 85, 247, 0.8)', // violet
+    'rgba(244, 63, 94, 0.8)', // rose
   ];
 
   return {
     type: chartType,
     data: {
       labels,
-      datasets: [{
-        label: valueKey,
-        data,
-        backgroundColor: chartType === 'pie' ? colors : colors[0],
-        borderColor: chartType === 'pie' ? colors : 'rgba(59, 130, 246, 1)',
-        borderWidth: 2,
-        tension: 0.3
-      }]
+      datasets: [
+        {
+          label: valueKey,
+          data,
+          backgroundColor: chartType === 'pie' ? colors : colors[0],
+          borderColor: chartType === 'pie' ? colors : 'rgba(59, 130, 246, 1)',
+          borderWidth: 2,
+          tension: 0.3,
+        },
+      ],
     },
     options: {
       responsive: true,
@@ -104,39 +115,42 @@ export function generateChartConfig(intent: QueryIntent, rows: any[]): any {
           labels: {
             color: 'rgba(255, 255, 255, 0.8)',
             font: {
-              size: 12
-            }
-          }
+              size: 12,
+            },
+          },
         },
         tooltip: {
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
           titleColor: 'rgba(255, 255, 255, 1)',
           bodyColor: 'rgba(255, 255, 255, 0.9)',
           borderColor: 'rgba(59, 130, 246, 0.5)',
-          borderWidth: 1
-        }
-      },
-      scales: chartType !== 'pie' ? {
-        y: {
-          beginAtZero: true,
-          grid: {
-            color: 'rgba(255, 255, 255, 0.1)'
-          },
-          ticks: {
-            color: 'rgba(255, 255, 255, 0.7)'
-          }
+          borderWidth: 1,
         },
-        x: {
-          grid: {
-            color: 'rgba(255, 255, 255, 0.05)'
-          },
-          ticks: {
-            color: 'rgba(255, 255, 255, 0.7)'
-          }
-        }
-      } : undefined
+      },
+      scales:
+        chartType !== 'pie'
+          ? {
+              y: {
+                beginAtZero: true,
+                grid: {
+                  color: 'rgba(255, 255, 255, 0.1)',
+                },
+                ticks: {
+                  color: 'rgba(255, 255, 255, 0.7)',
+                },
+              },
+              x: {
+                grid: {
+                  color: 'rgba(255, 255, 255, 0.05)',
+                },
+                ticks: {
+                  color: 'rgba(255, 255, 255, 0.7)',
+                },
+              },
+            }
+          : undefined,
     },
-    canPin: true
+    canPin: true,
   };
 }
 
@@ -148,40 +162,38 @@ export function generateFollowUps(intent: QueryIntent, query: string): string[] 
     simple_metric: [
       'Show me the trend over time',
       'Break this down by department',
-      'Compare to last quarter'
+      'Compare to last quarter',
     ],
     comparative: [
       'Show me the trend for each group',
       'Which group changed the most?',
-      'Add performance ratings to this'
+      'Add performance ratings to this',
     ],
     temporal: [
       'What caused the biggest changes?',
       'Compare to industry benchmarks',
-      'Show just the last 6 months'
+      'Show just the last 6 months',
     ],
     filtered: [
       'Compare this to other departments',
       'Show me the full organization',
-      'Add tenure breakdown'
+      'Add tenure breakdown',
     ],
-    aggregation: [
-      'Show distribution by level',
-      'Compare to company average',
-      'Highlight outliers'
-    ],
+    aggregation: ['Show distribution by level', 'Compare to company average', 'Highlight outliers'],
     correlation: [
       'Is this relationship significant?',
       'Show me other correlations',
-      'Break down by department'
-    ]
+      'Break down by department',
+    ],
   };
 
-  return followUps[intent] || [
-    'Show me more details',
-    'Break this down further',
-    'Compare to last period'
-  ];
+  return (
+    followUps[intent] || [
+      'Show me more details',
+      'Break this down further',
+      'Compare to last period',
+    ]
+  );
 }
 
 /**
@@ -219,7 +231,7 @@ export function populateAnalysisTemplate(template: string, rows: any[]): string 
 
   if (rows.length <= 10) {
     const dataPoints = rows
-      .map(row => `${formatValue(row[labelKey])}: ${formatValue(row[valueKey])}`)
+      .map((row) => `${formatValue(row[labelKey])}: ${formatValue(row[valueKey])}`)
       .join('; ');
     populated = populated.replace(/{data_summary}/g, dataPoints);
   }
@@ -238,31 +250,33 @@ export function populateAnalysisTemplate(template: string, rows: any[]): string 
   if (/{[^}]+}/.test(populated) || populated.trim().length === 0) {
     const topRows = rows.slice(0, Math.min(rows.length, 5));
     const listItems = topRows
-      .map(row => `- ${formatValue(row[labelKey])}: ${formatValue(row[valueKey])}`)
+      .map((row) => `- ${formatValue(row[labelKey])}: ${formatValue(row[valueKey])}`)
       .join('\n');
 
-    const additionalNote = rows.length > topRows.length
-      ? `\n- …and ${rows.length - topRows.length} more categories`
-      : '';
+    const additionalNote =
+      rows.length > topRows.length
+        ? `\n- …and ${rows.length - topRows.length} more categories`
+        : '';
 
-    const hasNumericValue = rows.some(row => Number.isFinite(Number(row[valueKey])));
+    const hasNumericValue = rows.some((row) => Number.isFinite(Number(row[valueKey])));
     const totalValue = hasNumericValue
       ? rows.reduce((sum, row) => {
-        const value = Number(row[valueKey]);
-        return Number.isFinite(value) ? sum + value : sum;
-      }, 0)
+          const value = Number(row[valueKey]);
+          return Number.isFinite(value) ? sum + value : sum;
+        }, 0)
       : null;
 
-    const totalLine = totalValue !== null
-      ? `\n- Total across all categories: ${totalValue.toLocaleString()}`
-      : '';
+    const totalLine =
+      totalValue !== null ? `\n- Total across all categories: ${totalValue.toLocaleString()}` : '';
 
     populated = [
       `Here’s what I found across ${rows.length} data point${rows.length === 1 ? '' : 's'}:`,
       listItems,
       additionalNote,
-      totalLine
-    ].filter(Boolean).join('\n');
+      totalLine,
+    ]
+      .filter(Boolean)
+      .join('\n');
   }
 
   return populated.trim();

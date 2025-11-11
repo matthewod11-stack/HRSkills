@@ -8,9 +8,11 @@ import { createMessage, type Anthropic } from '@/lib/api-helpers/anthropic-clien
 export function buildSystemPrompt(dataSources: string[], conversationHistory?: any[]): string {
   const schemaContext = buildSchemaContext(dataSources);
 
-  const historyContext = conversationHistory && conversationHistory.length > 0
-    ? '\n\n**Recent conversation:**\n' + conversationHistory.map((m: any) => `${m.role}: ${m.content}`).join('\n')
-    : '';
+  const historyContext =
+    conversationHistory && conversationHistory.length > 0
+      ? '\n\n**Recent conversation:**\n' +
+        conversationHistory.map((m: any) => `${m.role}: ${m.content}`).join('\n')
+      : '';
 
   return `You are an expert HR analytics assistant. Your job is to generate SQL queries AND provide analysis guidance for HR data questions.
 
@@ -68,11 +70,11 @@ export async function generateSQLAndAnalysis(
     messages: [
       {
         role: 'user',
-        content: message
-      }
+        content: message,
+      },
     ],
     tools: [SQL_ANALYSIS_TOOL],
-    tool_choice: { type: 'tool', name: 'generate_sql_and_analysis' }
+    tool_choice: { type: 'tool', name: 'generate_sql_and_analysis' },
   });
 
   // Extract tool use

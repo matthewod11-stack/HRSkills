@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 /**
  * WorkflowProgress Component
@@ -7,23 +7,23 @@
  * Shows current step, completed steps, and overall progress percentage.
  */
 
-import React from 'react'
-import { CheckCircle2, Circle, ArrowRight } from 'lucide-react'
+import React from 'react';
+import { CheckCircle2, Circle, ArrowRight } from 'lucide-react';
 
 interface WorkflowStateData {
-  currentStep: string | null
-  progress: number
-  completedSteps: string[]
-  isComplete: boolean
-  hasActions: boolean
-  actionCount: number
+  currentStep: string | null;
+  progress: number;
+  completedSteps: string[];
+  isComplete: boolean;
+  hasActions: boolean;
+  actionCount: number;
 }
 
 interface WorkflowProgressProps {
-  workflowId: string
-  workflowName?: string
-  state: WorkflowStateData
-  className?: string
+  workflowId: string;
+  workflowName?: string;
+  state: WorkflowStateData;
+  className?: string;
 }
 
 /**
@@ -33,8 +33,8 @@ interface WorkflowProgressProps {
 function formatStepName(step: string): string {
   return step
     .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 }
 
 /**
@@ -49,28 +49,30 @@ function getWorkflowDisplayName(workflowId: string): string {
     analytics: 'HR Analytics',
     compensation: 'Compensation & Benefits',
     employee_relations: 'Employee Relations',
-    compliance: 'HR Compliance'
-  }
-  return names[workflowId] || workflowId
+    compliance: 'HR Compliance',
+  };
+  return names[workflowId] || workflowId;
 }
 
 export function WorkflowProgress({
   workflowId,
   workflowName,
   state,
-  className = ''
+  className = '',
 }: WorkflowProgressProps) {
-  const displayName = workflowName || getWorkflowDisplayName(workflowId)
+  const displayName = workflowName || getWorkflowDisplayName(workflowId);
 
   // Don't show progress for general workflow
   if (workflowId === 'general' || !state.currentStep) {
-    return null
+    return null;
   }
 
-  const { currentStep, progress, completedSteps, isComplete, hasActions, actionCount } = state
+  const { currentStep, progress, completedSteps, isComplete, hasActions, actionCount } = state;
 
   return (
-    <div className={`workflow-progress rounded-lg border border-gray-200 bg-white p-4 shadow-sm ${className}`}>
+    <div
+      className={`workflow-progress rounded-lg border border-gray-200 bg-white p-4 shadow-sm ${className}`}
+    >
       {/* Header */}
       <div className="mb-3 flex items-center justify-between">
         <div>
@@ -128,7 +130,8 @@ export function WorkflowProgress({
         <div className="mt-3 flex items-center gap-2 rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">
           <ArrowRight className="h-4 w-4" />
           <span>
-            <span className="font-medium">{actionCount}</span> suggested action{actionCount > 1 ? 's' : ''} available
+            <span className="font-medium">{actionCount}</span> suggested action
+            {actionCount > 1 ? 's' : ''} available
           </span>
         </div>
       )}
@@ -141,7 +144,7 @@ export function WorkflowProgress({
         </div>
       )}
     </div>
-  )
+  );
 }
 
 /**
@@ -150,13 +153,13 @@ export function WorkflowProgress({
 export function WorkflowProgressCompact({
   workflowId,
   state,
-  className = ''
+  className = '',
 }: Omit<WorkflowProgressProps, 'workflowName'>) {
   if (workflowId === 'general' || !state.currentStep) {
-    return null
+    return null;
   }
 
-  const { currentStep, progress, isComplete } = state
+  const { currentStep, progress, isComplete } = state;
 
   return (
     <div className={`inline-flex items-center gap-2 ${className}`}>
@@ -169,16 +172,8 @@ export function WorkflowProgressCompact({
         </div>
         <span className="font-medium">{progress}%</span>
       </div>
-      {!isComplete && (
-        <span className="text-xs text-gray-500">
-          {formatStepName(currentStep)}
-        </span>
-      )}
-      {isComplete && (
-        <span className="text-xs font-medium text-green-600">
-          ✓ Complete
-        </span>
-      )}
+      {!isComplete && <span className="text-xs text-gray-500">{formatStepName(currentStep)}</span>}
+      {isComplete && <span className="text-xs font-medium text-green-600">✓ Complete</span>}
     </div>
-  )
+  );
 }

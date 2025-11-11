@@ -11,9 +11,9 @@ import type {
   ActionContext,
   ActionResult,
   ActionValidationResult,
-  CreateDocumentPayload
-} from '../types'
-import { createDocument, type CreateDocumentInput } from '@/lib/services/document-service'
+  CreateDocumentPayload,
+} from '../types';
+import { createDocument, type CreateDocumentInput } from '@/lib/services/document-service';
 
 /**
  * Document creation handler
@@ -24,37 +24,34 @@ export const documentHandler: ActionHandler<CreateDocumentPayload> = {
   /**
    * Validate document creation action
    */
-  async validate(
-    action: BaseAction,
-    context: ActionContext
-  ): Promise<ActionValidationResult> {
-    const errors = []
-    const warnings = []
-    const payload = action.payload as CreateDocumentPayload
+  async validate(action: BaseAction, context: ActionContext): Promise<ActionValidationResult> {
+    const errors = [];
+    const warnings = [];
+    const payload = action.payload as CreateDocumentPayload;
 
     // Check required fields
     if (!payload.title) {
       errors.push({
         field: 'title',
         message: 'Document title is required',
-        code: 'missing_required'
-      })
+        code: 'missing_required',
+      });
     }
 
     if (!payload.content) {
       errors.push({
         field: 'content',
         message: 'Document content is required',
-        code: 'missing_required'
-      })
+        code: 'missing_required',
+      });
     }
 
     if (!payload.documentType) {
       errors.push({
         field: 'documentType',
         message: 'Document type is required',
-        code: 'missing_required'
-      })
+        code: 'missing_required',
+      });
     }
 
     // Validate document type
@@ -66,15 +63,15 @@ export const documentHandler: ActionHandler<CreateDocumentPayload> = {
       'interview_guide',
       'performance_review',
       'onboarding_checklist',
-      'custom'
-    ]
+      'custom',
+    ];
 
     if (payload.documentType && !validTypes.includes(payload.documentType)) {
       errors.push({
         field: 'documentType',
         message: `Invalid document type. Must be one of: ${validTypes.join(', ')}`,
-        code: 'invalid_value'
-      })
+        code: 'invalid_value',
+      });
     }
 
     // Check permissions for Google Drive
@@ -83,56 +80,53 @@ export const documentHandler: ActionHandler<CreateDocumentPayload> = {
         errors.push({
           field: 'permissions',
           message: 'User does not have permission to create documents in Google Drive',
-          code: 'permission_denied'
-        })
+          code: 'permission_denied',
+        });
       }
 
       warnings.push({
         field: 'destination',
-        message: 'Google Drive integration not yet implemented. Document will be saved locally.'
-      })
+        message: 'Google Drive integration not yet implemented. Document will be saved locally.',
+      });
     }
 
     // Validate content length
     if (payload.content && payload.content.length < 10) {
       warnings.push({
         field: 'content',
-        message: 'Document content is very short. Consider adding more details.'
-      })
+        message: 'Document content is very short. Consider adding more details.',
+      });
     }
 
     if (payload.content && payload.content.length > 100000) {
       warnings.push({
         field: 'content',
-        message: 'Document content is very long (>100KB). This may take longer to process.'
-      })
+        message: 'Document content is very long (>100KB). This may take longer to process.',
+      });
     }
 
     return {
       valid: errors.length === 0,
       errors,
-      warnings
-    }
+      warnings,
+    };
   },
 
   /**
    * Execute document creation
    */
-  async execute(
-    action: BaseAction,
-    context: ActionContext
-  ): Promise<ActionResult> {
-    const startTime = Date.now()
-    const payload = action.payload as CreateDocumentPayload
+  async execute(action: BaseAction, context: ActionContext): Promise<ActionResult> {
+    const startTime = Date.now();
+    const payload = action.payload as CreateDocumentPayload;
 
     try {
       // Format content based on format type
-      let formattedContent = payload.content
+      let formattedContent = payload.content;
 
       if (payload.format === 'html') {
-        formattedContent = this.convertMarkdownToHtml(payload.content)
+        formattedContent = this.convertMarkdownToHtml(payload.content);
       } else if (payload.format === 'plain') {
-        formattedContent = this.stripMarkdown(payload.content)
+        formattedContent = this.stripMarkdown(payload.content);
       }
 
       // Prepare metadata
@@ -141,7 +135,7 @@ export const documentHandler: ActionHandler<CreateDocumentPayload> = {
         workflowId: context.workflowId,
         userId: context.userId,
         destination: payload.destination,
-      }
+      };
 
       // Create document in database (defaults to 'draft' status)
       const documentData: CreateDocumentInput = {
@@ -151,12 +145,12 @@ export const documentHandler: ActionHandler<CreateDocumentPayload> = {
         employeeId: payload.employeeId || null,
         status: 'draft', // Always create as draft from chat
         metadataJson: JSON.stringify(metadata),
-      }
+      };
 
-      const document = await createDocument(documentData)
+      const document = await createDocument(documentData);
 
       // Build document URL
-      const documentUrl = `/documents/${document.id}`
+      const documentUrl = `/documents/${document.id}`;
 
       const output = {
         documentId: document.id,
@@ -167,8 +161,8 @@ export const documentHandler: ActionHandler<CreateDocumentPayload> = {
         format: payload.format || 'markdown',
         size: formattedContent.length,
         createdAt: document.createdAt,
-        message: `Document "${payload.title}" created successfully as draft`
-      }
+        message: `Document "${payload.title}" created successfully as draft`,
+      };
 
       return {
         success: true,
@@ -180,9 +174,9 @@ export const documentHandler: ActionHandler<CreateDocumentPayload> = {
           workflowId: context.workflowId,
           userId: context.userId,
           documentType: payload.documentType,
-          documentId: document.id
-        }
-      }
+          documentId: document.id,
+        },
+      };
     } catch (error: any) {
       return {
         success: false,
@@ -192,9 +186,9 @@ export const documentHandler: ActionHandler<CreateDocumentPayload> = {
         error: {
           code: 'document_creation_failed',
           message: error.message || 'Failed to create document',
-          details: error
-        }
-      }
+          details: error,
+        },
+      };
     }
   },
 
@@ -202,7 +196,7 @@ export const documentHandler: ActionHandler<CreateDocumentPayload> = {
    * Estimate execution time
    */
   estimateDuration(): number {
-    return 2000 // 2 seconds average
+    return 2000; // 2 seconds average
   },
 
   /**
@@ -218,7 +212,7 @@ export const documentHandler: ActionHandler<CreateDocumentPayload> = {
       .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
       .replace(/\*(.*)\*/gim, '<em>$1</em>')
       .replace(/\n\n/g, '</p><p>')
-      .replace(/^(.+)$/gim, '<p>$1</p>')
+      .replace(/^(.+)$/gim, '<p>$1</p>');
   },
 
   /**
@@ -230,16 +224,16 @@ export const documentHandler: ActionHandler<CreateDocumentPayload> = {
       .replace(/\*\*(.*?)\*\*/g, '$1')
       .replace(/\*(.*?)\*/g, '$1')
       .replace(/\[(.*?)\]\(.*?\)/g, '$1')
-      .replace(/`(.*?)`/g, '$1')
+      .replace(/`(.*?)`/g, '$1');
   },
 
   /**
    * Delay helper
    */
   delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms))
-  }
-}
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  },
+};
 
 /**
  * Register document handler with executor
@@ -248,6 +242,6 @@ export function registerDocumentHandler(executor: any) {
   executor.registerHandler(documentHandler, {
     enabled: true,
     requiredPermissions: ['documents:write'],
-    rateLimitPerHour: 100
-  })
+    rateLimitPerHour: 100,
+  });
 }

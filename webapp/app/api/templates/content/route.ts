@@ -16,10 +16,7 @@ export async function GET(request: NextRequest) {
     const documentId = searchParams.get('documentId');
 
     if (!documentId) {
-      return NextResponse.json(
-        { error: 'Missing documentId parameter' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing documentId parameter' }, { status: 400 });
     }
 
     // Check if authenticated
@@ -45,9 +42,8 @@ export async function GET(request: NextRequest) {
       success: true,
       documentId,
       title: doc.data.title,
-      content: markdown
+      content: markdown,
     });
-
   } catch (error: any) {
     console.error('Error fetching template content:', error);
 
@@ -61,10 +57,7 @@ export async function GET(request: NextRequest) {
 
     // Handle not found
     if (error.code === 404) {
-      return NextResponse.json(
-        { error: 'Template not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Template not found' }, { status: 404 });
     }
 
     return NextResponse.json(

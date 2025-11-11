@@ -62,7 +62,7 @@ async function createMessageWithRetry(
     try {
       const response = await anthropic.messages.create({
         ...params,
-        stream: false // Explicitly disable streaming
+        stream: false, // Explicitly disable streaming
       });
       return response as Anthropic.Message;
     } catch (error: any) {
@@ -92,9 +92,7 @@ async function createMessageWithRetry(
     maxTimeout: 8000,
     onFailedAttempt: (error) => {
       if (process.env.NODE_ENV === 'development') {
-        console.warn(
-          `Retry attempt ${error.attemptNumber}/3 for Anthropic API`
-        );
+        console.warn(`Retry attempt ${error.attemptNumber}/3 for Anthropic API`);
       }
     },
   });
@@ -143,9 +141,7 @@ export async function createMessage(
   } catch (error: any) {
     // Enhance error message
     if (error.message?.includes('Breaker is open')) {
-      throw new Error(
-        'Anthropic API is currently unavailable. Please try again in a moment.'
-      );
+      throw new Error('Anthropic API is currently unavailable. Please try again in a moment.');
     }
 
     throw error;

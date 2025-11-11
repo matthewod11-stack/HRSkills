@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 /**
  * Welcome Dialog Component
@@ -10,14 +10,20 @@
  * - Information about demo data
  */
 
-import { useState, useEffect } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Sparkles, Database, MessageSquare, ArrowRight, Play } from 'lucide-react'
+import { useState, useEffect } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Sparkles, Database, MessageSquare, ArrowRight, Play } from 'lucide-react';
 
 interface WelcomeDialogProps {
-  onClose?: () => void
-  onQuickStart?: (prompt: string) => void
+  onClose?: () => void;
+  onQuickStart?: (prompt: string) => void;
 }
 
 const QUICK_START_PROMPTS = [
@@ -25,28 +31,28 @@ const QUICK_START_PROMPTS = [
     icon: Database,
     label: 'Show engineering headcount',
     prompt: 'Show me our engineering headcount with breakdown by level and recent changes',
-    color: 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
+    color: 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300',
   },
   {
     icon: Sparkles,
     label: 'Who are my flight risks?',
     prompt: 'Who are my flight risks? Show me employees at risk of leaving and why',
-    color: 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300'
+    color: 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300',
   },
   {
     icon: MessageSquare,
     label: 'Create a job description',
     prompt: 'Help me create a job description for a Senior Software Engineer position',
-    color: 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300'
-  }
-]
+    color: 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300',
+  },
+];
 
 const DEMO_CONVERSATION = {
   title: 'Engineering Headcount Analysis',
   messages: [
     {
       role: 'user' as const,
-      content: 'Show me our engineering headcount'
+      content: 'Show me our engineering headcount',
     },
     {
       role: 'assistant' as const,
@@ -72,40 +78,40 @@ const DEMO_CONVERSATION = {
 Would you like me to:
 - Draft job descriptions for open roles
 - Create retention plan for at-risk engineers
-- Analyze hiring bottlenecks`
-    }
-  ]
-}
+- Analyze hiring bottlenecks`,
+    },
+  ],
+};
 
 export function WelcomeDialog({ onClose, onQuickStart }: WelcomeDialogProps) {
-  const [open, setOpen] = useState(false)
-  const [showVideo, setShowVideo] = useState(true)
+  const [open, setOpen] = useState(false);
+  const [showVideo, setShowVideo] = useState(true);
 
   useEffect(() => {
     // Check if user has seen welcome before
-    const hasSeenWelcome = localStorage.getItem('hrskills_seen_welcome')
+    const hasSeenWelcome = localStorage.getItem('hrskills_seen_welcome');
 
     if (!hasSeenWelcome) {
-      setOpen(true)
+      setOpen(true);
     }
-  }, [])
+  }, []);
 
   const handleClose = () => {
-    localStorage.setItem('hrskills_seen_welcome', 'true')
-    setOpen(false)
-    onClose?.()
-  }
+    localStorage.setItem('hrskills_seen_welcome', 'true');
+    setOpen(false);
+    onClose?.();
+  };
 
   const handleQuickStart = (prompt: string) => {
-    handleClose()
-    onQuickStart?.(prompt)
-  }
+    handleClose();
+    onQuickStart?.(prompt);
+  };
 
   const handleViewExampleConversation = () => {
-    handleClose()
+    handleClose();
     // This will be handled by the parent component to load the demo conversation
-    onQuickStart?.(DEMO_CONVERSATION.messages[0].content)
-  }
+    onQuickStart?.(DEMO_CONVERSATION.messages[0].content);
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -132,9 +138,7 @@ export function WelcomeDialog({ onClose, onQuickStart }: WelcomeDialogProps) {
                   <div className="w-20 h-20 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-lg cursor-pointer hover:scale-110 transition-transform">
                     <Play className="h-10 w-10 text-blue-600 dark:text-blue-400 ml-1" />
                   </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Demo video coming soon
-                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Demo video coming soon</p>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -157,9 +161,10 @@ export function WelcomeDialog({ onClose, onQuickStart }: WelcomeDialogProps) {
                   key={idx}
                   className={`
                     rounded-lg p-3 text-sm
-                    ${msg.role === 'user'
-                      ? 'bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-100 ml-12'
-                      : 'bg-white dark:bg-gray-800 mr-12'
+                    ${
+                      msg.role === 'user'
+                        ? 'bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-100 ml-12'
+                        : 'bg-white dark:bg-gray-800 mr-12'
                     }
                   `}
                 >
@@ -186,7 +191,7 @@ export function WelcomeDialog({ onClose, onQuickStart }: WelcomeDialogProps) {
             <h3 className="font-semibold text-lg">Try asking:</h3>
             <div className="grid gap-3">
               {QUICK_START_PROMPTS.map((prompt, idx) => {
-                const Icon = prompt.icon
+                const Icon = prompt.icon;
                 return (
                   <button
                     key={idx}
@@ -206,7 +211,7 @@ export function WelcomeDialog({ onClose, onQuickStart }: WelcomeDialogProps) {
                     </div>
                     <ArrowRight className="h-4 w-4 opacity-50" />
                   </button>
-                )
+                );
               })}
             </div>
           </div>
@@ -220,8 +225,8 @@ export function WelcomeDialog({ onClose, onQuickStart }: WelcomeDialogProps) {
                   You're using demo data
                 </p>
                 <p className="text-blue-700 dark:text-blue-300">
-                  200 employees with realistic metrics, flight risks, and performance data.
-                  You can upload your own CSV data anytime in Settings.
+                  200 employees with realistic metrics, flight risks, and performance data. You can
+                  upload your own CSV data anytime in Settings.
                 </p>
               </div>
             </div>
@@ -229,18 +234,14 @@ export function WelcomeDialog({ onClose, onQuickStart }: WelcomeDialogProps) {
 
           {/* Action Buttons */}
           <div className="flex gap-3 pt-2">
-            <Button
-              onClick={handleClose}
-              className="flex-1"
-              size="lg"
-            >
+            <Button onClick={handleClose} className="flex-1" size="lg">
               Get Started
               <Sparkles className="ml-2 h-4 w-4" />
             </Button>
             <Button
               onClick={() => {
-                handleClose()
-                window.location.href = '/settings'
+                handleClose();
+                window.location.href = '/settings';
               }}
               variant="outline"
               size="lg"
@@ -261,27 +262,27 @@ export function WelcomeDialog({ onClose, onQuickStart }: WelcomeDialogProps) {
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 /**
  * Hook to trigger welcome dialog
  */
 export function useWelcomeDialog() {
-  const [shouldShow, setShouldShow] = useState(false)
+  const [shouldShow, setShouldShow] = useState(false);
 
   useEffect(() => {
-    const hasSeenWelcome = localStorage.getItem('hrskills_seen_welcome')
-    setShouldShow(!hasSeenWelcome)
-  }, [])
+    const hasSeenWelcome = localStorage.getItem('hrskills_seen_welcome');
+    setShouldShow(!hasSeenWelcome);
+  }, []);
 
   const resetWelcome = () => {
-    localStorage.removeItem('hrskills_seen_welcome')
-    setShouldShow(true)
-  }
+    localStorage.removeItem('hrskills_seen_welcome');
+    setShouldShow(true);
+  };
 
   return {
     shouldShow,
-    resetWelcome
-  }
+    resetWelcome,
+  };
 }

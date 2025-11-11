@@ -5,12 +5,7 @@
  * This is the core orchestration layer for multi-step workflows.
  */
 
-import type {
-  WorkflowState,
-  WorkflowId,
-  SuggestedAction,
-  WorkflowStep
-} from '../types'
+import type { WorkflowState, WorkflowId, SuggestedAction, WorkflowStep } from '../types';
 import type {
   StateTransitionEvent,
   TransitionEventType,
@@ -20,14 +15,10 @@ import type {
   TransitionRule,
   StateValidationResult,
   StateValidationError,
-  ValidationErrorCode
-} from './types'
-import { loadWorkflow } from '../loader'
-import {
-  saveConversationState,
-  createStateSnapshot,
-  updateWorkflowState
-} from './persistence'
+  ValidationErrorCode,
+} from './types';
+import { loadWorkflow } from '../loader';
+import { saveConversationState, createStateSnapshot, updateWorkflowState } from './persistence';
 
 // ============================================================================
 // WorkflowStateMachine Class
@@ -54,14 +45,14 @@ import {
  * ```
  */
 export class WorkflowStateMachine {
-  private workflowId: WorkflowId
-  private conversationId: string
-  private state: WorkflowState | null = null
-  private config: StateMachineConfig | null = null
+  private workflowId: WorkflowId;
+  private conversationId: string;
+  private state: WorkflowState | null = null;
+  private config: StateMachineConfig | null = null;
 
   constructor(workflowId: WorkflowId, conversationId: string) {
-    this.workflowId = workflowId
-    this.conversationId = conversationId
+    this.workflowId = workflowId;
+    this.conversationId = conversationId;
   }
 
   // ==========================================================================
@@ -77,18 +68,18 @@ export class WorkflowStateMachine {
   async initialize(initialState?: WorkflowState): Promise<boolean> {
     try {
       // Load workflow configuration
-      const workflow = loadWorkflow(this.workflowId)
+      const workflow = loadWorkflow(this.workflowId);
       if (!workflow) {
-        console.error(`Workflow ${this.workflowId} not found`)
-        return false
+        console.error(`Workflow ${this.workflowId} not found`);
+        return false;
       }
 
       // Build state machine config from workflow
-      this.config = this.buildConfig(workflow.steps || [])
+      this.config = this.buildConfig(workflow.steps || []);
 
       // Set initial state
       if (initialState) {
-        this.state = initialState
+        this.state = initialState;
       } else {
         this.state = {
           workflowId: this.workflowId,
@@ -100,15 +91,15 @@ export class WorkflowStateMachine {
           updatedAt: new Date().toISOString(),
           metadata: {
             initialized: true,
-            version: 1
-          }
-        }
+            version: 1,
+          },
+        };
       }
 
-      return true
+      return true;
     } catch (error) {
-      console.error('Failed to initialize state machine:', error)
-      return false
+      console.error('Failed to initialize state machine:', error);
+      return false;
     }
   }
 
@@ -119,26 +110,26 @@ export class WorkflowStateMachine {
    * @returns State machine configuration
    */
   private buildConfig(steps: WorkflowStep[]): StateMachineConfig {
-    const stepConfigs: StepConfig[] = steps.map(step => ({
+    const stepConfigs: StepConfig[] = steps.map((step) => ({
       id: step.id,
       name: step.name,
       description: step.description,
       requiredData: step.requiredData,
       optionalData: step.optionalData,
       allowedNextSteps: step.nextSteps || [],
-      isTerminal: step.isTerminal || false
-    }))
+      isTerminal: step.isTerminal || false,
+    }));
 
     // Build transition rules from step configuration
-    const transitions: TransitionRule[] = []
+    const transitions: TransitionRule[] = [];
     for (const step of steps) {
       if (step.nextSteps && step.nextSteps.length > 0) {
         for (const nextStep of step.nextSteps) {
           transitions.push({
             from: step.id,
             to: nextStep,
-            event: 'step_completed'
-          })
+            event: 'step_completed',
+          });
         }
       }
     }
@@ -147,8 +138,8 @@ export class WorkflowStateMachine {
       workflowId: this.workflowId,
       initialStep: steps[0]?.id || 'start',
       steps: stepConfigs,
-      transitions
-    }
+      transitions,
+    };
   }
 
   // ==========================================================================
@@ -159,46 +150,46 @@ export class WorkflowStateMachine {
    * Get current state
    */
   getState(): WorkflowState | null {
-    return this.state
+    return this.state;
   }
 
   /**
    * Get current step
    */
   getCurrentStep(): string | null {
-    return this.state?.step || null
+    return this.state?.step || null;
   }
 
   /**
    * Get current step configuration
    */
   getCurrentStepConfig(): StepConfig | null {
-    if (!this.state || !this.config) return null
-    return this.config.steps.find(s => s.id === this.state!.step) || null
+    if (!this.state || !this.config) return null;
+    return this.config.steps.find((s) => s.id === this.state!.step) || null;
   }
 
   /**
    * Get next suggested actions
    */
   getNextActions(): SuggestedAction[] {
-    return this.state?.nextActions || []
+    return this.state?.nextActions || [];
   }
 
   /**
    * Get completed steps
    */
   getCompletedSteps(): string[] {
-    return this.state?.completedSteps || []
+    return this.state?.completedSteps || [];
   }
 
   /**
    * Get workflow progress as percentage
    */
   getProgress(): number {
-    if (!this.state || !this.config) return 0
-    const totalSteps = this.config.steps.length
-    const completed = this.state.completedSteps.length
-    return totalSteps > 0 ? Math.round((completed / totalSteps) * 100) : 0
+    if (!this.state || !this.config) return 0;
+    const totalSteps = this.config.steps.length;
+    const completed = this.state.completedSteps.length;
+    return totalSteps > 0 ? Math.round((completed / totalSteps) * 100) : 0;
   }
 
   // ==========================================================================
@@ -212,12 +203,12 @@ export class WorkflowStateMachine {
    * @returns true if transition is valid
    */
   canTransition(toStep: string): boolean {
-    if (!this.state || !this.config) return false
+    if (!this.state || !this.config) return false;
 
-    const currentStep = this.getCurrentStepConfig()
-    if (!currentStep) return false
+    const currentStep = this.getCurrentStepConfig();
+    if (!currentStep) return false;
 
-    return currentStep.allowedNextSteps.includes(toStep)
+    return currentStep.allowedNextSteps.includes(toStep);
   }
 
   /**
@@ -239,18 +230,18 @@ export class WorkflowStateMachine {
         previousState: this.state!,
         newState: this.state!,
         event,
-        errors: ['State machine not initialized']
-      }
+        errors: ['State machine not initialized'],
+      };
     }
 
-    const previousState = { ...this.state }
+    const previousState = { ...this.state };
 
     // Determine target step
-    let targetStep = toStep
+    let targetStep = toStep;
     if (!targetStep) {
-      const currentStepConfig = this.getCurrentStepConfig()
+      const currentStepConfig = this.getCurrentStepConfig();
       if (currentStepConfig && currentStepConfig.allowedNextSteps.length > 0) {
-        targetStep = currentStepConfig.allowedNextSteps[0]
+        targetStep = currentStepConfig.allowedNextSteps[0];
       }
     }
 
@@ -261,21 +252,21 @@ export class WorkflowStateMachine {
         previousState,
         newState: this.state,
         event,
-        errors: [`Invalid transition from ${this.state.step} to ${targetStep}`]
-      }
+        errors: [`Invalid transition from ${this.state.step} to ${targetStep}`],
+      };
     }
 
     // Validate data if provided
     if (data) {
-      const validation = this.validateData(data)
+      const validation = this.validateData(data);
       if (!validation.valid) {
         return {
           success: false,
           previousState,
           newState: this.state,
           event,
-          errors: validation.errors.map(e => e.message)
-        }
+          errors: validation.errors.map((e) => e.message),
+        };
       }
     }
 
@@ -283,38 +274,39 @@ export class WorkflowStateMachine {
     let newState = updateWorkflowState(this.state, {
       step: targetStep || this.state.step,
       data: { ...this.state.data, ...data },
-      completedSteps: targetStep && !this.state.completedSteps.includes(this.state.step)
-        ? [...this.state.completedSteps, this.state.step]
-        : this.state.completedSteps,
+      completedSteps:
+        targetStep && !this.state.completedSteps.includes(this.state.step)
+          ? [...this.state.completedSteps, this.state.step]
+          : this.state.completedSteps,
       metadata: {
         ...this.state.metadata,
         lastTransition: {
           event: event.type,
           from: this.state.step,
           to: targetStep,
-          timestamp: event.timestamp
-        }
-      }
-    })
+          timestamp: event.timestamp,
+        },
+      },
+    });
 
     // Update internal state
-    this.state = newState
+    this.state = newState;
 
     // Persist to database
-    const saved = await saveConversationState(this.conversationId, newState)
+    const saved = await saveConversationState(this.conversationId, newState);
     if (!saved) {
-      console.warn('Failed to persist state to database')
+      console.warn('Failed to persist state to database');
     }
 
     // Create snapshot for audit trail
-    await createStateSnapshot(this.conversationId, newState, event)
+    await createStateSnapshot(this.conversationId, newState, event);
 
     return {
       success: true,
       previousState,
       newState,
-      event
-    }
+      event,
+    };
   }
 
   /**
@@ -332,10 +324,10 @@ export class WorkflowStateMachine {
       type: 'step_completed',
       triggeredBy: 'user',
       timestamp: new Date().toISOString(),
-      data
-    }
+      data,
+    };
 
-    return this.transition(event, nextStep, data)
+    return this.transition(event, nextStep, data);
   }
 
   /**
@@ -345,17 +337,17 @@ export class WorkflowStateMachine {
    * @returns Success boolean
    */
   async updateData(data: Record<string, any>): Promise<boolean> {
-    if (!this.state) return false
+    if (!this.state) return false;
 
     const event: StateTransitionEvent = {
       type: 'data_collected',
       triggeredBy: 'system',
       timestamp: new Date().toISOString(),
-      data
-    }
+      data,
+    };
 
-    const result = await this.transition(event, this.state.step, data)
-    return result.success
+    const result = await this.transition(event, this.state.step, data);
+    return result.success;
   }
 
   /**
@@ -365,13 +357,13 @@ export class WorkflowStateMachine {
    * @returns Success boolean
    */
   async setSuggestedActions(actions: SuggestedAction[]): Promise<boolean> {
-    if (!this.state) return false
+    if (!this.state) return false;
 
     this.state = updateWorkflowState(this.state, {
-      nextActions: actions
-    })
+      nextActions: actions,
+    });
 
-    return saveConversationState(this.conversationId, this.state)
+    return saveConversationState(this.conversationId, this.state);
   }
 
   // ==========================================================================
@@ -385,12 +377,12 @@ export class WorkflowStateMachine {
    * @returns Validation result
    */
   private validateData(data: Record<string, any>): StateValidationResult {
-    const currentStep = this.getCurrentStepConfig()
+    const currentStep = this.getCurrentStepConfig();
     if (!currentStep) {
-      return { valid: true, errors: [] }
+      return { valid: true, errors: [] };
     }
 
-    const errors: StateValidationError[] = []
+    const errors: StateValidationError[] = [];
 
     // Check required fields
     if (currentStep.requiredData) {
@@ -399,16 +391,16 @@ export class WorkflowStateMachine {
           errors.push({
             field,
             message: `Required field '${field}' is missing`,
-            code: 'missing_required_field'
-          })
+            code: 'missing_required_field',
+          });
         }
       }
     }
 
     return {
       valid: errors.length === 0,
-      errors
-    }
+      errors,
+    };
   }
 
   /**
@@ -420,15 +412,17 @@ export class WorkflowStateMachine {
     if (!this.state) {
       return {
         valid: false,
-        errors: [{
-          field: 'state',
-          message: 'State is null',
-          code: 'missing_required_field'
-        }]
-      }
+        errors: [
+          {
+            field: 'state',
+            message: 'State is null',
+            code: 'missing_required_field',
+          },
+        ],
+      };
     }
 
-    return this.validateData(this.state.data)
+    return this.validateData(this.state.data);
   }
 
   // ==========================================================================
@@ -439,8 +433,8 @@ export class WorkflowStateMachine {
    * Check if workflow is complete
    */
   isComplete(): boolean {
-    const currentStep = this.getCurrentStepConfig()
-    return currentStep?.isTerminal || false
+    const currentStep = this.getCurrentStepConfig();
+    return currentStep?.isTerminal || false;
   }
 
   /**
@@ -452,8 +446,8 @@ export class WorkflowStateMachine {
     const event: StateTransitionEvent = {
       type: 'workflow_completed',
       triggeredBy: 'system',
-      timestamp: new Date().toISOString()
-    }
+      timestamp: new Date().toISOString(),
+    };
 
     if (!this.state) {
       return {
@@ -461,29 +455,29 @@ export class WorkflowStateMachine {
         previousState: this.state!,
         newState: this.state!,
         event,
-        errors: ['State machine not initialized']
-      }
+        errors: ['State machine not initialized'],
+      };
     }
 
-    const previousState = { ...this.state }
+    const previousState = { ...this.state };
 
     this.state = updateWorkflowState(this.state, {
       metadata: {
         ...this.state.metadata,
         completed: true,
-        completedAt: new Date().toISOString()
-      }
-    })
+        completedAt: new Date().toISOString(),
+      },
+    });
 
-    await saveConversationState(this.conversationId, this.state)
-    await createStateSnapshot(this.conversationId, this.state, event)
+    await saveConversationState(this.conversationId, this.state);
+    await createStateSnapshot(this.conversationId, this.state, event);
 
     return {
       success: true,
       previousState,
       newState: this.state,
-      event
-    }
+      event,
+    };
   }
 
   /**
@@ -497,8 +491,8 @@ export class WorkflowStateMachine {
       type: 'workflow_cancelled',
       triggeredBy: 'user',
       timestamp: new Date().toISOString(),
-      data: { reason }
-    }
+      data: { reason },
+    };
 
     if (!this.state) {
       return {
@@ -506,30 +500,30 @@ export class WorkflowStateMachine {
         previousState: this.state!,
         newState: this.state!,
         event,
-        errors: ['State machine not initialized']
-      }
+        errors: ['State machine not initialized'],
+      };
     }
 
-    const previousState = { ...this.state }
+    const previousState = { ...this.state };
 
     this.state = updateWorkflowState(this.state, {
       metadata: {
         ...this.state.metadata,
         cancelled: true,
         cancelledAt: new Date().toISOString(),
-        cancellationReason: reason
-      }
-    })
+        cancellationReason: reason,
+      },
+    });
 
-    await saveConversationState(this.conversationId, this.state)
-    await createStateSnapshot(this.conversationId, this.state, event)
+    await saveConversationState(this.conversationId, this.state);
+    await createStateSnapshot(this.conversationId, this.state, event);
 
     return {
       success: true,
       previousState,
       newState: this.state,
-      event
-    }
+      event,
+    };
   }
 
   // ==========================================================================
@@ -540,12 +534,12 @@ export class WorkflowStateMachine {
    * Get workflow summary for debugging
    */
   getSummary(): {
-    workflowId: WorkflowId
-    currentStep: string | null
-    progress: number
-    completedSteps: string[]
-    isComplete: boolean
-    nextActions: number
+    workflowId: WorkflowId;
+    currentStep: string | null;
+    progress: number;
+    completedSteps: string[];
+    isComplete: boolean;
+    nextActions: number;
   } {
     return {
       workflowId: this.workflowId,
@@ -553,15 +547,15 @@ export class WorkflowStateMachine {
       progress: this.getProgress(),
       completedSteps: this.getCompletedSteps(),
       isComplete: this.isComplete(),
-      nextActions: this.getNextActions().length
-    }
+      nextActions: this.getNextActions().length,
+    };
   }
 
   /**
    * Export state for debugging or backup
    */
   exportState(): WorkflowState | null {
-    return this.state ? { ...this.state } : null
+    return this.state ? { ...this.state } : null;
   }
 }
 
@@ -582,14 +576,14 @@ export async function createStateMachine(
   conversationId: string,
   initialState?: WorkflowState
 ): Promise<WorkflowStateMachine | null> {
-  const machine = new WorkflowStateMachine(workflowId, conversationId)
-  const initialized = await machine.initialize(initialState)
+  const machine = new WorkflowStateMachine(workflowId, conversationId);
+  const initialized = await machine.initialize(initialState);
 
   if (!initialized) {
-    return null
+    return null;
   }
 
-  return machine
+  return machine;
 }
 
 /**
@@ -603,5 +597,5 @@ export async function loadStateMachine(
   conversationId: string,
   state: WorkflowState
 ): Promise<WorkflowStateMachine | null> {
-  return createStateMachine(state.workflowId, conversationId, state)
+  return createStateMachine(state.workflowId, conversationId, state);
 }

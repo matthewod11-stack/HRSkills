@@ -26,9 +26,11 @@ Phase 5 focuses on optimizing static resources (images, fonts, CSS) and implemen
 ## 🔍 CURRENT STATE ANALYSIS
 
 ### Images Currently Used:
+
 Let me audit the codebase for image usage...
 
 **Expected Findings:**
+
 - Background gradient orbs (CSS-based, not image files) ✅
 - Icons (Lucide React, SVG-based) ✅
 - No heavy image files detected (good!)
@@ -36,6 +38,7 @@ Let me audit the codebase for image usage...
 - No logo/branding images
 
 **Recommendation:**
+
 - Prepare infrastructure for future images
 - Add image optimization helpers
 - Document best practices
@@ -43,7 +46,9 @@ Let me audit the codebase for image usage...
 ---
 
 ### Fonts Currently Used:
+
 **Analysis Needed:**
+
 - Check `app/layout.tsx` for font imports
 - Identify Google Fonts or custom fonts
 - Measure font file sizes
@@ -52,13 +57,16 @@ Let me audit the codebase for image usage...
 ---
 
 ### CSS Currently Used:
+
 **Tailwind Configuration:**
+
 - Global styles in `app/globals.css`
 - Tailwind classes throughout components
 - Potential for unused CSS purging
 - Current CSS bundle size unknown
 
 **Goals:**
+
 - Identify unused Tailwind classes
 - Configure PurgeCSS properly
 - Extract critical CSS
@@ -73,6 +81,7 @@ Let me audit the codebase for image usage...
 Even without current images, prepare for future use:
 
 #### Step 1: Create Image Optimization Utilities
+
 **File:** `lib/image-utils.ts`
 
 ```typescript
@@ -88,14 +97,14 @@ export const IMAGE_SIZES = {
   medium: 256,
   large: 512,
   xlarge: 1024,
-  full: 1920
+  full: 1920,
 } as const;
 
 export const IMAGE_QUALITY = {
   low: 60,
   medium: 75,
   high: 90,
-  max: 100
+  max: 100,
 } as const;
 
 // Blurhash placeholder generator
@@ -105,6 +114,7 @@ export function getBlurDataURL(width: number, height: number): string {
 ```
 
 #### Step 2: Update next.config.js
+
 Add image domains and formats:
 
 ```javascript
@@ -121,6 +131,7 @@ images: {
 ```
 
 #### Step 3: Create Optimized Image Component
+
 **File:** `components/ui/OptimizedImage.tsx`
 
 ```tsx
@@ -142,7 +153,7 @@ export function OptimizedImage({
   width,
   height,
   priority = false,
-  className
+  className,
 }: OptimizedImageProps) {
   const [isLoading, setIsLoading] = useState(true);
 
@@ -172,9 +183,11 @@ export function OptimizedImage({
 ### 2. **Font Optimization** 🎯
 
 #### Step 1: Audit Current Fonts
+
 Check what fonts are currently loaded and how.
 
 #### Step 2: Migrate to next/font
+
 **File:** `app/layout.tsx`
 
 ```tsx
@@ -185,7 +198,7 @@ const inter = Inter({
   variable: '--font-inter',
   display: 'swap',
   preload: true,
-  fallback: ['system-ui', 'arial']
+  fallback: ['system-ui', 'arial'],
 });
 
 const robotoMono = Roboto_Mono({
@@ -193,7 +206,7 @@ const robotoMono = Roboto_Mono({
   variable: '--font-roboto-mono',
   display: 'swap',
   preload: false, // Only preload critical fonts
-  fallback: ['Courier New', 'monospace']
+  fallback: ['Courier New', 'monospace'],
 });
 
 export default function RootLayout({ children }) {
@@ -206,6 +219,7 @@ export default function RootLayout({ children }) {
 ```
 
 #### Step 3: Update Tailwind Config
+
 ```javascript
 theme: {
   extend: {
@@ -218,6 +232,7 @@ theme: {
 ```
 
 **Benefits:**
+
 - Automatic font optimization
 - Self-hosted (no external requests)
 - Automatic subset selection
@@ -230,6 +245,7 @@ theme: {
 ### 3. **CSS Optimization** 🎯
 
 #### Step 1: Configure Tailwind Purging
+
 **File:** `tailwind.config.js`
 
 ```javascript
@@ -245,17 +261,18 @@ module.exports = {
     'to-purple-600',
     // Animation classes
     'animate-pulse',
-    'animate-spin'
+    'animate-spin',
   ],
   theme: {
     extend: {
       // Custom theme
-    }
-  }
+    },
+  },
 };
 ```
 
 #### Step 2: Extract Critical CSS
+
 Create utility for critical CSS extraction:
 
 **File:** `lib/critical-css.ts`
@@ -278,6 +295,7 @@ export const criticalCSS = `
 ```
 
 #### Step 3: Optimize Global CSS
+
 **File:** `app/globals.css`
 
 ```css
@@ -316,6 +334,7 @@ export const criticalCSS = `
 ### 4. **Intelligent Prefetching** 🎯
 
 #### Strategy 1: Link Prefetching
+
 Use Next.js's built-in prefetching:
 
 ```tsx
@@ -333,10 +352,11 @@ import Link from 'next/link';
 ```
 
 #### Strategy 2: Component Prefetching
+
 Prefetch lazy-loaded components on hover:
 
 ```tsx
-'use client'
+'use client';
 
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
@@ -354,10 +374,7 @@ export function TriggerButton() {
   };
 
   return (
-    <button
-      onMouseEnter={prefetchDialog}
-      onFocus={prefetchDialog}
-    >
+    <button onMouseEnter={prefetchDialog} onFocus={prefetchDialog}>
       Open Dialog
     </button>
   );
@@ -365,10 +382,11 @@ export function TriggerButton() {
 ```
 
 #### Strategy 3: Route-Based Prefetching
+
 **File:** `components/custom/SmartPrefetch.tsx`
 
 ```tsx
-'use client'
+'use client';
 
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
@@ -376,7 +394,7 @@ import { usePathname } from 'next/navigation';
 const PREFETCH_MAP = {
   '/': ['/analytics', '/data-sources'], // From home, likely to go here
   '/analytics': ['/nine-box', '/data-sources'],
-  '/data-sources': ['/analytics']
+  '/data-sources': ['/analytics'],
 };
 
 export function SmartPrefetch() {
@@ -385,7 +403,7 @@ export function SmartPrefetch() {
   useEffect(() => {
     const routesToPrefetch = PREFETCH_MAP[pathname] || [];
 
-    routesToPrefetch.forEach(route => {
+    routesToPrefetch.forEach((route) => {
       // Prefetch after idle
       if ('requestIdleCallback' in window) {
         requestIdleCallback(() => {
@@ -409,11 +427,13 @@ export function SmartPrefetch() {
 ### 5. **Service Worker & PWA** 🎯
 
 #### Step 1: Install next-pwa
+
 ```bash
 npm install --save next-pwa
 ```
 
 #### Step 2: Configure PWA
+
 **File:** `next.config.js`
 
 ```javascript
@@ -430,9 +450,9 @@ const withPWA = require('next-pwa')({
         cacheName: 'google-fonts',
         expiration: {
           maxEntries: 10,
-          maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
-        }
-      }
+          maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+        },
+      },
     },
     {
       urlPattern: /^https:\/\/api\.anthropic\.com\/.*/i,
@@ -442,9 +462,9 @@ const withPWA = require('next-pwa')({
         networkTimeoutSeconds: 10,
         expiration: {
           maxEntries: 50,
-          maxAgeSeconds: 60 * 5 // 5 minutes
-        }
-      }
+          maxAgeSeconds: 60 * 5, // 5 minutes
+        },
+      },
     },
     {
       urlPattern: /\.(?:jpg|jpeg|png|gif|webp|svg|ico)$/i,
@@ -453,17 +473,18 @@ const withPWA = require('next-pwa')({
         cacheName: 'image-cache',
         expiration: {
           maxEntries: 100,
-          maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
-        }
-      }
-    }
-  ]
+          maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+        },
+      },
+    },
+  ],
 });
 
 module.exports = withBundleAnalyzer(withPWA(nextConfig));
 ```
 
 #### Step 3: Add manifest.json
+
 **File:** `public/manifest.json`
 
 ```json
@@ -491,6 +512,7 @@ module.exports = withBundleAnalyzer(withPWA(nextConfig));
 ```
 
 #### Step 4: Add Offline Fallback
+
 **File:** `app/offline/page.tsx`
 
 ```tsx
@@ -499,9 +521,7 @@ export default function OfflinePage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black via-gray-950 to-black text-white">
       <div className="text-center">
         <h1 className="text-4xl font-bold mb-4">You're Offline</h1>
-        <p className="text-gray-400 mb-8">
-          Please check your internet connection
-        </p>
+        <p className="text-gray-400 mb-8">Please check your internet connection</p>
         <button
           onClick={() => window.location.reload()}
           className="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
@@ -521,12 +541,14 @@ export default function OfflinePage() {
 ## 📊 EXPECTED IMPROVEMENTS
 
 ### Current State (After Phase 4):
+
 - **Homepage Bundle:** ~750KB
 - **CSS Bundle:** ~50KB (estimated)
 - **Font Loading:** Render-blocking
 - **Time to Interactive:** ~2.2s
 
 ### Target State (After Phase 5):
+
 - **Homepage Bundle:** ~700KB (-50KB from CSS)
 - **CSS Bundle:** ~30KB (-40% reduction)
 - **Font Loading:** Non-blocking, optimized
@@ -535,6 +557,7 @@ export default function OfflinePage() {
 - **Prefetching:** ✅ Instant transitions
 
 **Total Cumulative Improvement (Phases 4 + 5):**
+
 - **Bundle Size:** 800KB → 700KB (-12.5%)
 - **TTI:** 2.5s → 1.8s (-28%)
 - **User Experience:** Offline support, instant nav
@@ -544,6 +567,7 @@ export default function OfflinePage() {
 ## 🛠 IMPLEMENTATION CHECKLIST
 
 ### Round 1: Font Optimization (30 min)
+
 - [ ] Audit current font usage
 - [ ] Install and configure next/font
 - [ ] Update layout.tsx with optimized fonts
@@ -552,6 +576,7 @@ export default function OfflinePage() {
 - [ ] Measure font bundle size reduction
 
 ### Round 2: CSS Optimization (30 min)
+
 - [ ] Configure Tailwind purging
 - [ ] Identify unused classes
 - [ ] Reorganize globals.css with layers
@@ -560,6 +585,7 @@ export default function OfflinePage() {
 - [ ] Verify no visual regressions
 
 ### Round 3: Image Infrastructure (20 min)
+
 - [ ] Create image optimization utilities
 - [ ] Create OptimizedImage component
 - [ ] Update next.config.js for images
@@ -567,6 +593,7 @@ export default function OfflinePage() {
 - [ ] Add examples to docs
 
 ### Round 4: Prefetching (30 min)
+
 - [ ] Implement hover prefetching for dialogs
 - [ ] Add route-based prefetching
 - [ ] Create SmartPrefetch component
@@ -574,6 +601,7 @@ export default function OfflinePage() {
 - [ ] Measure perceived performance improvement
 
 ### Round 5: PWA & Service Worker (40 min)
+
 - [ ] Install next-pwa
 - [ ] Configure service worker
 - [ ] Create manifest.json
@@ -583,6 +611,7 @@ export default function OfflinePage() {
 - [ ] Test install prompt
 
 ### Round 6: Performance Audit (30 min)
+
 - [ ] Run Lighthouse audit (before)
 - [ ] Implement all optimizations
 - [ ] Run Lighthouse audit (after)
@@ -590,6 +619,7 @@ export default function OfflinePage() {
 - [ ] Create performance comparison
 
 ### Round 7: Testing & Documentation (30 min)
+
 - [ ] Create automated tests
 - [ ] Manual testing all optimizations
 - [ ] Create quick reference guide
@@ -601,6 +631,7 @@ export default function OfflinePage() {
 ## 📈 SUCCESS METRICS
 
 ### Performance:
+
 - ✅ Lighthouse Performance Score > 90
 - ✅ TTI < 2s
 - ✅ FCP < 1s
@@ -608,11 +639,13 @@ export default function OfflinePage() {
 - ✅ CLS < 0.1
 
 ### Bundle Size:
+
 - ✅ CSS bundle < 35KB
 - ✅ Font files optimized
 - ✅ Total bundle < 700KB
 
 ### User Experience:
+
 - ✅ PWA installable
 - ✅ Offline support working
 - ✅ Instant route transitions (with prefetch)
@@ -630,5 +663,5 @@ export default function OfflinePage() {
 
 ---
 
-*Created: November 5, 2025*
-*Status: Ready to implement*
+_Created: November 5, 2025_
+_Status: Ready to implement_

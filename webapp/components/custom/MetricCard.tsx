@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { memo, useMemo } from 'react';
 import { motion } from 'framer-motion';
@@ -33,7 +33,7 @@ export const MetricCard = memo(function MetricCard({
   icon: Icon,
   progress,
   delay = 0,
-  onClick
+  onClick,
 }: MetricCardProps) {
   // Memoize expensive calculations
   const { circumference, strokeDashoffset } = useMemo(() => {

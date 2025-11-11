@@ -59,9 +59,9 @@ export function getDatabase() {
  */
 function initializeSchema(sqlite: Database.Database) {
   // Check if tables exist
-  const tables = sqlite.prepare(
-    "SELECT name FROM sqlite_master WHERE type='table' AND name='employees'"
-  ).get();
+  const tables = sqlite
+    .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='employees'")
+    .get();
 
   if (!tables) {
     console.log('[DB] Creating database schema...');
@@ -305,13 +305,27 @@ export function getDbStats() {
   }
 
   const stats = {
-    employees: sqliteInstance.prepare('SELECT COUNT(*) as count FROM employees').get() as { count: number },
-    metrics: sqliteInstance.prepare('SELECT COUNT(*) as count FROM employee_metrics').get() as { count: number },
-    reviews: sqliteInstance.prepare('SELECT COUNT(*) as count FROM performance_reviews').get() as { count: number },
-    conversations: sqliteInstance.prepare('SELECT COUNT(*) as count FROM conversations').get() as { count: number },
-    actions: sqliteInstance.prepare('SELECT COUNT(*) as count FROM actions').get() as { count: number },
-    documents: sqliteInstance.prepare('SELECT COUNT(*) as count FROM documents').get() as { count: number },
-    insights: sqliteInstance.prepare('SELECT COUNT(*) as count FROM insight_events').get() as { count: number },
+    employees: sqliteInstance.prepare('SELECT COUNT(*) as count FROM employees').get() as {
+      count: number;
+    },
+    metrics: sqliteInstance.prepare('SELECT COUNT(*) as count FROM employee_metrics').get() as {
+      count: number;
+    },
+    reviews: sqliteInstance.prepare('SELECT COUNT(*) as count FROM performance_reviews').get() as {
+      count: number;
+    },
+    conversations: sqliteInstance.prepare('SELECT COUNT(*) as count FROM conversations').get() as {
+      count: number;
+    },
+    actions: sqliteInstance.prepare('SELECT COUNT(*) as count FROM actions').get() as {
+      count: number;
+    },
+    documents: sqliteInstance.prepare('SELECT COUNT(*) as count FROM documents').get() as {
+      count: number;
+    },
+    insights: sqliteInstance.prepare('SELECT COUNT(*) as count FROM insight_events').get() as {
+      count: number;
+    },
     dbSize: fs.statSync(DB_PATH).size,
   };
 
@@ -335,7 +349,7 @@ function ensureQuotaSchemaAlignment(sqlite: Database.Database) {
       return;
     }
 
-    const columnNames = new Set(pragma.map(col => col.name));
+    const columnNames = new Set(pragma.map((col) => col.name));
 
     sqlite.transaction(() => {
       // Rename legacy columns if present
@@ -353,10 +367,12 @@ function ensureQuotaSchemaAlignment(sqlite: Database.Database) {
       const refreshed = sqlite.prepare(`PRAGMA table_info('ai_quota_usage')`).all() as Array<{
         name: string;
       }>;
-      const refreshedNames = new Set(refreshed.map(col => col.name));
+      const refreshedNames = new Set(refreshed.map((col) => col.name));
 
       if (!refreshedNames.has('quota_limit')) {
-        sqlite.exec(`ALTER TABLE ai_quota_usage ADD COLUMN quota_limit INTEGER NOT NULL DEFAULT 100;`);
+        sqlite.exec(
+          `ALTER TABLE ai_quota_usage ADD COLUMN quota_limit INTEGER NOT NULL DEFAULT 100;`
+        );
         console.log('[DB] Added ai_quota_usage.quota_limit column with default 100');
       }
 

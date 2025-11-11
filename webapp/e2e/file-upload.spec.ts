@@ -27,7 +27,7 @@ test.beforeAll(async () => {
       level: 'Senior',
       hire_date: new Date('2020-01-15'),
       termination_date: null,
-      status: 'Active'
+      status: 'Active',
     },
     {
       employee_id: 'E002',
@@ -38,8 +38,8 @@ test.beforeAll(async () => {
       level: 'Mid',
       hire_date: new Date('2021-03-22'),
       termination_date: null,
-      status: 'Active'
-    }
+      status: 'Active',
+    },
   ];
 
   const ws = XLSX.utils.json_to_sheet(sampleData);
@@ -110,7 +110,10 @@ test.describe('File Upload Integration', () => {
       await expect(hireDateHeader).toBeVisible();
 
       // Verify date values are present (format may vary)
-      const dateCell = page.locator('td').filter({ hasText: /20(1|2)\d/ }).first();
+      const dateCell = page
+        .locator('td')
+        .filter({ hasText: /20(1|2)\d/ })
+        .first();
       await expect(dateCell).toBeVisible();
     }
   });

@@ -1,17 +1,17 @@
-import type { Metadata } from 'next'
-import './globals.css'
-import { Roboto } from 'next/font/google'
-import { RootErrorBoundary } from '@/components/ui/RootErrorBoundary'
-import { SmartPrefetch } from '@/components/custom/SmartPrefetch'
-import { MonitoringProvider } from '@/components/custom/MonitoringProvider'
-import { AuthProvider } from '@/lib/auth/auth-context'
+import type { Metadata } from 'next';
+import './globals.css';
+import { Roboto } from 'next/font/google';
+import { RootErrorBoundary } from '@/components/ui/RootErrorBoundary';
+import { SmartPrefetch } from '@/components/custom/SmartPrefetch';
+import { MonitoringProvider } from '@/components/custom/MonitoringProvider';
+import { AuthProvider } from '@/lib/auth/auth-context';
 
 const roboto = Roboto({
   weight: ['400', '500', '700'],
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-roboto',
-})
+});
 
 export const metadata: Metadata = {
   title: 'HR Command Center',
@@ -29,13 +29,9 @@ export const metadata: Metadata = {
     maximumScale: 1,
     userScalable: false,
   },
-}
+};
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`dark ${roboto.variable}`}>
       <body className={roboto.className}>
@@ -62,5 +58,5 @@ export default function RootLayout({
         </AuthProvider>
       </body>
     </html>
-  )
+  );
 }

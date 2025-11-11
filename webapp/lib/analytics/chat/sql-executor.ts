@@ -22,7 +22,9 @@ function getPersistentDatabase(): SqliteDatabase | null {
   try {
     const db = new Database(dbPath, { readonly: true, fileMustExist: true });
     try {
-      const row = db.prepare("SELECT COUNT(*) as count FROM employees").get() as { count?: number } | undefined;
+      const row = db.prepare('SELECT COUNT(*) as count FROM employees').get() as
+        | { count?: number }
+        | undefined;
       if ((row?.count ?? 0) > 0) {
         cachedDb = db;
         return cachedDb;
@@ -42,7 +44,7 @@ function toTitleCase(value: string): string {
   if (!value) return value;
   return value
     .split(/\s+/)
-    .map(segment => segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase())
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase())
     .join(' ');
 }
 
@@ -73,17 +75,23 @@ function buildInMemoryDatabase(employeeData: any[]): SqliteDatabase | null {
 
   const db = new Database(':memory:');
   const columnDefinitions = schema.columns
-    .map(column => `${column.name} ${column.type}`)
+    .map((column) => `${column.name} ${column.type}`)
     .join(', ');
 
   db.exec(`CREATE TABLE ${schema.name} (${columnDefinitions})`);
 
-  const columnNames = schema.columns.map(column => column.name);
+  const columnNames = schema.columns.map((column) => column.name);
   const placeholders = columnNames.map(() => '?').join(', ');
-  const insert = db.prepare(`INSERT INTO ${schema.name} (${columnNames.join(', ')}) VALUES (${placeholders})`);
+  const insert = db.prepare(
+    `INSERT INTO ${schema.name} (${columnNames.join(', ')}) VALUES (${placeholders})`
+  );
   const insertMany = db.transaction((rows: any[]) => {
     for (const row of rows) {
-      insert.run(columnNames.map((columnName, index) => coerceValueByType(row[columnName], schema.columns[index].type, columnName)));
+      insert.run(
+        columnNames.map((columnName, index) =>
+          coerceValueByType(row[columnName], schema.columns[index].type, columnName)
+        )
+      );
     }
   });
 
@@ -142,26 +150,26 @@ export async function executeQuery(
     const grouped = groupByCount(employeeData, 'department');
     rows = Object.entries(grouped).map(([department, count]) => ({
       department,
-      count
+      count,
     }));
   } else if (message.toLowerCase().includes('level')) {
     const grouped = groupByCount(employeeData, 'level');
     rows = Object.entries(grouped).map(([level, count]) => ({
       level,
-      count
+      count,
     }));
   } else if (message.toLowerCase().includes('status')) {
     const grouped = groupByCount(employeeData, 'status');
     rows = Object.entries(grouped).map(([status, count]) => ({
       status,
-      count
+      count,
     }));
   } else {
     // Default: department distribution
     const grouped = groupByCount(employeeData, 'department');
     rows = Object.entries(grouped).map(([department, count]) => ({
       department,
-      count
+      count,
     }));
   }
 
@@ -182,6 +190,6 @@ export function getQueryMetadata(rows: any[], startTime: number) {
   return {
     rowsReturned: rows.length,
     executionTime: Date.now() - startTime,
-    cached: false
+    cached: false,
   };
 }

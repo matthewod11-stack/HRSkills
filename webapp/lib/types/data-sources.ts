@@ -57,7 +57,7 @@ export const FILE_SCHEMAS: Record<FileType, string[]> = {
     'manager_id',
     'hire_date',
     'status',
-    'location'
+    'location',
   ],
   compensation: [
     'employee_id',
@@ -66,13 +66,9 @@ export const FILE_SCHEMAS: Record<FileType, string[]> = {
     'equity_value',
     'total_comp',
     'currency',
-    'effective_date'
+    'effective_date',
   ],
-  demographics: [
-    'employee_id',
-    'gender',
-    'race_ethnicity'
-  ],
+  demographics: ['employee_id', 'gender', 'race_ethnicity'],
   performance: [
     'employee_id',
     'review_period',
@@ -84,14 +80,9 @@ export const FILE_SCHEMAS: Record<FileType, string[]> = {
     'question',
     'response',
     'review_type',
-    'review_date'
+    'review_date',
   ],
-  turnover: [
-    'employee_id',
-    'termination_date',
-    'termination_type',
-    'reason_category'
-  ],
+  turnover: ['employee_id', 'termination_date', 'termination_type', 'reason_category'],
   survey: [
     'response_id',
     'employee_id',
@@ -99,21 +90,10 @@ export const FILE_SCHEMAS: Record<FileType, string[]> = {
     'question_id',
     'question_text',
     'response_value',
-    'response_date'
+    'response_date',
   ],
-  skills: [
-    'employee_id',
-    'skill_name',
-    'skill_category',
-    'proficiency_level'
-  ],
-  org_structure: [
-    'employee_id',
-    'manager_id',
-    'department',
-    'team',
-    'location'
-  ]
+  skills: ['employee_id', 'skill_name', 'skill_category', 'proficiency_level'],
+  org_structure: ['employee_id', 'manager_id', 'department', 'team', 'location'],
 };
 
 // Human-readable labels for file types
@@ -125,7 +105,7 @@ export const FILE_TYPE_LABELS: Record<FileType, string> = {
   turnover: 'Turnover/Exit Data',
   survey: 'Survey Responses',
   skills: 'Skills Data',
-  org_structure: 'Org Structure'
+  org_structure: 'Org Structure',
 };
 
 // PII fields to mask in previews
@@ -139,5 +119,5 @@ export const PII_FIELDS = [
   'dob',
   'phone',
   'address',
-  'bank_account'
+  'bank_account',
 ];

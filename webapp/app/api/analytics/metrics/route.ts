@@ -20,10 +20,7 @@ export async function POST(request: NextRequest) {
 
     // Validate metric structure
     if (!metric.name || !metric.value || !metric.timestamp) {
-      return NextResponse.json(
-        { error: 'Invalid metric data' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid metric data' }, { status: 400 });
     }
 
     // Log to console (in production, send to analytics service)
@@ -67,7 +64,7 @@ export async function POST(request: NextRequest) {
     return handleApiError(error, {
       endpoint: '/api/analytics/metrics',
       method: 'POST',
-      requestBody: { metricName: metric?.name }
+      requestBody: { metricName: metric?.name },
     });
   }
 }
@@ -89,7 +86,7 @@ export async function GET() {
   } catch (error) {
     return handleApiError(error, {
       endpoint: '/api/analytics/metrics',
-      method: 'GET'
+      method: 'GET',
     });
   }
 }

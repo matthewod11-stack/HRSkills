@@ -14,7 +14,7 @@ import {
   useBoolean,
   useCounter,
   useArray,
-  useSet
+  useSet,
 } from '@/lib/hooks';
 
 // Mock timers for debounce tests
@@ -22,10 +22,9 @@ jest.useFakeTimers();
 
 describe('useDebounce', () => {
   it('should debounce value changes', () => {
-    const { result, rerender } = renderHook(
-      ({ value }) => useDebounce(value, 500),
-      { initialProps: { value: 'initial' } }
-    );
+    const { result, rerender } = renderHook(({ value }) => useDebounce(value, 500), {
+      initialProps: { value: 'initial' },
+    });
 
     expect(result.current).toBe('initial');
 
@@ -42,10 +41,9 @@ describe('useDebounce', () => {
   });
 
   it('should cancel previous timeout on rapid changes', () => {
-    const { result, rerender } = renderHook(
-      ({ value }) => useDebounce(value, 500),
-      { initialProps: { value: 'initial' } }
-    );
+    const { result, rerender } = renderHook(({ value }) => useDebounce(value, 500), {
+      initialProps: { value: 'initial' },
+    });
 
     rerender({ value: 'first' });
     act(() => jest.advanceTimersByTime(250));
@@ -137,9 +135,7 @@ describe('useLocalStorage', () => {
 
 describe('usePagination', () => {
   it('should initialize with correct values', () => {
-    const { result } = renderHook(() =>
-      usePagination({ totalItems: 100, itemsPerPage: 10 })
-    );
+    const { result } = renderHook(() => usePagination({ totalItems: 100, itemsPerPage: 10 }));
 
     expect(result.current.currentPage).toBe(1);
     expect(result.current.totalPages).toBe(10);
@@ -149,9 +145,7 @@ describe('usePagination', () => {
   });
 
   it('should navigate to next page', () => {
-    const { result } = renderHook(() =>
-      usePagination({ totalItems: 100, itemsPerPage: 10 })
-    );
+    const { result } = renderHook(() => usePagination({ totalItems: 100, itemsPerPage: 10 }));
 
     act(() => {
       result.current.nextPage();
@@ -174,9 +168,7 @@ describe('usePagination', () => {
   });
 
   it('should go to specific page', () => {
-    const { result } = renderHook(() =>
-      usePagination({ totalItems: 100, itemsPerPage: 10 })
-    );
+    const { result } = renderHook(() => usePagination({ totalItems: 100, itemsPerPage: 10 }));
 
     act(() => {
       result.current.goToPage(7);
@@ -199,9 +191,7 @@ describe('usePagination', () => {
 
   it('should slice items correctly', () => {
     const items = Array.from({ length: 100 }, (_, i) => i + 1);
-    const { result } = renderHook(() =>
-      usePagination({ totalItems: 100, itemsPerPage: 10 })
-    );
+    const { result } = renderHook(() => usePagination({ totalItems: 100, itemsPerPage: 10 }));
 
     const pageItems = result.current.getCurrentPageItems(items);
 

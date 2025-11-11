@@ -233,7 +233,9 @@ describe('Analytics API Routes', () => {
     });
 
     it('should handle query parameters', async () => {
-      const url = new URL('http://localhost:3000/api/analytics/errors?limit=100&type=unhandledrejection');
+      const url = new URL(
+        'http://localhost:3000/api/analytics/errors?limit=100&type=unhandledrejection'
+      );
       const request = new NextRequest(url);
 
       const response = await errorsGet(request);

@@ -26,34 +26,28 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { email, role } = body;
+    const { email } = body;
 
     if (!email) {
-      return NextResponse.json(
-        { success: false, error: 'Email is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: 'Email is required' }, { status: 400 });
     }
 
-    const validRoles = ['super_admin', 'hr_admin', 'hr_manager', 'hr_analyst', 'employee'];
-    const selectedRole = validRoles.includes(role) ? role : 'hr_admin';
-
-    const token = await createDemoToken(email, selectedRole as any);
+    // Single-user model: always creates admin token
+    const token = await createDemoToken(email);
 
     return NextResponse.json({
       success: true,
       token,
-      role: selectedRole,
+      role: 'admin',
       email,
       expiresIn: '8h',
       usage: `curl -H "Authorization: Bearer ${token}" http://localhost:3000/api/employees`,
     });
-
   } catch (error: any) {
     return handleApiError(error, {
       endpoint: '/api/auth/demo-token',
       method: 'POST',
-      requestBody: { email: 'redacted', role: 'redacted' }
+      requestBody: { email: 'redacted', role: 'redacted' },
     });
   }
 }
@@ -80,27 +74,23 @@ export async function GET(request: NextRequest) {
 
   const searchParams = request.nextUrl.searchParams;
   const email = searchParams.get('email') || 'admin@hrskills.demo';
-  const role = searchParams.get('role') || 'hr_admin';
 
-  const validRoles = ['super_admin', 'hr_admin', 'hr_manager', 'hr_analyst', 'employee'];
-  const selectedRole = validRoles.includes(role) ? role : 'hr_admin';
-
+  // Single-user model: always creates admin token (role parameter ignored)
   try {
-    const token = await createDemoToken(email, selectedRole as any);
+    const token = await createDemoToken(email);
 
     return NextResponse.json({
       success: true,
       token,
-      role: selectedRole,
+      role: 'admin',
       email,
       expiresIn: '8h',
       usage: `curl -H "Authorization: Bearer ${token}" http://localhost:3000/api/employees`,
     });
-
   } catch (error: any) {
     return handleApiError(error, {
       endpoint: '/api/auth/demo-token',
-      method: 'GET'
+      method: 'GET',
     });
   }
 }

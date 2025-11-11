@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
@@ -8,16 +8,26 @@ import { useAuth } from '@/lib/auth/auth-context';
 
 // Lazy load Chart.js components
 const Bar = dynamic(
-  () => import('@/lib/chartjs-config').then(() => import('react-chartjs-2').then(mod => mod.Bar)),
-  { ssr: false, loading: () => <div className="w-full h-[300px] bg-white/5 rounded-lg animate-pulse" /> }
+  () => import('@/lib/chartjs-config').then(() => import('react-chartjs-2').then((mod) => mod.Bar)),
+  {
+    ssr: false,
+    loading: () => <div className="w-full h-[300px] bg-white/5 rounded-lg animate-pulse" />,
+  }
 );
 const Line = dynamic(
-  () => import('@/lib/chartjs-config').then(() => import('react-chartjs-2').then(mod => mod.Line)),
-  { ssr: false, loading: () => <div className="w-full h-[300px] bg-white/5 rounded-lg animate-pulse" /> }
+  () =>
+    import('@/lib/chartjs-config').then(() => import('react-chartjs-2').then((mod) => mod.Line)),
+  {
+    ssr: false,
+    loading: () => <div className="w-full h-[300px] bg-white/5 rounded-lg animate-pulse" />,
+  }
 );
 const Pie = dynamic(
-  () => import('@/lib/chartjs-config').then(() => import('react-chartjs-2').then(mod => mod.Pie)),
-  { ssr: false, loading: () => <div className="w-full h-[300px] bg-white/5 rounded-lg animate-pulse" /> }
+  () => import('@/lib/chartjs-config').then(() => import('react-chartjs-2').then((mod) => mod.Pie)),
+  {
+    ssr: false,
+    loading: () => <div className="w-full h-[300px] bg-white/5 rounded-lg animate-pulse" />,
+  }
 );
 
 interface AnalyticsChartPanelProps {
@@ -37,7 +47,7 @@ export function AnalyticsChartPanel({
   dateRange = 'last_12_months',
   chartConfig,
   analysisSummary,
-  metadata
+  metadata,
 }: AnalyticsChartPanelProps) {
   const { getAuthHeaders } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -57,7 +67,7 @@ export function AnalyticsChartPanel({
     setChartConfigState(null);
     setAnalysis('');
     fetchAnalyticsData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [metric, department, dateRange, chartConfig, analysisSummary]);
 
   const fetchAnalyticsData = async () => {
@@ -115,41 +125,47 @@ export function AnalyticsChartPanel({
         if (chartType === 'line' && data.trends) {
           return {
             labels: data.trends.map((t: any) => t.date),
-            datasets: [{
-              label: 'Headcount',
-              data: data.trends.map((t: any) => t.count),
-              borderColor: 'rgb(59, 130, 246)',
-              backgroundColor: 'rgba(59, 130, 246, 0.1)',
-              tension: 0.4,
-            }],
+            datasets: [
+              {
+                label: 'Headcount',
+                data: data.trends.map((t: any) => t.count),
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4,
+              },
+            ],
           };
         }
         if (chartType === 'bar' && data.byDepartment) {
           return {
             labels: Object.keys(data.byDepartment),
-            datasets: [{
-              label: 'Employees',
-              data: Object.values(data.byDepartment),
-              backgroundColor: 'rgba(59, 130, 246, 0.6)',
-              borderColor: 'rgb(59, 130, 246)',
-              borderWidth: 2,
-            }],
+            datasets: [
+              {
+                label: 'Employees',
+                data: Object.values(data.byDepartment),
+                backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                borderColor: 'rgb(59, 130, 246)',
+                borderWidth: 2,
+              },
+            ],
           };
         }
         if (chartType === 'pie' && data.byDepartment) {
           return {
             labels: Object.keys(data.byDepartment),
-            datasets: [{
-              data: Object.values(data.byDepartment),
-              backgroundColor: [
-                'rgba(59, 130, 246, 0.8)',
-                'rgba(139, 92, 246, 0.8)',
-                'rgba(236, 72, 153, 0.8)',
-                'rgba(34, 197, 94, 0.8)',
-                'rgba(251, 146, 60, 0.8)',
-                'rgba(14, 165, 233, 0.8)',
-              ],
-            }],
+            datasets: [
+              {
+                data: Object.values(data.byDepartment),
+                backgroundColor: [
+                  'rgba(59, 130, 246, 0.8)',
+                  'rgba(139, 92, 246, 0.8)',
+                  'rgba(236, 72, 153, 0.8)',
+                  'rgba(34, 197, 94, 0.8)',
+                  'rgba(251, 146, 60, 0.8)',
+                  'rgba(14, 165, 233, 0.8)',
+                ],
+              },
+            ],
           };
         }
         break;
@@ -158,13 +174,15 @@ export function AnalyticsChartPanel({
         if (data.byDepartment && chartType === 'bar') {
           return {
             labels: Object.keys(data.byDepartment),
-            datasets: [{
-              label: 'Attrition Rate (%)',
-              data: Object.values(data.byDepartment).map((d: any) => d.attritionRate),
-              backgroundColor: 'rgba(239, 68, 68, 0.6)',
-              borderColor: 'rgb(239, 68, 68)',
-              borderWidth: 2,
-            }],
+            datasets: [
+              {
+                label: 'Attrition Rate (%)',
+                data: Object.values(data.byDepartment).map((d: any) => d.attritionRate),
+                backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                borderColor: 'rgb(239, 68, 68)',
+                borderWidth: 2,
+              },
+            ],
           };
         }
         break;
@@ -173,13 +191,15 @@ export function AnalyticsChartPanel({
         if (data.distribution && chartType === 'bar') {
           return {
             labels: Object.keys(data.distribution),
-            datasets: [{
-              label: 'Employee Count',
-              data: Object.values(data.distribution),
-              backgroundColor: 'rgba(34, 197, 94, 0.6)',
-              borderColor: 'rgb(34, 197, 94)',
-              borderWidth: 2,
-            }],
+            datasets: [
+              {
+                label: 'Employee Count',
+                data: Object.values(data.distribution),
+                backgroundColor: 'rgba(34, 197, 94, 0.6)',
+                borderColor: 'rgb(34, 197, 94)',
+                borderWidth: 2,
+              },
+            ],
           };
         }
         break;
@@ -208,24 +228,30 @@ export function AnalyticsChartPanel({
           borderWidth: 1,
         },
       },
-      scales: chartType !== 'pie' ? {
-        x: {
-          grid: { color: 'rgba(255, 255, 255, 0.1)' },
-          ticks: { color: 'rgba(255, 255, 255, 0.7)' },
-        },
-        y: {
-          grid: { color: 'rgba(255, 255, 255, 0.1)' },
-          ticks: { color: 'rgba(255, 255, 255, 0.7)' },
-        },
-      } : undefined,
+      scales:
+        chartType !== 'pie'
+          ? {
+              x: {
+                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                ticks: { color: 'rgba(255, 255, 255, 0.7)' },
+              },
+              y: {
+                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                ticks: { color: 'rgba(255, 255, 255, 0.7)' },
+              },
+            }
+          : undefined,
     };
   };
 
   const getChartIcon = () => {
     switch (chartType) {
-      case 'line': return <LineChart className="w-4 h-4" />;
-      case 'pie': return <PieChart className="w-4 h-4" />;
-      default: return <BarChart3 className="w-4 h-4" />;
+      case 'line':
+        return <LineChart className="w-4 h-4" />;
+      case 'pie':
+        return <PieChart className="w-4 h-4" />;
+      default:
+        return <BarChart3 className="w-4 h-4" />;
     }
   };
 
@@ -242,7 +268,8 @@ export function AnalyticsChartPanel({
 
   const chartData = chartConfigState ? chartConfigState.data : getChartData();
   const resolvedChartType = chartConfigState?.type || chartType;
-  const ChartComponent = resolvedChartType === 'line' ? Line : resolvedChartType === 'pie' ? Pie : Bar;
+  const ChartComponent =
+    resolvedChartType === 'line' ? Line : resolvedChartType === 'pie' ? Pie : Bar;
   const chartOptions = chartConfigState?.options || getChartOptions();
 
   return (
@@ -342,11 +369,15 @@ export function AnalyticsChartPanel({
                   <p className="text-xs text-gray-400">Attrition Rate</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-orange-400">{data.overall.voluntaryRate}%</p>
+                  <p className="text-2xl font-bold text-orange-400">
+                    {data.overall.voluntaryRate}%
+                  </p>
                   <p className="text-xs text-gray-400">Voluntary</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-yellow-400">{data.overall.involuntaryRate}%</p>
+                  <p className="text-2xl font-bold text-yellow-400">
+                    {data.overall.involuntaryRate}%
+                  </p>
                   <p className="text-xs text-gray-400">Involuntary</p>
                 </div>
               </>

@@ -102,7 +102,7 @@ class AIProviderRouter {
     const providersToTry = [startProvider];
     if (this.config.enableAutoFallback) {
       // Add remaining providers from fallback chain
-      this.fallbackChain.forEach(p => {
+      this.fallbackChain.forEach((p) => {
         if (p !== startProvider && this.providers.has(p)) {
           providersToTry.push(p);
         }
@@ -346,7 +346,6 @@ export const translateWithAI = (
 
 export const getAIHealth = () => aiRouter.getAllHealth();
 
-export const configureAI = (config: Partial<AIProviderConfig>) =>
-  aiRouter.configure(config);
+export const configureAI = (config: Partial<AIProviderConfig>) => aiRouter.configure(config);
 
 export const getAIConfig = () => aiRouter.getConfig();

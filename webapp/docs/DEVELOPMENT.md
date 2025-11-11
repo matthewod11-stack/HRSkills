@@ -65,6 +65,7 @@ NEXT_PUBLIC_APP_VERSION=0.1.0
 ### Available Scripts
 
 #### Development
+
 ```bash
 npm run dev           # Start development server (http://localhost:3000)
 npm run build         # Create production build
@@ -72,6 +73,7 @@ npm run start         # Start production server
 ```
 
 #### Code Quality
+
 ```bash
 npm run lint          # Run ESLint
 npm run lint:fix      # Fix ESLint issues automatically
@@ -82,6 +84,7 @@ npm run validate      # Run type-check, lint, and test
 ```
 
 #### Testing
+
 ```bash
 npm run test              # Run Jest unit tests
 npm run test:watch        # Run Jest in watch mode
@@ -92,11 +95,13 @@ npm run test:all          # Run all accessibility tests
 ```
 
 #### Build Analysis
+
 ```bash
 npm run build:analyze # Build and analyze bundle size
 ```
 
 #### Maintenance
+
 ```bash
 npm run clean         # Clean build artifacts
 ```
@@ -110,6 +115,7 @@ npm run clean         # Clean build artifacts
 **Location:** `__tests__/`
 
 **Running Tests:**
+
 ```bash
 npm run test                    # All tests
 npm run test:watch              # Watch mode
@@ -118,6 +124,7 @@ npm run test:coverage           # With coverage
 ```
 
 **Writing Unit Tests:**
+
 ```tsx
 import { render, screen } from '@testing-library/react';
 import { MyComponent } from '@/components/MyComponent';
@@ -131,6 +138,7 @@ describe('MyComponent', () => {
 ```
 
 **Test Coverage Goals:**
+
 - Overall: 80%+
 - Critical paths: 95%+
 - Utility functions: 100%
@@ -142,11 +150,13 @@ describe('MyComponent', () => {
 **Location:** `__tests__/api/`
 
 **Running Tests:**
+
 ```bash
 npm run test -- __tests__/api
 ```
 
 **Writing Integration Tests:**
+
 ```typescript
 import { POST } from '@/app/api/my-route/route';
 import { NextRequest } from 'next/server';
@@ -171,6 +181,7 @@ describe('POST /api/my-route', () => {
 **Location:** `e2e/`
 
 **Running Tests:**
+
 ```bash
 npm run test:e2e          # Headless mode
 npm run test:e2e:ui       # Interactive UI mode
@@ -178,6 +189,7 @@ npx playwright test --debug  # Debug mode
 ```
 
 **Writing E2E Tests:**
+
 ```typescript
 import { test, expect } from '@playwright/test';
 
@@ -189,6 +201,7 @@ test('should navigate to analytics', async ({ page }) => {
 ```
 
 **Test Structure:**
+
 - `e2e/critical-flows.spec.ts` - Core user journeys
 - `e2e/accessibility.spec.ts` - Accessibility tests (if exists)
 
@@ -199,6 +212,7 @@ test('should navigate to analytics', async ({ page }) => {
 ### VS Code Setup
 
 **Recommended Extensions:**
+
 - ESLint (`dbaeumer.vscode-eslint`)
 - Prettier (`esbenp.prettier-vscode`)
 - Tailwind CSS IntelliSense (`bradlc.vscode-tailwindcss`)
@@ -213,11 +227,13 @@ Open the project in VS Code and it will prompt to install recommended extensions
 ### Linting & Formatting
 
 **ESLint Configuration:**
+
 - Extends Next.js defaults
 - TypeScript rules enabled
 - React Hooks rules enabled
 
 **Prettier Configuration:**
+
 ```json
 {
   "semi": true,
@@ -228,6 +244,7 @@ Open the project in VS Code and it will prompt to install recommended extensions
 ```
 
 **Pre-commit Checklist:**
+
 ```bash
 npm run format        # Format all files
 npm run lint:fix      # Fix linting issues
@@ -278,6 +295,7 @@ webapp/
 ### Code Organization
 
 **Component Structure:**
+
 ```tsx
 // 1. Imports
 import { useState } from 'react';
@@ -294,7 +312,7 @@ export function MyComponent({ title }: MyComponentProps) {
   const [count, setCount] = useState(0);
 
   // 5. Handlers
-  const handleClick = () => setCount(c => c + 1);
+  const handleClick = () => setCount((c) => c + 1);
 
   // 6. Render
   return (
@@ -313,6 +331,7 @@ export function MyComponent({ title }: MyComponentProps) {
 ### React Components
 
 **Do:**
+
 - ✅ Use TypeScript for all components
 - ✅ Memoize expensive components with `memo()`
 - ✅ Use custom hooks for reusable logic
@@ -320,6 +339,7 @@ export function MyComponent({ title }: MyComponentProps) {
 - ✅ Use proper ARIA labels for accessibility
 
 **Don't:**
+
 - ❌ Use `any` type without good reason
 - ❌ Create deep component nesting (> 3 levels)
 - ❌ Put business logic in components
@@ -330,6 +350,7 @@ export function MyComponent({ title }: MyComponentProps) {
 ### Performance
 
 **Optimization Checklist:**
+
 - ✅ Use dynamic imports for heavy components
 - ✅ Implement code splitting with `next/dynamic`
 - ✅ Add suspense boundaries with loading states
@@ -337,6 +358,7 @@ export function MyComponent({ title }: MyComponentProps) {
 - ✅ Use SmartPrefetch for route prefetching
 
 **Monitoring:**
+
 - Core Web Vitals tracked automatically in production
 - Check performance in Chrome DevTools Lighthouse
 - Monitor bundle size with `npm run build:analyze`
@@ -346,6 +368,7 @@ export function MyComponent({ title }: MyComponentProps) {
 ### Accessibility
 
 **WCAG AA Compliance:**
+
 - ✅ Semantic HTML with proper landmarks
 - ✅ Keyboard navigation support
 - ✅ Screen reader compatibility
@@ -353,12 +376,14 @@ export function MyComponent({ title }: MyComponentProps) {
 - ✅ Focus indicators on interactive elements
 
 **Testing:**
+
 ```bash
 npm run test:a11y          # Automated accessibility tests
 npm run test:e2e:a11y      # E2E accessibility tests
 ```
 
 **Resources:**
+
 - Accessibility Statement: `/accessibility`
 - Audit Report: `webapp/PHASE_6_PRODUCTION_READY_COMPLETE.md`
 
@@ -367,6 +392,7 @@ npm run test:e2e:a11y      # E2E accessibility tests
 ### Git Workflow
 
 **Branch Naming:**
+
 ```
 feature/add-new-feature
 fix/bug-description
@@ -375,6 +401,7 @@ docs/update-readme
 ```
 
 **Commit Messages:**
+
 ```
 feat: Add user profile dashboard
 fix: Resolve metric calculation error
@@ -384,6 +411,7 @@ test: Add unit tests for monitoring system
 ```
 
 **Before Committing:**
+
 ```bash
 npm run validate  # Type-check, lint, test
 npm run format    # Format code
@@ -396,6 +424,7 @@ npm run format    # Format code
 ### Common Issues
 
 #### Port Already in Use
+
 ```bash
 # Kill process on port 3000
 npx kill-port 3000
@@ -405,6 +434,7 @@ PORT=3001 npm run dev
 ```
 
 #### TypeScript Errors
+
 ```bash
 # Clear Next.js cache
 npm run clean
@@ -414,6 +444,7 @@ npm run build
 ```
 
 #### Module Not Found
+
 ```bash
 # Re-install dependencies
 rm -rf node_modules package-lock.json
@@ -421,6 +452,7 @@ npm install
 ```
 
 #### Test Failures
+
 ```bash
 # Clear Jest cache
 npx jest --clearCache
@@ -430,6 +462,7 @@ npm run test -- --verbose
 ```
 
 #### PWA Not Working
+
 - PWA only works in production builds
 - Service worker disabled in development
 - Build and serve: `npm run build && npm run start`
@@ -439,6 +472,7 @@ npm run test -- --verbose
 ### Performance Issues
 
 **Slow Build Times:**
+
 ```bash
 # Clear cache
 npm run clean
@@ -448,6 +482,7 @@ SKIP_TYPE_CHECK=true npm run build
 ```
 
 **Large Bundle Size:**
+
 ```bash
 # Analyze bundle
 npm run build:analyze
@@ -463,12 +498,14 @@ npm run build:analyze
 ### Getting Help
 
 **Documentation:**
+
 - This file (`DEVELOPMENT.md`)
 - Phase completion docs (`PHASE_*_COMPLETE.md`)
 - Next.js docs: https://nextjs.org/docs
 - Tailwind docs: https://tailwindcss.com/docs
 
 **Debugging:**
+
 - Use Chrome DevTools for React/network debugging
 - Use VS Code debugger for server-side code
 - Check `console.log` output in terminal (server) and browser (client)
@@ -478,6 +515,7 @@ npm run build:analyze
 ## Quick Reference
 
 ### Most Used Commands
+
 ```bash
 npm run dev           # Start dev server
 npm run build         # Production build
@@ -488,6 +526,7 @@ npm run validate      # Full validation
 ```
 
 ### File Paths
+
 ```
 Components:     components/
 Pages:          app/
@@ -499,6 +538,7 @@ Styles:         app/globals.css
 ```
 
 ### Important URLs
+
 ```
 Development:    http://localhost:3000
 Accessibility:  /accessibility

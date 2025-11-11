@@ -26,10 +26,12 @@ The Analytics module provides a conversational interface for exploring HR data. 
 ### Frontend (`/webapp/app/analytics/page.tsx`)
 
 **Layout:**
+
 - **Left Panel (40%)**: Chat interface with messages and input
 - **Right Panel (60%)**: Chart visualization area
 
 **Features:**
+
 - Real-time messaging with typing indicators
 - Data source selection (Employees, Reviews, eNPS)
 - Suggested follow-up questions
@@ -40,6 +42,7 @@ The Analytics module provides a conversational interface for exploring HR data. 
 ### Backend (`/webapp/app/api/analytics/chat/route.ts`)
 
 **Flow:**
+
 1. Receive user question + selected data sources
 2. Build schema context for selected tables
 3. Call Claude with SQL generation tool
@@ -50,6 +53,7 @@ The Analytics module provides a conversational interface for exploring HR data. 
 8. Return response with chart + explanation + follow-ups
 
 **Security:**
+
 - Only SELECT queries allowed
 - Blocks DROP, DELETE, INSERT, UPDATE, ALTER, etc.
 - SQL injection prevention
@@ -57,6 +61,7 @@ The Analytics module provides a conversational interface for exploring HR data. 
 - Rate limiting ready
 
 **Caching:**
+
 - In-memory cache with 30-minute TTL
 - Cache key: `message + dataSources`
 - Reduces API costs for repeated queries
@@ -74,6 +79,7 @@ The Analytics module provides a conversational interface for exploring HR data. 
 ### Asking Questions
 
 **Simple Metrics:**
+
 ```
 "How many employees do we have?"
 "What's the average tenure?"
@@ -81,6 +87,7 @@ The Analytics module provides a conversational interface for exploring HR data. 
 ```
 
 **Department Analysis:**
+
 ```
 "What's our department distribution?"
 "Show me headcount by department"
@@ -88,6 +95,7 @@ The Analytics module provides a conversational interface for exploring HR data. 
 ```
 
 **Trends:**
+
 ```
 "Show me attrition trends over time"
 "How has headcount changed this year?"
@@ -95,6 +103,7 @@ The Analytics module provides a conversational interface for exploring HR data. 
 ```
 
 **Comparisons:**
+
 ```
 "Compare eNPS scores by department"
 "Which department has the highest performance ratings?"
@@ -104,6 +113,7 @@ The Analytics module provides a conversational interface for exploring HR data. 
 ### Data Source Selection
 
 Toggle data sources in the header:
+
 - **👥 Employees**: Employee master data
 - **📊 Reviews**: Performance reviews
 - **📈 eNPS**: Employee survey responses
@@ -128,16 +138,24 @@ const SQL_GENERATION_TOOL: Anthropic.Tool = {
       sql: { type: 'string', description: 'The SQLite SELECT query' },
       intent: {
         type: 'string',
-        enum: ['simple_metric', 'filtered', 'comparative', 'temporal', 'aggregation', 'correlation']
+        enum: [
+          'simple_metric',
+          'filtered',
+          'comparative',
+          'temporal',
+          'aggregation',
+          'correlation',
+        ],
       },
-      explanation: { type: 'string' }
+      explanation: { type: 'string' },
     },
-    required: ['sql', 'intent', 'explanation']
-  }
+    required: ['sql', 'intent', 'explanation'],
+  },
 };
 ```
 
 **Query Intents:**
+
 - `simple_metric`: Single value (COUNT, AVG, SUM)
 - `filtered`: Filtered subset with WHERE
 - `comparative`: Group comparison (GROUP BY)
@@ -157,6 +175,7 @@ function selectChartType(intent: string, rowCount: number): ChartType {
 ```
 
 **Chart Types:**
+
 - **Bar**: Comparisons, distributions
 - **Line**: Trends over time
 - **Pie**: Simple breakdowns (<7 items)
@@ -165,6 +184,7 @@ function selectChartType(intent: string, rowCount: number): ChartType {
 ### Database Schema
 
 **Employees Table:**
+
 ```sql
 CREATE TABLE employees (
   id INTEGER PRIMARY KEY,
@@ -184,6 +204,7 @@ CREATE TABLE employees (
 ```
 
 **Reviews Table:**
+
 ```sql
 CREATE TABLE reviews (
   id INTEGER PRIMARY KEY,
@@ -198,6 +219,7 @@ CREATE TABLE reviews (
 ```
 
 **eNPS Responses Table:**
+
 ```sql
 CREATE TABLE enps_responses (
   id TEXT PRIMARY KEY,
@@ -220,6 +242,7 @@ CREATE TABLE enps_responses (
 **File:** `/webapp/app/analytics/page.tsx`
 
 **State Management:**
+
 - `messages`: Chat message history
 - `input`: Current user input
 - `isTyping`: Loading indicator
@@ -228,6 +251,7 @@ CREATE TABLE enps_responses (
 - `currentChart`: Current chart configuration
 
 **Key Functions:**
+
 - `handleSend()`: Sends message to API
 - `toggleDataSource()`: Enables/disables data sources
 - `renderChart()`: Renders Chart.js component
@@ -238,6 +262,7 @@ CREATE TABLE enps_responses (
 **File:** `/webapp/app/api/analytics/chat/route.ts`
 
 **Functions:**
+
 - `buildSchemaContext()`: Generates schema description for Claude
 - `validateSQL()`: Security validation of generated SQL
 - `selectChartType()`: Determines appropriate chart type
@@ -249,6 +274,7 @@ CREATE TABLE enps_responses (
 **File:** `/webapp/lib/chartjs-config.ts`
 
 Registers Chart.js components for client-side rendering:
+
 - CategoryScale, LinearScale
 - PointElement, LineElement, BarElement, ArcElement
 - Title, Tooltip, Legend, Filler
@@ -260,17 +286,20 @@ Registers Chart.js components for client-side rendering:
 The analytics module matches the existing HR Command Center design:
 
 **Colors:**
+
 - Background: `bg-gradient-to-br from-black via-gray-950 to-black`
 - Panels: `backdrop-blur-2xl bg-black/40 border-2 border-white/30`
 - Accents: Blue (primary), Purple (secondary), Green (user), Pink (tertiary)
 
 **Layout:**
+
 - Glassmorphic cards with blur effects
 - Floating orb backgrounds
 - Border glow on hover
 - Smooth animations with Framer Motion
 
 **Chat Design:**
+
 - User messages: Green gradient, right-aligned
 - Assistant messages: Blue/purple gradient, left-aligned
 - Avatars: Rounded squares with gradients
@@ -291,6 +320,7 @@ The analytics module matches the existing HR Command Center design:
 ## Future Enhancements
 
 ### Short-term
+
 - [ ] Connect to real SQLite database
 - [ ] Add session persistence
 - [ ] Implement chart pinning/saving
@@ -298,6 +328,7 @@ The analytics module matches the existing HR Command Center design:
 - [ ] Add more chart types (doughnut, radar)
 
 ### Medium-term
+
 - [ ] Natural language explanations for charts
 - [ ] Drill-down interactions
 - [ ] Query history
@@ -305,6 +336,7 @@ The analytics module matches the existing HR Command Center design:
 - [ ] Share analysis via link
 
 ### Long-term
+
 - [ ] Predictive analytics
 - [ ] ML-powered insights
 - [ ] Custom dashboard builder
@@ -371,15 +403,18 @@ npm run build
 ## Files Created/Modified
 
 ### New Files
+
 - `/webapp/app/analytics/page.tsx` - Main analytics page
 - `/webapp/app/api/analytics/chat/route.ts` - Analytics API endpoint
 - `/webapp/lib/chartjs-config.ts` - Chart.js registration
 
 ### Modified Files
+
 - `/webapp/app/page.tsx` - Added Analytics quick action
 - `/webapp/package.json` - Added chart.js dependencies
 
 ### Dependencies Added
+
 - `chart.js` - Chart rendering library
 - `react-chartjs-2` - React wrapper for Chart.js
 
@@ -388,6 +423,7 @@ npm run build
 ## Support
 
 For issues or questions:
+
 1. Check the implementation guide above
 2. Review the code comments
 3. Test with the example queries
@@ -396,6 +432,7 @@ For issues or questions:
 ---
 
 **Built with:**
+
 - Next.js 14+
 - React 18+
 - Anthropic Claude Sonnet 4

@@ -10,8 +10,8 @@
  */
 export function markFirstRunComplete() {
   if (typeof window !== 'undefined') {
-    localStorage.setItem('hrskills_first_run_complete', 'true')
-    localStorage.setItem('hrskills_first_run_date', new Date().toISOString())
+    localStorage.setItem('hrskills_first_run_complete', 'true');
+    localStorage.setItem('hrskills_first_run_date', new Date().toISOString());
   }
 }
 
@@ -19,8 +19,8 @@ export function markFirstRunComplete() {
  * Check if user has completed first run (client-side)
  */
 export function hasCompletedFirstRun(): boolean {
-  if (typeof window === 'undefined') return false
-  return localStorage.getItem('hrskills_first_run_complete') === 'true'
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem('hrskills_first_run_complete') === 'true';
 }
 
 /**
@@ -28,9 +28,9 @@ export function hasCompletedFirstRun(): boolean {
  */
 export function resetFirstRunStatus() {
   if (typeof window !== 'undefined') {
-    localStorage.removeItem('hrskills_first_run_complete')
-    localStorage.removeItem('hrskills_first_run_date')
-    localStorage.removeItem('hrskills_seen_welcome')
+    localStorage.removeItem('hrskills_first_run_complete');
+    localStorage.removeItem('hrskills_first_run_date');
+    localStorage.removeItem('hrskills_seen_welcome');
   }
 }
 
@@ -38,15 +38,15 @@ export function resetFirstRunStatus() {
  * Get days since first run
  */
 export function getDaysSinceFirstRun(): number {
-  if (typeof window === 'undefined') return 0
+  if (typeof window === 'undefined') return 0;
 
-  const firstRunDate = localStorage.getItem('hrskills_first_run_date')
-  if (!firstRunDate) return 0
+  const firstRunDate = localStorage.getItem('hrskills_first_run_date');
+  if (!firstRunDate) return 0;
 
-  const now = new Date()
-  const then = new Date(firstRunDate)
-  const diffTime = Math.abs(now.getTime() - then.getTime())
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  const now = new Date();
+  const then = new Date(firstRunDate);
+  const diffTime = Math.abs(now.getTime() - then.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  return diffDays
+  return diffDays;
 }

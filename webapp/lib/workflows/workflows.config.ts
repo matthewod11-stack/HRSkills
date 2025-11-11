@@ -7,7 +7,7 @@
  * Each workflow combines multiple legacy skills into a cohesive experience.
  */
 
-import type { Workflow, WorkflowId } from './types'
+import type { Workflow, WorkflowId } from './types';
 
 // ============================================================================
 // WORKFLOW 1: HIRING & RECRUITMENT
@@ -16,7 +16,8 @@ import type { Workflow, WorkflowId } from './types'
 const HIRING_WORKFLOW: Workflow = {
   id: 'hiring',
   name: 'Hiring & Recruitment',
-  description: 'End-to-end hiring workflows including job descriptions, interviews, offers, and candidate evaluation',
+  description:
+    'End-to-end hiring workflows including job descriptions, interviews, offers, and candidate evaluation',
 
   triggers: [
     // Job descriptions
@@ -44,32 +45,32 @@ const HIRING_WORKFLOW: Workflow = {
       id: 'job_descriptions',
       name: 'Job Description Writing',
       description: 'Create compelling, inclusive job descriptions optimized for hiring',
-      requirements: []
+      requirements: [],
     },
     {
       id: 'interview_guides',
       name: 'Interview Guide Creation',
       description: 'Structured interview guides with behavioral questions and scorecards',
-      requirements: []
+      requirements: [],
     },
     {
       id: 'offer_letters',
       name: 'Offer Letter Generation',
       description: 'Professional offer letters with compensation and benefits details',
-      requirements: ['google_drive']
+      requirements: ['google_drive'],
     },
     {
       id: 'candidate_scorecards',
       name: 'Candidate Evaluation',
       description: 'Objective candidate assessment frameworks',
-      requirements: []
+      requirements: [],
     },
     {
       id: 'headcount_planning',
       name: 'Headcount Planning',
       description: 'Workforce planning and hiring roadmaps',
-      requirements: ['employee_data']
-    }
+      requirements: ['employee_data'],
+    },
   ],
 
   systemPrompt: `You are an expert HR recruiting partner specializing in end-to-end hiring workflows.
@@ -192,44 +193,79 @@ Current state: {{WORKFLOW_STATE}}
       label: 'Create job description',
       description: 'Generate and save job description to Google Drive',
       requiresApproval: false,
-      requiredPermissions: ['documents:write']
+      requiredPermissions: ['documents:write'],
     },
     create_interview_guide: {
       type: 'create_document',
       label: 'Create interview guide',
       description: 'Generate structured interview guide with questions and scorecard',
-      requiresApproval: false
+      requiresApproval: false,
     },
     create_offer_letter: {
       type: 'create_document',
       label: 'Create offer letter',
       description: 'Generate offer letter template with compensation details',
-      requiresApproval: false
+      requiresApproval: false,
     },
     create_hiring_channel: {
       type: 'send_slack_message',
       label: 'Create Slack channel',
       description: 'Set up dedicated Slack channel for hiring committee',
-      requiresApproval: false
+      requiresApproval: false,
     },
     email_hiring_manager: {
       type: 'send_email',
       label: 'Email hiring manager',
       description: 'Send hiring materials to the hiring manager for review',
-      requiresApproval: false
-    }
+      requiresApproval: false,
+    },
   },
 
   steps: [
-    { id: 'gather_requirements', name: 'Gather Requirements', description: 'Understand role, team, and hiring needs', nextSteps: ['draft_documents'] },
-    { id: 'draft_documents', name: 'Draft Documents', description: 'Create job description, interview guide, and offer template', nextSteps: ['execute_actions', 'refine_documents'] },
-    { id: 'refine_documents', name: 'Refine Documents', description: 'Iterate on documents based on feedback', nextSteps: ['execute_actions'] },
-    { id: 'execute_actions', name: 'Execute Actions', description: 'Post job, create channels, schedule interviews', nextSteps: ['track_candidates'] },
-    { id: 'track_candidates', name: 'Track Candidates', description: 'Monitor pipeline and coordinate interviews', nextSteps: ['make_offer', 'close_workflow'] },
-    { id: 'make_offer', name: 'Make Offer', description: 'Generate and send offer letter', nextSteps: ['close_workflow'] },
-    { id: 'close_workflow', name: 'Close Workflow', description: 'Hiring complete or position closed', nextSteps: [] }
-  ]
-}
+    {
+      id: 'gather_requirements',
+      name: 'Gather Requirements',
+      description: 'Understand role, team, and hiring needs',
+      nextSteps: ['draft_documents'],
+    },
+    {
+      id: 'draft_documents',
+      name: 'Draft Documents',
+      description: 'Create job description, interview guide, and offer template',
+      nextSteps: ['execute_actions', 'refine_documents'],
+    },
+    {
+      id: 'refine_documents',
+      name: 'Refine Documents',
+      description: 'Iterate on documents based on feedback',
+      nextSteps: ['execute_actions'],
+    },
+    {
+      id: 'execute_actions',
+      name: 'Execute Actions',
+      description: 'Post job, create channels, schedule interviews',
+      nextSteps: ['track_candidates'],
+    },
+    {
+      id: 'track_candidates',
+      name: 'Track Candidates',
+      description: 'Monitor pipeline and coordinate interviews',
+      nextSteps: ['make_offer', 'close_workflow'],
+    },
+    {
+      id: 'make_offer',
+      name: 'Make Offer',
+      description: 'Generate and send offer letter',
+      nextSteps: ['close_workflow'],
+    },
+    {
+      id: 'close_workflow',
+      name: 'Close Workflow',
+      description: 'Hiring complete or position closed',
+      nextSteps: [],
+    },
+  ],
+};
 
 // ============================================================================
 // WORKFLOW 2: PERFORMANCE MANAGEMENT
@@ -272,38 +308,38 @@ const PERFORMANCE_WORKFLOW: Workflow = {
       id: 'performance_reviews',
       name: 'Performance Reviews',
       description: 'Conduct and synthesize performance reviews across the organization',
-      requirements: ['employee_data']
+      requirements: ['employee_data'],
     },
     {
       id: 'feedback_synthesis',
       name: 'Feedback Synthesis',
       description: 'Aggregate and analyze 360 feedback for actionable insights',
-      requirements: []
+      requirements: [],
     },
     {
       id: 'pip_creation',
       name: 'Performance Improvement Plans',
       description: 'Create structured PIPs with clear goals and timelines',
-      requirements: []
+      requirements: [],
     },
     {
       id: 'coaching_plans',
       name: 'Coaching & Development',
       description: 'Design coaching programs and development plans',
-      requirements: []
+      requirements: [],
     },
     {
       id: 'one_on_ones',
       name: '1:1 Meeting Frameworks',
       description: 'Structured 1:1 agendas and conversation guides',
-      requirements: []
+      requirements: [],
     },
     {
       id: 'recognition_programs',
       name: 'Recognition & Rewards',
       description: 'Design recognition programs that drive engagement',
-      requirements: []
-    }
+      requirements: [],
+    },
   ],
 
   systemPrompt: `You are an expert performance management partner specializing in employee development, feedback, and continuous improvement.
@@ -436,45 +472,85 @@ Current state: {{WORKFLOW_STATE}}
       label: 'Create PIP',
       description: 'Generate performance improvement plan with goals and timeline',
       requiresApproval: true,
-      requiredPermissions: ['employees:write']
+      requiredPermissions: ['employees:write'],
     },
     create_performance_review: {
       type: 'create_document',
       label: 'Create performance review',
       description: 'Generate performance review document',
-      requiresApproval: false
+      requiresApproval: false,
     },
     create_development_plan: {
       type: 'create_document',
       label: 'Create development plan',
       description: 'Generate personalized development plan',
-      requiresApproval: false
+      requiresApproval: false,
     },
     schedule_review_meeting: {
       type: 'schedule_meeting',
       label: 'Schedule review meeting',
       description: 'Schedule performance review discussion',
-      requiresApproval: false
+      requiresApproval: false,
     },
     analyze_performance: {
       type: 'analyze_data',
       label: 'Analyze performance trends',
       description: 'Analyze team or individual performance patterns',
-      requiresApproval: false
-    }
+      requiresApproval: false,
+    },
   },
 
   steps: [
-    { id: 'assess_situation', name: 'Assess Situation', description: 'Understand performance issue or development opportunity', nextSteps: ['gather_feedback'] },
-    { id: 'gather_feedback', name: 'Gather Feedback', description: 'Collect 360 feedback, historical data, and context', nextSteps: ['create_plan'] },
-    { id: 'create_plan', name: 'Create Plan', description: 'Draft PIP, development plan, or review', nextSteps: ['review_plan', 'execute_actions'] },
-    { id: 'review_plan', name: 'Review Plan', description: 'Get stakeholder feedback on plan', nextSteps: ['execute_actions'] },
-    { id: 'execute_actions', name: 'Execute Actions', description: 'Schedule meetings, assign training, set up check-ins', nextSteps: ['monitor_progress'] },
-    { id: 'monitor_progress', name: 'Monitor Progress', description: 'Track improvement and adjust plan', nextSteps: ['close_workflow', 'adjust_plan'] },
-    { id: 'adjust_plan', name: 'Adjust Plan', description: 'Modify plan based on progress', nextSteps: ['monitor_progress'] },
-    { id: 'close_workflow', name: 'Close Workflow', description: 'Goals met or next steps defined', nextSteps: [] }
-  ]
-}
+    {
+      id: 'assess_situation',
+      name: 'Assess Situation',
+      description: 'Understand performance issue or development opportunity',
+      nextSteps: ['gather_feedback'],
+    },
+    {
+      id: 'gather_feedback',
+      name: 'Gather Feedback',
+      description: 'Collect 360 feedback, historical data, and context',
+      nextSteps: ['create_plan'],
+    },
+    {
+      id: 'create_plan',
+      name: 'Create Plan',
+      description: 'Draft PIP, development plan, or review',
+      nextSteps: ['review_plan', 'execute_actions'],
+    },
+    {
+      id: 'review_plan',
+      name: 'Review Plan',
+      description: 'Get stakeholder feedback on plan',
+      nextSteps: ['execute_actions'],
+    },
+    {
+      id: 'execute_actions',
+      name: 'Execute Actions',
+      description: 'Schedule meetings, assign training, set up check-ins',
+      nextSteps: ['monitor_progress'],
+    },
+    {
+      id: 'monitor_progress',
+      name: 'Monitor Progress',
+      description: 'Track improvement and adjust plan',
+      nextSteps: ['close_workflow', 'adjust_plan'],
+    },
+    {
+      id: 'adjust_plan',
+      name: 'Adjust Plan',
+      description: 'Modify plan based on progress',
+      nextSteps: ['monitor_progress'],
+    },
+    {
+      id: 'close_workflow',
+      name: 'Close Workflow',
+      description: 'Goals met or next steps defined',
+      nextSteps: [],
+    },
+  ],
+};
 
 // ============================================================================
 // WORKFLOW 3: ANALYTICS & INSIGHTS
@@ -488,18 +564,30 @@ const ANALYTICS_WORKFLOW: Workflow = {
   triggers: [
     // Metrics & analytics
     { pattern: /analytics|metrics|dashboard/i, weight: 10 },
-    { pattern: /show\s+me|tell\s+me|what('s|s|\sis)/i, weight: 6, contextHints: ['headcount', 'turnover', 'diversity', 'trend'] },
+    {
+      pattern: /show\s+me|tell\s+me|what('s|s|\sis)/i,
+      weight: 6,
+      contextHints: ['headcount', 'turnover', 'diversity', 'trend'],
+    },
     { pattern: /trend|forecast|predict/i, weight: 8 },
 
     // Specific metrics
     { pattern: /headcount/i, weight: 9 },
     { pattern: /turnover|attrition|retention/i, weight: 10 },
-    { pattern: /diversity|dei|inclusion/i, weight: 9, contextHints: ['metrics', 'report', 'analysis'] },
+    {
+      pattern: /diversity|dei|inclusion/i,
+      weight: 9,
+      contextHints: ['metrics', 'report', 'analysis'],
+    },
     { pattern: /\benps\b|engagement\s+score/i, weight: 10 },
     { pattern: /flight\s+risk/i, weight: 11 },
 
     // Survey analysis
-    { pattern: /survey/i, weight: 8, contextHints: ['analysis', 'results', 'feedback', 'engagement'] },
+    {
+      pattern: /survey/i,
+      weight: 8,
+      contextHints: ['analysis', 'results', 'feedback', 'engagement'],
+    },
     { pattern: /survey\s+results|survey\s+analysis/i, weight: 11 },
 
     // Comparison & analysis
@@ -513,44 +601,44 @@ const ANALYTICS_WORKFLOW: Workflow = {
       id: 'hr_metrics',
       name: 'HR Metrics & KPIs',
       description: 'Calculate and visualize key HR metrics',
-      requirements: ['employee_data']
+      requirements: ['employee_data'],
     },
     {
       id: 'turnover_analysis',
       name: 'Turnover & Retention Analysis',
       description: 'Analyze attrition patterns and retention drivers',
-      requirements: ['employee_data']
+      requirements: ['employee_data'],
     },
     {
       id: 'diversity_reporting',
       name: 'Diversity & Inclusion Metrics',
       description: 'DEI analytics and representation reporting',
-      requirements: ['employee_data']
+      requirements: ['employee_data'],
     },
     {
       id: 'engagement_insights',
       name: 'Engagement Insights',
       description: 'eNPS analysis and engagement trend tracking',
-      requirements: ['employee_data']
+      requirements: ['employee_data'],
     },
     {
       id: 'flight_risk_detection',
       name: 'Flight Risk Detection',
       description: 'Identify employees at risk of leaving',
-      requirements: ['employee_data', 'performance_data']
+      requirements: ['employee_data', 'performance_data'],
     },
     {
       id: 'survey_analysis',
       name: 'Survey Analysis',
       description: 'Analyze engagement surveys and create action plans',
-      requirements: []
+      requirements: [],
     },
     {
       id: 'forecasting',
       name: 'Workforce Forecasting',
       description: 'Predict hiring needs and turnover trends',
-      requirements: ['employee_data']
-    }
+      requirements: ['employee_data'],
+    },
   ],
 
   systemPrompt: `You are an expert HR analytics partner specializing in data-driven insights, workforce trends, and predictive analytics.
@@ -701,44 +789,79 @@ Current state: {{WORKFLOW_STATE}}
       type: 'analyze_data',
       label: 'Analyze HR metrics',
       description: 'Deep-dive analysis of specific HR metrics',
-      requiresApproval: false
+      requiresApproval: false,
     },
     export_to_sheets: {
       type: 'export_to_sheets',
       label: 'Export to Google Sheets',
       description: 'Create live dashboard in Google Sheets',
-      requiresApproval: false
+      requiresApproval: false,
     },
     create_report: {
       type: 'create_document',
       label: 'Create analytics report',
       description: 'Generate comprehensive analytics report',
-      requiresApproval: false
+      requiresApproval: false,
     },
     identify_flight_risks: {
       type: 'analyze_data',
       label: 'Identify flight risks',
       description: 'Analyze employee data to identify retention risks',
-      requiresApproval: false
+      requiresApproval: false,
     },
     create_retention_plan: {
       type: 'create_document',
       label: 'Create retention plan',
       description: 'Draft retention strategies for at-risk employees',
-      requiresApproval: false
-    }
+      requiresApproval: false,
+    },
   },
 
   steps: [
-    { id: 'understand_question', name: 'Understand Question', description: 'Clarify what metrics or insights are needed', nextSteps: ['gather_data'] },
-    { id: 'gather_data', name: 'Gather Data', description: 'Collect relevant employee, performance, and survey data', nextSteps: ['analyze'] },
-    { id: 'analyze', name: 'Analyze', description: 'Calculate metrics, identify trends, and generate insights', nextSteps: ['visualize', 'recommend_actions'] },
-    { id: 'visualize', name: 'Visualize', description: 'Create charts, dashboards, or reports', nextSteps: ['recommend_actions'] },
-    { id: 'recommend_actions', name: 'Recommend Actions', description: 'Suggest concrete next steps based on insights', nextSteps: ['execute_actions', 'close_workflow'] },
-    { id: 'execute_actions', name: 'Execute Actions', description: 'Export data, create reports, schedule follow-ups', nextSteps: ['close_workflow'] },
-    { id: 'close_workflow', name: 'Close Workflow', description: 'Insights delivered and actions taken', nextSteps: [] }
-  ]
-}
+    {
+      id: 'understand_question',
+      name: 'Understand Question',
+      description: 'Clarify what metrics or insights are needed',
+      nextSteps: ['gather_data'],
+    },
+    {
+      id: 'gather_data',
+      name: 'Gather Data',
+      description: 'Collect relevant employee, performance, and survey data',
+      nextSteps: ['analyze'],
+    },
+    {
+      id: 'analyze',
+      name: 'Analyze',
+      description: 'Calculate metrics, identify trends, and generate insights',
+      nextSteps: ['visualize', 'recommend_actions'],
+    },
+    {
+      id: 'visualize',
+      name: 'Visualize',
+      description: 'Create charts, dashboards, or reports',
+      nextSteps: ['recommend_actions'],
+    },
+    {
+      id: 'recommend_actions',
+      name: 'Recommend Actions',
+      description: 'Suggest concrete next steps based on insights',
+      nextSteps: ['execute_actions', 'close_workflow'],
+    },
+    {
+      id: 'execute_actions',
+      name: 'Execute Actions',
+      description: 'Export data, create reports, schedule follow-ups',
+      nextSteps: ['close_workflow'],
+    },
+    {
+      id: 'close_workflow',
+      name: 'Close Workflow',
+      description: 'Insights delivered and actions taken',
+      nextSteps: [],
+    },
+  ],
+};
 
 // ============================================================================
 // WORKFLOW 4: ONBOARDING
@@ -764,26 +887,26 @@ const ONBOARDING_WORKFLOW: Workflow = {
       id: 'onboarding_plans',
       name: 'Onboarding Plan Creation',
       description: 'Comprehensive 30/60/90 day onboarding plans',
-      requirements: []
+      requirements: [],
     },
     {
       id: 'first_day_experience',
       name: 'First Day Coordination',
       description: 'Design exceptional first-day experiences',
-      requirements: []
+      requirements: [],
     },
     {
       id: 'buddy_programs',
       name: 'Buddy Program Management',
       description: 'Match new hires with onboarding buddies',
-      requirements: ['employee_data']
+      requirements: ['employee_data'],
     },
     {
       id: 'welcome_materials',
       name: 'Welcome Materials',
       description: 'Create welcome packets and orientation materials',
-      requirements: ['google_drive']
-    }
+      requirements: ['google_drive'],
+    },
   ],
 
   systemPrompt: `You are an expert onboarding specialist focused on creating exceptional new hire experiences.
@@ -839,37 +962,67 @@ Current state: {{WORKFLOW_STATE}}
       type: 'create_document',
       label: 'Create 30/60/90 plan',
       description: 'Generate comprehensive onboarding plan',
-      requiresApproval: false
+      requiresApproval: false,
     },
     create_welcome_packet: {
       type: 'create_document',
       label: 'Create welcome packet',
       description: 'Generate new hire welcome materials',
-      requiresApproval: false
+      requiresApproval: false,
     },
     schedule_orientation: {
       type: 'schedule_meeting',
       label: 'Schedule orientation',
       description: 'Book orientation sessions and introductions',
-      requiresApproval: false
+      requiresApproval: false,
     },
     send_welcome_email: {
       type: 'send_email',
       label: 'Send welcome email',
       description: 'Send pre-boarding email to new hire',
-      requiresApproval: false
-    }
+      requiresApproval: false,
+    },
   },
 
   steps: [
-    { id: 'gather_hire_info', name: 'Gather Hire Info', description: 'Collect new hire details and role requirements', nextSteps: ['create_plan'] },
-    { id: 'create_plan', name: 'Create Plan', description: 'Draft 30/60/90 onboarding plan', nextSteps: ['coordinate_logistics'] },
-    { id: 'coordinate_logistics', name: 'Coordinate Logistics', description: 'Arrange equipment, access, workspace', nextSteps: ['schedule_activities'] },
-    { id: 'schedule_activities', name: 'Schedule Activities', description: 'Book orientations, trainings, and introductions', nextSteps: ['monitor_progress'] },
-    { id: 'monitor_progress', name: 'Monitor Progress', description: 'Track onboarding completion and engagement', nextSteps: ['close_workflow'] },
-    { id: 'close_workflow', name: 'Close Workflow', description: 'Onboarding complete', nextSteps: [] }
-  ]
-}
+    {
+      id: 'gather_hire_info',
+      name: 'Gather Hire Info',
+      description: 'Collect new hire details and role requirements',
+      nextSteps: ['create_plan'],
+    },
+    {
+      id: 'create_plan',
+      name: 'Create Plan',
+      description: 'Draft 30/60/90 onboarding plan',
+      nextSteps: ['coordinate_logistics'],
+    },
+    {
+      id: 'coordinate_logistics',
+      name: 'Coordinate Logistics',
+      description: 'Arrange equipment, access, workspace',
+      nextSteps: ['schedule_activities'],
+    },
+    {
+      id: 'schedule_activities',
+      name: 'Schedule Activities',
+      description: 'Book orientations, trainings, and introductions',
+      nextSteps: ['monitor_progress'],
+    },
+    {
+      id: 'monitor_progress',
+      name: 'Monitor Progress',
+      description: 'Track onboarding completion and engagement',
+      nextSteps: ['close_workflow'],
+    },
+    {
+      id: 'close_workflow',
+      name: 'Close Workflow',
+      description: 'Onboarding complete',
+      nextSteps: [],
+    },
+  ],
+};
 
 // ============================================================================
 // WORKFLOW 5: OFFBOARDING
@@ -882,7 +1035,11 @@ const OFFBOARDING_WORKFLOW: Workflow = {
 
   triggers: [
     { pattern: /offboarding|offboard/i, weight: 12 },
-    { pattern: /exit|departure|leaving/i, weight: 8, contextHints: ['employee', 'transition', 'process'] },
+    {
+      pattern: /exit|departure|leaving/i,
+      weight: 8,
+      contextHints: ['employee', 'transition', 'process'],
+    },
     { pattern: /termination\s+letter/i, weight: 12, capability: 'termination_letters' },
     { pattern: /exit\s+interview/i, weight: 11 },
     { pattern: /knowledge\s+transfer/i, weight: 10 },
@@ -896,32 +1053,32 @@ const OFFBOARDING_WORKFLOW: Workflow = {
       id: 'exit_processes',
       name: 'Exit Process Management',
       description: 'Coordinate all aspects of employee departures',
-      requirements: []
+      requirements: [],
     },
     {
       id: 'knowledge_transfer',
       name: 'Knowledge Transfer',
       description: 'Capture institutional knowledge before departure',
-      requirements: []
+      requirements: [],
     },
     {
       id: 'exit_interviews',
       name: 'Exit Interviews',
       description: 'Conduct and analyze exit interviews',
-      requirements: []
+      requirements: [],
     },
     {
       id: 'termination_letters',
       name: 'Termination Documentation',
       description: 'Generate professional separation letters',
-      requirements: ['google_drive']
+      requirements: ['google_drive'],
     },
     {
       id: 'rif_planning',
       name: 'Workforce Reduction Planning',
       description: 'Plan and execute reductions in force with compliance',
-      requirements: ['employee_data']
-    }
+      requirements: ['employee_data'],
+    },
   ],
 
   systemPrompt: `You are an expert offboarding specialist focused on respectful, compliant employee transitions.
@@ -985,36 +1142,61 @@ Current state: {{WORKFLOW_STATE}}
       label: 'Create termination letter',
       description: 'Generate professional separation letter',
       requiresApproval: true,
-      requiredPermissions: ['employees:write']
+      requiredPermissions: ['employees:write'],
     },
     create_exit_checklist: {
       type: 'create_document',
       label: 'Create exit checklist',
       description: 'Generate comprehensive offboarding checklist',
-      requiresApproval: false
+      requiresApproval: false,
     },
     schedule_exit_interview: {
       type: 'schedule_meeting',
       label: 'Schedule exit interview',
       description: 'Book exit interview session',
-      requiresApproval: false
+      requiresApproval: false,
     },
     send_departure_comms: {
       type: 'send_email',
       label: 'Send departure announcement',
       description: 'Notify team of departure (with permission)',
-      requiresApproval: true
-    }
+      requiresApproval: true,
+    },
   },
 
   steps: [
-    { id: 'assess_situation', name: 'Assess Situation', description: 'Understand departure reason and context', nextSteps: ['plan_transition'] },
-    { id: 'plan_transition', name: 'Plan Transition', description: 'Create exit timeline and checklist', nextSteps: ['execute_exit'] },
-    { id: 'execute_exit', name: 'Execute Exit', description: 'Coordinate all exit activities', nextSteps: ['conduct_interview'] },
-    { id: 'conduct_interview', name: 'Conduct Interview', description: 'Hold exit interview and gather feedback', nextSteps: ['close_workflow'] },
-    { id: 'close_workflow', name: 'Close Workflow', description: 'Exit complete, analyze insights', nextSteps: [] }
-  ]
-}
+    {
+      id: 'assess_situation',
+      name: 'Assess Situation',
+      description: 'Understand departure reason and context',
+      nextSteps: ['plan_transition'],
+    },
+    {
+      id: 'plan_transition',
+      name: 'Plan Transition',
+      description: 'Create exit timeline and checklist',
+      nextSteps: ['execute_exit'],
+    },
+    {
+      id: 'execute_exit',
+      name: 'Execute Exit',
+      description: 'Coordinate all exit activities',
+      nextSteps: ['conduct_interview'],
+    },
+    {
+      id: 'conduct_interview',
+      name: 'Conduct Interview',
+      description: 'Hold exit interview and gather feedback',
+      nextSteps: ['close_workflow'],
+    },
+    {
+      id: 'close_workflow',
+      name: 'Close Workflow',
+      description: 'Exit complete, analyze insights',
+      nextSteps: [],
+    },
+  ],
+};
 
 // ============================================================================
 // WORKFLOW 6: COMPENSATION
@@ -1040,32 +1222,32 @@ const COMPENSATION_WORKFLOW: Workflow = {
       id: 'salary_bands',
       name: 'Salary Band Design',
       description: 'Create competitive, equitable salary structures',
-      requirements: ['employee_data']
+      requirements: ['employee_data'],
     },
     {
       id: 'merit_cycles',
       name: 'Merit Cycle Management',
       description: 'Plan and execute annual compensation reviews',
-      requirements: ['employee_data', 'performance_data']
+      requirements: ['employee_data', 'performance_data'],
     },
     {
       id: 'equity_programs',
       name: 'Equity Grant Administration',
       description: 'Manage stock options, RSUs, and equity grants',
-      requirements: []
+      requirements: [],
     },
     {
       id: 'benchmarking',
       name: 'Market Benchmarking',
       description: 'Compare compensation to market rates',
-      requirements: []
+      requirements: [],
     },
     {
       id: 'pay_equity',
       name: 'Pay Equity Analysis',
       description: 'Ensure fair pay across demographics',
-      requirements: ['employee_data']
-    }
+      requirements: ['employee_data'],
+    },
   ],
 
   systemPrompt: `You are an expert compensation specialist focused on competitive, equitable pay structures.
@@ -1128,31 +1310,61 @@ Current state: {{WORKFLOW_STATE}}
       type: 'create_document',
       label: 'Create compensation proposal',
       description: 'Generate detailed compensation proposal',
-      requiresApproval: false
+      requiresApproval: false,
     },
     analyze_pay_equity: {
       type: 'analyze_data',
       label: 'Analyze pay equity',
       description: 'Run pay equity analysis across demographics',
-      requiresApproval: false
+      requiresApproval: false,
     },
     export_comp_data: {
       type: 'export_to_sheets',
       label: 'Export to Google Sheets',
       description: 'Create compensation planning spreadsheet',
-      requiresApproval: false
-    }
+      requiresApproval: false,
+    },
   },
 
   steps: [
-    { id: 'understand_need', name: 'Understand Need', description: 'Clarify compensation question or initiative', nextSteps: ['analyze_data'] },
-    { id: 'analyze_data', name: 'Analyze Data', description: 'Review current comp and market data', nextSteps: ['design_structure'] },
-    { id: 'design_structure', name: 'Design Structure', description: 'Create salary bands or grant framework', nextSteps: ['model_impact'] },
-    { id: 'model_impact', name: 'Model Impact', description: 'Project budget and equity impact', nextSteps: ['execute_changes'] },
-    { id: 'execute_changes', name: 'Execute Changes', description: 'Implement compensation updates', nextSteps: ['close_workflow'] },
-    { id: 'close_workflow', name: 'Close Workflow', description: 'Changes complete', nextSteps: [] }
-  ]
-}
+    {
+      id: 'understand_need',
+      name: 'Understand Need',
+      description: 'Clarify compensation question or initiative',
+      nextSteps: ['analyze_data'],
+    },
+    {
+      id: 'analyze_data',
+      name: 'Analyze Data',
+      description: 'Review current comp and market data',
+      nextSteps: ['design_structure'],
+    },
+    {
+      id: 'design_structure',
+      name: 'Design Structure',
+      description: 'Create salary bands or grant framework',
+      nextSteps: ['model_impact'],
+    },
+    {
+      id: 'model_impact',
+      name: 'Model Impact',
+      description: 'Project budget and equity impact',
+      nextSteps: ['execute_changes'],
+    },
+    {
+      id: 'execute_changes',
+      name: 'Execute Changes',
+      description: 'Implement compensation updates',
+      nextSteps: ['close_workflow'],
+    },
+    {
+      id: 'close_workflow',
+      name: 'Close Workflow',
+      description: 'Changes complete',
+      nextSteps: [],
+    },
+  ],
+};
 
 // ============================================================================
 // WORKFLOW 7: EMPLOYEE RELATIONS
@@ -1168,7 +1380,11 @@ const EMPLOYEE_RELATIONS_WORKFLOW: Workflow = {
     { pattern: /investigation|investigate|complaint/i, weight: 10 },
     { pattern: /accommodation|ada|disability/i, weight: 11 },
     { pattern: /\bfmla\b|leave\s+of\s+absence|parental\s+leave/i, weight: 11 },
-    { pattern: /policy|handbook|code\s+of\s+conduct/i, weight: 8, contextHints: ['employee', 'create', 'update'] },
+    {
+      pattern: /policy|handbook|code\s+of\s+conduct/i,
+      weight: 8,
+      contextHints: ['employee', 'create', 'update'],
+    },
     { pattern: /harassment|discrimination|hostile\s+work/i, weight: 12 },
     { pattern: /grievance|dispute|conflict/i, weight: 9 },
   ],
@@ -1178,32 +1394,32 @@ const EMPLOYEE_RELATIONS_WORKFLOW: Workflow = {
       id: 'er_case_management',
       name: 'ER Case Management',
       description: 'Manage employee relations cases and investigations',
-      requirements: []
+      requirements: [],
     },
     {
       id: 'investigations',
       name: 'Workplace Investigations',
       description: 'Conduct fair, thorough investigations',
-      requirements: []
+      requirements: [],
     },
     {
       id: 'accommodations',
       name: 'Accommodation Management',
       description: 'Handle ADA and reasonable accommodation requests',
-      requirements: []
+      requirements: [],
     },
     {
       id: 'leave_administration',
       name: 'Leave Administration',
       description: 'Manage FMLA, parental, and other leave types',
-      requirements: ['employee_data']
+      requirements: ['employee_data'],
     },
     {
       id: 'policy_management',
       name: 'Policy Management',
       description: 'Create and update employee policies',
-      requirements: []
-    }
+      requirements: [],
+    },
   ],
 
   systemPrompt: `You are an expert employee relations specialist focused on fair, compliant case resolution.
@@ -1270,30 +1486,55 @@ Current state: {{WORKFLOW_STATE}}
       type: 'create_document',
       label: 'Create investigation plan',
       description: 'Generate investigation framework',
-      requiresApproval: false
+      requiresApproval: false,
     },
     create_policy: {
       type: 'create_document',
       label: 'Create policy document',
       description: 'Draft employee policy or handbook section',
-      requiresApproval: false
+      requiresApproval: false,
     },
     document_accommodation: {
       type: 'create_document',
       label: 'Document accommodation',
       description: 'Create accommodation agreement',
-      requiresApproval: false
-    }
+      requiresApproval: false,
+    },
   },
 
   steps: [
-    { id: 'receive_issue', name: 'Receive Issue', description: 'Log ER case or request', nextSteps: ['assess_severity'] },
-    { id: 'assess_severity', name: 'Assess Severity', description: 'Determine urgency and response needed', nextSteps: ['investigate', 'recommend_action'] },
-    { id: 'investigate', name: 'Investigate', description: 'Conduct investigation if needed', nextSteps: ['recommend_action'] },
-    { id: 'recommend_action', name: 'Recommend Action', description: 'Propose resolution or next steps', nextSteps: ['close_case'] },
-    { id: 'close_case', name: 'Close Case', description: 'Resolve case and document outcome', nextSteps: [] }
-  ]
-}
+    {
+      id: 'receive_issue',
+      name: 'Receive Issue',
+      description: 'Log ER case or request',
+      nextSteps: ['assess_severity'],
+    },
+    {
+      id: 'assess_severity',
+      name: 'Assess Severity',
+      description: 'Determine urgency and response needed',
+      nextSteps: ['investigate', 'recommend_action'],
+    },
+    {
+      id: 'investigate',
+      name: 'Investigate',
+      description: 'Conduct investigation if needed',
+      nextSteps: ['recommend_action'],
+    },
+    {
+      id: 'recommend_action',
+      name: 'Recommend Action',
+      description: 'Propose resolution or next steps',
+      nextSteps: ['close_case'],
+    },
+    {
+      id: 'close_case',
+      name: 'Close Case',
+      description: 'Resolve case and document outcome',
+      nextSteps: [],
+    },
+  ],
+};
 
 // ============================================================================
 // WORKFLOW 8: COMPLIANCE
@@ -1320,32 +1561,32 @@ const COMPLIANCE_WORKFLOW: Workflow = {
       id: 'i9_management',
       name: 'I-9 Compliance',
       description: 'Manage employment eligibility verification',
-      requirements: []
+      requirements: [],
     },
     {
       id: 'eeo_reporting',
       name: 'EEO Reporting',
       description: 'File EEO-1 and track compliance',
-      requirements: ['employee_data']
+      requirements: ['employee_data'],
     },
     {
       id: 'benefits_enrollment',
       name: 'Benefits Enrollment',
       description: 'Coordinate benefits enrollment and compliance',
-      requirements: []
+      requirements: [],
     },
     {
       id: 'regulatory_compliance',
       name: 'Regulatory Compliance',
       description: 'Ensure compliance with employment laws',
-      requirements: []
+      requirements: [],
     },
     {
       id: 'legal_documentation',
       name: 'Legal Documentation',
       description: 'Create compliant HR documentation',
-      requirements: []
-    }
+      requirements: [],
+    },
   ],
 
   systemPrompt: `You are an expert HR compliance specialist focused on regulatory adherence and risk mitigation.
@@ -1408,25 +1649,55 @@ Current state: {{WORKFLOW_STATE}}
       type: 'create_document',
       label: 'Create compliance document',
       description: 'Generate compliant form or policy',
-      requiresApproval: false
+      requiresApproval: false,
     },
     run_compliance_audit: {
       type: 'analyze_data',
       label: 'Run compliance audit',
       description: 'Check compliance across requirements',
-      requiresApproval: false
-    }
+      requiresApproval: false,
+    },
   },
 
   steps: [
-    { id: 'identify_requirement', name: 'Identify Requirement', description: 'Understand compliance need', nextSteps: ['assess_compliance'] },
-    { id: 'assess_compliance', name: 'Assess Compliance', description: 'Check current compliance status', nextSteps: ['create_documentation'] },
-    { id: 'create_documentation', name: 'Create Documentation', description: 'Generate required documentation', nextSteps: ['implement_process'] },
-    { id: 'implement_process', name: 'Implement Process', description: 'Put compliance process in place', nextSteps: ['monitor_ongoing'] },
-    { id: 'monitor_ongoing', name: 'Monitor Ongoing', description: 'Track ongoing compliance', nextSteps: ['close_workflow'] },
-    { id: 'close_workflow', name: 'Close Workflow', description: 'Compliance achieved', nextSteps: [] }
-  ]
-}
+    {
+      id: 'identify_requirement',
+      name: 'Identify Requirement',
+      description: 'Understand compliance need',
+      nextSteps: ['assess_compliance'],
+    },
+    {
+      id: 'assess_compliance',
+      name: 'Assess Compliance',
+      description: 'Check current compliance status',
+      nextSteps: ['create_documentation'],
+    },
+    {
+      id: 'create_documentation',
+      name: 'Create Documentation',
+      description: 'Generate required documentation',
+      nextSteps: ['implement_process'],
+    },
+    {
+      id: 'implement_process',
+      name: 'Implement Process',
+      description: 'Put compliance process in place',
+      nextSteps: ['monitor_ongoing'],
+    },
+    {
+      id: 'monitor_ongoing',
+      name: 'Monitor Ongoing',
+      description: 'Track ongoing compliance',
+      nextSteps: ['close_workflow'],
+    },
+    {
+      id: 'close_workflow',
+      name: 'Close Workflow',
+      description: 'Compliance achieved',
+      nextSteps: [],
+    },
+  ],
+};
 
 // ============================================================================
 // GENERAL FALLBACK
@@ -1435,7 +1706,7 @@ Current state: {{WORKFLOW_STATE}}
 const GENERAL_WORKFLOW: Workflow = {
   id: 'general',
   name: 'General HR Assistant',
-  description: 'General HR guidance and support for queries that don\'t match specific workflows',
+  description: "General HR guidance and support for queries that don't match specific workflows",
 
   triggers: [], // No triggers - this is the fallback
 
@@ -1444,8 +1715,8 @@ const GENERAL_WORKFLOW: Workflow = {
       id: 'general_guidance',
       name: 'General HR Guidance',
       description: 'Provide general HR advice and support',
-      requirements: []
-    }
+      requirements: [],
+    },
   ],
 
   systemPrompt: `You are a helpful HR assistant providing general guidance and support.
@@ -1467,8 +1738,8 @@ Available workflows:
 Be helpful, professional, and guide users to the right workflow when appropriate.`,
 
   actions: {},
-  steps: []
-}
+  steps: [],
+};
 
 // ============================================================================
 // WORKFLOW REGISTRY
@@ -1484,25 +1755,25 @@ export const WORKFLOWS: Record<WorkflowId, Workflow> = {
   employee_relations: EMPLOYEE_RELATIONS_WORKFLOW,
   compliance: COMPLIANCE_WORKFLOW,
   general: GENERAL_WORKFLOW,
-}
+};
 
 /**
  * Get workflow by ID
  */
 export function getWorkflow(workflowId: WorkflowId): Workflow | null {
-  return WORKFLOWS[workflowId] || null
+  return WORKFLOWS[workflowId] || null;
 }
 
 /**
  * Get all workflow IDs
  */
 export function getAllWorkflowIds(): WorkflowId[] {
-  return Object.keys(WORKFLOWS) as WorkflowId[]
+  return Object.keys(WORKFLOWS) as WorkflowId[];
 }
 
 /**
  * Get workflow name
  */
 export function getWorkflowName(workflowId: WorkflowId): string {
-  return WORKFLOWS[workflowId]?.name || workflowId
+  return WORKFLOWS[workflowId]?.name || workflowId;
 }

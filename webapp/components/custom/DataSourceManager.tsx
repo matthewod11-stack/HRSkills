@@ -1,8 +1,21 @@
-'use client'
+'use client';
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Database, Trash2, Eye, FileText, Calendar, BarChart3, X, ArrowLeft, Table2, Users, TrendingUp, CheckCircle2 } from 'lucide-react';
+import {
+  Database,
+  Trash2,
+  Eye,
+  FileText,
+  Calendar,
+  BarChart3,
+  X,
+  ArrowLeft,
+  Table2,
+  Users,
+  TrendingUp,
+  CheckCircle2,
+} from 'lucide-react';
 import Link from 'next/link';
 import { DataFile, FilePreview, FILE_TYPE_LABELS } from '@/lib/types/data-sources';
 import { SmartFileUpload } from './SmartFileUpload';
@@ -39,7 +52,7 @@ export function DataSourceManager() {
   const loadFiles = async () => {
     try {
       const response = await fetch('/api/data/list', {
-        headers: getAuthHeaders()
+        headers: getAuthHeaders(),
       });
       const data = await response.json();
 
@@ -59,7 +72,7 @@ export function DataSourceManager() {
     try {
       const response = await fetch(`/api/data/delete/${fileId}`, {
         method: 'DELETE',
-        headers: getAuthHeaders()
+        headers: getAuthHeaders(),
       });
 
       const result = await response.json();
@@ -79,7 +92,7 @@ export function DataSourceManager() {
   const handlePreview = async (file: DataFile) => {
     try {
       const response = await fetch(`/api/data/preview/${file.fileId}`, {
-        headers: getAuthHeaders()
+        headers: getAuthHeaders(),
       });
       const result = await response.json();
 
@@ -98,7 +111,7 @@ export function DataSourceManager() {
       day: 'numeric',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
@@ -145,9 +158,7 @@ export function DataSourceManager() {
               <Users className="w-4 h-4 text-blue-400" />
               <span className="text-xs text-gray-400">Employees</span>
             </div>
-            <p className="text-2xl font-bold">
-              {firstRunData?.employeeCount || 0}
-            </p>
+            <p className="text-2xl font-bold">{firstRunData?.employeeCount || 0}</p>
             <p className="text-xs text-gray-500 mt-1">
               {hasUploadedData ? 'Your data' : 'Demo data'}
             </p>
@@ -158,9 +169,7 @@ export function DataSourceManager() {
               <TrendingUp className="w-4 h-4 text-green-400" />
               <span className="text-xs text-gray-400">Analytics</span>
             </div>
-            <p className="text-2xl font-bold">
-              {firstRunData?.progress?.percentage || 0}%
-            </p>
+            <p className="text-2xl font-bold">{firstRunData?.progress?.percentage || 0}%</p>
             <p className="text-xs text-gray-500 mt-1">Setup complete</p>
           </div>
 
@@ -171,9 +180,7 @@ export function DataSourceManager() {
             </div>
             <p className="text-2xl font-bold">Active</p>
             <p className="text-xs text-gray-500 mt-1">
-              {daysSinceFirstRun > 0
-                ? `${daysSinceFirstRun} days ago`
-                : 'Just started'}
+              {daysSinceFirstRun > 0 ? `${daysSinceFirstRun} days ago` : 'Just started'}
             </p>
           </div>
         </div>
@@ -217,9 +224,7 @@ export function DataSourceManager() {
         <h2 className="text-lg font-semibold mb-4">Uploaded Files ({files.length})</h2>
 
         {loading ? (
-          <div className="text-center py-12 text-gray-400">
-            Loading...
-          </div>
+          <div className="text-center py-12 text-gray-400">Loading...</div>
         ) : files.length === 0 ? (
           <div className="text-center py-12">
             <FileText className="w-16 h-16 mx-auto mb-4 text-gray-600" />
@@ -246,9 +251,7 @@ export function DataSourceManager() {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-lg mb-1">{file.fileName}</h3>
-                    <p className="text-sm text-gray-400 mb-2">
-                      {FILE_TYPE_LABELS[file.fileType]}
-                    </p>
+                    <p className="text-sm text-gray-400 mb-2">{FILE_TYPE_LABELS[file.fileType]}</p>
                     <div className="flex flex-wrap gap-4 text-sm text-gray-500">
                       <span className="flex items-center gap-1">
                         <BarChart3 className="w-4 h-4" />
@@ -339,18 +342,10 @@ export function DataSourceManager() {
                   </thead>
                   <tbody>
                     {preview.data.rows.map((row, idx) => (
-                      <tr
-                        key={idx}
-                        className="border-b border-white/10 hover:bg-white/5"
-                      >
+                      <tr key={idx} className="border-b border-white/10 hover:bg-white/5">
                         {preview.data.columns.map((col) => (
-                          <td
-                            key={col}
-                            className="px-3 py-2 whitespace-nowrap"
-                          >
-                            {row[col] !== null && row[col] !== undefined
-                              ? String(row[col])
-                              : '—'}
+                          <td key={col} className="px-3 py-2 whitespace-nowrap">
+                            {row[col] !== null && row[col] !== undefined ? String(row[col]) : '—'}
                           </td>
                         ))}
                       </tr>

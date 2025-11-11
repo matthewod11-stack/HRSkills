@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, hasPermission, requireRole, authErrorResponse } from '@/lib/auth/middleware';
+import { requireAuth, authErrorResponse } from '@/lib/auth/middleware';
 import { handleApiError } from '@/lib/api-helpers';
 import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter';
 import { db } from '@/lib/db';
@@ -36,13 +36,7 @@ export async function GET(request: NextRequest) {
     return authErrorResponse(authResult);
   }
 
-  // Check permissions
-  if (!hasPermission(authResult.user, 'employees', 'read')) {
-    return NextResponse.json(
-      { success: false, error: 'Insufficient permissions to read employees' },
-      { status: 403 }
-    );
-  }
+  // Single-user model: authenticated = authorized
 
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -88,7 +82,7 @@ export async function GET(request: NextRequest) {
       .orderBy(orderByClause);
 
     // Transform to match Phase 1 API format (for backward compatibility)
-    const transformedEmployees = employeesList.map(emp => ({
+    const transformedEmployees = employeesList.map((emp) => ({
       employee_id: emp.id,
       full_name: emp.fullName,
       first_name: emp.firstName,
@@ -113,14 +107,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       employees: transformedEmployees,
-      count: transformedEmployees.length
+      count: transformedEmployees.length,
     });
-
   } catch (error: any) {
     return handleApiError(error, {
       endpoint: '/api/employees',
       method: 'GET',
-      userId: authResult.user.userId
+      userId: authResult.user.userId,
     });
   }
 }
@@ -144,31 +137,20 @@ export async function POST(request: NextRequest) {
     return authErrorResponse(authResult);
   }
 
-  // Check role
-  if (!requireRole(authResult.user, 'hr_admin', 'super_admin')) {
-    return NextResponse.json(
-      { success: false, error: 'Admin role required to create employees' },
-      { status: 403 }
-    );
-  }
-
-  // Check permissions
-  if (!hasPermission(authResult.user, 'employees', 'write')) {
-    return NextResponse.json(
-      { success: false, error: 'Insufficient permissions to create employees' },
-      { status: 403 }
-    );
-  }
+  // Single-user model: authenticated = authorized
 
   try {
     const body = await request.json();
 
     // Validate employee_id exists
     if (!body.employee_id) {
-      return NextResponse.json({
-        success: false,
-        error: 'employee_id is required'
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'employee_id is required',
+        },
+        { status: 400 }
+      );
     }
 
     // Check if employee already exists
@@ -179,10 +161,13 @@ export async function POST(request: NextRequest) {
       .limit(1);
 
     if (existing.length > 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'Employee with this ID already exists'
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Employee with this ID already exists',
+        },
+        { status: 400 }
+      );
     }
 
     // Transform from Phase 1 format to Phase 2
@@ -235,15 +220,14 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      employee: response
+      employee: response,
     });
-
   } catch (error: any) {
     return handleApiError(error, {
       endpoint: '/api/employees',
       method: 'POST',
       userId: authResult.user.userId,
-      requestBody: {}
+      requestBody: {},
     });
   }
 }
@@ -261,23 +245,20 @@ export async function PATCH(request: NextRequest) {
     return authErrorResponse(authResult);
   }
 
-  // Check role
-  if (!requireRole(authResult.user, 'hr_admin', 'super_admin', 'hr_manager')) {
-    return NextResponse.json(
-      { success: false, error: 'Admin or manager role required to update employees' },
-      { status: 403 }
-    );
-  }
+  // Single-user model: authenticated = authorized
 
   try {
     const body = await request.json();
     const updates = body.updates;
 
     if (!Array.isArray(updates)) {
-      return NextResponse.json({
-        success: false,
-        error: 'Updates must be an array'
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Updates must be an array',
+        },
+        { status: 400 }
+      );
     }
 
     let updatedCount = 0;
@@ -288,7 +269,7 @@ export async function PATCH(request: NextRequest) {
 
       // Transform from Phase 1 format to Phase 2
       const updateData: any = {
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
 
       if (update.full_name !== undefined) updateData.fullName = update.full_name;
@@ -302,7 +283,8 @@ export async function PATCH(request: NextRequest) {
       if (update.location !== undefined) updateData.location = update.location;
       if (update.employee_type !== undefined) updateData.employmentType = update.employee_type;
       if (update.hire_date !== undefined) updateData.hireDate = update.hire_date;
-      if (update.termination_date !== undefined) updateData.terminationDate = update.termination_date;
+      if (update.termination_date !== undefined)
+        updateData.terminationDate = update.termination_date;
       if (update.status !== undefined) updateData.status = update.status;
       if (update.gender !== undefined) updateData.gender = update.gender;
       if (update.race_ethnicity !== undefined) updateData.raceEthnicity = update.race_ethnicity;
@@ -319,14 +301,13 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      updated: updatedCount
+      updated: updatedCount,
     });
-
   } catch (error: any) {
     return handleApiError(error, {
       endpoint: '/api/employees',
       method: 'PATCH',
-      userId: authResult.user.userId
+      userId: authResult.user.userId,
     });
   }
 }
@@ -344,40 +325,27 @@ export async function DELETE(request: NextRequest) {
     return authErrorResponse(authResult);
   }
 
-  // Only super_admin can delete
-  if (!requireRole(authResult.user, 'super_admin')) {
-    return NextResponse.json(
-      { success: false, error: 'Super admin role required for deletion' },
-      { status: 403 }
-    );
-  }
-
-  // Check permissions
-  if (!hasPermission(authResult.user, 'employees', 'delete')) {
-    return NextResponse.json(
-      { success: false, error: 'Insufficient permissions to delete employees' },
-      { status: 403 }
-    );
-  }
+  // Single-user model: authenticated = authorized
 
   try {
     const body = await request.json();
     const employeeIds: string[] = body.employee_ids;
 
     if (!Array.isArray(employeeIds)) {
-      return NextResponse.json({
-        success: false,
-        error: 'employee_ids must be an array'
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'employee_ids must be an array',
+        },
+        { status: 400 }
+      );
     }
 
     let deletedCount = 0;
 
     // Delete each employee (will cascade to related records via ON DELETE CASCADE)
     for (const empId of employeeIds) {
-      const result = await db
-        .delete(employees)
-        .where(eq(employees.id, empId));
+      const result = await db.delete(employees).where(eq(employees.id, empId));
 
       if (result.changes > 0) {
         deletedCount++;
@@ -386,14 +354,13 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      deleted: deletedCount
+      deleted: deletedCount,
     });
-
   } catch (error: any) {
     return handleApiError(error, {
       endpoint: '/api/employees',
       method: 'DELETE',
-      userId: authResult.user.userId
+      userId: authResult.user.userId,
     });
   }
 }

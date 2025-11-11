@@ -11,7 +11,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, hasPermission, authErrorResponse } from '@/lib/auth/middleware';
+import { requireAuth, authErrorResponse } from '@/lib/auth/middleware';
 import { handleApiError } from '@/lib/api-helpers';
 import { db } from '@/lib/db';
 import { employees } from '@/db/schema';
@@ -40,7 +40,15 @@ type AnalyticsMetric =
   | 'compensation'
   | 'costs';
 
-type DateRange = 'ytd' | 'qtd' | 'mtd' | 'last_30_days' | 'last_90_days' | 'last_6_months' | 'last_12_months' | 'custom';
+type DateRange =
+  | 'ytd'
+  | 'qtd'
+  | 'mtd'
+  | 'last_30_days'
+  | 'last_90_days'
+  | 'last_6_months'
+  | 'last_12_months'
+  | 'custom';
 type GroupBy = 'department' | 'location' | 'level' | 'manager';
 type OutputFormat = 'json' | 'csv';
 
@@ -99,7 +107,11 @@ interface Employee {
 /**
  * Convert date range string to start/end dates
  */
-function getDateRange(range: DateRange, customStart?: string, customEnd?: string): { start: string; end: string } {
+function getDateRange(
+  range: DateRange,
+  customStart?: string,
+  customEnd?: string
+): { start: string; end: string } {
   const end = new Date();
   const start = new Date();
 
@@ -196,7 +208,7 @@ function convertToCSV(data: any, metric: string): string {
 
     // Add rows
     for (const row of data) {
-      csv += headers.map(h => JSON.stringify(row[h] ?? '')).join(',') + '\n';
+      csv += headers.map((h) => JSON.stringify(row[h] ?? '')).join(',') + '\n';
     }
   } else {
     // For complex objects, flatten and convert
@@ -237,7 +249,9 @@ async function calculateHeadcountMetrics(params: AnalyticsQueryParams): Promise<
       total: deptData?.headcount || 0,
       department: params.department,
       byLevel: deptData?.byLevel || {},
-      trends: Array.isArray(trends) ? trends.filter((t: any) => t.department === params.department) : [],
+      trends: Array.isArray(trends)
+        ? trends.filter((t: any) => t.department === params.department)
+        : [],
     };
   }
 
@@ -351,7 +365,8 @@ async function calculateNineBoxMetrics(params: AnalyticsQueryParams): Promise<an
   let inflationCount = 0;
 
   for (const emp of activeEmployees) {
-    const perfScore = emp.ai_performance_score ?? emp.current_performance_rating ?? emp.manager_rating ?? 3;
+    const perfScore =
+      emp.ai_performance_score ?? emp.current_performance_rating ?? emp.manager_rating ?? 3;
 
     let potScore = emp.ai_potential_score;
     if (!potScore) {
@@ -627,7 +642,8 @@ async function calculateCostMetrics(params: AnalyticsQueryParams): Promise<any> 
     totalCompensation: compensationMetrics.average.total * compensationMetrics.total,
     byDepartment: compensationMetrics.byDepartment,
     employees: compensationMetrics.total,
-    message: 'Cost metrics based on compensation data. Add benefits and overhead for complete picture.',
+    message:
+      'Cost metrics based on compensation data. Add benefits and overhead for complete picture.',
   };
 }
 
@@ -642,13 +658,7 @@ export async function GET(request: NextRequest) {
     return authErrorResponse(authResult);
   }
 
-  // Check permissions
-  if (!hasPermission(authResult.user, 'analytics', 'read')) {
-    return NextResponse.json(
-      { success: false, error: 'Insufficient permissions to access analytics' },
-      { status: 403 }
-    );
-  }
+  // Single-user model: authenticated = authorized
 
   try {
     // Parse query parameters
@@ -660,7 +670,16 @@ export async function GET(request: NextRequest) {
         {
           success: false,
           error: 'Missing required parameter: metric',
-          validMetrics: ['headcount', 'attrition', 'nine-box', 'diversity', 'performance', 'engagement', 'compensation', 'costs'],
+          validMetrics: [
+            'headcount',
+            'attrition',
+            'nine-box',
+            'diversity',
+            'performance',
+            'engagement',
+            'compensation',
+            'costs',
+          ],
         },
         { status: 400 }
       );
@@ -723,7 +742,16 @@ export async function GET(request: NextRequest) {
           {
             success: false,
             error: `Unknown metric: ${metric}`,
-            validMetrics: ['headcount', 'attrition', 'nine-box', 'diversity', 'performance', 'engagement', 'compensation', 'costs'],
+            validMetrics: [
+              'headcount',
+              'attrition',
+              'nine-box',
+              'diversity',
+              'performance',
+              'engagement',
+              'compensation',
+              'costs',
+            ],
           },
           { status: 400 }
         );

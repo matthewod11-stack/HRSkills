@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 /**
  * Role-Based UI Guard Components
@@ -80,11 +80,7 @@ export function RequireAdmin({ children, fallback = null }: RoleGuardProps) {
 /**
  * Render children only if user has specific permission
  */
-export function RequirePermission({
-  children,
-  permission,
-  fallback = null,
-}: PermissionGuardProps) {
+export function RequirePermission({ children, permission, fallback = null }: PermissionGuardProps) {
   const user = useAuth();
 
   if (!user || !user.role.permissions[permission]) {

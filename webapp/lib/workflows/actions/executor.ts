@@ -5,7 +5,7 @@
  * Manages action handlers and provides a unified execution interface.
  */
 
-import { nanoid } from 'nanoid'
+import { nanoid } from 'nanoid';
 import type {
   BaseAction,
   ActionType,
@@ -20,8 +20,8 @@ import type {
   CreateActionInput,
   UpdateActionInput,
   ActionStatistics,
-  ActionHistoryEntry
-} from './types'
+  ActionHistoryEntry,
+} from './types';
 
 // ============================================================================
 // ActionExecutor Class
@@ -50,10 +50,10 @@ import type {
  * ```
  */
 export class ActionExecutor {
-  private handlers: Map<ActionType, ActionHandler> = new Map()
-  private registry: Map<ActionType, ActionRegistryEntry> = new Map()
-  private history: ActionHistoryEntry[] = []
-  private rateLimitCounters: Map<string, number[]> = new Map()
+  private handlers: Map<ActionType, ActionHandler> = new Map();
+  private registry: Map<ActionType, ActionRegistryEntry> = new Map();
+  private history: ActionHistoryEntry[] = [];
+  private rateLimitCounters: Map<string, number[]> = new Map();
 
   // ==========================================================================
   // Handler Registration
@@ -68,50 +68,50 @@ export class ActionExecutor {
   registerHandler(
     handler: ActionHandler,
     options: {
-      enabled?: boolean
-      requiredPermissions?: string[]
-      rateLimitPerHour?: number
+      enabled?: boolean;
+      requiredPermissions?: string[];
+      rateLimitPerHour?: number;
     } = {}
   ): void {
-    this.handlers.set(handler.type, handler)
+    this.handlers.set(handler.type, handler);
 
     const entry: ActionRegistryEntry = {
       type: handler.type,
       handler,
       enabled: options.enabled ?? true,
       requiredPermissions: options.requiredPermissions || [],
-      rateLimitPerHour: options.rateLimitPerHour
-    }
+      rateLimitPerHour: options.rateLimitPerHour,
+    };
 
-    this.registry.set(handler.type, entry)
-    console.log(`Registered action handler: ${handler.type}`)
+    this.registry.set(handler.type, entry);
+    console.log(`Registered action handler: ${handler.type}`);
   }
 
   /**
    * Unregister an action handler
    */
   unregisterHandler(type: ActionType): void {
-    this.handlers.delete(type)
-    this.registry.delete(type)
+    this.handlers.delete(type);
+    this.registry.delete(type);
   }
 
   /**
    * Get handler for action type
    */
   private getHandler(type: ActionType): ActionHandler | null {
-    const entry = this.registry.get(type)
+    const entry = this.registry.get(type);
 
     if (!entry) {
-      console.error(`No handler registered for action type: ${type}`)
-      return null
+      console.error(`No handler registered for action type: ${type}`);
+      return null;
     }
 
     if (!entry.enabled) {
-      console.warn(`Handler for ${type} is disabled`)
-      return null
+      console.warn(`Handler for ${type} is disabled`);
+      return null;
     }
 
-    return entry.handler
+    return entry.handler;
   }
 
   // ==========================================================================
@@ -129,8 +129,8 @@ export class ActionExecutor {
       ...input,
       id: nanoid(),
       status: 'pending',
-      createdAt: new Date().toISOString()
-    }
+      createdAt: new Date().toISOString(),
+    };
   }
 
   /**
@@ -144,8 +144,8 @@ export class ActionExecutor {
     return {
       ...action,
       ...updates,
-      updatedAt: new Date().toISOString()
-    }
+      updatedAt: new Date().toISOString(),
+    };
   }
 
   // ==========================================================================
@@ -159,94 +159,93 @@ export class ActionExecutor {
    * @param context - Execution context
    * @returns Validation result
    */
-  async validate(
-    action: BaseAction,
-    context: ActionContext
-  ): Promise<ActionValidationResult> {
-    const errors = []
-    const warnings = []
+  async validate(action: BaseAction, context: ActionContext): Promise<ActionValidationResult> {
+    const errors = [];
+    const warnings = [];
 
     // Check if handler exists
-    const handler = this.getHandler(action.type)
+    const handler = this.getHandler(action.type);
     if (!handler) {
       return {
         valid: false,
-        errors: [{
-          field: 'type',
-          message: `No handler available for action type: ${action.type}`,
-          code: 'invalid_value'
-        }]
-      }
+        errors: [
+          {
+            field: 'type',
+            message: `No handler available for action type: ${action.type}`,
+            code: 'invalid_value',
+          },
+        ],
+      };
     }
 
     // Check permissions
-    const entry = this.registry.get(action.type)!
+    const entry = this.registry.get(action.type)!;
     if (entry.requiredPermissions.length > 0) {
       const missingPermissions = entry.requiredPermissions.filter(
-        perm => !context.userPermissions.includes(perm)
-      )
+        (perm) => !context.userPermissions.includes(perm)
+      );
 
       if (missingPermissions.length > 0) {
         errors.push({
           field: 'permissions',
           message: `Missing required permissions: ${missingPermissions.join(', ')}`,
-          code: 'permission_denied'
-        })
+          code: 'permission_denied',
+        });
       }
     }
 
     // Check rate limits
     if (entry.rateLimitPerHour) {
-      const key = `${context.userId}:${action.type}`
-      const isRateLimited = this.checkRateLimit(key, entry.rateLimitPerHour)
+      const key = `${context.userId}:${action.type}`;
+      const isRateLimited = this.checkRateLimit(key, entry.rateLimitPerHour);
 
       if (isRateLimited) {
         errors.push({
           field: 'rate_limit',
           message: `Rate limit exceeded for ${action.type}. Max ${entry.rateLimitPerHour} per hour.`,
-          code: 'invalid_value'
-        })
+          code: 'invalid_value',
+        });
       }
     }
 
     // Return early if basic validation failed
     if (errors.length > 0) {
-      return { valid: false, errors, warnings }
+      return { valid: false, errors, warnings };
     }
 
     // Run handler-specific validation
-    const handlerValidation = await handler.validate(action, context)
+    const handlerValidation = await handler.validate(action, context);
 
     return {
       valid: handlerValidation.valid && errors.length === 0,
       errors: [...errors, ...handlerValidation.errors],
-      warnings: [...warnings, ...(handlerValidation.warnings || [])]
-    }
+      warnings: [...warnings, ...(handlerValidation.warnings || [])],
+    };
   }
 
   /**
    * Check rate limit for action
    */
   private checkRateLimit(key: string, limitPerHour: number): boolean {
-    const now = Date.now()
-    const oneHourAgo = now - 60 * 60 * 1000
+    const now = Date.now();
+    const oneHourAgo = now - 60 * 60 * 1000;
 
     // Get or create counter
-    let timestamps = this.rateLimitCounters.get(key) || []
+    let timestamps = this.rateLimitCounters.get(key) || [];
 
     // Remove old timestamps
-    timestamps = timestamps.filter(ts => ts > oneHourAgo)
+    timestamps = timestamps.filter((ts) => ts > oneHourAgo);
 
     // Check if limit exceeded
     if (timestamps.length >= limitPerHour) {
-      return true
+      return true;
     }
 
     // Add current timestamp
-    timestamps.push(now)
-    this.rateLimitCounters.set(key, timestamps)
+    timestamps.push(now);
+    this.rateLimitCounters.set(key, timestamps);
 
-    return false
+    return false;
   }
 
   // ==========================================================================
@@ -266,10 +265,10 @@ export class ActionExecutor {
     context: ActionContext,
     options: ActionExecutionOptions = {}
   ): Promise<ActionResult> {
-    const startTime = Date.now()
+    const startTime = Date.now();
 
     // Validate before execution
-    const validation = await this.validate(action, context)
+    const validation = await this.validate(action, context);
     if (!validation.valid) {
       return {
         success: false,
@@ -279,9 +278,9 @@ export class ActionExecutor {
         error: {
           code: 'validation_failed',
           message: 'Action validation failed',
-          details: validation.errors
-        }
-      }
+          details: validation.errors,
+        },
+      };
     }
 
     // Dry run mode - validate only
@@ -291,17 +290,17 @@ export class ActionExecutor {
         actionId: action.id,
         executedAt: new Date().toISOString(),
         duration: Date.now() - startTime,
-        metadata: { dryRun: true, validation }
-      }
+        metadata: { dryRun: true, validation },
+      };
     }
 
     // Get handler
-    const handler = this.getHandler(action.type)!
+    const handler = this.getHandler(action.type)!;
 
     // Execute with timeout and retries
-    let result: ActionResult
-    const maxRetries = options.retries || 0
-    let attempt = 0
+    let result: ActionResult;
+    const maxRetries = options.retries || 0;
+    let attempt = 0;
 
     while (attempt <= maxRetries) {
       try {
@@ -311,17 +310,17 @@ export class ActionExecutor {
           action,
           context,
           options.timeout || 30000 // 30 second default timeout
-        )
+        );
 
         // Success - break retry loop
         if (result.success) {
-          break
+          break;
         }
 
         // Failed - check if we should retry
         if (attempt < maxRetries) {
-          console.log(`Action ${action.id} failed, retrying (${attempt + 1}/${maxRetries})...`)
-          await this.delay(1000 * (attempt + 1)) // Exponential backoff
+          console.log(`Action ${action.id} failed, retrying (${attempt + 1}/${maxRetries})...`);
+          await this.delay(1000 * (attempt + 1)); // Exponential backoff
         }
       } catch (error: any) {
         result = {
@@ -332,24 +331,24 @@ export class ActionExecutor {
           error: {
             code: 'execution_error',
             message: error.message || 'Unknown execution error',
-            details: error
-          }
-        }
+            details: error,
+          },
+        };
 
         // Retry on error if attempts remaining
         if (attempt < maxRetries) {
-          console.log(`Action ${action.id} error, retrying (${attempt + 1}/${maxRetries})...`)
-          await this.delay(1000 * (attempt + 1))
+          console.log(`Action ${action.id} error, retrying (${attempt + 1}/${maxRetries})...`);
+          await this.delay(1000 * (attempt + 1));
         }
       }
 
-      attempt++
+      attempt++;
     }
 
     // Record execution in history
-    this.recordHistory(action, result!, context)
+    this.recordHistory(action, result!, context);
 
-    return result!
+    return result!;
   }
 
   /**
@@ -365,15 +364,15 @@ export class ActionExecutor {
       handler.execute(action, context),
       new Promise<ActionResult>((_, reject) =>
         setTimeout(() => reject(new Error(`Action execution timeout after ${timeout}ms`)), timeout)
-      )
-    ])
+      ),
+    ]);
   }
 
   /**
    * Delay helper for retry backoff
    */
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms))
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   // ==========================================================================
@@ -387,48 +386,48 @@ export class ActionExecutor {
    * @returns Batch execution result
    */
   async executeBatch(request: BatchActionRequest): Promise<BatchActionResult> {
-    const startTime = Date.now()
-    const results: ActionResult[] = []
-    let successCount = 0
-    let failureCount = 0
-    const errors: BatchActionResult['errors'] = []
+    const startTime = Date.now();
+    const results: ActionResult[] = [];
+    let successCount = 0;
+    let failureCount = 0;
+    const errors: BatchActionResult['errors'] = [];
 
     if (request.sequential) {
       // Execute one at a time
       for (const action of request.actions) {
-        const result = await this.execute(action, request.context, request.options)
-        results.push(result)
+        const result = await this.execute(action, request.context, request.options);
+        results.push(result);
 
         if (result.success) {
-          successCount++
+          successCount++;
         } else {
-          failureCount++
+          failureCount++;
           errors.push({
             actionId: action.id,
-            error: result.error
-          })
+            error: result.error,
+          });
         }
       }
     } else {
       // Execute in parallel
-      const promises = request.actions.map(action =>
+      const promises = request.actions.map((action) =>
         this.execute(action, request.context, request.options)
-      )
+      );
 
-      const batchResults = await Promise.all(promises)
+      const batchResults = await Promise.all(promises);
 
       for (let i = 0; i < batchResults.length; i++) {
-        const result = batchResults[i]
-        results.push(result)
+        const result = batchResults[i];
+        results.push(result);
 
         if (result.success) {
-          successCount++
+          successCount++;
         } else {
-          failureCount++
+          failureCount++;
           errors.push({
             actionId: request.actions[i].id,
-            error: result.error
-          })
+            error: result.error,
+          });
         }
       }
     }
@@ -438,8 +437,8 @@ export class ActionExecutor {
       totalDuration: Date.now() - startTime,
       successCount,
       failureCount,
-      errors: errors.length > 0 ? errors : undefined
-    }
+      errors: errors.length > 0 ? errors : undefined,
+    };
   }
 
   // ==========================================================================
@@ -449,25 +448,21 @@ export class ActionExecutor {
   /**
    * Record action execution in history
    */
-  private recordHistory(
-    action: BaseAction,
-    result: ActionResult,
-    context: ActionContext
-  ): void {
+  private recordHistory(action: BaseAction, result: ActionResult, context: ActionContext): void {
     const entry: ActionHistoryEntry = {
       id: nanoid(),
       actionId: action.id,
       action,
       result,
       context,
-      timestamp: new Date().toISOString()
-    }
+      timestamp: new Date().toISOString(),
+    };
 
-    this.history.push(entry)
+    this.history.push(entry);
 
     // Limit history size to prevent memory issues
     if (this.history.length > 1000) {
-      this.history = this.history.slice(-1000)
+      this.history = this.history.slice(-1000);
     }
   }
 
@@ -475,86 +470,86 @@ export class ActionExecutor {
    * Get action history
    */
   getHistory(filter?: {
-    actionType?: ActionType
-    userId?: string
-    workflowId?: string
-    status?: 'success' | 'failure'
+    actionType?: ActionType;
+    userId?: string;
+    workflowId?: string;
+    status?: 'success' | 'failure';
   }): ActionHistoryEntry[] {
-    let filtered = this.history
+    let filtered = this.history;
 
     if (filter?.actionType) {
-      filtered = filtered.filter(e => e.action.type === filter.actionType)
+      filtered = filtered.filter((e) => e.action.type === filter.actionType);
     }
 
     if (filter?.userId) {
-      filtered = filtered.filter(e => e.context.userId === filter.userId)
+      filtered = filtered.filter((e) => e.context.userId === filter.userId);
     }
 
     if (filter?.workflowId) {
-      filtered = filtered.filter(e => e.context.workflowId === filter.workflowId)
+      filtered = filtered.filter((e) => e.context.workflowId === filter.workflowId);
     }
 
     if (filter?.status) {
-      filtered = filtered.filter(e =>
+      filtered = filtered.filter((e) =>
         filter.status === 'success' ? e.result.success : !e.result.success
-      )
+      );
     }
 
-    return filtered
+    return filtered;
   }
 
   /**
    * Get execution statistics
    */
   getStatistics(): ActionStatistics {
-    const byType: ActionStatistics['byType'] = {} as any
-    const byWorkflow: ActionStatistics['byWorkflow'] = {} as any
+    const byType: ActionStatistics['byType'] = {} as any;
+    const byWorkflow: ActionStatistics['byWorkflow'] = {} as any;
 
-    let totalExecuted = 0
-    let successCount = 0
-    let failureCount = 0
-    let totalDuration = 0
+    let totalExecuted = 0;
+    let successCount = 0;
+    let failureCount = 0;
+    let totalDuration = 0;
 
     for (const entry of this.history) {
-      totalExecuted++
-      totalDuration += entry.result.duration
+      totalExecuted++;
+      totalDuration += entry.result.duration;
 
       if (entry.result.success) {
-        successCount++
+        successCount++;
       } else {
-        failureCount++
+        failureCount++;
       }
 
       // By type
-      const type = entry.action.type
+      const type = entry.action.type;
       if (!byType[type]) {
-        byType[type] = { count: 0, successRate: 0, avgDuration: 0 }
+        byType[type] = { count: 0, successRate: 0, avgDuration: 0 };
       }
-      byType[type].count++
+      byType[type].count++;
 
       // By workflow
-      const workflowId = entry.context.workflowId
+      const workflowId = entry.context.workflowId;
       if (!byWorkflow[workflowId]) {
-        byWorkflow[workflowId] = { count: 0, successRate: 0 }
+        byWorkflow[workflowId] = { count: 0, successRate: 0 };
       }
-      byWorkflow[workflowId].count++
+      byWorkflow[workflowId].count++;
     }
 
     // Calculate rates and averages
     for (const type in byType) {
-      const typeEntries = this.history.filter(e => e.action.type === type)
-      const typeSuccess = typeEntries.filter(e => e.result.success).length
-      const typeDuration = typeEntries.reduce((sum, e) => sum + e.result.duration, 0)
+      const typeEntries = this.history.filter((e) => e.action.type === type);
+      const typeSuccess = typeEntries.filter((e) => e.result.success).length;
+      const typeDuration = typeEntries.reduce((sum, e) => sum + e.result.duration, 0);
 
-      byType[type as ActionType].successRate = typeSuccess / typeEntries.length
-      byType[type as ActionType].avgDuration = typeDuration / typeEntries.length
+      byType[type as ActionType].successRate = typeSuccess / typeEntries.length;
+      byType[type as ActionType].avgDuration = typeDuration / typeEntries.length;
     }
 
     for (const workflowId in byWorkflow) {
-      const workflowEntries = this.history.filter(e => e.context.workflowId === workflowId)
-      const workflowSuccess = workflowEntries.filter(e => e.result.success).length
+      const workflowEntries = this.history.filter((e) => e.context.workflowId === workflowId);
+      const workflowSuccess = workflowEntries.filter((e) => e.result.success).length;
 
-      byWorkflow[workflowId].successRate = workflowSuccess / workflowEntries.length
+      byWorkflow[workflowId].successRate = workflowSuccess / workflowEntries.length;
     }
 
     return {
@@ -563,15 +558,15 @@ export class ActionExecutor {
       failureCount,
       averageDuration: totalExecuted > 0 ? totalDuration / totalExecuted : 0,
       byType,
-      byWorkflow
-    }
+      byWorkflow,
+    };
   }
 
   /**
    * Clear history
    */
   clearHistory(): void {
-    this.history = []
+    this.history = [];
   }
 }
 
@@ -582,4 +577,4 @@ export class ActionExecutor {
 /**
  * Global action executor instance
  */
-export const actionExecutor = new ActionExecutor()
+export const actionExecutor = new ActionExecutor();

@@ -14,10 +14,7 @@ export async function GET(request: NextRequest) {
   try {
     // Check if authenticated
     if (!googleOAuthClient.isAuthenticated()) {
-      return NextResponse.json(
-        { error: 'Not authenticated with Google Drive' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Not authenticated with Google Drive' }, { status: 401 });
     }
 
     // Refresh token if needed
@@ -29,7 +26,7 @@ export async function GET(request: NextRequest) {
     const searchRootResponse = await drive.files.list({
       q: `name='HR Command Center' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
       fields: 'files(id)',
-      pageSize: 1
+      pageSize: 1,
     });
 
     if (!searchRootResponse.data.files || searchRootResponse.data.files.length === 0) {
@@ -45,7 +42,7 @@ export async function GET(request: NextRequest) {
     const searchTemplatesResponse = await drive.files.list({
       q: `name='Templates' and '${rootFolderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
       fields: 'files(id)',
-      pageSize: 1
+      pageSize: 1,
     });
 
     if (!searchTemplatesResponse.data.files || searchTemplatesResponse.data.files.length === 0) {
@@ -62,7 +59,7 @@ export async function GET(request: NextRequest) {
       q: `'${templatesFolderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
       fields: 'files(id, name)',
       pageSize: 100,
-      orderBy: 'name'
+      orderBy: 'name',
     });
 
     const skillFolders = skillFoldersResponse.data.files || [];
@@ -74,7 +71,7 @@ export async function GET(request: NextRequest) {
         q: `'${skillFolder.id}' in parents and mimeType='application/vnd.google-apps.document' and trashed=false`,
         fields: 'files(id, name, modifiedTime, webViewLink)',
         pageSize: 100,
-        orderBy: 'name'
+        orderBy: 'name',
       });
 
       const files = filesResponse.data.files || [];
@@ -85,7 +82,7 @@ export async function GET(request: NextRequest) {
           name: file.name,
           skillName: skillFolder.name,
           modifiedTime: file.modifiedTime,
-          webViewLink: file.webViewLink
+          webViewLink: file.webViewLink,
         });
       }
     }
@@ -93,9 +90,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       count: templates.length,
-      templates
+      templates,
     });
-
   } catch (error: any) {
     console.error('Error fetching templates:', error);
 

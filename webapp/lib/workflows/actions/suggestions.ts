@@ -5,21 +5,26 @@
  * This is used by the chat endpoint to suggest follow-up actions after AI responses.
  */
 
-import type { BaseAction, CreateDocumentPayload, SendEmailPayload, SendSlackMessagePayload } from './types'
-import type { WorkflowId } from '../types'
+import type {
+  BaseAction,
+  CreateDocumentPayload,
+  SendEmailPayload,
+  SendSlackMessagePayload,
+} from './types';
+import type { WorkflowId } from '../types';
 
 // ============================================================================
 // Suggestion Context
 // ============================================================================
 
 export interface SuggestionContext {
-  workflowId: WorkflowId
-  message: string
-  aiResponse: string
-  conversationHistory?: Array<{ role: string; content: string }>
-  extractedData?: Record<string, any>
-  userId: string
-  userPermissions: string[]
+  workflowId: WorkflowId;
+  message: string;
+  aiResponse: string;
+  conversationHistory?: Array<{ role: string; content: string }>;
+  extractedData?: Record<string, any>;
+  userId: string;
+  userPermissions: string[];
 }
 
 // ============================================================================
@@ -27,10 +32,10 @@ export interface SuggestionContext {
 // ============================================================================
 
 interface SuggestionRule {
-  workflowId: WorkflowId
-  triggers: RegExp[]
-  generator: (context: SuggestionContext) => Partial<BaseAction>[]
-  priority?: 'low' | 'medium' | 'high'
+  workflowId: WorkflowId;
+  triggers: RegExp[];
+  generator: (context: SuggestionContext) => Partial<BaseAction>[];
+  priority?: 'low' | 'medium' | 'high';
 }
 
 /**
@@ -42,12 +47,9 @@ const SUGGESTION_RULES: SuggestionRule[] = [
   // ========================================================================
   {
     workflowId: 'hiring',
-    triggers: [
-      /job description|jd/i,
-      /position|role|opening/i,
-    ],
+    triggers: [/job description|jd/i, /position|role|opening/i],
     generator: (ctx) => {
-      const actions: Partial<BaseAction>[] = []
+      const actions: Partial<BaseAction>[] = [];
 
       // If JD is mentioned, suggest saving to Drive + posting to Slack
       if (/job description|jd/i.test(ctx.message) || /job description|jd/i.test(ctx.aiResponse)) {
@@ -67,7 +69,7 @@ const SUGGESTION_RULES: SuggestionRule[] = [
               folderPath: '/Hiring/Job Descriptions',
             },
           } as CreateDocumentPayload,
-        })
+        });
 
         actions.push({
           type: 'send_slack_message',
@@ -79,7 +81,7 @@ const SUGGESTION_RULES: SuggestionRule[] = [
             channel: 'hiring',
             text: `New job description ready: ${extractTitle(ctx.aiResponse)}`,
           } as SendSlackMessagePayload,
-        })
+        });
       }
 
       // If candidate mentioned, suggest scheduling interview
@@ -98,10 +100,10 @@ const SUGGESTION_RULES: SuggestionRule[] = [
               createRequest: true,
             },
           },
-        })
+        });
       }
 
-      return actions
+      return actions;
     },
   },
 
@@ -110,12 +112,9 @@ const SUGGESTION_RULES: SuggestionRule[] = [
   // ========================================================================
   {
     workflowId: 'hiring',
-    triggers: [
-      /offer letter|offer/i,
-      /compensation|salary|package/i,
-    ],
+    triggers: [/offer letter|offer/i, /compensation|salary|package/i],
     generator: (ctx) => {
-      const actions: Partial<BaseAction>[] = []
+      const actions: Partial<BaseAction>[] = [];
 
       if (/offer/i.test(ctx.message) || /offer/i.test(ctx.aiResponse)) {
         actions.push({
@@ -134,7 +133,7 @@ const SUGGESTION_RULES: SuggestionRule[] = [
               folderPath: '/Hiring/Offer Letters',
             },
           } as CreateDocumentPayload,
-        })
+        });
 
         actions.push({
           type: 'send_email',
@@ -148,10 +147,10 @@ const SUGGESTION_RULES: SuggestionRule[] = [
             body: ctx.aiResponse,
             format: 'html',
           } as SendEmailPayload,
-        })
+        });
       }
 
-      return actions
+      return actions;
     },
   },
 
@@ -160,12 +159,9 @@ const SUGGESTION_RULES: SuggestionRule[] = [
   // ========================================================================
   {
     workflowId: 'performance',
-    triggers: [
-      /review|feedback|evaluation/i,
-      /performance|rating/i,
-    ],
+    triggers: [/review|feedback|evaluation/i, /performance|rating/i],
     generator: (ctx) => {
-      const actions: Partial<BaseAction>[] = []
+      const actions: Partial<BaseAction>[] = [];
 
       // Performance review document
       if (/review/i.test(ctx.message)) {
@@ -185,7 +181,7 @@ const SUGGESTION_RULES: SuggestionRule[] = [
               folderPath: '/Performance Reviews',
             },
           } as CreateDocumentPayload,
-        })
+        });
 
         actions.push({
           type: 'send_email',
@@ -199,7 +195,7 @@ const SUGGESTION_RULES: SuggestionRule[] = [
             body: 'Please see your performance review attached.',
             format: 'html',
           } as SendEmailPayload,
-        })
+        });
       }
 
       // PIP (Performance Improvement Plan)
@@ -220,7 +216,7 @@ const SUGGESTION_RULES: SuggestionRule[] = [
               folderPath: '/Performance/PIPs',
             },
           } as CreateDocumentPayload,
-        })
+        });
 
         actions.push({
           type: 'create_calendar_event',
@@ -233,10 +229,10 @@ const SUGGESTION_RULES: SuggestionRule[] = [
             description: 'Discuss performance improvement plan and expectations',
             attendees: [],
           },
-        })
+        });
       }
 
-      return actions
+      return actions;
     },
   },
 
@@ -245,12 +241,9 @@ const SUGGESTION_RULES: SuggestionRule[] = [
   // ========================================================================
   {
     workflowId: 'analytics',
-    triggers: [
-      /headcount|turnover|attrition/i,
-      /report|dashboard|metrics/i,
-    ],
+    triggers: [/headcount|turnover|attrition/i, /report|dashboard|metrics/i],
     generator: (ctx) => {
-      const actions: Partial<BaseAction>[] = []
+      const actions: Partial<BaseAction>[] = [];
 
       // Export to Google Sheets
       if (/report|export|share/i.test(ctx.message)) {
@@ -268,7 +261,7 @@ const SUGGESTION_RULES: SuggestionRule[] = [
               metric: extractMetric(ctx.message),
             },
           },
-        })
+        });
       }
 
       // Schedule dashboard email
@@ -285,10 +278,10 @@ const SUGGESTION_RULES: SuggestionRule[] = [
             body: 'Your weekly HR metrics dashboard',
             format: 'html',
           } as SendEmailPayload,
-        })
+        });
       }
 
-      return actions
+      return actions;
     },
   },
 
@@ -297,11 +290,9 @@ const SUGGESTION_RULES: SuggestionRule[] = [
   // ========================================================================
   {
     workflowId: 'onboarding',
-    triggers: [
-      /onboarding|new hire|first day/i,
-    ],
+    triggers: [/onboarding|new hire|first day/i],
     generator: (ctx) => {
-      const actions: Partial<BaseAction>[] = []
+      const actions: Partial<BaseAction>[] = [];
 
       actions.push({
         type: 'create_document',
@@ -319,7 +310,7 @@ const SUGGESTION_RULES: SuggestionRule[] = [
             folderPath: '/Onboarding',
           },
         } as CreateDocumentPayload,
-      })
+      });
 
       actions.push({
         type: 'send_slack_message',
@@ -335,7 +326,7 @@ const SUGGESTION_RULES: SuggestionRule[] = [
           },
           text: 'Welcome channel created for new hire onboarding!',
         } as SendSlackMessagePayload,
-      })
+      });
 
       actions.push({
         type: 'send_email',
@@ -346,12 +337,12 @@ const SUGGESTION_RULES: SuggestionRule[] = [
         payload: {
           to: [],
           subject: 'Welcome to [Company]!',
-          body: 'Welcome aboard! Here\'s everything you need to get started.',
+          body: "Welcome aboard! Here's everything you need to get started.",
           format: 'html',
         } as SendEmailPayload,
-      })
+      });
 
-      return actions
+      return actions;
     },
   },
 
@@ -360,11 +351,9 @@ const SUGGESTION_RULES: SuggestionRule[] = [
   // ========================================================================
   {
     workflowId: 'offboarding',
-    triggers: [
-      /offboarding|exit|termination|resignation/i,
-    ],
+    triggers: [/offboarding|exit|termination|resignation/i],
     generator: (ctx) => {
-      const actions: Partial<BaseAction>[] = []
+      const actions: Partial<BaseAction>[] = [];
 
       // Termination letter
       if (/termination|terminate/i.test(ctx.message)) {
@@ -384,7 +373,7 @@ const SUGGESTION_RULES: SuggestionRule[] = [
               folderPath: '/Offboarding/Terminations',
             },
           } as CreateDocumentPayload,
-        })
+        });
       }
 
       // Exit interview
@@ -399,7 +388,7 @@ const SUGGESTION_RULES: SuggestionRule[] = [
           description: 'Exit interview and feedback session',
           attendees: [],
         },
-      })
+      });
 
       // Offboarding checklist
       actions.push({
@@ -414,9 +403,9 @@ const SUGGESTION_RULES: SuggestionRule[] = [
           content: ctx.aiResponse,
           format: 'markdown',
         } as CreateDocumentPayload,
-      })
+      });
 
-      return actions
+      return actions;
     },
   },
 
@@ -425,12 +414,9 @@ const SUGGESTION_RULES: SuggestionRule[] = [
   // ========================================================================
   {
     workflowId: 'compensation',
-    triggers: [
-      /salary|compensation|raise|promotion/i,
-      /equity|bonus|benefits/i,
-    ],
+    triggers: [/salary|compensation|raise|promotion/i, /equity|bonus|benefits/i],
     generator: (ctx) => {
-      const actions: Partial<BaseAction>[] = []
+      const actions: Partial<BaseAction>[] = [];
 
       // Comp adjustment letter
       if (/raise|promotion|adjustment/i.test(ctx.message)) {
@@ -446,7 +432,7 @@ const SUGGESTION_RULES: SuggestionRule[] = [
             content: ctx.aiResponse,
             format: 'html',
           } as CreateDocumentPayload,
-        })
+        });
 
         actions.push({
           type: 'update_database',
@@ -462,10 +448,10 @@ const SUGGESTION_RULES: SuggestionRule[] = [
             },
             where: {},
           },
-        })
+        });
       }
 
-      return actions
+      return actions;
     },
   },
 
@@ -474,12 +460,9 @@ const SUGGESTION_RULES: SuggestionRule[] = [
   // ========================================================================
   {
     workflowId: 'employee_relations',
-    triggers: [
-      /complaint|grievance|investigation/i,
-      /accommodation|ada|disability/i,
-    ],
+    triggers: [/complaint|grievance|investigation/i, /accommodation|ada|disability/i],
     generator: (ctx) => {
-      const actions: Partial<BaseAction>[] = []
+      const actions: Partial<BaseAction>[] = [];
 
       // Investigation documentation
       if (/investigation|complaint/i.test(ctx.message)) {
@@ -499,13 +482,13 @@ const SUGGESTION_RULES: SuggestionRule[] = [
               folderPath: '/Employee Relations/Investigations',
             },
           } as CreateDocumentPayload,
-        })
+        });
       }
 
-      return actions
+      return actions;
     },
   },
-]
+];
 
 // ============================================================================
 // Action Suggestion Engine
@@ -515,24 +498,24 @@ const SUGGESTION_RULES: SuggestionRule[] = [
  * Generate action suggestions based on context
  */
 export function suggestActions(context: SuggestionContext): BaseAction[] {
-  const suggestions: BaseAction[] = []
+  const suggestions: BaseAction[] = [];
 
   // Find matching rules for this workflow
-  const matchingRules = SUGGESTION_RULES.filter(rule => {
+  const matchingRules = SUGGESTION_RULES.filter((rule) => {
     if (rule.workflowId !== context.workflowId && rule.workflowId !== 'general') {
-      return false
+      return false;
     }
 
     // Check if any trigger matches
-    return rule.triggers.some(trigger =>
-      trigger.test(context.message) || trigger.test(context.aiResponse)
-    )
-  })
+    return rule.triggers.some(
+      (trigger) => trigger.test(context.message) || trigger.test(context.aiResponse)
+    );
+  });
 
   // Generate suggestions from matching rules
   for (const rule of matchingRules) {
     try {
-      const partialActions = rule.generator(context)
+      const partialActions = rule.generator(context);
 
       for (const partial of partialActions) {
         // Convert partial action to full BaseAction
@@ -553,20 +536,20 @@ export function suggestActions(context: SuggestionContext): BaseAction[] {
             generatedBy: 'suggestion-engine',
             ...partial.metadata,
           },
-        }
+        };
 
         // Check if user has required permissions
         if (hasRequiredPermissions(action, context.userPermissions)) {
-          suggestions.push(action)
+          suggestions.push(action);
         }
       }
     } catch (error) {
-      console.error(`Failed to generate suggestions for rule:`, error)
+      console.error(`Failed to generate suggestions for rule:`, error);
     }
   }
 
   // Sort by priority
-  return sortByPriority(suggestions)
+  return sortByPriority(suggestions);
 }
 
 // ============================================================================
@@ -574,7 +557,7 @@ export function suggestActions(context: SuggestionContext): BaseAction[] {
 // ============================================================================
 
 function generateActionId(): string {
-  return `action_${Date.now()}_${Math.random().toString(36).substring(7)}`
+  return `action_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 }
 
 function getRequiredPermissions(actionType: string): string[] {
@@ -586,55 +569,53 @@ function getRequiredPermissions(actionType: string): string[] {
     update_database: ['editEmployees'],
     api_call: ['chat'],
     webhook: ['chat', 'takeActions'],
-  }
+  };
 
-  return permissionMap[actionType] || ['chat']
+  return permissionMap[actionType] || ['chat'];
 }
 
 function hasRequiredPermissions(action: BaseAction, userPermissions: string[]): boolean {
   if (!action.requiredPermissions || action.requiredPermissions.length === 0) {
-    return true
+    return true;
   }
 
-  return action.requiredPermissions.every(required =>
-    userPermissions.includes(required)
-  )
+  return action.requiredPermissions.every((required) => userPermissions.includes(required));
 }
 
 function sortByPriority(actions: BaseAction[]): BaseAction[] {
-  const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 }
+  const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
 
   return actions.sort((a, b) => {
-    const aPriority = priorityOrder[a.priority || 'medium']
-    const bPriority = priorityOrder[b.priority || 'medium']
-    return aPriority - bPriority
-  })
+    const aPriority = priorityOrder[a.priority || 'medium'];
+    const bPriority = priorityOrder[b.priority || 'medium'];
+    return aPriority - bPriority;
+  });
 }
 
 function extractTitle(text: string): string {
   // Try to extract a title from markdown headers
-  const match = text.match(/^#\s+(.+)$/m)
+  const match = text.match(/^#\s+(.+)$/m);
   if (match) {
-    return match[1]
+    return match[1];
   }
 
   // Try to extract from "Position:" or "Title:" lines
-  const posMatch = text.match(/(?:Position|Title|Role):\s*(.+)/i)
+  const posMatch = text.match(/(?:Position|Title|Role):\s*(.+)/i);
   if (posMatch) {
-    return posMatch[1].trim()
+    return posMatch[1].trim();
   }
 
   // Default
-  return 'Untitled'
+  return 'Untitled';
 }
 
 function extractMetric(message: string): string {
-  if (/headcount/i.test(message)) return 'headcount'
-  if (/turnover|attrition/i.test(message)) return 'attrition'
-  if (/diversity/i.test(message)) return 'diversity'
-  if (/performance/i.test(message)) return 'performance'
-  if (/engagement/i.test(message)) return 'engagement'
-  return 'general'
+  if (/headcount/i.test(message)) return 'headcount';
+  if (/turnover|attrition/i.test(message)) return 'attrition';
+  if (/diversity/i.test(message)) return 'diversity';
+  if (/performance/i.test(message)) return 'performance';
+  if (/engagement/i.test(message)) return 'engagement';
+  return 'general';
 }
 
 // ============================================================================
@@ -647,13 +628,13 @@ function extractMetric(message: string): string {
 export function generateContextualSuggestions(
   context: SuggestionContext,
   entities?: {
-    employees?: string[]
-    documents?: string[]
-    dates?: string[]
-    emails?: string[]
+    employees?: string[];
+    documents?: string[];
+    dates?: string[];
+    emails?: string[];
   }
 ): BaseAction[] {
-  const suggestions: BaseAction[] = []
+  const suggestions: BaseAction[] = [];
 
   // If employees mentioned, suggest relevant actions
   if (entities?.employees && entities.employees.length > 0) {
@@ -671,7 +652,7 @@ export function generateContextualSuggestions(
         url: `/api/employees/${entities.employees[0]}`,
         method: 'GET',
       },
-    })
+    });
   }
 
   // If documents mentioned, suggest opening them
@@ -690,17 +671,17 @@ export function generateContextualSuggestions(
         url: `/api/documents/${entities.documents[0]}`,
         method: 'GET',
       },
-    })
+    });
   }
 
-  return suggestions
+  return suggestions;
 }
 
 /**
  * Generate follow-up question suggestions
  */
 export function suggestFollowUpQuestions(context: SuggestionContext): string[] {
-  const questions: string[] = []
+  const questions: string[] = [];
 
   switch (context.workflowId) {
     case 'hiring':
@@ -708,40 +689,36 @@ export function suggestFollowUpQuestions(context: SuggestionContext): string[] {
         'Create an interview guide for this position',
         'Draft an offer letter for a candidate',
         'Show me hiring pipeline metrics'
-      )
-      break
+      );
+      break;
 
     case 'performance':
       questions.push(
         'Generate a performance review template',
         'Show me top performers',
         'Analyze performance trends'
-      )
-      break
+      );
+      break;
 
     case 'analytics':
       questions.push(
         'Show me department breakdown',
         'Compare to last quarter',
         'Export to Google Sheets'
-      )
-      break
+      );
+      break;
 
     case 'onboarding':
       questions.push(
         'Create onboarding schedule',
         'Generate welcome email',
         'Set up IT access requests'
-      )
-      break
+      );
+      break;
 
     default:
-      questions.push(
-        'Tell me more',
-        'Show me related data',
-        'What else should I know?'
-      )
+      questions.push('Tell me more', 'Show me related data', 'What else should I know?');
   }
 
-  return questions
+  return questions;
 }

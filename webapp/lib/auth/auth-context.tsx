@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
@@ -75,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return {};
     }
     return {
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     };
   };
 

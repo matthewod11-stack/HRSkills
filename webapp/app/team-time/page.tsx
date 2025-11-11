@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
@@ -19,32 +19,32 @@ const TEAM_LOCATIONS: TimeZone[] = [
     city: 'San Francisco',
     timezone: 'America/Los_Angeles',
     flag: '🇺🇸',
-    isHome: true
+    isHome: true,
   },
   {
     location: 'India',
     city: 'Bangalore',
     timezone: 'Asia/Kolkata',
-    flag: '🇮🇳'
+    flag: '🇮🇳',
   },
   {
     location: 'Brazil',
     city: 'São Paulo',
     timezone: 'America/Sao_Paulo',
-    flag: '🇧🇷'
+    flag: '🇧🇷',
   },
   {
     location: 'Colombia',
     city: 'Bogotá',
     timezone: 'America/Bogota',
-    flag: '🇨🇴'
+    flag: '🇨🇴',
   },
   {
     location: 'Australia',
     city: 'Sydney',
     timezone: 'Australia/Sydney',
-    flag: '🇦🇺'
-  }
+    flag: '🇦🇺',
+  },
 ];
 
 export default function TeamTimePage() {
@@ -54,7 +54,7 @@ export default function TeamTimePage() {
   useEffect(() => {
     const updateTimes = () => {
       const times: Record<string, Date> = {};
-      TEAM_LOCATIONS.forEach(location => {
+      TEAM_LOCATIONS.forEach((location) => {
         times[location.timezone] = new Date();
       });
       setCurrentTimes(times);
@@ -72,7 +72,7 @@ export default function TeamTimePage() {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
-      hour12: true
+      hour12: true,
     });
   };
 
@@ -82,7 +82,7 @@ export default function TeamTimePage() {
       weekday: 'long',
       month: 'long',
       day: 'numeric',
-      year: 'numeric'
+      year: 'numeric',
     });
   };
 
@@ -103,18 +103,32 @@ export default function TeamTimePage() {
   };
 
   const getWorkHourStatus = (date: Date, timezone: string) => {
-    const hour = parseInt(date.toLocaleTimeString('en-US', {
-      timeZone: timezone,
-      hour: '2-digit',
-      hour12: false
-    }));
+    const hour = parseInt(
+      date.toLocaleTimeString('en-US', {
+        timeZone: timezone,
+        hour: '2-digit',
+        hour12: false,
+      })
+    );
 
     if (hour >= 9 && hour < 18) {
-      return { status: 'Working Hours', color: 'from-green-500 to-emerald-500', textColor: 'text-green-400' };
+      return {
+        status: 'Working Hours',
+        color: 'from-green-500 to-emerald-500',
+        textColor: 'text-green-400',
+      };
     } else if ((hour >= 18 && hour < 22) || (hour >= 6 && hour < 9)) {
-      return { status: 'Outside Hours', color: 'from-yellow-500 to-orange-500', textColor: 'text-yellow-400' };
+      return {
+        status: 'Outside Hours',
+        color: 'from-yellow-500 to-orange-500',
+        textColor: 'text-yellow-400',
+      };
     } else {
-      return { status: 'Sleeping Hours', color: 'from-purple-500 to-indigo-500', textColor: 'text-purple-400' };
+      return {
+        status: 'Sleeping Hours',
+        color: 'from-purple-500 to-indigo-500',
+        textColor: 'text-purple-400',
+      };
     }
   };
 
@@ -162,9 +176,10 @@ export default function TeamTimePage() {
                 transition={{ delay: index * 0.1 }}
                 className="relative group"
               >
-                <div className="absolute inset-0 bg-gradient-to-br opacity-20 group-hover:opacity-30 rounded-2xl transition-opacity blur-xl"
+                <div
+                  className="absolute inset-0 bg-gradient-to-br opacity-20 group-hover:opacity-30 rounded-2xl transition-opacity blur-xl"
                   style={{
-                    background: `linear-gradient(135deg, ${workStatus.color.split(' ')[1]} 0%, ${workStatus.color.split(' ')[3]} 100%)`
+                    background: `linear-gradient(135deg, ${workStatus.color.split(' ')[1]} 0%, ${workStatus.color.split(' ')[3]} 100%)`,
                   }}
                 />
 
@@ -188,7 +203,9 @@ export default function TeamTimePage() {
                         </p>
                       </div>
                     </div>
-                    <div className={`px-3 py-1.5 bg-gradient-to-br ${workStatus.color} bg-opacity-20 border border-white/20 rounded-lg`}>
+                    <div
+                      className={`px-3 py-1.5 bg-gradient-to-br ${workStatus.color} bg-opacity-20 border border-white/20 rounded-lg`}
+                    >
                       <p className={`text-xs font-medium ${workStatus.textColor}`}>
                         {workStatus.status}
                       </p>
@@ -201,7 +218,10 @@ export default function TeamTimePage() {
                       <Clock className="w-5 h-5 text-gray-400" />
                       <span className="text-sm text-gray-400">Current Time</span>
                     </div>
-                    <div className="text-5xl font-mono font-bold tracking-tight mb-2" suppressHydrationWarning>
+                    <div
+                      className="text-5xl font-mono font-bold tracking-tight mb-2"
+                      suppressHydrationWarning
+                    >
                       {formatTime(currentTime, location.timezone)}
                     </div>
                     <p className="text-sm text-gray-400" suppressHydrationWarning>
@@ -213,7 +233,10 @@ export default function TeamTimePage() {
                   {!location.isHome && (
                     <div className="pt-4 border-t border-white/10">
                       <p className="text-sm text-gray-400">
-                        Offset from home: <span className="text-white font-medium">{getTimeOffset(location.timezone)}</span>
+                        Offset from home:{' '}
+                        <span className="text-white font-medium">
+                          {getTimeOffset(location.timezone)}
+                        </span>
                       </p>
                     </div>
                   )}

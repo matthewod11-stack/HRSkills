@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
@@ -195,12 +195,19 @@ export function DocumentEditorPanel({
   onExport,
 }: DocumentEditorPanelProps) {
   const [editMode, setEditMode] = useState(false);
-  const defaultTemplate = useMemo(() => getDefaultDocumentTemplate(documentType, employeeName), [documentType, employeeName]);
-  const [editedContent, setEditedContent] = useState(() => resolveInitialContent(content, defaultTemplate));
+  const defaultTemplate = useMemo(
+    () => getDefaultDocumentTemplate(documentType, employeeName),
+    [documentType, employeeName]
+  );
+  const [editedContent, setEditedContent] = useState(() =>
+    resolveInitialContent(content, defaultTemplate)
+  );
   const [copied, setCopied] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
-  const [lastSyncedContent, setLastSyncedContent] = useState(() => resolveInitialContent(content, defaultTemplate));
+  const [lastSyncedContent, setLastSyncedContent] = useState(() =>
+    resolveInitialContent(content, defaultTemplate)
+  );
 
   useEffect(() => {
     const resolved = resolveInitialContent(content, defaultTemplate);
@@ -267,9 +274,7 @@ export function DocumentEditorPanel({
           <FileText className="w-5 h-5 text-emerald-400" />
           <div>
             <h4 className="font-medium text-emerald-100">{getDocumentTitle(documentType)}</h4>
-            {employeeName && (
-              <p className="text-xs text-emerald-200/70">For: {employeeName}</p>
-            )}
+            {employeeName && <p className="text-xs text-emerald-200/70">For: {employeeName}</p>}
           </div>
         </div>
 
@@ -328,11 +333,7 @@ export function DocumentEditorPanel({
         <div className="h-full bg-white text-gray-900 rounded-xl border border-gray-200 shadow-lg">
           {editMode ? (
             /* Edit Mode - Textarea */
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="h-full"
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full">
               <textarea
                 value={editedContent}
                 onChange={(e) => {
@@ -345,11 +346,7 @@ export function DocumentEditorPanel({
             </motion.div>
           ) : (
             /* Preview Mode - Rendered Markdown */
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="px-6 py-5"
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="px-6 py-5">
               <div className="prose prose-neutral prose-sm max-w-none text-gray-900">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {editedContent || '*No content generated yet*'}
@@ -363,9 +360,7 @@ export function DocumentEditorPanel({
       {/* Footer Info */}
       <div className="mt-4 pt-4 border-t border-emerald-500/20">
         <div className="flex items-center justify-between text-xs text-emerald-100/80">
-          <div>
-            {editMode ? 'Edit mode - Changes are local' : 'Preview mode'}
-          </div>
+          <div>{editMode ? 'Edit mode - Changes are local' : 'Preview mode'}</div>
           <div>
             {editedContent.split('\n').length} lines • {editedContent.length} characters
           </div>

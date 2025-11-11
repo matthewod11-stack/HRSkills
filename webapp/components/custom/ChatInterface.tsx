@@ -1,8 +1,23 @@
-'use client'
+'use client';
 
 import { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Bot, User, Sparkles, Zap, FileText, Users as UsersIcon, Edit3, Copy, Check, Shield, AlertTriangle, FileUp, RotateCcw } from 'lucide-react';
+import {
+  Send,
+  Bot,
+  User,
+  Sparkles,
+  Zap,
+  FileText,
+  Users as UsersIcon,
+  Edit3,
+  Copy,
+  Check,
+  Shield,
+  AlertTriangle,
+  FileUp,
+  RotateCcw,
+} from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { detectSensitivePII } from '@/lib/pii-detector';
@@ -69,7 +84,7 @@ function sanitizePipContent(rawContent: string): string {
   const closingPhrases = [
     'give me those details',
     'share those details',
-    'once you provide the details'
+    'once you provide the details',
   ];
 
   for (const phrase of closingPhrases) {
@@ -86,10 +101,12 @@ function sanitizePipContent(rawContent: string): string {
     '## performance issues',
     '## improvement goals',
     '## support & resources',
-    '## check-in schedule'
+    '## check-in schedule',
   ];
 
-  const hasAllSections = requiredSections.every(section => pipBody.toLowerCase().includes(section));
+  const hasAllSections = requiredSections.every((section) =>
+    pipBody.toLowerCase().includes(section)
+  );
 
   if (!hasAllSections) {
     return '';
@@ -113,8 +130,8 @@ function enhanceContextPanelData(panelData: ContextPanelData | null): ContextPan
         ...panelData,
         data: {
           ...panelData.data,
-          content: ''
-        }
+          content: '',
+        },
       };
     }
 
@@ -122,8 +139,8 @@ function enhanceContextPanelData(panelData: ContextPanelData | null): ContextPan
       ...panelData,
       data: {
         ...panelData.data,
-        content: sanitized
-      }
+        content: sanitized,
+      },
     };
   }
 
@@ -150,7 +167,7 @@ const MessageItem = memo(function MessageItem({
   onSaveEdit,
   onCopy,
   onExportToGoogleDocs,
-  onFollowUp
+  onFollowUp,
 }: {
   message: Message;
   conversationId: string;
@@ -179,23 +196,23 @@ const MessageItem = memo(function MessageItem({
       transition={{ duration: 0.3 }}
       className={`flex gap-3 ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
     >
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-glow-accent ${
-        message.role === 'user'
-          ? 'bg-gradient-to-br from-success to-success'
-          : 'bg-gradient-to-br from-violet to-violet-light'
-      }`}>
-        {message.role === 'user' ? (
-          <User className="w-5 h-5" />
-        ) : (
-          <Bot className="w-5 h-5" />
-        )}
+      <div
+        className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-glow-accent ${
+          message.role === 'user'
+            ? 'bg-gradient-to-br from-success to-success'
+            : 'bg-gradient-to-br from-violet to-violet-light'
+        }`}
+      >
+        {message.role === 'user' ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
       </div>
       <div className={`flex-1 ${message.role === 'user' ? 'flex justify-end' : ''}`}>
-        <div className={`max-w-[80%] p-4 rounded-2xl transition-premium ${
-          message.role === 'user'
-            ? 'bg-gradient-to-br from-success/20 to-success/10 border border-success/50'
-            : 'bg-card border border-border shadow-soft'
-        }`}>
+        <div
+          className={`max-w-[80%] p-4 rounded-2xl transition-premium ${
+            message.role === 'user'
+              ? 'bg-gradient-to-br from-success/20 to-success/10 border border-success/50'
+              : 'bg-card border border-border shadow-soft'
+          }`}
+        >
           {message.isEditing ? (
             <div className="space-y-2">
               <textarea
@@ -238,43 +255,43 @@ const MessageItem = memo(function MessageItem({
                   />
                 </div>
               )}
-              {message.suggestedActions && message.suggestedActions.length > 0 && message.role === 'assistant' && (
-                <div className="mb-3">
-                  <ActionButtons
-                    actions={message.suggestedActions}
-                    conversationId={conversationId}
-                    workflowId={message.detectedWorkflow || 'general'}
-                  />
-                </div>
-              )}
-              {message.suggestedFollowUps && message.suggestedFollowUps.length > 0 && message.role === 'assistant' && (
-                <div className="mb-3">
-                  <p className="text-xs text-secondary font-medium mb-2">
-                    Suggested follow-ups
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {message.suggestedFollowUps.map((followUp, index) => (
-                      <button
-                        key={index}
-                        onClick={() => onFollowUp(followUp)}
-                        className="px-3 py-1 bg-white/5 hover:bg-white/10 border border-white/20 rounded-lg text-xs transition-premium"
-                      >
-                        {followUp}
-                      </button>
-                    ))}
+              {message.suggestedActions &&
+                message.suggestedActions.length > 0 &&
+                message.role === 'assistant' && (
+                  <div className="mb-3">
+                    <ActionButtons
+                      actions={message.suggestedActions}
+                      conversationId={conversationId}
+                      workflowId={message.detectedWorkflow || 'general'}
+                    />
                   </div>
-                </div>
-              )}
+                )}
+              {message.suggestedFollowUps &&
+                message.suggestedFollowUps.length > 0 &&
+                message.role === 'assistant' && (
+                  <div className="mb-3">
+                    <p className="text-xs text-secondary font-medium mb-2">Suggested follow-ups</p>
+                    <div className="flex flex-wrap gap-2">
+                      {message.suggestedFollowUps.map((followUp, index) => (
+                        <button
+                          key={index}
+                          onClick={() => onFollowUp(followUp)}
+                          className="px-3 py-1 bg-white/5 hover:bg-white/10 border border-white/20 rounded-lg text-xs transition-premium"
+                        >
+                          {followUp}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               <div className="prose prose-invert prose-sm max-w-none">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {message.content}
-                </ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
               </div>
               <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
                 <p className="text-xs text-secondary">
                   {message.timestamp.toLocaleTimeString('en-US', {
                     hour: '2-digit',
-                    minute: '2-digit'
+                    minute: '2-digit',
                   })}
                 </p>
                 {message.role === 'assistant' && (
@@ -326,11 +343,16 @@ export function ChatInterface({ onContextPanelChange }: ChatInterfaceProps = {})
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [conversationId, setConversationId] = useState<string>(() => createConversationId());
-  const [piiWarning, setPiiWarning] = useState<{ show: boolean; types: string[]; message: string; pendingText: string }>({
+  const [piiWarning, setPiiWarning] = useState<{
+    show: boolean;
+    types: string[];
+    message: string;
+    pendingText: string;
+  }>({
     show: false,
     types: [],
     message: '',
-    pendingText: ''
+    pendingText: '',
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -355,7 +377,7 @@ export function ChatInterface({ onContextPanelChange }: ChatInterfaceProps = {})
           show: true,
           types: piiResult.types,
           message: piiResult.message,
-          pendingText: messageText
+          pendingText: messageText,
         });
         return; // Don't send yet, wait for user decision
       }
@@ -373,9 +395,9 @@ export function ChatInterface({ onContextPanelChange }: ChatInterfaceProps = {})
     setInput('');
     setIsTyping(true);
 
-    const conversationHistoryPayload = historyWithNewMessage.slice(-4).map(m => ({
+    const conversationHistoryPayload = historyWithNewMessage.slice(-4).map((m) => ({
       role: m.role,
-      content: m.content
+      content: m.content,
     }));
 
     const contextDetection = detectContext(messageText);
@@ -385,13 +407,13 @@ export function ChatInterface({ onContextPanelChange }: ChatInterfaceProps = {})
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            ...getAuthHeaders()
+            ...getAuthHeaders(),
           },
           body: JSON.stringify({
             message: messageText,
             sessionId: conversationId,
-            conversationHistory: conversationHistoryPayload
-          })
+            conversationHistory: conversationHistoryPayload,
+          }),
         });
 
         const result = await response.json();
@@ -407,7 +429,7 @@ export function ChatInterface({ onContextPanelChange }: ChatInterfaceProps = {})
           timestamp: new Date(),
           detectedWorkflow: 'analytics',
           workflowConfidence: 100,
-          suggestedFollowUps: result.data.suggestedFollowUps || []
+          suggestedFollowUps: result.data.suggestedFollowUps || [],
         };
 
         setMessages((prev) => [...prev, assistantMessage]);
@@ -415,20 +437,23 @@ export function ChatInterface({ onContextPanelChange }: ChatInterfaceProps = {})
         if (onContextPanelChange) {
           onContextPanelChange(
             enhanceContextPanelData({
-            type: 'analytics',
-            title: 'Analytics Insight',
-            config: {
-              chartType: result.data.chartConfig?.type || contextDetection.panelData.config?.chartType || 'bar',
-              filters: contextDetection.panelData.config?.filters
-            },
-            data: {
-              metric: contextDetection.panelData.data?.metric || 'headcount',
-              chartConfig: result.data.chartConfig,
-              analysisSummary: result.data.content,
-              suggestedFollowUps: result.data.suggestedFollowUps || [],
-              metadata: result.data.metadata
-            }
-          })
+              type: 'analytics',
+              title: 'Analytics Insight',
+              config: {
+                chartType:
+                  result.data.chartConfig?.type ||
+                  contextDetection.panelData.config?.chartType ||
+                  'bar',
+                filters: contextDetection.panelData.config?.filters,
+              },
+              data: {
+                metric: contextDetection.panelData.data?.metric || 'headcount',
+                chartConfig: result.data.chartConfig,
+                analysisSummary: result.data.content,
+                suggestedFollowUps: result.data.suggestedFollowUps || [],
+                metadata: result.data.metadata,
+              },
+            })
           );
         }
       } catch (error: any) {
@@ -452,13 +477,13 @@ export function ChatInterface({ onContextPanelChange }: ChatInterfaceProps = {})
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders()
+          ...getAuthHeaders(),
         },
         body: JSON.stringify({
           message: messageText,
           conversationId,
-          history: historyWithNewMessage.map(m => ({ role: m.role, content: m.content }))
-        })
+          history: historyWithNewMessage.map((m) => ({ role: m.role, content: m.content })),
+        }),
       });
 
       const data = await response.json();
@@ -498,7 +523,7 @@ export function ChatInterface({ onContextPanelChange }: ChatInterfaceProps = {})
       const errorMessage: Message = {
         id: messages.length + 2,
         role: 'assistant',
-        content: "Sorry, I encountered an error. Please try again.",
+        content: 'Sorry, I encountered an error. Please try again.',
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -531,27 +556,29 @@ export function ChatInterface({ onContextPanelChange }: ChatInterfaceProps = {})
 
   // Memoize callbacks to prevent MessageItem re-renders
   const toggleEdit = useCallback((messageId: number) => {
-    setMessages(prev => prev.map(msg =>
-      msg.id === messageId
-        ? { ...msg, isEditing: !msg.isEditing, editedContent: msg.editedContent || msg.content }
-        : msg
-    ));
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.id === messageId
+          ? { ...msg, isEditing: !msg.isEditing, editedContent: msg.editedContent || msg.content }
+          : msg
+      )
+    );
   }, []);
 
   const updateEditedContent = useCallback((messageId: number, content: string) => {
-    setMessages(prev => prev.map(msg =>
-      msg.id === messageId
-        ? { ...msg, editedContent: content }
-        : msg
-    ));
+    setMessages((prev) =>
+      prev.map((msg) => (msg.id === messageId ? { ...msg, editedContent: content } : msg))
+    );
   }, []);
 
   const saveEdit = useCallback((messageId: number) => {
-    setMessages(prev => prev.map(msg =>
-      msg.id === messageId
-        ? { ...msg, content: msg.editedContent || msg.content, isEditing: false }
-        : msg
-    ));
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.id === messageId
+          ? { ...msg, content: msg.editedContent || msg.content, isEditing: false }
+          : msg
+      )
+    );
   }, []);
 
   const copyToClipboard = useCallback(async (content: string) => {
@@ -563,91 +590,95 @@ export function ChatInterface({ onContextPanelChange }: ChatInterfaceProps = {})
     }
   }, []);
 
-  const exportToGoogleDocs = useCallback(async (message: Message) => {
-    try {
-      // Detect document type from the message content or detected workflow
-      let documentType = 'Document';
+  const exportToGoogleDocs = useCallback(
+    async (message: Message) => {
+      try {
+        // Detect document type from the message content or detected workflow
+        let documentType = 'Document';
 
-      if (message.detectedWorkflow) {
-        const workflowMapping: { [key: string]: string } = {
-          'hiring': 'Job Description',
-          'performance': 'Performance Document',
-          'onboarding': 'Onboarding Plan',
-          'offboarding': 'Exit Document',
-          'compliance': 'Policy Document',
-          'employee_relations': 'ER Document',
-          'compensation': 'Compensation Document',
-          'analytics': 'Analytics Report'
-        };
-        documentType = workflowMapping[message.detectedWorkflow] || 'Document';
-      }
-
-      // Try to extract document type from content
-      const content = message.content.toLowerCase();
-      if (content.includes('offer letter') || content.includes('offer of employment')) {
-        documentType = 'Offer Letter';
-      } else if (content.includes('performance improvement plan') || content.includes('pip')) {
-        documentType = 'PIP';
-      } else if (content.includes('termination') || content.includes('separation')) {
-        documentType = 'Termination Letter';
-      } else if (content.includes('reference letter')) {
-        documentType = 'Reference Letter';
-      } else if (content.includes('promotion')) {
-        documentType = 'Promotion Letter';
-      } else if (content.includes('transfer')) {
-        documentType = 'Transfer Letter';
-      } else if (content.includes('job description') || content.includes('jd')) {
-        documentType = 'Job Description';
-      }
-
-      // Generate title from timestamp
-      const timestamp = message.timestamp || new Date();
-      const title = `${documentType}_${timestamp.toISOString().split('T')[0]}`;
-
-      // Call export API
-      const response = await fetch('/api/documents/export-to-google-docs', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeaders()
-        },
-        body: JSON.stringify({
-          title,
-          content: message.content,
-          documentType,
-          metadata: {
-            date: timestamp.toISOString().split('T')[0]
-          }
-        })
-      });
-
-      const data = await response.json();
-
-      // Handle authentication required
-      if (data.needsAuth) {
-        const shouldConnect = confirm('You need to connect your Google account to export documents. You will be redirected to Google. Connect now?');
-        if (shouldConnect) {
-          // Use same tab to avoid popup blockers
-          window.location.href = '/api/auth/google';
+        if (message.detectedWorkflow) {
+          const workflowMapping: { [key: string]: string } = {
+            hiring: 'Job Description',
+            performance: 'Performance Document',
+            onboarding: 'Onboarding Plan',
+            offboarding: 'Exit Document',
+            compliance: 'Policy Document',
+            employee_relations: 'ER Document',
+            compensation: 'Compensation Document',
+            analytics: 'Analytics Report',
+          };
+          documentType = workflowMapping[message.detectedWorkflow] || 'Document';
         }
-        return;
+
+        // Try to extract document type from content
+        const content = message.content.toLowerCase();
+        if (content.includes('offer letter') || content.includes('offer of employment')) {
+          documentType = 'Offer Letter';
+        } else if (content.includes('performance improvement plan') || content.includes('pip')) {
+          documentType = 'PIP';
+        } else if (content.includes('termination') || content.includes('separation')) {
+          documentType = 'Termination Letter';
+        } else if (content.includes('reference letter')) {
+          documentType = 'Reference Letter';
+        } else if (content.includes('promotion')) {
+          documentType = 'Promotion Letter';
+        } else if (content.includes('transfer')) {
+          documentType = 'Transfer Letter';
+        } else if (content.includes('job description') || content.includes('jd')) {
+          documentType = 'Job Description';
+        }
+
+        // Generate title from timestamp
+        const timestamp = message.timestamp || new Date();
+        const title = `${documentType}_${timestamp.toISOString().split('T')[0]}`;
+
+        // Call export API
+        const response = await fetch('/api/documents/export-to-google-docs', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders(),
+          },
+          body: JSON.stringify({
+            title,
+            content: message.content,
+            documentType,
+            metadata: {
+              date: timestamp.toISOString().split('T')[0],
+            },
+          }),
+        });
+
+        const data = await response.json();
+
+        // Handle authentication required
+        if (data.needsAuth) {
+          const shouldConnect = confirm(
+            'You need to connect your Google account to export documents. You will be redirected to Google. Connect now?'
+          );
+          if (shouldConnect) {
+            // Use same tab to avoid popup blockers
+            window.location.href = '/api/auth/google';
+          }
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error(data.error || data.message || 'Export failed');
+        }
+
+        // Open the document in a new tab
+        window.open(data.editLink, '_blank');
+
+        // Success!
+        console.log('Document exported successfully:', data.webViewLink);
+      } catch (error: any) {
+        console.error('Failed to export to Google Docs:', error);
+        alert(`Failed to export document: ${error.message}`);
       }
-
-      if (!response.ok) {
-        throw new Error(data.error || data.message || 'Export failed');
-      }
-
-      // Open the document in a new tab
-      window.open(data.editLink, '_blank');
-
-      // Success!
-      console.log('Document exported successfully:', data.webViewLink);
-
-    } catch (error: any) {
-      console.error('Failed to export to Google Docs:', error);
-      alert(`Failed to export document: ${error.message}`);
-    }
-  }, [getAuthHeaders]);
+    },
+    [getAuthHeaders]
+  );
 
   const handleResetChat = () => {
     setMessages(initialMessages);
@@ -685,14 +716,16 @@ export function ChatInterface({ onContextPanelChange }: ChatInterfaceProps = {})
             </div>
 
             <div className="flex items-center gap-3">
-              {messages.length > 0 && messages[messages.length - 1].detectedWorkflow && messages[messages.length - 1].detectedWorkflow !== 'general' && (
-                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-violet/10 border border-violet/20 rounded-lg">
-                  <Sparkles className="w-3.5 h-3.5 text-violet" />
-                  <span className="text-xs font-medium text-violet capitalize">
-                    {messages[messages.length - 1].detectedWorkflow?.replace('_', ' ')} workflow
-                  </span>
-                </div>
-              )}
+              {messages.length > 0 &&
+                messages[messages.length - 1].detectedWorkflow &&
+                messages[messages.length - 1].detectedWorkflow !== 'general' && (
+                  <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-violet/10 border border-violet/20 rounded-lg">
+                    <Sparkles className="w-3.5 h-3.5 text-violet" />
+                    <span className="text-xs font-medium text-violet capitalize">
+                      {messages[messages.length - 1].detectedWorkflow?.replace('_', ' ')} workflow
+                    </span>
+                  </div>
+                )}
               <motion.button
                 onClick={handleResetChat}
                 whileHover={{ scale: 1.05 }}
@@ -858,12 +891,11 @@ export function ChatInterface({ onContextPanelChange }: ChatInterfaceProps = {})
                   </p>
                   <div className="bg-card border border-error/30 rounded-lg p-3 mb-3">
                     <p className="text-sm font-semibold text-error">
-                      Detected: <span className="text-foreground">{piiWarning.types.join(', ')}</span>
+                      Detected:{' '}
+                      <span className="text-foreground">{piiWarning.types.join(', ')}</span>
                     </p>
                   </div>
-                  <p className="text-sm text-secondary font-medium">
-                    {piiWarning.message}
-                  </p>
+                  <p className="text-sm text-secondary font-medium">{piiWarning.message}</p>
                 </div>
               </div>
 

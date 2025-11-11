@@ -70,9 +70,7 @@ export async function verifyToken(token: string): Promise<SimpleAuthResult> {
 /**
  * Generate JWT token for authenticated user
  */
-export async function generateToken(
-  user: Omit<SimpleAuthUser, 'iat' | 'exp'>
-): Promise<string> {
+export async function generateToken(user: Omit<SimpleAuthUser, 'iat' | 'exp'>): Promise<string> {
   return new SignJWT({ ...user } as any)
     .setProtectedHeader({ alg: JWT_ALGORITHM })
     .setIssuedAt()

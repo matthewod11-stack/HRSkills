@@ -8,8 +8,8 @@ function normalizeColumnName(name: string): string {
   return name
     .toLowerCase()
     .trim()
-    .replace(/[_\-\s]+/g, ' ')  // Replace underscores, hyphens, spaces with single space
-    .replace(/[^\w\s]/g, '');    // Remove special characters
+    .replace(/[_\-\s]+/g, ' ') // Replace underscores, hyphens, spaces with single space
+    .replace(/[^\w\s]/g, ''); // Remove special characters
 }
 
 /**
@@ -19,27 +19,25 @@ function detectDataType(values: any[]): string {
   if (values.length === 0) return 'string';
 
   // Remove null/undefined values
-  const validValues = values.filter(v => v !== null && v !== undefined && v !== '');
+  const validValues = values.filter((v) => v !== null && v !== undefined && v !== '');
   if (validValues.length === 0) return 'string';
 
   // Check if all values are numbers
-  const allNumbers = validValues.every(v => !isNaN(Number(v)));
+  const allNumbers = validValues.every((v) => !isNaN(Number(v)));
   if (allNumbers) return 'number';
 
   // Check if all values are booleans
   const booleanValues = ['true', 'false', 'yes', 'no', '1', '0', 'y', 'n'];
-  const allBooleans = validValues.every(v =>
-    booleanValues.includes(String(v).toLowerCase())
-  );
+  const allBooleans = validValues.every((v) => booleanValues.includes(String(v).toLowerCase()));
   if (allBooleans) return 'boolean';
 
   // Check if values look like dates
   const datePattern = /^\d{4}-\d{2}-\d{2}|^\d{1,2}\/\d{1,2}\/\d{2,4}|^\d{2}-\d{2}-\d{4}/;
-  const allDates = validValues.every(v => datePattern.test(String(v)));
+  const allDates = validValues.every((v) => datePattern.test(String(v)));
   if (allDates) return 'date';
 
   // Check if values look like arrays (comma-separated)
-  const allArrays = validValues.every(v => String(v).includes(',') || String(v).includes(';'));
+  const allArrays = validValues.every((v) => String(v).includes(',') || String(v).includes(';'));
   if (allArrays) return 'array';
 
   return 'string';
@@ -58,9 +56,7 @@ export function mapColumnsToCanonical(
     const normalized = normalizeColumnName(sourceColumn);
 
     // Extract sample values for this column
-    const sampleValues = sampleData
-      .map(row => row[sourceColumn])
-      .slice(0, 10);
+    const sampleValues = sampleData.map((row) => row[sourceColumn]).slice(0, 10);
 
     const detectedType = detectDataType(sampleValues);
 
@@ -100,13 +96,11 @@ export function mapColumnsToCanonical(
     const MIN_CONFIDENCE = 0.7;
     const mapping: ColumnMapping = {
       source_column: sourceColumn,
-      canonical_field: (bestMatch && bestMatch.confidence >= MIN_CONFIDENCE)
-        ? bestMatch.field
-        : null,
+      canonical_field: bestMatch && bestMatch.confidence >= MIN_CONFIDENCE ? bestMatch.field : null,
       confidence: bestMatch ? bestMatch.confidence : 0,
       is_custom: !bestMatch || bestMatch.confidence < MIN_CONFIDENCE,
       data_type: detectedType,
-      sample_values: sampleValues.slice(0, 3)
+      sample_values: sampleValues.slice(0, 3),
     };
 
     mappings.push(mapping);
@@ -119,7 +113,7 @@ export function mapColumnsToCanonical(
  * Validate employee ID exists in data
  */
 export function findEmployeeIdColumn(mappings: ColumnMapping[]): string | null {
-  const employeeIdMapping = mappings.find(m => m.canonical_field === 'employee_id');
+  const employeeIdMapping = mappings.find((m) => m.canonical_field === 'employee_id');
   return employeeIdMapping?.source_column || null;
 }
 
@@ -136,7 +130,7 @@ export function splitFullName(fullName: string): { first_name: string; last_name
   } else {
     return {
       first_name: parts[0],
-      last_name: parts.slice(1).join(' ')
+      last_name: parts.slice(1).join(' '),
     };
   }
 }
@@ -205,8 +199,16 @@ export function generateEmployeeId(): string {
 export function inferEmployeeId(row: Record<string, any>): string | null {
   // Try common patterns
   const possibleIdFields = [
-    'employee_id', 'employeeid', 'emp_id', 'empid', 'id',
-    'hris_id', 'hrisid', 'user_id', 'userid', 'email'
+    'employee_id',
+    'employeeid',
+    'emp_id',
+    'empid',
+    'id',
+    'hris_id',
+    'hrisid',
+    'user_id',
+    'userid',
+    'email',
   ];
 
   for (const field of possibleIdFields) {

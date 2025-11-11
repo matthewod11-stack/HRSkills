@@ -88,9 +88,7 @@ export async function calculateAttrition(
 
   // Calculate overall attrition rate
   const attritionRate =
-    avgHeadcount > 0
-      ? parseFloat(((totalTerminations / avgHeadcount) * 100).toFixed(1))
-      : 0;
+    avgHeadcount > 0 ? parseFloat(((totalTerminations / avgHeadcount) * 100).toFixed(1)) : 0;
 
   // For now, we don't have voluntary/involuntary data in the schema
   // This would require adding a termination_type field
@@ -102,21 +100,13 @@ export async function calculateAttrition(
   };
 
   // Attrition by department
-  const byDepartment = await calculateAttritionByField(
-    'department',
-    startDate,
-    endDate
-  );
+  const byDepartment = await calculateAttritionByField('department', startDate, endDate);
 
   // Attrition by level
   const byLevel = await calculateAttritionByField('level', startDate, endDate);
 
   // Attrition by location
-  const byLocation = await calculateAttritionByField(
-    'location',
-    startDate,
-    endDate
-  );
+  const byLocation = await calculateAttritionByField('location', startDate, endDate);
 
   // Demographics breakdown
   const demographics = await calculateDemographicAttrition(startDate, endDate);
@@ -182,14 +172,14 @@ async function calculateAttritionByField(
 
   // Create maps for easy lookup
   const activeMap = new Map<string, number>();
-  activeByField.forEach(row => {
+  activeByField.forEach((row) => {
     if (row.fieldValue) {
       activeMap.set(row.fieldValue, row.count);
     }
   });
 
   const terminatedMap = new Map<string, number>();
-  terminatedByField.forEach(row => {
+  terminatedByField.forEach((row) => {
     if (row.fieldValue) {
       terminatedMap.set(row.fieldValue, row.count);
     }
@@ -198,7 +188,7 @@ async function calculateAttritionByField(
   // Combine all field values
   const allValues = new Set([...activeMap.keys(), ...terminatedMap.keys()]);
 
-  allValues.forEach(value => {
+  allValues.forEach((value) => {
     const activeCount = activeMap.get(value) || 0;
     const terminatedCount = terminatedMap.get(value) || 0;
     const avgHeadcount = activeCount + terminatedCount;
@@ -206,9 +196,7 @@ async function calculateAttritionByField(
     result[value] = {
       terminations: terminatedCount,
       attritionRate:
-        avgHeadcount > 0
-          ? parseFloat(((terminatedCount / avgHeadcount) * 100).toFixed(1))
-          : 0,
+        avgHeadcount > 0 ? parseFloat(((terminatedCount / avgHeadcount) * 100).toFixed(1)) : 0,
     };
   });
 
@@ -253,31 +241,25 @@ async function calculateDemographicAttrition(
   const byGender: Record<string, { terminations: number; rate: number }> = {};
 
   const activeGenderMap = new Map<string, number>();
-  activeByGender.forEach(row => {
+  activeByGender.forEach((row) => {
     if (row.gender) activeGenderMap.set(row.gender, row.count);
   });
 
   const terminatedGenderMap = new Map<string, number>();
-  terminatedByGender.forEach(row => {
+  terminatedByGender.forEach((row) => {
     if (row.gender) terminatedGenderMap.set(row.gender, row.count);
   });
 
-  const allGenders = new Set([
-    ...activeGenderMap.keys(),
-    ...terminatedGenderMap.keys(),
-  ]);
+  const allGenders = new Set([...activeGenderMap.keys(), ...terminatedGenderMap.keys()]);
 
-  allGenders.forEach(gender => {
+  allGenders.forEach((gender) => {
     const activeCount = activeGenderMap.get(gender) || 0;
     const terminatedCount = terminatedGenderMap.get(gender) || 0;
     const avgHeadcount = activeCount + terminatedCount;
 
     byGender[gender] = {
       terminations: terminatedCount,
-      rate:
-        avgHeadcount > 0
-          ? parseFloat(((terminatedCount / avgHeadcount) * 100).toFixed(1))
-          : 0,
+      rate: avgHeadcount > 0 ? parseFloat(((terminatedCount / avgHeadcount) * 100).toFixed(1)) : 0,
     };
   });
 
@@ -309,28 +291,25 @@ async function calculateDemographicAttrition(
   const byRace: Record<string, { terminations: number; rate: number }> = {};
 
   const activeRaceMap = new Map<string, number>();
-  activeByRace.forEach(row => {
+  activeByRace.forEach((row) => {
     if (row.race) activeRaceMap.set(row.race, row.count);
   });
 
   const terminatedRaceMap = new Map<string, number>();
-  terminatedByRace.forEach(row => {
+  terminatedByRace.forEach((row) => {
     if (row.race) terminatedRaceMap.set(row.race, row.count);
   });
 
   const allRaces = new Set([...activeRaceMap.keys(), ...terminatedRaceMap.keys()]);
 
-  allRaces.forEach(race => {
+  allRaces.forEach((race) => {
     const activeCount = activeRaceMap.get(race) || 0;
     const terminatedCount = terminatedRaceMap.get(race) || 0;
     const avgHeadcount = activeCount + terminatedCount;
 
     byRace[race] = {
       terminations: terminatedCount,
-      rate:
-        avgHeadcount > 0
-          ? parseFloat(((terminatedCount / avgHeadcount) * 100).toFixed(1))
-          : 0,
+      rate: avgHeadcount > 0 ? parseFloat(((terminatedCount / avgHeadcount) * 100).toFixed(1)) : 0,
     };
   });
 
@@ -382,9 +361,7 @@ export async function getAttritionByDepartment(
   return {
     terminations,
     attritionRate:
-      avgHeadcount > 0
-        ? parseFloat(((terminations / avgHeadcount) * 100).toFixed(1))
-        : 0,
+      avgHeadcount > 0 ? parseFloat(((terminations / avgHeadcount) * 100).toFixed(1)) : 0,
   };
 }
 

@@ -64,10 +64,7 @@ describe('Performance Monitoring System', () => {
     it('should log metrics in development mode', () => {
       reportCustomMetric('custom_metric', 123);
 
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        '[Custom Metric] custom_metric:',
-        123
-      );
+      expect(consoleLogSpy).toHaveBeenCalledWith('[Custom Metric] custom_metric:', 123);
       expect(fetchSpy).not.toHaveBeenCalled();
     });
 
@@ -77,7 +74,7 @@ describe('Performance Monitoring System', () => {
       reportCustomMetric('custom_metric', 456);
 
       // Wait for async fetch
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(fetchSpy).toHaveBeenCalledWith(
         '/api/analytics/metrics',
@@ -96,7 +93,7 @@ describe('Performance Monitoring System', () => {
       reportCustomMetric('failing_metric', 789);
 
       // Wait for async fetch
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(consoleErrorSpy).toHaveBeenCalled();
     });
@@ -108,7 +105,7 @@ describe('Performance Monitoring System', () => {
       initMonitoring();
 
       const errorHandler = addEventListenerSpy.mock.calls.find(
-        call => call[0] === 'error'
+        (call) => call[0] === 'error'
       )?.[1] as Function;
 
       expect(errorHandler).toBeDefined();
@@ -131,7 +128,7 @@ describe('Performance Monitoring System', () => {
       initMonitoring();
 
       const rejectionHandler = addEventListenerSpy.mock.calls.find(
-        call => call[0] === 'unhandledrejection'
+        (call) => call[0] === 'unhandledrejection'
       )?.[1] as Function;
 
       expect(rejectionHandler).toBeDefined();

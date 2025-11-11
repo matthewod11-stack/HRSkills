@@ -123,7 +123,7 @@ describe('ErrorBoundary', () => {
       expect(onError).toHaveBeenCalledWith(
         expect.any(Error),
         expect.objectContaining({
-          componentStack: expect.any(String)
+          componentStack: expect.any(String),
         })
       );
     });
@@ -218,11 +218,7 @@ describe('ErrorBoundary', () => {
 describe('useErrorHandler hook', () => {
   function TestComponent() {
     const throwError = useErrorHandler();
-    return (
-      <button onClick={() => throwError(new Error('Manual error'))}>
-        Throw Error
-      </button>
-    );
+    return <button onClick={() => throwError(new Error('Manual error'))}>Throw Error</button>;
   }
 
   it('should allow manual error triggering', () => {

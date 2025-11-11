@@ -1,15 +1,9 @@
-'use client'
+'use client';
 
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
-import {
-  Users,
-  TrendingDown,
-  Grid3x3,
-  Settings,
-  Database
-} from 'lucide-react';
+import { Users, TrendingDown, Grid3x3, Settings, Database } from 'lucide-react';
 import { FloatingOrbs } from '@/components/custom/FloatingOrbs';
 import { MetricCard } from '@/components/custom/MetricCard';
 import { ChatInterface } from '@/components/custom/ChatInterface';
@@ -25,18 +19,22 @@ import { DialogSkeleton } from '@/components/ui/skeletons';
 // Lazy load heavy dialog components
 // These are only needed when user interacts, reducing initial bundle size
 const MetricDetailsDialog = dynamic(
-  () => import('@/components/custom/MetricDetailsDialog').then(mod => ({ default: mod.MetricDetailsDialog })),
+  () =>
+    import('@/components/custom/MetricDetailsDialog').then((mod) => ({
+      default: mod.MetricDetailsDialog,
+    })),
   {
     loading: () => <DialogSkeleton />,
-    ssr: false // Dialog is client-side only
+    ssr: false, // Dialog is client-side only
   }
 );
 
 const CommandPalette = dynamic(
-  () => import('@/components/custom/CommandPalette').then(mod => ({ default: mod.CommandPalette })),
+  () =>
+    import('@/components/custom/CommandPalette').then((mod) => ({ default: mod.CommandPalette })),
   {
     loading: () => <DialogSkeleton />,
-    ssr: false // Command palette is client-side only
+    ssr: false, // Command palette is client-side only
   }
 );
 
@@ -61,12 +59,16 @@ export default function Home() {
   const [metrics, setMetrics] = useState<MetricsState>({
     headcount: 0,
     attritionRate: 0,
-    lastUpdated: null
+    lastUpdated: null,
   });
-  const [metricsStatus, setMetricsStatus] = useState<'idle' | 'loading' | 'live' | 'empty' | 'error'>('idle');
+  const [metricsStatus, setMetricsStatus] = useState<
+    'idle' | 'loading' | 'live' | 'empty' | 'error'
+  >('idle');
   const [metricsError, setMetricsError] = useState<string | null>(null);
   const [nineBoxSummary, setNineBoxSummary] = useState<NineBoxSummary | null>(null);
-  const [nineBoxStatus, setNineBoxStatus] = useState<'idle' | 'loading' | 'live' | 'empty' | 'error'>('idle');
+  const [nineBoxStatus, setNineBoxStatus] = useState<
+    'idle' | 'loading' | 'live' | 'empty' | 'error'
+  >('idle');
   const [nineBoxError, setNineBoxError] = useState<string | null>(null);
   const [metricDialogOpen, setMetricDialogOpen] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState<MetricType>(null);
@@ -80,12 +82,13 @@ export default function Home() {
     // Auto-login for development
     const token = localStorage.getItem('auth_token');
     if (!token) {
-      const demoToken = 'eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiJkZXYtdXNlciIsImVtYWlsIjoiZGV2QGhyc2tpbGxzLmxvY2FsIiwibmFtZSI6IkRldmVsb3BlciIsInJvbGVzIjpbeyJpZCI6ImFkbWluIiwibmFtZSI6IkFkbWluIn1dLCJpYXQiOjE3MzEwMTkyMDAsImV4cCI6OTk5OTk5OTk5OX0.dev-token';
+      const demoToken =
+        'eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiJkZXYtdXNlciIsImVtYWlsIjoiZGV2QGhyc2tpbGxzLmxvY2FsIiwibmFtZSI6IkRldmVsb3BlciIsInJvbGVzIjpbeyJpZCI6ImFkbWluIiwibmFtZSI6IkFkbWluIn1dLCJpYXQiOjE3MzEwMTkyMDAsImV4cCI6OTk5OTk5OTk5OX0.dev-token';
       const demoUser = {
         userId: 'dev-user',
         email: 'dev@hrskills.local',
         name: 'Developer',
-        roles: [{ id: 'admin', name: 'Admin', permissions: [] }]
+        roles: [{ id: 'admin', name: 'Admin', permissions: [] }],
       };
       localStorage.setItem('auth_token', demoToken);
       localStorage.setItem('auth_user', JSON.stringify(demoUser));
@@ -110,13 +113,13 @@ export default function Home() {
     try {
       const data = await fetchWithRetry<any>(`/api/metrics?_=${Date.now()}`, {
         method: 'GET',
-        cache: 'no-store'
+        cache: 'no-store',
       });
 
       setMetrics({
         headcount: typeof data?.headcount === 'number' ? data.headcount : 0,
         attritionRate: typeof data?.attritionRate === 'number' ? data.attritionRate : 0,
-        lastUpdated: typeof data?.lastUpdated === 'string' ? data.lastUpdated : null
+        lastUpdated: typeof data?.lastUpdated === 'string' ? data.lastUpdated : null,
       });
 
       if (data?.error) {
@@ -131,17 +134,20 @@ export default function Home() {
       setMetrics({
         headcount: 0,
         attritionRate: 0,
-        lastUpdated: null
+        lastUpdated: null,
       });
       setMetricsStatus('error');
       setMetricsError(error?.message || 'Failed to load metrics');
     }
 
     try {
-      const analyticsResult = await fetchWithRetry<any>(`/api/analytics?metric=nine-box&_=${Date.now()}`, {
-        method: 'GET',
-        cache: 'no-store'
-      });
+      const analyticsResult = await fetchWithRetry<any>(
+        `/api/analytics?metric=nine-box&_=${Date.now()}`,
+        {
+          method: 'GET',
+          cache: 'no-store',
+        }
+      );
 
       const normalizeAnalyticsError = (rawError: unknown) => {
         if (!rawError) return 'Nine-box analytics unavailable';
@@ -200,9 +206,10 @@ export default function Home() {
   const nineBoxUnavailable = nineBoxStatus === 'empty';
   const nineBoxFailed = nineBoxStatus === 'error';
 
-  const headcountDisplay = (metricsLoading || metricsFailed) ? '—' : metrics.headcount;
-  const attritionDisplay = (metricsLoading || metricsFailed) ? '—' : `${metrics.attritionRate}%`;
-  const nineBoxDisplay = (nineBoxLoading || nineBoxFailed) ? '—' : (nineBoxSummary?.highPerformers ?? 0);
+  const headcountDisplay = metricsLoading || metricsFailed ? '—' : metrics.headcount;
+  const attritionDisplay = metricsLoading || metricsFailed ? '—' : `${metrics.attritionRate}%`;
+  const nineBoxDisplay =
+    nineBoxLoading || nineBoxFailed ? '—' : (nineBoxSummary?.highPerformers ?? 0);
 
   const metricsStatusLabel = metricsLoading
     ? 'Loading...'
@@ -223,16 +230,25 @@ export default function Home() {
           ? (nineBoxError ?? 'Error')
           : '—';
 
-  const headcountProgress = metricsHasData ? Math.min(Math.round((metrics.headcount / 200) * 100), 100) : 0;
-  const attritionProgress = metricsHasData ? Math.max(0, 100 - Math.min(Math.round(metrics.attritionRate), 100)) : 0;
+  const headcountProgress = metricsHasData
+    ? Math.min(Math.round((metrics.headcount / 200) * 100), 100)
+    : 0;
+  const attritionProgress = metricsHasData
+    ? Math.max(0, 100 - Math.min(Math.round(metrics.attritionRate), 100))
+    : 0;
   const nineBoxProgress =
     nineBoxHasData && nineBoxSummary?.totalAnalyzed
-      ? Math.min(Math.round((nineBoxSummary.highPerformers / Math.max(nineBoxSummary.totalAnalyzed, 1)) * 100), 100)
+      ? Math.min(
+          Math.round(
+            (nineBoxSummary.highPerformers / Math.max(nineBoxSummary.totalAnalyzed, 1)) * 100
+          ),
+          100
+        )
       : 0;
   const attritionIsPositive = metricsHasData ? metrics.attritionRate <= 10 : false;
   const nineBoxIsPositive =
     nineBoxHasData && nineBoxSummary?.totalAnalyzed
-      ? (nineBoxSummary.highPerformers / Math.max(nineBoxSummary.totalAnalyzed, 1)) >= 0.3
+      ? nineBoxSummary.highPerformers / Math.max(nineBoxSummary.totalAnalyzed, 1) >= 0.3
       : false;
 
   useEffect(() => {
@@ -253,7 +269,7 @@ export default function Home() {
     return date.toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit'
+      second: '2-digit',
     });
   };
 
@@ -262,7 +278,7 @@ export default function Home() {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
@@ -319,15 +335,19 @@ export default function Home() {
 
               <div className="flex items-center gap-6">
                 <button
-                  onClick={() => window.location.href = '/team-time'}
+                  onClick={() => (window.location.href = '/team-time')}
                   className="text-right hidden md:block hover:bg-white/5 px-4 py-2 rounded-lg transition-premium cursor-pointer"
                 >
-                  <p className="text-sm text-secondary" suppressHydrationWarning>{formatDate(currentTime)}</p>
-                  <p className="text-2xl font-mono" suppressHydrationWarning>{formatTime(currentTime)}</p>
+                  <p className="text-sm text-secondary" suppressHydrationWarning>
+                    {formatDate(currentTime)}
+                  </p>
+                  <p className="text-2xl font-mono" suppressHydrationWarning>
+                    {formatTime(currentTime)}
+                  </p>
                 </button>
 
                 <button
-                  onClick={() => window.location.href = '/data-sources'}
+                  onClick={() => (window.location.href = '/data-sources')}
                   aria-label="Upload Data & Documents"
                   title="Upload Data & Documents"
                   className="w-10 h-10 bg-white/5 hover:bg-white/10 border border-border hover:border-violet/50 rounded-lg flex items-center justify-center transition-premium"
@@ -336,7 +356,7 @@ export default function Home() {
                 </button>
 
                 <button
-                  onClick={() => window.location.href = '/settings'}
+                  onClick={() => (window.location.href = '/settings')}
                   aria-label="Open settings"
                   className="w-10 h-10 bg-white/5 hover:bg-white/10 border border-border hover:border-violet/50 rounded-lg flex items-center justify-center transition-premium"
                 >
@@ -371,7 +391,13 @@ export default function Home() {
                 icon={Users}
                 progress={headcountProgress}
                 delay={0}
-                onClick={() => handleMetricClick('headcount', 'Recent New Hires', 'Last 5 employees who joined the company')}
+                onClick={() =>
+                  handleMetricClick(
+                    'headcount',
+                    'Recent New Hires',
+                    'Last 5 employees who joined the company'
+                  )
+                }
               />
               <MetricCard
                 title="Attrition Rate"
@@ -381,7 +407,13 @@ export default function Home() {
                 icon={TrendingDown}
                 progress={attritionProgress}
                 delay={0.1}
-                onClick={() => handleMetricClick('attrition', 'Recent Terminations', 'Last 5 employees who left the company this year')}
+                onClick={() =>
+                  handleMetricClick(
+                    'attrition',
+                    'Recent Terminations',
+                    'Last 5 employees who left the company this year'
+                  )
+                }
               />
               <MetricCard
                 title="9Box High Performers"
@@ -394,14 +426,14 @@ export default function Home() {
                 onClick={handleNineBoxClick}
               />
             </div>
-            {metricsError && (
-              <p className="text-sm text-warning font-medium">{metricsError}</p>
-            )}
+            {metricsError && <p className="text-sm text-warning font-medium">{metricsError}</p>}
             {nineBoxError && !nineBoxHasData && (
               <p className="text-sm text-warning font-medium">{nineBoxError}</p>
             )}
             {metricsHasData && metrics.lastUpdated && (
-              <p className="text-xs text-secondary font-medium">Last updated: {new Date(metrics.lastUpdated).toLocaleString()}</p>
+              <p className="text-xs text-secondary font-medium">
+                Last updated: {new Date(metrics.lastUpdated).toLocaleString()}
+              </p>
             )}
           </section>
 
@@ -419,9 +451,7 @@ export default function Home() {
                     logComponentError(error, errorInfo, 'ChatInterface');
                   }}
                 >
-                  <ChatInterface
-                    onContextPanelChange={setContextPanelData}
-                  />
+                  <ChatInterface onContextPanelChange={setContextPanelData} />
                 </ErrorBoundary>
               </div>
             </section>

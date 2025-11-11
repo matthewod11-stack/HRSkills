@@ -103,39 +103,25 @@ export default function OfflinePage() {
 
         {/* Available Pages */}
         <div className="text-left bg-white/5 rounded-lg p-6 border border-white/10">
-          <h2 className="text-sm font-medium text-gray-400 mb-3">
-            Available while offline:
-          </h2>
+          <h2 className="text-sm font-medium text-gray-400 mb-3">Available while offline:</h2>
           <ul className="space-y-2 text-sm">
             <li>
-              <a
-                href="/"
-                className="text-blue-400 hover:text-blue-300 transition-colors"
-              >
+              <a href="/" className="text-blue-400 hover:text-blue-300 transition-colors">
                 → Home
               </a>
             </li>
             <li>
-              <a
-                href="/analytics"
-                className="text-blue-400 hover:text-blue-300 transition-colors"
-              >
+              <a href="/analytics" className="text-blue-400 hover:text-blue-300 transition-colors">
                 → Analytics (if previously visited)
               </a>
             </li>
             <li>
-              <a
-                href="/nine-box"
-                className="text-blue-400 hover:text-blue-300 transition-colors"
-              >
+              <a href="/nine-box" className="text-blue-400 hover:text-blue-300 transition-colors">
                 → Nine-Box Grid (if previously visited)
               </a>
             </li>
             <li>
-              <a
-                href="/employees"
-                className="text-blue-400 hover:text-blue-300 transition-colors"
-              >
+              <a href="/employees" className="text-blue-400 hover:text-blue-300 transition-colors">
                 → Employees (if previously visited)
               </a>
             </li>

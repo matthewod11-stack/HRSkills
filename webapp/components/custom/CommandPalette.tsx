@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Users, FileText, Calendar, Settings, TrendingUp } from 'lucide-react';
@@ -82,7 +82,9 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                   className="flex-1 bg-transparent outline-none text-white placeholder-gray-500"
                   autoFocus
                 />
-                <kbd className="px-2 py-1 bg-white/5 border border-white/20 rounded text-xs text-gray-400">ESC</kbd>
+                <kbd className="px-2 py-1 bg-white/5 border border-white/20 rounded text-xs text-gray-400">
+                  ESC
+                </kbd>
               </div>
 
               <div className="max-h-96 overflow-y-auto p-2">

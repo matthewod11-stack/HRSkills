@@ -16,7 +16,7 @@ const sampleData = [
     level: 'Senior',
     hire_date: new Date('2020-01-15'),
     termination_date: null,
-    status: 'Active'
+    status: 'Active',
   },
   {
     employee_id: 'E002',
@@ -27,7 +27,7 @@ const sampleData = [
     level: 'Mid',
     hire_date: new Date('2021-03-22'),
     termination_date: null,
-    status: 'Active'
+    status: 'Active',
   },
   {
     employee_id: 'E003',
@@ -38,7 +38,7 @@ const sampleData = [
     level: 'Junior',
     hire_date: new Date('2022-11-30'),
     termination_date: null,
-    status: 'Active'
+    status: 'Active',
   },
   {
     employee_id: 'E004',
@@ -49,7 +49,7 @@ const sampleData = [
     level: 'Senior',
     hire_date: new Date('2019-05-10'),
     termination_date: new Date('2024-03-15'),
-    status: 'Terminated'
+    status: 'Terminated',
   },
   {
     employee_id: 'E005',
@@ -60,8 +60,8 @@ const sampleData = [
     level: 'Mid',
     hire_date: new Date('2023-01-08'),
     termination_date: null,
-    status: 'Active'
-  }
+    status: 'Active',
+  },
 ];
 
 const edgeCaseData = [
@@ -74,7 +74,7 @@ const edgeCaseData = [
     level: 'Mid',
     hire_date: new Date('2024-03-10'),
     termination_date: null,
-    status: 'Active'
+    status: 'Active',
   },
   {
     employee_id: 'E102',
@@ -85,7 +85,7 @@ const edgeCaseData = [
     level: 'Senior',
     hire_date: new Date('2023-12-31'),
     termination_date: null,
-    status: 'Active'
+    status: 'Active',
   },
   {
     employee_id: 'E103',
@@ -96,7 +96,7 @@ const edgeCaseData = [
     level: 'Junior',
     hire_date: null,
     termination_date: null,
-    status: 'Active'
+    status: 'Active',
   },
   {
     employee_id: 'E104',
@@ -107,7 +107,7 @@ const edgeCaseData = [
     level: 'Mid',
     hire_date: new Date('2024-11-03'),
     termination_date: new Date('2024-11-04'),
-    status: 'Terminated'
+    status: 'Terminated',
   },
   {
     employee_id: 'E105',
@@ -118,8 +118,8 @@ const edgeCaseData = [
     level: 'Senior',
     hire_date: new Date('2020-02-29'), // Leap year date
     termination_date: null,
-    status: 'Active'
-  }
+    status: 'Active',
+  },
 ];
 
 function createExcelFile(data: any[], filename: string) {

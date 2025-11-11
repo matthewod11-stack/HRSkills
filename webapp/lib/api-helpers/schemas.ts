@@ -139,9 +139,7 @@ export const performanceReviewSchema = z.object({
 
 export const analyzePerformanceSchema = z.object({
   reviews: z.array(performanceReviewSchema).min(1).max(100),
-  analysisType: z
-    .enum(['individual', 'team', 'department', 'company'])
-    .default('individual'),
+  analysisType: z.enum(['individual', 'team', 'department', 'company']).default('individual'),
   includeRecommendations: z.boolean().default(true),
 });
 
@@ -181,13 +179,15 @@ export const metricsResponseSchema = z.object({
       ethnicity: z.record(z.string(), z.number()).optional(),
     })
     .optional(),
-  departmentMetrics: z.array(
-    z.object({
-      department: z.string(),
-      headcount: z.number().int().nonnegative(),
-      attritionRate: z.number().nonnegative(),
-    })
-  ).optional(),
+  departmentMetrics: z
+    .array(
+      z.object({
+        department: z.string(),
+        headcount: z.number().int().nonnegative(),
+        attritionRate: z.number().nonnegative(),
+      })
+    )
+    .optional(),
 });
 
 export const aiCostMetricsSchema = z.object({
@@ -269,7 +269,10 @@ export const errorResponseSchema = z.object({
 /**
  * Validate data against a schema and return typed result
  */
-export function validate<T>(schema: z.ZodSchema<T>, data: unknown): {
+export function validate<T>(
+  schema: z.ZodSchema<T>,
+  data: unknown
+): {
   success: boolean;
   data?: T;
   error?: z.ZodError;

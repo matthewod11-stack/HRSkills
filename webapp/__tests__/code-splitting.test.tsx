@@ -9,7 +9,7 @@ import {
   ChatMessageSkeleton,
   DialogSkeleton,
   ChartSkeleton,
-  TableSkeleton
+  TableSkeleton,
 } from '@/components/ui/skeletons';
 
 describe('Code Splitting & Lazy Loading Tests', () => {
@@ -205,7 +205,7 @@ describe('Code Splitting & Lazy Loading Tests', () => {
         <ChatMessageSkeleton key="chat" />,
         <DialogSkeleton key="dialog" />,
         <ChartSkeleton key="chart" />,
-        <TableSkeleton key="table" />
+        <TableSkeleton key="table" />,
       ];
 
       skeletons.forEach((skeleton, index) => {

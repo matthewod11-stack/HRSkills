@@ -6,19 +6,19 @@
  * and creates snapshots in workflowSnapshots table for history.
  */
 
-import { db } from '@/lib/db'
-import { conversations, workflowSnapshots } from '@/db/schema'
-import { eq, and, desc } from 'drizzle-orm'
-import type { WorkflowState, WorkflowId } from '../types'
+import { db } from '@/lib/db';
+import { conversations, workflowSnapshots } from '@/db/schema';
+import { eq, and, desc } from 'drizzle-orm';
+import type { WorkflowState, WorkflowId } from '../types';
 import type {
   WorkflowStateSnapshot,
   StateQueryOptions,
   StateUpdateOptions,
   StateTransitionEvent,
   HybridStateConfig,
-  StateModeInfo
-} from './types'
-import { nanoid } from 'nanoid'
+  StateModeInfo,
+} from './types';
+import { nanoid } from 'nanoid';
 
 // ============================================================================
 // Configuration
@@ -28,8 +28,8 @@ const DEFAULT_HYBRID_CONFIG: HybridStateConfig = {
   upgradeThreshold: 75, // Confidence >= 75% triggers stateful mode
   maxStatelessMessages: 5,
   persistAfterActions: true,
-  autoDowngrade: true
-}
+  autoDowngrade: true,
+};
 
 // ============================================================================
 // State Mode Management
@@ -55,8 +55,8 @@ export function determineStateMode(
     return {
       mode: 'stateless',
       reason: 'General workflow - no state tracking needed',
-      messageCount
-    }
+      messageCount,
+    };
   }
 
   // Upgrade if confidence meets threshold
@@ -65,8 +65,8 @@ export function determineStateMode(
       mode: 'stateful',
       reason: `High confidence (${confidence}%) workflow detected`,
       upgradedAt: new Date().toISOString(),
-      messageCount
-    }
+      messageCount,
+    };
   }
 
   // Force upgrade after max stateless messages (workflowId is already not 'general' here)
@@ -75,16 +75,16 @@ export function determineStateMode(
       mode: 'stateful',
       reason: `Exceeded ${config.maxStatelessMessages} messages without high-confidence workflow`,
       upgradedAt: new Date().toISOString(),
-      messageCount
-    }
+      messageCount,
+    };
   }
 
   // Stay stateless
   return {
     mode: 'stateless',
     reason: `Low confidence (${confidence}%) - staying stateless`,
-    messageCount
-  }
+    messageCount,
+  };
 }
 
 // ============================================================================
@@ -97,25 +97,23 @@ export function determineStateMode(
  * @param conversationId - Conversation ID
  * @returns Workflow state or null if not found
  */
-export async function loadConversationState(
-  conversationId: string
-): Promise<WorkflowState | null> {
+export async function loadConversationState(conversationId: string): Promise<WorkflowState | null> {
   try {
     const result = await db
       .select({ workflowStateJson: conversations.workflowStateJson })
       .from(conversations)
       .where(eq(conversations.id, conversationId))
-      .limit(1)
+      .limit(1);
 
     if (!result || result.length === 0 || !result[0].workflowStateJson) {
-      return null
+      return null;
     }
 
-    const state = JSON.parse(result[0].workflowStateJson) as WorkflowState
-    return state
+    const state = JSON.parse(result[0].workflowStateJson) as WorkflowState;
+    return state;
   } catch (error) {
-    console.error(`Failed to load conversation state for ${conversationId}:`, error)
-    return null
+    console.error(`Failed to load conversation state for ${conversationId}:`, error);
+    return null;
   }
 }
 
@@ -125,21 +123,19 @@ export async function loadConversationState(
  * @param snapshotId - Snapshot ID
  * @returns Workflow state snapshot or null
  */
-export async function loadStateSnapshot(
-  snapshotId: string
-): Promise<WorkflowStateSnapshot | null> {
+export async function loadStateSnapshot(snapshotId: string): Promise<WorkflowStateSnapshot | null> {
   try {
     const result = await db
       .select()
       .from(workflowSnapshots)
       .where(eq(workflowSnapshots.id, snapshotId))
-      .limit(1)
+      .limit(1);
 
     if (!result || result.length === 0) {
-      return null
+      return null;
     }
 
-    const snapshot = result[0]
+    const snapshot = result[0];
     return {
       conversationId: snapshot.conversationId!,
       userId: '', // Not stored in snapshot table - would need to join conversations
@@ -148,11 +144,11 @@ export async function loadStateSnapshot(
       createdAt: snapshot.createdAt,
       updatedAt: snapshot.createdAt,
       isActive: true,
-      transitions: [] // Would need separate transitions table to track history
-    }
+      transitions: [], // Would need separate transitions table to track history
+    };
   } catch (error) {
-    console.error(`Failed to load snapshot ${snapshotId}:`, error)
-    return null
+    console.error(`Failed to load snapshot ${snapshotId}:`, error);
+    return null;
   }
 }
 
@@ -166,33 +162,33 @@ export async function queryStateSnapshots(
   options: StateQueryOptions
 ): Promise<WorkflowStateSnapshot[]> {
   try {
-    let query = db.select().from(workflowSnapshots)
+    let query = db.select().from(workflowSnapshots);
 
     // Apply filters
-    const conditions = []
+    const conditions = [];
     if (options.conversationId) {
-      conditions.push(eq(workflowSnapshots.conversationId, options.conversationId))
+      conditions.push(eq(workflowSnapshots.conversationId, options.conversationId));
     }
     if (options.workflowId) {
-      conditions.push(eq(workflowSnapshots.workflowId, options.workflowId))
+      conditions.push(eq(workflowSnapshots.workflowId, options.workflowId));
     }
 
     if (conditions.length > 0) {
-      query = query.where(and(...conditions)) as any
+      query = query.where(and(...conditions)) as any;
     }
 
     // Order by most recent
-    query = query.orderBy(desc(workflowSnapshots.createdAt)) as any
+    query = query.orderBy(desc(workflowSnapshots.createdAt)) as any;
 
     // Apply limit/offset
     if (options.limit) {
-      query = query.limit(options.limit) as any
+      query = query.limit(options.limit) as any;
     }
     if (options.offset) {
-      query = query.offset(options.offset) as any
+      query = query.offset(options.offset) as any;
     }
 
-    const results = await query
+    const results = await query;
 
     return results.map((snapshot: any) => ({
       conversationId: snapshot.conversationId!,
@@ -202,11 +198,11 @@ export async function queryStateSnapshots(
       createdAt: snapshot.createdAt,
       updatedAt: snapshot.createdAt,
       isActive: true,
-      transitions: []
-    }))
+      transitions: [],
+    }));
   } catch (error) {
-    console.error('Failed to query state snapshots:', error)
-    return []
+    console.error('Failed to query state snapshots:', error);
+    return [];
   }
 }
 
@@ -228,20 +224,20 @@ export async function saveConversationState(
   options: StateUpdateOptions = {}
 ): Promise<boolean> {
   try {
-    const stateJson = JSON.stringify(state)
+    const stateJson = JSON.stringify(state);
 
     await db
       .update(conversations)
       .set({
         workflowStateJson: stateJson,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       })
-      .where(eq(conversations.id, conversationId))
+      .where(eq(conversations.id, conversationId));
 
-    return true
+    return true;
   } catch (error) {
-    console.error(`Failed to save conversation state for ${conversationId}:`, error)
-    return false
+    console.error(`Failed to save conversation state for ${conversationId}:`, error);
+    return false;
   }
 }
 
@@ -259,8 +255,8 @@ export async function createStateSnapshot(
   event?: StateTransitionEvent
 ): Promise<string | null> {
   try {
-    const snapshotId = nanoid()
-    const stateJson = JSON.stringify(state)
+    const snapshotId = nanoid();
+    const stateJson = JSON.stringify(state);
 
     await db.insert(workflowSnapshots).values({
       id: snapshotId,
@@ -268,13 +264,13 @@ export async function createStateSnapshot(
       conversationId,
       step: state.step,
       stateJson,
-      createdAt: new Date().toISOString()
-    })
+      createdAt: new Date().toISOString(),
+    });
 
-    return snapshotId
+    return snapshotId;
   } catch (error) {
-    console.error('Failed to create state snapshot:', error)
-    return null
+    console.error('Failed to create state snapshot:', error);
+    return null;
   }
 }
 
@@ -299,9 +295,9 @@ export function initializeWorkflowState(
     updatedAt: new Date().toISOString(),
     metadata: {
       initialized: true,
-      version: 1
-    }
-  }
+      version: 1,
+    },
+  };
 }
 
 /**
@@ -318,8 +314,8 @@ export function updateWorkflowState(
   return {
     ...state,
     ...updates,
-    updatedAt: new Date().toISOString()
-  }
+    updatedAt: new Date().toISOString(),
+  };
 }
 
 // ============================================================================
@@ -332,22 +328,20 @@ export function updateWorkflowState(
  * @param conversationId - Conversation ID
  * @returns Success boolean
  */
-export async function clearConversationState(
-  conversationId: string
-): Promise<boolean> {
+export async function clearConversationState(conversationId: string): Promise<boolean> {
   try {
     await db
       .update(conversations)
       .set({
         workflowStateJson: null,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       })
-      .where(eq(conversations.id, conversationId))
+      .where(eq(conversations.id, conversationId));
 
-    return true
+    return true;
   } catch (error) {
-    console.error(`Failed to clear conversation state for ${conversationId}:`, error)
-    return false
+    console.error(`Failed to clear conversation state for ${conversationId}:`, error);
+    return false;
   }
 }
 
@@ -357,18 +351,16 @@ export async function clearConversationState(
  * @param conversationId - Conversation ID
  * @returns Number of snapshots deleted
  */
-export async function deleteConversationSnapshots(
-  conversationId: string
-): Promise<number> {
+export async function deleteConversationSnapshots(conversationId: string): Promise<number> {
   try {
     const result = await db
       .delete(workflowSnapshots)
-      .where(eq(workflowSnapshots.conversationId, conversationId))
+      .where(eq(workflowSnapshots.conversationId, conversationId));
 
-    return result.changes || 0
+    return result.changes || 0;
   } catch (error) {
-    console.error(`Failed to delete snapshots for ${conversationId}:`, error)
-    return 0
+    console.error(`Failed to delete snapshots for ${conversationId}:`, error);
+    return 0;
   }
 }
 
@@ -383,8 +375,8 @@ export async function deleteConversationSnapshots(
  * @returns true if state exists
  */
 export async function hasActiveState(conversationId: string): Promise<boolean> {
-  const state = await loadConversationState(conversationId)
-  return state !== null
+  const state = await loadConversationState(conversationId);
+  return state !== null;
 }
 
 /**
@@ -394,21 +386,21 @@ export async function hasActiveState(conversationId: string): Promise<boolean> {
  * @returns Statistics object
  */
 export async function getStateStatistics(conversationId: string): Promise<{
-  hasState: boolean
-  snapshotCount: number
-  currentWorkflow?: WorkflowId
-  currentStep?: string
-  completedSteps?: number
-  pendingActions?: number
+  hasState: boolean;
+  snapshotCount: number;
+  currentWorkflow?: WorkflowId;
+  currentStep?: string;
+  completedSteps?: number;
+  pendingActions?: number;
 }> {
-  const state = await loadConversationState(conversationId)
-  const snapshots = await queryStateSnapshots({ conversationId })
+  const state = await loadConversationState(conversationId);
+  const snapshots = await queryStateSnapshots({ conversationId });
 
   if (!state) {
     return {
       hasState: false,
-      snapshotCount: snapshots.length
-    }
+      snapshotCount: snapshots.length,
+    };
   }
 
   return {
@@ -417,6 +409,6 @@ export async function getStateStatistics(conversationId: string): Promise<{
     currentWorkflow: state.workflowId,
     currentStep: state.step,
     completedSteps: state.completedSteps?.length || 0,
-    pendingActions: state.nextActions?.length || 0
-  }
+    pendingActions: state.nextActions?.length || 0,
+  };
 }

@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { motion } from 'framer-motion';
 import { ArrowLeft, CheckCircle2, Mail, Phone, MessageSquare } from 'lucide-react';
@@ -57,10 +57,13 @@ export default function AccessibilityStatement() {
               <h2 className="text-2xl font-semibold mb-4">Our Commitment</h2>
               <div className="bg-white/5 border-2 border-white/20 rounded-2xl p-6">
                 <p className="text-gray-300 leading-relaxed mb-4">
-                  HR Command Center is committed to ensuring digital accessibility for people with disabilities. We are continually improving the user experience for everyone and applying the relevant accessibility standards.
+                  HR Command Center is committed to ensuring digital accessibility for people with
+                  disabilities. We are continually improving the user experience for everyone and
+                  applying the relevant accessibility standards.
                 </p>
                 <p className="text-gray-300 leading-relaxed">
-                  We believe that everyone should have equal access to our HR automation platform, regardless of ability or technology used.
+                  We believe that everyone should have equal access to our HR automation platform,
+                  regardless of ability or technology used.
                 </p>
               </div>
             </section>
@@ -69,27 +72,47 @@ export default function AccessibilityStatement() {
             <section>
               <h2 className="text-2xl font-semibold mb-4">Standards Compliance</h2>
               <div className="bg-white/5 border-2 border-white/20 rounded-2xl p-6">
-                <p className="text-gray-300 mb-4">HR Command Center conforms to the following standards:</p>
+                <p className="text-gray-300 mb-4">
+                  HR Command Center conforms to the following standards:
+                </p>
                 <ul className="space-y-3">
                   <li className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-green-400 mt-1 flex-shrink-0" aria-hidden="true" />
+                    <CheckCircle2
+                      className="w-5 h-5 text-green-400 mt-1 flex-shrink-0"
+                      aria-hidden="true"
+                    />
                     <div>
                       <strong className="text-white">WCAG 2.1 Level AA:</strong>
-                      <span className="text-gray-300"> Web Content Accessibility Guidelines 2.1 at Level AA conformance</span>
+                      <span className="text-gray-300">
+                        {' '}
+                        Web Content Accessibility Guidelines 2.1 at Level AA conformance
+                      </span>
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-green-400 mt-1 flex-shrink-0" aria-hidden="true" />
+                    <CheckCircle2
+                      className="w-5 h-5 text-green-400 mt-1 flex-shrink-0"
+                      aria-hidden="true"
+                    />
                     <div>
                       <strong className="text-white">Section 508:</strong>
-                      <span className="text-gray-300"> U.S. Federal accessibility requirements</span>
+                      <span className="text-gray-300">
+                        {' '}
+                        U.S. Federal accessibility requirements
+                      </span>
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-green-400 mt-1 flex-shrink-0" aria-hidden="true" />
+                    <CheckCircle2
+                      className="w-5 h-5 text-green-400 mt-1 flex-shrink-0"
+                      aria-hidden="true"
+                    />
                     <div>
                       <strong className="text-white">ARIA 1.2:</strong>
-                      <span className="text-gray-300"> Accessible Rich Internet Applications technical specifications</span>
+                      <span className="text-gray-300">
+                        {' '}
+                        Accessible Rich Internet Applications technical specifications
+                      </span>
                     </div>
                   </li>
                 </ul>
@@ -102,27 +125,39 @@ export default function AccessibilityStatement() {
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="bg-white/5 border-2 border-white/20 rounded-xl p-4">
                   <h3 className="font-semibold mb-2 text-white">Keyboard Navigation</h3>
-                  <p className="text-sm text-gray-400">Full keyboard support with visible focus indicators and logical tab order</p>
+                  <p className="text-sm text-gray-400">
+                    Full keyboard support with visible focus indicators and logical tab order
+                  </p>
                 </div>
                 <div className="bg-white/5 border-2 border-white/20 rounded-xl p-4">
                   <h3 className="font-semibold mb-2 text-white">Screen Reader Support</h3>
-                  <p className="text-sm text-gray-400">Tested with NVDA, JAWS, and VoiceOver with proper ARIA labels</p>
+                  <p className="text-sm text-gray-400">
+                    Tested with NVDA, JAWS, and VoiceOver with proper ARIA labels
+                  </p>
                 </div>
                 <div className="bg-white/5 border-2 border-white/20 rounded-xl p-4">
                   <h3 className="font-semibold mb-2 text-white">High Contrast</h3>
-                  <p className="text-sm text-gray-400">All text meets WCAG AA contrast ratios (4.5:1 minimum)</p>
+                  <p className="text-sm text-gray-400">
+                    All text meets WCAG AA contrast ratios (4.5:1 minimum)
+                  </p>
                 </div>
                 <div className="bg-white/5 border-2 border-white/20 rounded-xl p-4">
                   <h3 className="font-semibold mb-2 text-white">Responsive Design</h3>
-                  <p className="text-sm text-gray-400">Works at 200% text size and 400% browser zoom</p>
+                  <p className="text-sm text-gray-400">
+                    Works at 200% text size and 400% browser zoom
+                  </p>
                 </div>
                 <div className="bg-white/5 border-2 border-white/20 rounded-xl p-4">
                   <h3 className="font-semibold mb-2 text-white">Semantic HTML</h3>
-                  <p className="text-sm text-gray-400">Proper heading hierarchy and ARIA landmarks for navigation</p>
+                  <p className="text-sm text-gray-400">
+                    Proper heading hierarchy and ARIA landmarks for navigation
+                  </p>
                 </div>
                 <div className="bg-white/5 border-2 border-white/20 rounded-xl p-4">
                   <h3 className="font-semibold mb-2 text-white">Form Labels</h3>
-                  <p className="text-sm text-gray-400">All form inputs have descriptive labels and help text</p>
+                  <p className="text-sm text-gray-400">
+                    All form inputs have descriptive labels and help text
+                  </p>
                 </div>
               </div>
             </section>
@@ -131,7 +166,9 @@ export default function AccessibilityStatement() {
             <section>
               <h2 className="text-2xl font-semibold mb-4">Technology Compatibility</h2>
               <div className="bg-white/5 border-2 border-white/20 rounded-2xl p-6">
-                <p className="text-gray-300 mb-4">HR Command Center is designed to be compatible with:</p>
+                <p className="text-gray-300 mb-4">
+                  HR Command Center is designed to be compatible with:
+                </p>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
                     <h3 className="font-semibold text-white mb-2">Assistive Technologies</h3>
@@ -160,7 +197,8 @@ export default function AccessibilityStatement() {
               <h2 className="text-2xl font-semibold mb-4">Known Limitations</h2>
               <div className="bg-white/5 border-2 border-white/20 rounded-2xl p-6">
                 <p className="text-gray-300 mb-4">
-                  Despite our best efforts, some limitations may exist. We are actively working to address:
+                  Despite our best efforts, some limitations may exist. We are actively working to
+                  address:
                 </p>
                 <ul className="text-gray-400 space-y-2 text-sm">
                   <li>• Complex data visualizations may require alternative text descriptions</li>
@@ -175,7 +213,8 @@ export default function AccessibilityStatement() {
               <h2 className="text-2xl font-semibold mb-4">Feedback & Contact</h2>
               <div className="bg-white/5 border-2 border-white/20 rounded-2xl p-6">
                 <p className="text-gray-300 mb-6">
-                  We welcome your feedback on the accessibility of HR Command Center. Please let us know if you encounter accessibility barriers:
+                  We welcome your feedback on the accessibility of HR Command Center. Please let us
+                  know if you encounter accessibility barriers:
                 </p>
                 <div className="grid md:grid-cols-3 gap-4">
                   <motion.a
@@ -233,19 +272,31 @@ export default function AccessibilityStatement() {
                 <ul className="space-y-3 text-gray-400">
                   <li className="flex items-start gap-3">
                     <span className="text-blue-400">•</span>
-                    <span><strong className="text-white">Automated Testing:</strong> axe-core and Playwright with @axe-core/playwright</span>
+                    <span>
+                      <strong className="text-white">Automated Testing:</strong> axe-core and
+                      Playwright with @axe-core/playwright
+                    </span>
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="text-blue-400">•</span>
-                    <span><strong className="text-white">Manual Testing:</strong> Keyboard navigation, screen readers, and browser zoom testing</span>
+                    <span>
+                      <strong className="text-white">Manual Testing:</strong> Keyboard navigation,
+                      screen readers, and browser zoom testing
+                    </span>
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="text-blue-400">•</span>
-                    <span><strong className="text-white">Code Review:</strong> ARIA implementation and semantic HTML validation</span>
+                    <span>
+                      <strong className="text-white">Code Review:</strong> ARIA implementation and
+                      semantic HTML validation
+                    </span>
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="text-blue-400">•</span>
-                    <span><strong className="text-white">User Testing:</strong> Feedback from users with disabilities</span>
+                    <span>
+                      <strong className="text-white">User Testing:</strong> Feedback from users with
+                      disabilities
+                    </span>
                   </li>
                 </ul>
               </div>

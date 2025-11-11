@@ -59,14 +59,20 @@ export function isValidNumber(value: any, min?: number, max?: number): boolean {
 /**
  * Validate enum value
  */
-export function isValidEnum<T extends string>(value: string, validValues: readonly T[]): value is T {
+export function isValidEnum<T extends string>(
+  value: string,
+  validValues: readonly T[]
+): value is T {
   return validValues.includes(value as T);
 }
 
 /**
  * Sanitize object by removing dangerous properties
  */
-export function sanitizeObject<T extends Record<string, any>>(obj: T, allowedKeys: string[]): Partial<T> {
+export function sanitizeObject<T extends Record<string, any>>(
+  obj: T,
+  allowedKeys: string[]
+): Partial<T> {
   const sanitized: Partial<T> = {};
 
   for (const key of allowedKeys) {
@@ -81,7 +87,7 @@ export function sanitizeObject<T extends Record<string, any>>(obj: T, allowedKey
         sanitized[key as keyof T] = value as T[keyof T];
       } else if (Array.isArray(value)) {
         // Recursively sanitize array elements
-        sanitized[key as keyof T] = value.map(item =>
+        sanitized[key as keyof T] = value.map((item) =>
           typeof item === 'string' ? sanitizeString(item) : item
         ) as T[keyof T];
       } else if (typeof value === 'object') {
@@ -158,13 +164,14 @@ export function validateQueryParams(
 
       case 'number':
         if (!isValidNumber(value, rule.min, rule.max)) {
-          const range = rule.min !== undefined && rule.max !== undefined
-            ? ` (${rule.min}-${rule.max})`
-            : rule.min !== undefined
-            ? ` (min: ${rule.min})`
-            : rule.max !== undefined
-            ? ` (max: ${rule.max})`
-            : '';
+          const range =
+            rule.min !== undefined && rule.max !== undefined
+              ? ` (${rule.min}-${rule.max})`
+              : rule.min !== undefined
+                ? ` (min: ${rule.min})`
+                : rule.max !== undefined
+                  ? ` (max: ${rule.max})`
+                  : '';
           errors.push(`${key} must be a valid number${range}`);
           break;
         }
@@ -204,7 +211,7 @@ export function validateQueryParams(
   return {
     valid: errors.length === 0,
     errors,
-    sanitized
+    sanitized,
   };
 }
 
@@ -225,10 +232,7 @@ export interface FileValidationOptions {
   allowedExtensions?: string[];
 }
 
-export function validateFile(
-  file: File,
-  options: FileValidationOptions = {}
-): ValidationResult {
+export function validateFile(file: File, options: FileValidationOptions = {}): ValidationResult {
   const errors: string[] = [];
 
   // Check file size
@@ -238,20 +242,24 @@ export function validateFile(
 
   // Check file type
   if (options.allowedTypes && !options.allowedTypes.includes(file.type)) {
-    errors.push(`File type ${file.type} is not allowed. Allowed types: ${options.allowedTypes.join(', ')}`);
+    errors.push(
+      `File type ${file.type} is not allowed. Allowed types: ${options.allowedTypes.join(', ')}`
+    );
   }
 
   // Check file extension
   if (options.allowedExtensions) {
     const ext = file.name.toLowerCase().split('.').pop();
     if (!ext || !options.allowedExtensions.includes(`.${ext}`)) {
-      errors.push(`File extension .${ext} is not allowed. Allowed extensions: ${options.allowedExtensions.join(', ')}`);
+      errors.push(
+        `File extension .${ext} is not allowed. Allowed extensions: ${options.allowedExtensions.join(', ')}`
+      );
     }
   }
 
   return {
     valid: errors.length === 0,
     errors,
-    sanitized: {}
+    sanitized: {},
   };
 }

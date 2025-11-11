@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
@@ -17,60 +17,61 @@ export function FileUpload({ onUploadSuccess }: FileUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState<UploadResponse | null>(null);
 
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    if (acceptedFiles.length === 0) return;
+  const onDrop = useCallback(
+    async (acceptedFiles: File[]) => {
+      if (acceptedFiles.length === 0) return;
 
-    const file = acceptedFiles[0];
-    setUploading(true);
-    setUploadResult(null);
+      const file = acceptedFiles[0];
+      setUploading(true);
+      setUploadResult(null);
 
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('fileType', fileType);
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('fileType', fileType);
 
-      const response = await fetch('/api/data/upload', {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: formData
-      });
+        const response = await fetch('/api/data/upload', {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: formData,
+        });
 
-      const result: UploadResponse = await response.json();
-      setUploadResult(result);
+        const result: UploadResponse = await response.json();
+        setUploadResult(result);
 
-      if (result.success) {
-        onUploadSuccess();
-        // Auto-clear success message after 3 seconds
-        setTimeout(() => setUploadResult(null), 3000);
+        if (result.success) {
+          onUploadSuccess();
+          // Auto-clear success message after 3 seconds
+          setTimeout(() => setUploadResult(null), 3000);
+        }
+      } catch (error) {
+        setUploadResult({
+          success: false,
+          error: error instanceof Error ? error.message : 'Upload failed',
+        });
+      } finally {
+        setUploading(false);
       }
-    } catch (error) {
-      setUploadResult({
-        success: false,
-        error: error instanceof Error ? error.message : 'Upload failed'
-      });
-    } finally {
-      setUploading(false);
-    }
-  }, [fileType, onUploadSuccess]);
+    },
+    [fileType, onUploadSuccess]
+  );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
       'text/csv': ['.csv'],
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
-      'application/vnd.ms-excel': ['.xls']
+      'application/vnd.ms-excel': ['.xls'],
     },
     maxFiles: 1,
-    disabled: uploading
+    disabled: uploading,
   });
 
   return (
     <div className="w-full">
       {/* File Type Selector */}
       <div className="mb-4">
-        <label className="block text-sm font-medium mb-2">
-          Select Data Type
-        </label>
+        <label className="block text-sm font-medium mb-2">Select Data Type</label>
         <select
           value={fileType}
           onChange={(e) => setFileType(e.target.value as FileType)}
@@ -91,11 +92,12 @@ export function FileUpload({ onUploadSuccess }: FileUploadProps) {
         className={`
           relative border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer
           transition-all duration-300
-          ${isDragActive
-            ? 'border-blue-500 bg-blue-500/10 scale-105'
-            : uploading
-              ? 'border-gray-600 bg-gray-800/50 cursor-wait'
-              : 'border-white/30 hover:border-blue-500/50 hover:bg-white/5'
+          ${
+            isDragActive
+              ? 'border-blue-500 bg-blue-500/10 scale-105'
+              : uploading
+                ? 'border-gray-600 bg-gray-800/50 cursor-wait'
+                : 'border-white/30 hover:border-blue-500/50 hover:bg-white/5'
           }
         `}
       >
@@ -114,25 +116,15 @@ export function FileUpload({ onUploadSuccess }: FileUploadProps) {
           ) : (
             <>
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                {isDragActive ? (
-                  <Upload className="w-8 h-8" />
-                ) : (
-                  <FileText className="w-8 h-8" />
-                )}
+                {isDragActive ? <Upload className="w-8 h-8" /> : <FileText className="w-8 h-8" />}
               </div>
               <div>
                 <p className="text-lg font-medium mb-1">
-                  {isDragActive
-                    ? 'Drop file here'
-                    : 'Drag & drop CSV/Excel file here'}
+                  {isDragActive ? 'Drop file here' : 'Drag & drop CSV/Excel file here'}
                 </p>
-                <p className="text-sm text-gray-400">
-                  or click to browse
-                </p>
+                <p className="text-sm text-gray-400">or click to browse</p>
               </div>
-              <p className="text-xs text-gray-500">
-                Supported formats: CSV, XLSX, XLS
-              </p>
+              <p className="text-xs text-gray-500">Supported formats: CSV, XLSX, XLS</p>
             </>
           )}
         </div>
@@ -147,9 +139,10 @@ export function FileUpload({ onUploadSuccess }: FileUploadProps) {
             exit={{ opacity: 0, y: -10 }}
             className={`
               mt-4 p-4 rounded-xl border-2
-              ${uploadResult.success
-                ? 'bg-green-500/10 border-green-500/30'
-                : 'bg-red-500/10 border-red-500/30'
+              ${
+                uploadResult.success
+                  ? 'bg-green-500/10 border-green-500/30'
+                  : 'bg-red-500/10 border-red-500/30'
               }
             `}
           >
@@ -161,14 +154,20 @@ export function FileUpload({ onUploadSuccess }: FileUploadProps) {
               )}
 
               <div className="flex-1">
-                <p className={`font-medium ${uploadResult.success ? 'text-green-300' : 'text-red-300'}`}>
+                <p
+                  className={`font-medium ${uploadResult.success ? 'text-green-300' : 'text-red-300'}`}
+                >
                   {uploadResult.success ? 'Upload Successful!' : 'Upload Failed'}
                 </p>
 
                 {uploadResult.success && (
                   <div className="mt-2 text-sm space-y-1">
-                    <p><span className="text-gray-400">File:</span> {uploadResult.fileName}</p>
-                    <p><span className="text-gray-400">Rows:</span> {uploadResult.rowCount}</p>
+                    <p>
+                      <span className="text-gray-400">File:</span> {uploadResult.fileName}
+                    </p>
+                    <p>
+                      <span className="text-gray-400">Rows:</span> {uploadResult.rowCount}
+                    </p>
                     {uploadResult.validationErrors && uploadResult.validationErrors.length > 0 && (
                       <div className="mt-2 p-2 bg-yellow-500/10 border border-yellow-500/30 rounded">
                         <p className="text-yellow-300 text-xs font-medium mb-1">Warnings:</p>
@@ -183,9 +182,7 @@ export function FileUpload({ onUploadSuccess }: FileUploadProps) {
                 )}
 
                 {!uploadResult.success && uploadResult.error && (
-                  <p className="mt-1 text-sm text-red-200">
-                    {uploadResult.error}
-                  </p>
+                  <p className="mt-1 text-sm text-red-200">{uploadResult.error}</p>
                 )}
 
                 {uploadResult.validationErrors && !uploadResult.success && (

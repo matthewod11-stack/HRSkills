@@ -5,6 +5,7 @@
 The simplified RBAC v2 system reduces complexity from **5 roles** to **2 roles** while maintaining essential security:
 
 **Before (v1):**
+
 - super_admin
 - hr_admin
 - hr_manager
@@ -12,6 +13,7 @@ The simplified RBAC v2 system reduces complexity from **5 roles** to **2 roles**
 - employee
 
 **After (v2):**
+
 - **admin** - Full access to all features
 - **user** - Chat access with limited actions
 
@@ -25,15 +27,15 @@ This represents a **90% reduction in RBAC code** complexity.
 
 ```typescript
 // OLD (v1):
-import { requireAuth, hasPermission, authErrorResponse } from '@/lib/auth/middleware'
+import { requireAuth, hasPermission, authErrorResponse } from '@/lib/auth/middleware';
 
 export async function POST(request: NextRequest) {
-  const authResult = await requireAuth(request)
-  if (!authResult.success) return authErrorResponse(authResult)
+  const authResult = await requireAuth(request);
+  if (!authResult.success) return authErrorResponse(authResult);
 
   // Check permission with complex resource/action mapping
   if (!hasPermission(authResult.user, 'employees', 'write')) {
-    return authErrorResponse({ success: false, error: 'Forbidden', statusCode: 403 })
+    return authErrorResponse({ success: false, error: 'Forbidden', statusCode: 403 });
   }
 
   // ... rest of endpoint
@@ -42,15 +44,15 @@ export async function POST(request: NextRequest) {
 
 ```typescript
 // NEW (v2):
-import { requireAuth, hasPermission, authErrorResponse } from '@/lib/auth/middleware-v2'
+import { requireAuth, hasPermission, authErrorResponse } from '@/lib/auth/middleware-v2';
 
 export async function POST(request: NextRequest) {
-  const authResult = await requireAuth(request)
-  if (!authResult.success) return authErrorResponse(authResult)
+  const authResult = await requireAuth(request);
+  if (!authResult.success) return authErrorResponse(authResult);
 
   // Simple permission check
   if (!hasPermission(authResult.user, 'editEmployees')) {
-    return authErrorResponse({ success: false, error: 'Forbidden', statusCode: 403 })
+    return authErrorResponse({ success: false, error: 'Forbidden', statusCode: 403 });
   }
 
   // ... rest of endpoint
@@ -61,9 +63,11 @@ export async function POST(request: NextRequest) {
 
 ```tsx
 // OLD (v1):
-{user.roles.some(role => ['super_admin', 'hr_admin'].includes(role.name)) && (
-  <Button>Admin Only Action</Button>
-)}
+{
+  user.roles.some((role) => ['super_admin', 'hr_admin'].includes(role.name)) && (
+    <Button>Admin Only Action</Button>
+  );
+}
 ```
 
 ```tsx
@@ -85,16 +89,16 @@ import { RequireAdmin, RequirePermission } from '@/components/auth/RoleGuard'
 
 ### v1 → v2 Permission Mapping
 
-| v1 Resource/Action | v2 Permission | Admin | User |
-|-------------------|---------------|-------|------|
-| `employees` + `read` | `viewEmployees` | ✅ | ✅ |
-| `employees` + `write` | `editEmployees` | ✅ | ❌ |
-| `analytics` + `read` | `viewAnalytics` | ✅ | ✅ |
-| `analytics` + `export` | `exportData` | ✅ | ❌ |
-| `chat` + `write` | `chat` | ✅ | ✅ |
-| `data_upload` + `write` | `uploadData` | ✅ | ❌ |
-| `settings` + `write` | `manageSettings` | ✅ | ❌ |
-| *(new)* | `takeActions` | ✅ | ❌ |
+| v1 Resource/Action      | v2 Permission    | Admin | User |
+| ----------------------- | ---------------- | ----- | ---- |
+| `employees` + `read`    | `viewEmployees`  | ✅    | ✅   |
+| `employees` + `write`   | `editEmployees`  | ✅    | ❌   |
+| `analytics` + `read`    | `viewAnalytics`  | ✅    | ✅   |
+| `analytics` + `export`  | `exportData`     | ✅    | ❌   |
+| `chat` + `write`        | `chat`           | ✅    | ✅   |
+| `data_upload` + `write` | `uploadData`     | ✅    | ❌   |
+| `settings` + `write`    | `manageSettings` | ✅    | ❌   |
+| _(new)_                 | `takeActions`    | ✅    | ❌   |
 
 ### Role Migration Map
 
@@ -118,15 +122,15 @@ employee     → user
 // File: webapp/app/api/chat/route.ts
 
 // BEFORE (v1):
-import { requireAuth, hasPermission } from '@/lib/auth/middleware'
+import { requireAuth, hasPermission } from '@/lib/auth/middleware';
 
 export async function POST(request: NextRequest) {
-  const authResult = await requireAuth(request)
-  if (!authResult.success) return authErrorResponse(authResult)
+  const authResult = await requireAuth(request);
+  if (!authResult.success) return authErrorResponse(authResult);
 
   // Everyone with 'chat' resource can access
   if (!hasPermission(authResult.user, 'chat', 'write')) {
-    return authErrorResponse({ success: false, error: 'Forbidden', statusCode: 403 })
+    return authErrorResponse({ success: false, error: 'Forbidden', statusCode: 403 });
   }
   // ...
 }
@@ -134,15 +138,15 @@ export async function POST(request: NextRequest) {
 
 ```typescript
 // AFTER (v2):
-import { requireAuth, hasPermission } from '@/lib/auth/middleware-v2'
+import { requireAuth, hasPermission } from '@/lib/auth/middleware-v2';
 
 export async function POST(request: NextRequest) {
-  const authResult = await requireAuth(request)
-  if (!authResult.success) return authErrorResponse(authResult)
+  const authResult = await requireAuth(request);
+  if (!authResult.success) return authErrorResponse(authResult);
 
   // Both admin and user can chat
   if (!hasPermission(authResult.user, 'chat')) {
-    return authErrorResponse({ success: false, error: 'Forbidden', statusCode: 403 })
+    return authErrorResponse({ success: false, error: 'Forbidden', statusCode: 403 });
   }
   // ...
 }
@@ -154,14 +158,14 @@ export async function POST(request: NextRequest) {
 // File: webapp/app/api/data/upload/route.ts
 
 // BEFORE (v1):
-import { requireAuth, hasPermission } from '@/lib/auth/middleware'
+import { requireAuth, hasPermission } from '@/lib/auth/middleware';
 
 export async function POST(request: NextRequest) {
-  const authResult = await requireAuth(request)
-  if (!authResult.success) return authErrorResponse(authResult)
+  const authResult = await requireAuth(request);
+  if (!authResult.success) return authErrorResponse(authResult);
 
   if (!hasPermission(authResult.user, 'data_upload', 'write')) {
-    return authErrorResponse({ success: false, error: 'Forbidden', statusCode: 403 })
+    return authErrorResponse({ success: false, error: 'Forbidden', statusCode: 403 });
   }
   // ...
 }
@@ -169,15 +173,15 @@ export async function POST(request: NextRequest) {
 
 ```typescript
 // AFTER (v2):
-import { requireAuth, hasPermission } from '@/lib/auth/middleware-v2'
+import { requireAuth, hasPermission } from '@/lib/auth/middleware-v2';
 
 export async function POST(request: NextRequest) {
-  const authResult = await requireAuth(request)
-  if (!authResult.success) return authErrorResponse(authResult)
+  const authResult = await requireAuth(request);
+  if (!authResult.success) return authErrorResponse(authResult);
 
   // Only admins can upload data
   if (!hasPermission(authResult.user, 'uploadData')) {
-    return authErrorResponse({ success: false, error: 'Forbidden', statusCode: 403 })
+    return authErrorResponse({ success: false, error: 'Forbidden', statusCode: 403 });
   }
   // ...
 }
@@ -191,20 +195,20 @@ export async function POST(request: NextRequest) {
 
 ```tsx
 // BEFORE (v1):
-{user.roles.some(role => role.permissions.some(
-  p => p.resource === 'settings' && p.actions.includes('write')
-)) && (
-  <SettingsPanel />
-)}
+{
+  user.roles.some((role) =>
+    role.permissions.some((p) => p.resource === 'settings' && p.actions.includes('write'))
+  ) && <SettingsPanel />;
+}
 ```
 
 ```tsx
 // AFTER (v2):
-import { RequirePermission } from '@/components/auth/RoleGuard'
+import { RequirePermission } from '@/components/auth/RoleGuard';
 
 <RequirePermission permission="manageSettings">
   <SettingsPanel />
-</RequirePermission>
+</RequirePermission>;
 ```
 
 ### Example 2: Export Button
@@ -212,11 +216,11 @@ import { RequirePermission } from '@/components/auth/RoleGuard'
 ```tsx
 // BEFORE (v1):
 <Button
-  disabled={!user.roles.some(role =>
-    role.permissions.some(p =>
-      p.resource === 'analytics' && p.actions.includes('export')
+  disabled={
+    !user.roles.some((role) =>
+      role.permissions.some((p) => p.resource === 'analytics' && p.actions.includes('export'))
     )
-  )}
+  }
 >
   Export Data
 </Button>
@@ -224,35 +228,31 @@ import { RequirePermission } from '@/components/auth/RoleGuard'
 
 ```tsx
 // AFTER (v2):
-import { PermissionButton } from '@/components/auth/RoleGuard'
+import { PermissionButton } from '@/components/auth/RoleGuard';
 
-<PermissionButton
-  permission="exportData"
-  disabledMessage="Only admins can export data"
->
+<PermissionButton permission="exportData" disabledMessage="Only admins can export data">
   Export Data
-</PermissionButton>
+</PermissionButton>;
 ```
 
 ### Example 3: Role-Specific Content
 
 ```tsx
 // BEFORE (v1):
-{user.roles.some(r => ['super_admin', 'hr_admin'].includes(r.name)) ? (
-  <AdminDashboard />
-) : (
-  <UserDashboard />
-)}
+{
+  user.roles.some((r) => ['super_admin', 'hr_admin'].includes(r.name)) ? (
+    <AdminDashboard />
+  ) : (
+    <UserDashboard />
+  );
+}
 ```
 
 ```tsx
 // AFTER (v2):
-import { RoleSwitch } from '@/components/auth/RoleGuard'
+import { RoleSwitch } from '@/components/auth/RoleGuard';
 
-<RoleSwitch
-  admin={<AdminDashboard />}
-  user={<UserDashboard />}
-/>
+<RoleSwitch admin={<AdminDashboard />} user={<UserDashboard />} />;
 ```
 
 ---
@@ -300,20 +300,20 @@ The v2 system is **backward compatible** with v1 tokens:
 
 ```typescript
 // Create test tokens for both roles
-import { createDemoToken } from '@/lib/auth/middleware-v2'
+import { createDemoToken } from '@/lib/auth/middleware-v2';
 
-const adminToken = await createDemoToken('admin@test.com', 'admin')
-const userToken = await createDemoToken('user@test.com', 'user')
+const adminToken = await createDemoToken('admin@test.com', 'admin');
+const userToken = await createDemoToken('user@test.com', 'user');
 
 // Test API endpoints with both tokens
 const adminResponse = await fetch('/api/data/upload', {
-  headers: { Authorization: `Bearer ${adminToken}` }
-})
+  headers: { Authorization: `Bearer ${adminToken}` },
+});
 // Should succeed for admin
 
 const userResponse = await fetch('/api/data/upload', {
-  headers: { Authorization: `Bearer ${userToken}` }
-})
+  headers: { Authorization: `Bearer ${userToken}` },
+});
 // Should return 403 for user
 ```
 

@@ -13,7 +13,6 @@ import { SmartFileUpload } from '@/components/custom/SmartFileUpload';
 expect.extend(toHaveNoViolations);
 
 describe('Accessibility Tests - Core Components', () => {
-
   describe('ChatInterface Component', () => {
     it('should have no axe violations', async () => {
       const { container } = render(<ChatInterface />);
@@ -94,16 +93,13 @@ describe('Accessibility Tests - Core Components', () => {
 });
 
 describe('Accessibility Tests - Common Patterns', () => {
-
   describe('Color Contrast', () => {
     it('should test muted text contrast', async () => {
-      const { container } = render(
-        <div className="text-muted-foreground">Muted text content</div>
-      );
+      const { container } = render(<div className="text-muted-foreground">Muted text content</div>);
       const results = await axe(container, {
         rules: {
-          'color-contrast': { enabled: true }
-        }
+          'color-contrast': { enabled: true },
+        },
       });
       expect(results).toHaveNoViolations();
     });
@@ -112,14 +108,12 @@ describe('Accessibility Tests - Common Patterns', () => {
   describe('Focus Management', () => {
     it('should have visible focus indicators', async () => {
       const { container } = render(
-        <button className="focus-visible:outline focus-visible:outline-2">
-          Test Button
-        </button>
+        <button className="focus-visible:outline focus-visible:outline-2">Test Button</button>
       );
       const results = await axe(container, {
         rules: {
-          'focus-visible': { enabled: true }
-        }
+          'focus-visible': { enabled: true },
+        },
       });
       expect(results).toHaveNoViolations();
     });
@@ -135,8 +129,8 @@ describe('Accessibility Tests - Common Patterns', () => {
       );
       const results = await axe(container, {
         rules: {
-          'label': { enabled: true }
-        }
+          label: { enabled: true },
+        },
       });
       expect(results).toHaveNoViolations();
     });
@@ -154,8 +148,8 @@ describe('Accessibility Tests - Common Patterns', () => {
       const results = await axe(container, {
         rules: {
           'aria-valid-attr': { enabled: true },
-          'aria-hidden-focus': { enabled: true }
-        }
+          'aria-hidden-focus': { enabled: true },
+        },
       });
       expect(results).toHaveNoViolations();
     });

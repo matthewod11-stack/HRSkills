@@ -17,7 +17,7 @@ import { logComponentError } from '@/lib/errorLogging';
   }}
 >
   <YourComponent />
-</ErrorBoundary>
+</ErrorBoundary>;
 ```
 
 ---
@@ -25,6 +25,7 @@ import { logComponentError } from '@/lib/errorLogging';
 ## 📊 Boundary Levels
 
 ### App Level
+
 - **Use for:** Root layout, entire application
 - **Behavior:** Full-screen error UI with home navigation
 - **Visual:** Maximum prominence
@@ -36,6 +37,7 @@ import { logComponentError } from '@/lib/errorLogging';
 ```
 
 ### Page Level
+
 - **Use for:** Individual pages, routes
 - **Behavior:** Page-sized error UI, stays within layout
 - **Visual:** Medium prominence
@@ -47,6 +49,7 @@ import { logComponentError } from '@/lib/errorLogging';
 ```
 
 ### Section Level
+
 - **Use for:** Individual components, widgets
 - **Behavior:** Inline error UI, minimal disruption
 - **Visual:** Low prominence
@@ -62,48 +65,53 @@ import { logComponentError } from '@/lib/errorLogging';
 ## 🎨 Specialized Fallback Components
 
 ### Data Loading Errors
+
 ```tsx
 import { DataLoadingError } from '@/components/ui/ErrorFallbacks';
 
 <ErrorBoundary fallback={<DataLoadingError onRetry={refetch} />}>
   <DataTable />
-</ErrorBoundary>
+</ErrorBoundary>;
 ```
 
 ### Chart Rendering Errors
+
 ```tsx
 import { ChartRenderError } from '@/components/ui/ErrorFallbacks';
 
 <ErrorBoundary fallback={<ChartRenderError onReset={resetChart} />}>
   <AnalyticsChart />
-</ErrorBoundary>
+</ErrorBoundary>;
 ```
 
 ### Form Submission Errors
+
 ```tsx
 import { FormSubmissionError } from '@/components/ui/ErrorFallbacks';
 
 <ErrorBoundary fallback={<FormSubmissionError onRetry={resubmit} />}>
   <EmployeeForm />
-</ErrorBoundary>
+</ErrorBoundary>;
 ```
 
 ### Authentication Errors
+
 ```tsx
 import { AuthenticationError } from '@/components/ui/ErrorFallbacks';
 
 <ErrorBoundary fallback={<AuthenticationError />}>
   <ProtectedContent />
-</ErrorBoundary>
+</ErrorBoundary>;
 ```
 
 ### Network Errors
+
 ```tsx
 import { NetworkError } from '@/components/ui/ErrorFallbacks';
 
 <ErrorBoundary fallback={<NetworkError onRetry={reconnect} />}>
   <LiveDataFeed />
-</ErrorBoundary>
+</ErrorBoundary>;
 ```
 
 ---
@@ -111,6 +119,7 @@ import { NetworkError } from '@/components/ui/ErrorFallbacks';
 ## 📝 Error Logging
 
 ### Component Errors (Automatic)
+
 ```tsx
 // Automatically logged when boundary catches error
 <ErrorBoundary
@@ -123,6 +132,7 @@ import { NetworkError } from '@/components/ui/ErrorFallbacks';
 ```
 
 ### API Errors (Manual)
+
 ```tsx
 import { logApiError } from '@/lib/errorLogging';
 
@@ -134,6 +144,7 @@ try {
 ```
 
 ### User Action Errors (Manual)
+
 ```tsx
 import { logUserActionError } from '@/lib/errorLogging';
 
@@ -141,25 +152,21 @@ try {
   handleButtonClick();
 } catch (error) {
   logUserActionError(error as Error, 'button_click', {
-    buttonId: 'submit-btn'
+    buttonId: 'submit-btn',
   });
 }
 ```
 
 ### Custom Error Logging
+
 ```tsx
 import { errorLogger, ErrorSeverity } from '@/lib/errorLogging';
 
-errorLogger.logError(
-  new Error('Custom error'),
-  undefined,
-  ErrorSeverity.HIGH,
-  {
-    component: 'CustomComponent',
-    action: 'custom_action',
-    userId: 'user123'
-  }
-);
+errorLogger.logError(new Error('Custom error'), undefined, ErrorSeverity.HIGH, {
+  component: 'CustomComponent',
+  action: 'custom_action',
+  userId: 'user123',
+});
 ```
 
 ---
@@ -167,6 +174,7 @@ errorLogger.logError(
 ## 🔧 Advanced Patterns
 
 ### Multiple Nested Boundaries
+
 ```tsx
 <ErrorBoundary level="app">
   <App>
@@ -182,6 +190,7 @@ errorLogger.logError(
 ```
 
 ### Manual Error Triggering
+
 ```tsx
 import { useErrorHandler } from '@/components/ui/ErrorBoundary';
 
@@ -199,37 +208,37 @@ function Component() {
 ```
 
 ### Custom Fallback with Props
+
 ```tsx
 const customFallback = (
   <div className="p-4 bg-red-50 rounded">
     <h3>Oops! Custom Error</h3>
-    <button onClick={() => window.location.reload()}>
-      Reload Page
-    </button>
+    <button onClick={() => window.location.reload()}>Reload Page</button>
   </div>
 );
 
 <ErrorBoundary fallback={customFallback}>
   <Component />
-</ErrorBoundary>
+</ErrorBoundary>;
 ```
 
 ---
 
 ## 📊 Error Severity Levels
 
-| Level | Use Case | Example |
-|-------|----------|---------|
-| **LOW** | User actions, recoverable errors | Form validation, button clicks |
-| **MEDIUM** | API errors, network issues | Failed fetch, timeout |
-| **HIGH** | Component errors, render failures | Null reference, type error |
-| **CRITICAL** | App-breaking errors | Auth failure, missing dependencies |
+| Level        | Use Case                          | Example                            |
+| ------------ | --------------------------------- | ---------------------------------- |
+| **LOW**      | User actions, recoverable errors  | Form validation, button clicks     |
+| **MEDIUM**   | API errors, network issues        | Failed fetch, timeout              |
+| **HIGH**     | Component errors, render failures | Null reference, type error         |
+| **CRITICAL** | App-breaking errors               | Auth failure, missing dependencies |
 
 ---
 
 ## 🧪 Testing Error Boundaries
 
 ### Trigger Test Error
+
 ```tsx
 function TestError() {
   throw new Error('Test error');
@@ -238,16 +247,17 @@ function TestError() {
 
 <ErrorBoundary>
   <TestError />
-</ErrorBoundary>
+</ErrorBoundary>;
 ```
 
 ### Test Error Recovery
+
 ```tsx
 const [shouldError, setShouldError] = useState(false);
 
 <ErrorBoundary>
   <TestComponent shouldError={shouldError} />
-</ErrorBoundary>
+</ErrorBoundary>;
 
 // Trigger error
 setShouldError(true);
@@ -273,41 +283,36 @@ setShouldError(false);
 ## ⚡ Common Patterns
 
 ### Protecting Data Fetching
+
 ```tsx
 function DataComponent() {
   const [data, setData] = useState(null);
 
   useEffect(() => {
     fetch('/api/data')
-      .then(res => res.json())
+      .then((res) => res.json())
       .then(setData)
-      .catch(err => logApiError(err, '/api/data'));
+      .catch((err) => logApiError(err, '/api/data'));
   }, []);
 
-  return <ErrorBoundary level="section">
-    {data ? <DataView data={data} /> : <Loading />}
-  </ErrorBoundary>;
+  return (
+    <ErrorBoundary level="section">{data ? <DataView data={data} /> : <Loading />}</ErrorBoundary>
+  );
 }
 ```
 
 ### Protecting Forms
+
 ```tsx
-<ErrorBoundary
-  level="section"
-  fallback={<FormSubmissionError onRetry={handleSubmit} />}
->
-  <form onSubmit={handleSubmit}>
-    {/* form fields */}
-  </form>
+<ErrorBoundary level="section" fallback={<FormSubmissionError onRetry={handleSubmit} />}>
+  <form onSubmit={handleSubmit}>{/* form fields */}</form>
 </ErrorBoundary>
 ```
 
 ### Protecting Charts
+
 ```tsx
-<ErrorBoundary
-  level="section"
-  fallback={<ChartRenderError />}
->
+<ErrorBoundary level="section" fallback={<ChartRenderError />}>
   <Chart data={chartData} />
 </ErrorBoundary>
 ```
@@ -317,12 +322,14 @@ function DataComponent() {
 ## 🚨 When NOT to Use Error Boundaries
 
 Error boundaries **cannot** catch:
+
 - Errors in event handlers (use try/catch)
 - Errors in async code (use try/catch)
 - Errors in server-side rendering
 - Errors thrown in the boundary itself
 
 **Instead, use manual error handling:**
+
 ```tsx
 // ❌ Won't be caught by boundary
 async function handleClick() {
@@ -359,4 +366,4 @@ async function handleClick() {
 
 ---
 
-*Last Updated: November 5, 2025*
+_Last Updated: November 5, 2025_

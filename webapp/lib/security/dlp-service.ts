@@ -7,22 +7,22 @@
  * @see https://cloud.google.com/dlp/docs
  */
 
-import { DlpServiceClient } from '@google-cloud/dlp'
-import type { protos } from '@google-cloud/dlp'
+import { DlpServiceClient } from '@google-cloud/dlp';
+import type { protos } from '@google-cloud/dlp';
 
-type IInfoType = protos.google.privacy.dlp.v2.IInfoType
-type IInspectConfig = protos.google.privacy.dlp.v2.IInspectConfig
-type IDeidentifyConfig = protos.google.privacy.dlp.v2.IDeidentifyConfig
-type IFinding = protos.google.privacy.dlp.v2.IFinding
+type IInfoType = protos.google.privacy.dlp.v2.IInfoType;
+type IInspectConfig = protos.google.privacy.dlp.v2.IInspectConfig;
+type IDeidentifyConfig = protos.google.privacy.dlp.v2.IDeidentifyConfig;
+type IFinding = protos.google.privacy.dlp.v2.IFinding;
 
 // Initialize DLP client (uses GOOGLE_APPLICATION_CREDENTIALS env var)
-let dlpClient: DlpServiceClient | null = null
+let dlpClient: DlpServiceClient | null = null;
 
 function getDlpClient(): DlpServiceClient {
   if (!dlpClient) {
-    dlpClient = new DlpServiceClient()
+    dlpClient = new DlpServiceClient();
   }
-  return dlpClient
+  return dlpClient;
 }
 
 /**
@@ -30,11 +30,11 @@ function getDlpClient(): DlpServiceClient {
  */
 export interface DlpScanConfig {
   /** Info types to scan for (default: ALL_HR_PII) */
-  infoTypes?: IInfoType[]
+  infoTypes?: IInfoType[];
   /** Minimum likelihood threshold (default: LIKELY) */
-  minLikelihood?: 'VERY_UNLIKELY' | 'UNLIKELY' | 'POSSIBLE' | 'LIKELY' | 'VERY_LIKELY'
+  minLikelihood?: 'VERY_UNLIKELY' | 'UNLIKELY' | 'POSSIBLE' | 'LIKELY' | 'VERY_LIKELY';
   /** Include quote from finding (default: false for privacy) */
-  includeQuote?: boolean
+  includeQuote?: boolean;
 }
 
 /**
@@ -42,18 +42,18 @@ export interface DlpScanConfig {
  */
 export interface DlpScanResult {
   /** Whether PII was detected */
-  hasPii: boolean
+  hasPii: boolean;
   /** Number of findings */
-  findingCount: number
+  findingCount: number;
   /** Detailed findings (if any) */
   findings: Array<{
-    infoType: string
-    likelihood: string
-    location?: { byteRange?: { start?: number; end?: number } }
-    quote?: string
-  }>
+    infoType: string;
+    likelihood: string;
+    location?: { byteRange?: { start?: number; end?: number } };
+    quote?: string;
+  }>;
   /** Risk analysis */
-  riskLevel: 'NONE' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
+  riskLevel: 'NONE' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 }
 
 /**
@@ -75,7 +75,7 @@ const HR_PII_INFO_TYPES: IInfoType[] = [
   { name: 'GENDER' },
   { name: 'MEDICAL_RECORD_NUMBER' },
   { name: 'US_HEALTHCARE_NPI' },
-]
+];
 
 /**
  * Scan text content for PII
@@ -96,7 +96,7 @@ export async function scanForPii(
   content: string,
   config: DlpScanConfig = {}
 ): Promise<DlpScanResult> {
-  const client = getDlpClient()
+  const client = getDlpClient();
 
   // Build inspect config
   const inspectConfig: IInspectConfig = {
@@ -106,18 +106,18 @@ export async function scanForPii(
     limits: {
       maxFindingsPerRequest: 100,
     },
-  }
+  };
 
   try {
-    const projectId = await client.getProjectId()
+    const projectId = await client.getProjectId();
 
     const [response] = await client.inspectContent({
       parent: `projects/${projectId}`,
       inspectConfig,
       item: { value: content },
-    })
+    });
 
-    const findings = response.result?.findings || []
+    const findings = response.result?.findings || [];
 
     // Map findings to simplified format
     const simplifiedFindings = findings.map((finding: IFinding) => ({
@@ -125,26 +125,26 @@ export async function scanForPii(
       likelihood: finding.likelihood || 'UNKNOWN',
       location: finding.location,
       quote: config.includeQuote ? finding.quote : undefined,
-    }))
+    }));
 
     // Calculate risk level based on findings
-    const riskLevel = calculateRiskLevel(simplifiedFindings)
+    const riskLevel = calculateRiskLevel(simplifiedFindings);
 
     return {
       hasPii: findings.length > 0,
       findingCount: findings.length,
       findings: simplifiedFindings,
       riskLevel,
-    }
+    };
   } catch (error) {
-    console.error('[DLP] Scan failed:', error)
+    console.error('[DLP] Scan failed:', error);
     // Fail open: don't block operations if DLP is unavailable
     return {
       hasPii: false,
       findingCount: 0,
       findings: [],
       riskLevel: 'NONE',
-    }
+    };
   }
 }
 
@@ -167,20 +167,22 @@ export async function deidentifyText(
   content: string,
   infoTypes: IInfoType[] = HR_PII_INFO_TYPES
 ): Promise<string> {
-  const client = getDlpClient()
+  const client = getDlpClient();
 
   const deidentifyConfig: IDeidentifyConfig = {
     infoTypeTransformations: {
-      transformations: [{
-        primitiveTransformation: {
-          replaceWithInfoTypeConfig: {},
+      transformations: [
+        {
+          primitiveTransformation: {
+            replaceWithInfoTypeConfig: {},
+          },
         },
-      }],
+      ],
     },
-  }
+  };
 
   try {
-    const projectId = await client.getProjectId()
+    const projectId = await client.getProjectId();
 
     const [response] = await client.deidentifyContent({
       parent: `projects/${projectId}`,
@@ -189,13 +191,13 @@ export async function deidentifyText(
         infoTypes,
       },
       item: { value: content },
-    })
+    });
 
-    return response.item?.value || content
+    return response.item?.value || content;
   } catch (error) {
-    console.error('[DLP] De-identification failed:', error)
+    console.error('[DLP] De-identification failed:', error);
     // Fail open: return original content if DLP unavailable
-    return content
+    return content;
   }
 }
 
@@ -218,22 +220,24 @@ export async function redactPii(
   content: string,
   infoTypes: IInfoType[] = HR_PII_INFO_TYPES
 ): Promise<string> {
-  const client = getDlpClient()
+  const client = getDlpClient();
 
   const deidentifyConfig: IDeidentifyConfig = {
     infoTypeTransformations: {
-      transformations: [{
-        primitiveTransformation: {
-          characterMaskConfig: {
-            maskingCharacter: '*',
+      transformations: [
+        {
+          primitiveTransformation: {
+            characterMaskConfig: {
+              maskingCharacter: '*',
+            },
           },
         },
-      }],
+      ],
     },
-  }
+  };
 
   try {
-    const projectId = await client.getProjectId()
+    const projectId = await client.getProjectId();
 
     const [response] = await client.deidentifyContent({
       parent: `projects/${projectId}`,
@@ -242,12 +246,12 @@ export async function redactPii(
         infoTypes,
       },
       item: { value: content },
-    })
+    });
 
-    return response.item?.value || content
+    return response.item?.value || content;
   } catch (error) {
-    console.error('[DLP] Redaction failed:', error)
-    return content
+    console.error('[DLP] Redaction failed:', error);
+    return content;
   }
 }
 
@@ -265,19 +269,16 @@ export async function redactPii(
  * // Throws if PII found, otherwise continues
  * ```
  */
-export async function validateNoPii(
-  content: string,
-  context: string = 'content'
-): Promise<void> {
+export async function validateNoPii(content: string, context: string = 'content'): Promise<void> {
   const result = await scanForPii(content, {
     minLikelihood: 'POSSIBLE', // More sensitive for validation
     includeQuote: false, // Don't expose PII in error
-  })
+  });
 
   if (result.hasPii) {
     throw new Error(
-      `PII detected in ${context}: Found ${result.findingCount} instances of sensitive data (${result.findings.map(f => f.infoType).join(', ')}). Risk level: ${result.riskLevel}`
-    )
+      `PII detected in ${context}: Found ${result.findingCount} instances of sensitive data (${result.findings.map((f) => f.infoType).join(', ')}). Risk level: ${result.riskLevel}`
+    );
   }
 }
 
@@ -287,24 +288,33 @@ export async function validateNoPii(
 function calculateRiskLevel(
   findings: Array<{ infoType: string; likelihood: string }>
 ): DlpScanResult['riskLevel'] {
-  if (findings.length === 0) return 'NONE'
+  if (findings.length === 0) return 'NONE';
 
   // Critical: SSN, Credit Card, Medical records
-  const criticalTypes = ['US_SOCIAL_SECURITY_NUMBER', 'CREDIT_CARD_NUMBER', 'MEDICAL_RECORD_NUMBER']
-  const hasCritical = findings.some(f => criticalTypes.includes(f.infoType))
-  if (hasCritical) return 'CRITICAL'
+  const criticalTypes = [
+    'US_SOCIAL_SECURITY_NUMBER',
+    'CREDIT_CARD_NUMBER',
+    'MEDICAL_RECORD_NUMBER',
+  ];
+  const hasCritical = findings.some((f) => criticalTypes.includes(f.infoType));
+  if (hasCritical) return 'CRITICAL';
 
   // High: Financial info, passport, driver's license
-  const highTypes = ['US_BANK_ROUTING_MICR', 'IBAN_CODE', 'US_PASSPORT', 'US_DRIVERS_LICENSE_NUMBER']
-  const hasHigh = findings.some(f => highTypes.includes(f.infoType))
-  if (hasHigh) return 'HIGH'
+  const highTypes = [
+    'US_BANK_ROUTING_MICR',
+    'IBAN_CODE',
+    'US_PASSPORT',
+    'US_DRIVERS_LICENSE_NUMBER',
+  ];
+  const hasHigh = findings.some((f) => highTypes.includes(f.infoType));
+  if (hasHigh) return 'HIGH';
 
   // Medium: Multiple findings or very likely findings
-  const veryLikelyFindings = findings.filter(f => f.likelihood === 'VERY_LIKELY')
-  if (findings.length > 5 || veryLikelyFindings.length > 2) return 'MEDIUM'
+  const veryLikelyFindings = findings.filter((f) => f.likelihood === 'VERY_LIKELY');
+  if (findings.length > 5 || veryLikelyFindings.length > 2) return 'MEDIUM';
 
   // Low: Few findings
-  return 'LOW'
+  return 'LOW';
 }
 
 /**
@@ -312,12 +322,12 @@ function calculateRiskLevel(
  */
 export async function isDlpAvailable(): Promise<boolean> {
   try {
-    const client = getDlpClient()
-    await client.getProjectId()
-    return true
+    const client = getDlpClient();
+    await client.getProjectId();
+    return true;
   } catch (error) {
-    console.warn('[DLP] Not available:', error instanceof Error ? error.message : 'Unknown error')
-    return false
+    console.warn('[DLP] Not available:', error instanceof Error ? error.message : 'Unknown error');
+    return false;
   }
 }
 
@@ -356,4 +366,4 @@ export const DLP_INFO_TYPE_PRESETS = {
 
   /** All HR-relevant PII */
   ALL_HR_PII: HR_PII_INFO_TYPES,
-}
+};

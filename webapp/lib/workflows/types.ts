@@ -18,47 +18,47 @@ export type WorkflowId =
   | 'compensation'
   | 'employee_relations'
   | 'compliance'
-  | 'general' // Fallback for non-workflow conversations
+  | 'general'; // Fallback for non-workflow conversations
 
 export interface Workflow {
-  id: WorkflowId
-  name: string
-  description: string
-  triggers: WorkflowTrigger[]
-  capabilities: WorkflowCapability[]
-  systemPrompt: string
-  actions: Record<string, WorkflowActionDefinition>
-  steps?: WorkflowStep[]
+  id: WorkflowId;
+  name: string;
+  description: string;
+  triggers: WorkflowTrigger[];
+  capabilities: WorkflowCapability[];
+  systemPrompt: string;
+  actions: Record<string, WorkflowActionDefinition>;
+  steps?: WorkflowStep[];
 }
 
 export interface WorkflowTrigger {
-  pattern: RegExp
-  weight: number // Higher weight = higher priority when multiple matches
-  contextHints?: string[] // Additional context that increases confidence
-  capability?: string // Specific capability this trigger relates to
+  pattern: RegExp;
+  weight: number; // Higher weight = higher priority when multiple matches
+  contextHints?: string[]; // Additional context that increases confidence
+  capability?: string; // Specific capability this trigger relates to
 }
 
 export interface WorkflowCapability {
-  id: string
-  name: string
-  description: string
-  requirements?: string[] // e.g., ['google_drive', 'employee_data']
+  id: string;
+  name: string;
+  description: string;
+  requirements?: string[]; // e.g., ['google_drive', 'employee_data']
 }
 
 export interface WorkflowStep {
-  id: string
-  name: string
-  description: string
-  nextSteps: string[] // Possible next steps from here
+  id: string;
+  name: string;
+  description: string;
+  nextSteps: string[]; // Possible next steps from here
 }
 
 export interface WorkflowActionDefinition {
-  type: ActionType
-  label: string
-  description: string
-  defaultPayload?: any
-  requiresApproval?: boolean
-  requiredPermissions?: string[]
+  type: ActionType;
+  label: string;
+  description: string;
+  defaultPayload?: any;
+  requiresApproval?: boolean;
+  requiredPermissions?: string[];
 }
 
 // ============================================================================
@@ -66,25 +66,25 @@ export interface WorkflowActionDefinition {
 // ============================================================================
 
 export interface WorkflowMatch {
-  workflowId: WorkflowId
-  confidence: number // 0-100
-  matchedTriggers: WorkflowTrigger[]
-  contextFactors: string[] // What influenced the detection
-  capability?: string // Specific capability matched (for context-based routing)
+  workflowId: WorkflowId;
+  confidence: number; // 0-100
+  matchedTriggers: WorkflowTrigger[];
+  contextFactors: string[]; // What influenced the detection
+  capability?: string; // Specific capability matched (for context-based routing)
 }
 
 export interface DetectionContext {
-  message: string
-  conversationHistory?: ConversationMessage[]
-  currentWorkflow?: WorkflowId
-  userData?: any
+  message: string;
+  conversationHistory?: ConversationMessage[];
+  currentWorkflow?: WorkflowId;
+  userData?: any;
 }
 
 export interface ConversationMessage {
-  role: 'user' | 'assistant'
-  content: string
-  timestamp: string
-  workflowId?: WorkflowId
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+  workflowId?: WorkflowId;
 }
 
 // ============================================================================
@@ -92,25 +92,25 @@ export interface ConversationMessage {
 // ============================================================================
 
 export interface WorkflowState {
-  workflowId: WorkflowId
-  step: string
-  data: Record<string, any> // Workflow-specific data collected so far
-  completedSteps: string[]
-  nextActions: SuggestedAction[]
-  createdAt: string
-  updatedAt: string
-  metadata?: Record<string, any> // Additional context
+  workflowId: WorkflowId;
+  step: string;
+  data: Record<string, any>; // Workflow-specific data collected so far
+  completedSteps: string[];
+  nextActions: SuggestedAction[];
+  createdAt: string;
+  updatedAt: string;
+  metadata?: Record<string, any>; // Additional context
 }
 
 export interface SuggestedAction {
-  id: string
-  type: ActionType
-  label: string // User-facing label: "Save to Google Drive"
-  description: string // Longer description of what this does
-  payload: any // Action-specific payload
-  requiresApproval: boolean
-  status?: 'pending' | 'approved' | 'rejected' | 'completed' | 'failed'
-  icon?: string // Icon name for UI
+  id: string;
+  type: ActionType;
+  label: string; // User-facing label: "Save to Google Drive"
+  description: string; // Longer description of what this does
+  payload: any; // Action-specific payload
+  requiresApproval: boolean;
+  status?: 'pending' | 'approved' | 'rejected' | 'completed' | 'failed';
+  icon?: string; // Icon name for UI
 }
 
 // ============================================================================
@@ -125,7 +125,7 @@ export type ActionType =
   | 'update_employee'
   | 'create_drive_folder'
   | 'analyze_data'
-  | 'export_to_sheets'
+  | 'export_to_sheets';
 
 export type Action =
   | DocumentAction
@@ -135,18 +135,18 @@ export type Action =
   | DataUpdateAction
   | DriveFolderAction
   | AnalyzeDataAction
-  | ExportSheetsAction
+  | ExportSheetsAction;
 
 // Document Actions
 export interface DocumentAction {
-  type: 'create_document'
-  documentType: DocumentType
-  data: Record<string, any>
-  saveToGoogleDrive?: boolean
-  driveFolder?: string
-  templateId?: string // Google Docs template ID
-  fileName?: string
-  metadata?: DocumentMetadata
+  type: 'create_document';
+  documentType: DocumentType;
+  data: Record<string, any>;
+  saveToGoogleDrive?: boolean;
+  driveFolder?: string;
+  templateId?: string; // Google Docs template ID
+  fileName?: string;
+  metadata?: DocumentMetadata;
 }
 
 export type DocumentType =
@@ -159,136 +159,136 @@ export type DocumentType =
   | 'exit_checklist'
   | 'policy_document'
   | 'compensation_proposal'
-  | 'investigation_report'
+  | 'investigation_report';
 
 export interface DocumentMetadata {
-  employeeId?: string
-  department?: string
-  templateVersion?: string
-  createdBy?: string
-  tags?: string[]
+  employeeId?: string;
+  department?: string;
+  templateVersion?: string;
+  createdBy?: string;
+  tags?: string[];
 }
 
 // Email Actions
 export interface EmailAction {
-  type: 'send_email'
-  to: string[]
-  cc?: string[]
-  bcc?: string[]
-  subject: string
-  body: string
-  bodyFormat?: 'text' | 'html'
-  attachments?: EmailAttachment[]
-  requiresApproval: boolean
-  metadata?: EmailMetadata
+  type: 'send_email';
+  to: string[];
+  cc?: string[];
+  bcc?: string[];
+  subject: string;
+  body: string;
+  bodyFormat?: 'text' | 'html';
+  attachments?: EmailAttachment[];
+  requiresApproval: boolean;
+  metadata?: EmailMetadata;
 }
 
 export interface EmailAttachment {
-  filename: string
-  content?: string // Base64 encoded
-  url?: string // Or URL to download
-  mimeType?: string
+  filename: string;
+  content?: string; // Base64 encoded
+  url?: string; // Or URL to download
+  mimeType?: string;
 }
 
 export interface EmailMetadata {
-  campaignId?: string
-  category?: string
-  tags?: string[]
+  campaignId?: string;
+  category?: string;
+  tags?: string[];
 }
 
 // Slack Actions
 export interface SlackAction {
-  type: 'send_slack_message'
-  channel: string
-  message: string
-  threadTs?: string // Reply to thread
+  type: 'send_slack_message';
+  channel: string;
+  message: string;
+  threadTs?: string; // Reply to thread
   createChannel?: {
-    name: string
-    members: string[]
-    isPrivate?: boolean
-    topic?: string
-  }
-  metadata?: SlackMetadata
+    name: string;
+    members: string[];
+    isPrivate?: boolean;
+    topic?: string;
+  };
+  metadata?: SlackMetadata;
 }
 
 export interface SlackMetadata {
-  priority?: 'normal' | 'urgent'
-  category?: string
+  priority?: 'normal' | 'urgent';
+  category?: string;
 }
 
 // Calendar Actions
 export interface CalendarAction {
-  type: 'schedule_meeting'
-  title: string
-  description?: string
-  attendees: string[]
-  duration: number // minutes
-  suggestedTimes: Date[]
-  location?: string
-  conferenceLink?: string
-  requiresApproval: boolean
-  metadata?: CalendarMetadata
+  type: 'schedule_meeting';
+  title: string;
+  description?: string;
+  attendees: string[];
+  duration: number; // minutes
+  suggestedTimes: Date[];
+  location?: string;
+  conferenceLink?: string;
+  requiresApproval: boolean;
+  metadata?: CalendarMetadata;
 }
 
 export interface CalendarMetadata {
-  meetingType?: string
-  recurring?: boolean
-  recurrencePattern?: string
+  meetingType?: string;
+  recurring?: boolean;
+  recurrencePattern?: string;
 }
 
 // Data Update Actions
 export interface DataUpdateAction {
-  type: 'update_employee'
-  employeeId: string
-  updates: Partial<EmployeeData>
-  requiresApproval: boolean
-  reason?: string
-  metadata?: DataUpdateMetadata
+  type: 'update_employee';
+  employeeId: string;
+  updates: Partial<EmployeeData>;
+  requiresApproval: boolean;
+  reason?: string;
+  metadata?: DataUpdateMetadata;
 }
 
 export interface EmployeeData {
-  full_name?: string
-  email?: string
-  department?: string
-  job_title?: string
-  manager_id?: string
-  location?: string
-  compensation_base?: number
-  status?: 'active' | 'terminated' | 'leave'
-  [key: string]: any
+  full_name?: string;
+  email?: string;
+  department?: string;
+  job_title?: string;
+  manager_id?: string;
+  location?: string;
+  compensation_base?: number;
+  status?: 'active' | 'terminated' | 'leave';
+  [key: string]: any;
 }
 
 export interface DataUpdateMetadata {
-  source?: string
-  verifiedBy?: string
-  effectiveDate?: string
+  source?: string;
+  verifiedBy?: string;
+  effectiveDate?: string;
 }
 
 // Drive Folder Actions
 export interface DriveFolderAction {
-  type: 'create_drive_folder'
-  folderName: string
-  parentFolder?: string
-  shareWith?: string[]
-  permissions?: 'view' | 'edit' | 'comment'
+  type: 'create_drive_folder';
+  folderName: string;
+  parentFolder?: string;
+  shareWith?: string[];
+  permissions?: 'view' | 'edit' | 'comment';
 }
 
 // Analyze Data Actions
 export interface AnalyzeDataAction {
-  type: 'analyze_data'
-  analysisType: string
-  filters?: Record<string, any>
-  outputFormat?: 'json' | 'chart' | 'report'
+  type: 'analyze_data';
+  analysisType: string;
+  filters?: Record<string, any>;
+  outputFormat?: 'json' | 'chart' | 'report';
 }
 
 // Export to Sheets Actions
 export interface ExportSheetsAction {
-  type: 'export_to_sheets'
-  data: any[]
-  sheetId?: string
-  sheetName?: string
-  range?: string
-  createNew?: boolean
+  type: 'export_to_sheets';
+  data: any[];
+  sheetId?: string;
+  sheetName?: string;
+  range?: string;
+  createNew?: boolean;
 }
 
 // ============================================================================
@@ -296,18 +296,18 @@ export interface ExportSheetsAction {
 // ============================================================================
 
 export interface ActionResult {
-  success: boolean
-  actionId?: string
-  data?: any
-  error?: string
-  metadata?: ActionResultMetadata
+  success: boolean;
+  actionId?: string;
+  data?: any;
+  error?: string;
+  metadata?: ActionResultMetadata;
 }
 
 export interface ActionResultMetadata {
-  executionTimeMs?: number
-  provider?: string
-  resourceUrl?: string // e.g., Google Doc URL
-  resourceId?: string
+  executionTimeMs?: number;
+  provider?: string;
+  resourceUrl?: string; // e.g., Google Doc URL
+  resourceId?: string;
 }
 
 // ============================================================================
@@ -315,21 +315,21 @@ export interface ActionResultMetadata {
 // ============================================================================
 
 export interface WorkflowContext {
-  workflow: Workflow
-  state?: WorkflowState
-  employeeData?: any[]
-  analyticsData?: any
-  templates?: WorkflowTemplate[]
-  userPermissions?: string[]
+  workflow: Workflow;
+  state?: WorkflowState;
+  employeeData?: any[];
+  analyticsData?: any;
+  templates?: WorkflowTemplate[];
+  userPermissions?: string[];
 }
 
 export interface WorkflowTemplate {
-  id: string
-  name: string
-  description: string
-  content?: string
-  driveId?: string // Google Drive file ID
-  type: 'local' | 'drive'
+  id: string;
+  name: string;
+  description: string;
+  content?: string;
+  driveId?: string; // Google Drive file ID
+  type: 'local' | 'drive';
 }
 
 // ============================================================================
@@ -337,8 +337,8 @@ export interface WorkflowTemplate {
 // ============================================================================
 
 export interface SkillToWorkflowMapping {
-  skillId: string
-  workflowId: WorkflowId
-  capability?: string
-  notes?: string
+  skillId: string;
+  workflowId: WorkflowId;
+  capability?: string;
+  notes?: string;
 }

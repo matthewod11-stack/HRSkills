@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
@@ -72,9 +72,10 @@ export function PerformanceGridPanel({
   };
 
   const getCellData = (performance: string, potential: string): NineBoxCell | null => {
-    return gridData.find(
-      (cell) => cell.performance === performance && cell.potential === potential
-    ) || null;
+    return (
+      gridData.find((cell) => cell.performance === performance && cell.potential === potential) ||
+      null
+    );
   };
 
   const getCellColor = (performance: string, potential: string): string => {
@@ -224,13 +225,9 @@ export function PerformanceGridPanel({
       {/* Footer */}
       <div className="mt-4 pt-4 border-t border-white/10">
         <div className="text-xs text-gray-400">
-          <p className="mb-1">
-            Performance based on AI analysis + manager ratings
-          </p>
+          <p className="mb-1">Performance based on AI analysis + manager ratings</p>
           {highlights.length > 0 && (
-            <p className="text-yellow-400">
-              Highlighting: {highlights.join(', ')}
-            </p>
+            <p className="text-yellow-400">Highlighting: {highlights.join(', ')}</p>
           )}
         </div>
       </div>

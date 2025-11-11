@@ -6,16 +6,16 @@
  */
 
 export interface FirstRunStatus {
-  isFirstRun: boolean
-  hasEmployees: boolean
-  hasConversations: boolean
-  employeeCount: number
-  needsInitialization: boolean
+  isFirstRun: boolean;
+  hasEmployees: boolean;
+  hasConversations: boolean;
+  employeeCount: number;
+  needsInitialization: boolean;
   initializationSteps: {
-    databaseSetup: boolean
-    demoDataSeeded: boolean
-    conversationsCreated: boolean
-  }
+    databaseSetup: boolean;
+    demoDataSeeded: boolean;
+    conversationsCreated: boolean;
+  };
 }
 
 /**
@@ -24,19 +24,22 @@ export interface FirstRunStatus {
 export async function checkFirstRun(): Promise<FirstRunStatus> {
   try {
     // Dynamic import to avoid bundling SQLite in client-side code
-    const { db } = await import('@/lib/db')
-    const { employees, conversations } = await import('@/db/schema')
+    const { db } = await import('@/lib/db');
+    const { employees, conversations } = await import('@/db/schema');
 
     // Check if employees table has data
-    const employeeCount = await db.select({ count: employees.id }).from(employees).execute()
-    const hasEmployees = employeeCount.length > 0
+    const employeeCount = await db.select({ count: employees.id }).from(employees).execute();
+    const hasEmployees = employeeCount.length > 0;
 
     // Check if conversations table has data
-    const conversationCount = await db.select({ count: conversations.id }).from(conversations).execute()
-    const hasConversations = conversationCount.length > 0
+    const conversationCount = await db
+      .select({ count: conversations.id })
+      .from(conversations)
+      .execute();
+    const hasConversations = conversationCount.length > 0;
 
     // Determine if this is truly a first run
-    const isFirstRun = !hasEmployees && !hasConversations
+    const isFirstRun = !hasEmployees && !hasConversations;
 
     return {
       isFirstRun,
@@ -47,11 +50,11 @@ export async function checkFirstRun(): Promise<FirstRunStatus> {
       initializationSteps: {
         databaseSetup: true, // Schema is always set up by this point
         demoDataSeeded: hasEmployees,
-        conversationsCreated: hasConversations
-      }
-    }
+        conversationsCreated: hasConversations,
+      },
+    };
   } catch (error) {
-    console.error('[First Run] Error checking first run status:', error)
+    console.error('[First Run] Error checking first run status:', error);
 
     // If we can't query the database, assume it's a first run
     return {
@@ -63,9 +66,9 @@ export async function checkFirstRun(): Promise<FirstRunStatus> {
       initializationSteps: {
         databaseSetup: false,
         demoDataSeeded: false,
-        conversationsCreated: false
-      }
-    }
+        conversationsCreated: false,
+      },
+    };
   }
 }
 
@@ -74,13 +77,13 @@ export async function checkFirstRun(): Promise<FirstRunStatus> {
  */
 export async function hasDemoData(): Promise<boolean> {
   try {
-    const { db } = await import('@/lib/db')
-    const { employees } = await import('@/db/schema')
-    const employeeCount = await db.select({ count: employees.id }).from(employees).execute()
-    return employeeCount.length > 0
+    const { db } = await import('@/lib/db');
+    const { employees } = await import('@/db/schema');
+    const employeeCount = await db.select({ count: employees.id }).from(employees).execute();
+    return employeeCount.length > 0;
   } catch (error) {
-    console.error('[First Run] Error checking demo data:', error)
-    return false
+    console.error('[First Run] Error checking demo data:', error);
+    return false;
   }
 }
 
@@ -88,37 +91,37 @@ export async function hasDemoData(): Promise<boolean> {
  * Get initialization progress for UI display
  */
 export async function getInitializationProgress(): Promise<{
-  percentage: number
-  currentStep: string
-  steps: Array<{ name: string; completed: boolean }>
+  percentage: number;
+  currentStep: string;
+  steps: Array<{ name: string; completed: boolean }>;
 }> {
-  const status = await checkFirstRun()
+  const status = await checkFirstRun();
 
   const steps = [
     {
       name: 'Database setup',
-      completed: status.initializationSteps.databaseSetup
+      completed: status.initializationSteps.databaseSetup,
     },
     {
       name: 'Demo data seeded',
-      completed: status.initializationSteps.demoDataSeeded
+      completed: status.initializationSteps.demoDataSeeded,
     },
     {
       name: 'Example conversations created',
-      completed: status.initializationSteps.conversationsCreated
-    }
-  ]
+      completed: status.initializationSteps.conversationsCreated,
+    },
+  ];
 
-  const completedSteps = steps.filter(s => s.completed).length
-  const percentage = Math.round((completedSteps / steps.length) * 100)
+  const completedSteps = steps.filter((s) => s.completed).length;
+  const percentage = Math.round((completedSteps / steps.length) * 100);
 
-  const currentStep = steps.find(s => !s.completed)?.name || 'Complete'
+  const currentStep = steps.find((s) => !s.completed)?.name || 'Complete';
 
   return {
     percentage,
     currentStep,
-    steps
-  }
+    steps,
+  };
 }
 
 /**
@@ -127,8 +130,8 @@ export async function getInitializationProgress(): Promise<{
  */
 export function markFirstRunComplete() {
   if (typeof window !== 'undefined') {
-    localStorage.setItem('hrskills_first_run_complete', 'true')
-    localStorage.setItem('hrskills_first_run_date', new Date().toISOString())
+    localStorage.setItem('hrskills_first_run_complete', 'true');
+    localStorage.setItem('hrskills_first_run_date', new Date().toISOString());
   }
 }
 
@@ -136,8 +139,8 @@ export function markFirstRunComplete() {
  * Check if user has completed first run (client-side)
  */
 export function hasCompletedFirstRun(): boolean {
-  if (typeof window === 'undefined') return false
-  return localStorage.getItem('hrskills_first_run_complete') === 'true'
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem('hrskills_first_run_complete') === 'true';
 }
 
 /**
@@ -145,9 +148,9 @@ export function hasCompletedFirstRun(): boolean {
  */
 export function resetFirstRunStatus() {
   if (typeof window !== 'undefined') {
-    localStorage.removeItem('hrskills_first_run_complete')
-    localStorage.removeItem('hrskills_first_run_date')
-    localStorage.removeItem('hrskills_seen_welcome')
+    localStorage.removeItem('hrskills_first_run_complete');
+    localStorage.removeItem('hrskills_first_run_date');
+    localStorage.removeItem('hrskills_seen_welcome');
   }
 }
 
@@ -155,15 +158,15 @@ export function resetFirstRunStatus() {
  * Get days since first run
  */
 export function getDaysSinceFirstRun(): number {
-  if (typeof window === 'undefined') return 0
+  if (typeof window === 'undefined') return 0;
 
-  const firstRunDate = localStorage.getItem('hrskills_first_run_date')
-  if (!firstRunDate) return 0
+  const firstRunDate = localStorage.getItem('hrskills_first_run_date');
+  if (!firstRunDate) return 0;
 
-  const now = new Date()
-  const then = new Date(firstRunDate)
-  const diffTime = Math.abs(now.getTime() - then.getTime())
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  const now = new Date();
+  const then = new Date(firstRunDate);
+  const diffTime = Math.abs(now.getTime() - then.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  return diffDays
+  return diffDays;
 }

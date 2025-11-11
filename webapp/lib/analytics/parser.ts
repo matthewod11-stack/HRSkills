@@ -19,13 +19,13 @@ export function parseCSV(fileContent: string): ParseResult {
       header: true,
       skipEmptyLines: true,
       dynamicTyping: true,
-      transformHeader: (header) => header.trim().toLowerCase().replace(/\s+/g, '_')
+      transformHeader: (header) => header.trim().toLowerCase().replace(/\s+/g, '_'),
     });
 
     if (result.errors.length > 0) {
       return {
         success: false,
-        errors: result.errors.map(e => e.message)
+        errors: result.errors.map((e) => e.message),
       };
     }
 
@@ -33,12 +33,12 @@ export function parseCSV(fileContent: string): ParseResult {
       success: true,
       data: result.data,
       columns: result.meta.fields || [],
-      rowCount: result.data.length
+      rowCount: result.data.length,
     };
   } catch (error) {
     return {
       success: false,
-      errors: [error instanceof Error ? error.message : 'Failed to parse CSV']
+      errors: [error instanceof Error ? error.message : 'Failed to parse CSV'],
     };
   }
 }
@@ -55,24 +55,24 @@ export function parseExcel(fileBuffer: Buffer): ParseResult {
     const jsonData = XLSX.utils.sheet_to_json(worksheet, {
       raw: false,
       defval: null,
-      UTC: false
+      UTC: false,
     });
 
     if (jsonData.length === 0) {
       return {
         success: false,
-        errors: ['Excel file is empty']
+        errors: ['Excel file is empty'],
       };
     }
 
     // Extract columns and normalize
     const firstRow = jsonData[0] as Record<string, any>;
-    const columns = Object.keys(firstRow).map(col =>
+    const columns = Object.keys(firstRow).map((col) =>
       col.trim().toLowerCase().replace(/\s+/g, '_')
     );
 
     // Normalize all row keys
-    const normalizedData = jsonData.map(row => {
+    const normalizedData = jsonData.map((row) => {
       const normalized: Record<string, any> = {};
       Object.entries(row as Record<string, any>).forEach(([key, value]) => {
         const normalizedKey = key.trim().toLowerCase().replace(/\s+/g, '_');
@@ -85,12 +85,12 @@ export function parseExcel(fileBuffer: Buffer): ParseResult {
       success: true,
       data: normalizedData,
       columns,
-      rowCount: normalizedData.length
+      rowCount: normalizedData.length,
     };
   } catch (error) {
     return {
       success: false,
-      errors: [error instanceof Error ? error.message : 'Failed to parse Excel']
+      errors: [error instanceof Error ? error.message : 'Failed to parse Excel'],
     };
   }
 }
@@ -106,17 +106,15 @@ export function validateSchema(
   const errors: string[] = [];
 
   // Check for missing required columns
-  const missingColumns = expectedColumns.filter(col => !columns.includes(col));
+  const missingColumns = expectedColumns.filter((col) => !columns.includes(col));
 
   if (missingColumns.length > 0) {
-    errors.push(
-      `Missing required columns: ${missingColumns.join(', ')}`
-    );
+    errors.push(`Missing required columns: ${missingColumns.join(', ')}`);
   }
 
   return {
     valid: errors.length === 0,
-    errors
+    errors,
   };
 }
 
@@ -124,20 +122,18 @@ export function validateSchema(
  * Detect PII in column names
  */
 export function detectPIIColumns(columns: string[]): string[] {
-  return columns.filter(col =>
-    PII_FIELDS.some(piiField => col.includes(piiField))
-  );
+  return columns.filter((col) => PII_FIELDS.some((piiField) => col.includes(piiField)));
 }
 
 /**
  * Mask PII in data for preview
  */
 export function maskPII(data: any[]): any[] {
-  return data.map(row => {
+  return data.map((row) => {
     const maskedRow: Record<string, any> = {};
 
     Object.entries(row).forEach(([key, value]) => {
-      if (PII_FIELDS.some(piiField => key.includes(piiField))) {
+      if (PII_FIELDS.some((piiField) => key.includes(piiField))) {
         // Mask PII fields
         if (typeof value === 'string') {
           maskedRow[key] = '***';

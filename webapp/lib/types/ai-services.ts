@@ -9,7 +9,7 @@ export type {
   ClassificationResult,
   BatchSentimentResult,
   NlpConfig,
-} from '../ai-services/nlp-service'
+} from '../ai-services/nlp-service';
 
 // Re-export Translation types for convenience
 export type {
@@ -17,33 +17,33 @@ export type {
   BatchTranslationResult,
   LanguageDetection,
   TranslationConfig,
-} from '../ai-services/translation-service'
+} from '../ai-services/translation-service';
 
 /**
  * Generic AI API response wrapper
  */
 export interface AIServiceResponse<T> {
-  success: boolean
-  data?: T
-  error?: string
+  success: boolean;
+  data?: T;
+  error?: string;
   metadata?: {
-    processingTime?: number
-    cacheHit?: boolean
-    apiCalls?: number
-    cost?: number
-  }
+    processingTime?: number;
+    cacheHit?: boolean;
+    apiCalls?: number;
+    cost?: number;
+  };
 }
 
 /**
  * AI service feature flags
  */
 export interface AIFeatureFlags {
-  nlpEnabled: boolean
-  translationEnabled: boolean
-  speechEnabled: boolean
-  documentAiEnabled: boolean
-  vertexAiEnabled: boolean
-  visionEnabled: boolean
+  nlpEnabled: boolean;
+  translationEnabled: boolean;
+  speechEnabled: boolean;
+  documentAiEnabled: boolean;
+  vertexAiEnabled: boolean;
+  visionEnabled: boolean;
 }
 
 /**
@@ -57,5 +57,5 @@ export function getAIFeatureFlags(): AIFeatureFlags {
     documentAiEnabled: process.env.NEXT_PUBLIC_ENABLE_DOCUMENT_AI === 'true',
     vertexAiEnabled: process.env.NEXT_PUBLIC_ENABLE_VERTEX_AI === 'true',
     visionEnabled: process.env.NEXT_PUBLIC_ENABLE_VISION === 'true',
-  }
+  };
 }

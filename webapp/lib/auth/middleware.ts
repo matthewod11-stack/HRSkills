@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify, SignJWT } from 'jose';
-import { AuthUser, AuthResult, Permission, DEFAULT_ROLES } from './types';
+import { AuthUser, AuthResult } from './types';
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'CHANGE_THIS_IN_PRODUCTION_MIN_32_CHARS'
@@ -44,22 +44,22 @@ export async function generateToken(user: Omit<AuthUser, 'iat' | 'exp'>): Promis
 
 /**
  * Authentication middleware - requires valid JWT token
+ * Single-user model: any authenticated user has full admin access
  */
 export async function requireAuth(request: NextRequest): Promise<AuthResult> {
-  // DEVELOPMENT: Auto-authenticate
+  // DEVELOPMENT: Auto-authenticate as admin
   if (process.env.NODE_ENV === 'development') {
-    const role = DEFAULT_ROLES['hr_admin'];
     return {
       success: true,
       user: {
         userId: 'dev-user',
         email: 'dev@hrskills.local',
         name: 'Developer',
-        roles: [role],
+        role: 'admin',
         sessionId: 'dev-session',
         iat: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + 86400
-      }
+        exp: Math.floor(Date.now() / 1000) + 86400,
+      },
     };
   }
 
@@ -75,28 +75,6 @@ export async function requireAuth(request: NextRequest): Promise<AuthResult> {
 
   const token = authHeader.substring(7);
   return verifyToken(token);
-}
-
-/**
- * Permission check middleware
- */
-export function hasPermission(
-  user: AuthUser,
-  resource: Permission['resource'],
-  action: Permission['actions'][number]
-): boolean {
-  return user.roles.some(role =>
-    role.permissions.some(
-      perm => perm.resource === resource && perm.actions.includes(action)
-    )
-  );
-}
-
-/**
- * Role-based access control middleware
- */
-export function requireRole(user: AuthUser, ...allowedRoles: string[]): boolean {
-  return user.roles.some(role => allowedRoles.includes(role.name));
 }
 
 /**
@@ -125,18 +103,14 @@ export function authErrorResponse(result: AuthResult): NextResponse {
 /**
  * Helper to create a demo token for development/testing
  * DO NOT USE IN PRODUCTION - This is for demonstration only
+ * Single-user model: always creates admin token
  */
-export async function createDemoToken(
-  email: string,
-  roleName: keyof typeof DEFAULT_ROLES = 'hr_admin'
-): Promise<string> {
-  const role = DEFAULT_ROLES[roleName];
-
+export async function createDemoToken(email: string): Promise<string> {
   const user: Omit<AuthUser, 'iat' | 'exp'> = {
     userId: `user_${Date.now()}`,
     email,
     name: email.split('@')[0],
-    roles: [role],
+    role: 'admin',
     sessionId: `session_${Date.now()}`,
   };
 

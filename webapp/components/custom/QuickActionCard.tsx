@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { memo } from 'react';
 import { motion } from 'framer-motion';
@@ -30,12 +30,10 @@ export const QuickActionCard = memo(function QuickActionCard({
   icon: Icon,
   gradient,
   delay = 0,
-  href
+  href,
 }: QuickActionCardProps) {
   const content = (
-    <div
-      className="relative group cursor-pointer"
-    >
+    <div className="relative group cursor-pointer">
       <div className="absolute inset-0 bg-gradient-to-br from-violet/20 to-violet-light/20 rounded-2xl blur-xl group-hover:blur-2xl transition-premium opacity-50 group-hover:opacity-70" />
 
       <div className="relative backdrop-blur-xl bg-card border border-border rounded-2xl p-6 hover:border-violet/50 shadow-soft hover:shadow-panel-hover transition-premium flex flex-col justify-center">

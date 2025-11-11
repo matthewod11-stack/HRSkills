@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -64,9 +64,9 @@ const colorMap = {
 const NotificationItem = memo(function NotificationItem({
   notification,
   index,
-  colorMap: colorMapProp
+  colorMap: colorMapProp,
 }: {
-  notification: typeof notifications[0];
+  notification: (typeof notifications)[0];
   index: number;
   colorMap: Record<string, string>;
 }) {
@@ -81,7 +81,9 @@ const NotificationItem = memo(function NotificationItem({
       className="mb-3 p-4 backdrop-blur-xl bg-black/40 border-2 border-white/30 rounded-xl hover:bg-white/10 hover:border-white/40 transition-all cursor-pointer group"
     >
       <div className="flex gap-3">
-        <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${colorMapProp[notification.color]} flex items-center justify-center flex-shrink-0`}>
+        <div
+          className={`w-12 h-12 rounded-lg bg-gradient-to-br ${colorMapProp[notification.color]} flex items-center justify-center flex-shrink-0`}
+        >
           <Icon className="w-6 h-6" />
         </div>
         <div className="flex-1 min-w-0">
@@ -116,7 +118,9 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
             <div className="flex items-center justify-between p-6 border-b-2 border-white/20">
               <div>
                 <h2 className="text-xl">Notifications</h2>
-                <p className="text-sm text-gray-400">You have {notifications.length} unread notifications</p>
+                <p className="text-sm text-gray-400">
+                  You have {notifications.length} unread notifications
+                </p>
               </div>
               <button
                 onClick={onClose}

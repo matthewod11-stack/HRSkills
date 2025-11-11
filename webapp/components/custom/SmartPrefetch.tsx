@@ -9,7 +9,7 @@
  * to avoid impacting main thread performance.
  */
 
-'use client'
+'use client';
 
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
@@ -77,7 +77,10 @@ export function SmartPrefetch() {
     }
 
     // Check network conditions
-    const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
+    const connection =
+      (navigator as any).connection ||
+      (navigator as any).mozConnection ||
+      (navigator as any).webkitConnection;
 
     if (connection) {
       // Respect save-data preference
@@ -86,13 +89,20 @@ export function SmartPrefetch() {
       }
 
       // Only prefetch on fast connections
-      if (connection.effectiveType && connection.effectiveType !== PREFETCH_CONFIG.minEffectiveType && connection.effectiveType !== '3g') {
+      if (
+        connection.effectiveType &&
+        connection.effectiveType !== PREFETCH_CONFIG.minEffectiveType &&
+        connection.effectiveType !== '3g'
+      ) {
         return;
       }
     }
 
     // Get routes to prefetch for current page
-    const routesToPrefetch = (PREFETCH_MAP[pathname] || []).slice(0, PREFETCH_CONFIG.maxPrefetchCount);
+    const routesToPrefetch = (PREFETCH_MAP[pathname] || []).slice(
+      0,
+      PREFETCH_CONFIG.maxPrefetchCount
+    );
 
     if (routesToPrefetch.length === 0) {
       return;

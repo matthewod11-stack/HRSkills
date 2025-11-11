@@ -1,83 +1,97 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
-import { Loader2 } from 'lucide-react'
-import { get } from '@/lib/api-helpers/fetch-with-retry'
+import { useEffect, useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Loader2 } from 'lucide-react';
+import { get } from '@/lib/api-helpers/fetch-with-retry';
 
 interface MetricDetail {
-  name: string
-  role: string
-  date: string | null
+  name: string;
+  role: string;
+  date: string | null;
 }
 
-type MetricDetailsType = 'headcount' | 'attrition' | null
+type MetricDetailsType = 'headcount' | 'attrition' | null;
 
 interface MetricDetailsDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  metric: MetricDetailsType
-  title: string
-  description: string
+  isOpen: boolean;
+  onClose: () => void;
+  metric: MetricDetailsType;
+  title: string;
+  description: string;
 }
 
-export function MetricDetailsDialog({ isOpen, onClose, metric, title, description }: MetricDetailsDialogProps) {
-  const [data, setData] = useState<MetricDetail[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+export function MetricDetailsDialog({
+  isOpen,
+  onClose,
+  metric,
+  title,
+  description,
+}: MetricDetailsDialogProps) {
+  const [data, setData] = useState<MetricDetail[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isOpen || !metric) {
-      setData([])
-      setError(null)
-      return
+      setData([]);
+      setError(null);
+      return;
     }
 
     const fetchDetails = async () => {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
 
       try {
-        const result = await get(`/api/metrics/details?metric=${metric}`)
-        setData(result.data || [])
+        const result = await get(`/api/metrics?type=${metric}&details=true`);
+        setData(result.data || []);
       } catch (err: any) {
-        console.error('Error fetching metric details:', err)
-        setError(err.message || 'Failed to load data')
+        console.error('Error fetching metric details:', err);
+        setError(err.message || 'Failed to load data');
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchDetails()
-  }, [isOpen, metric])
+    fetchDetails();
+  }, [isOpen, metric]);
 
   const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return 'N/A'
+    if (!dateStr) return 'N/A';
     try {
-      const date = new Date(dateStr)
+      const date = new Date(dateStr);
       return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
-        day: 'numeric'
-      })
+        day: 'numeric',
+      });
     } catch {
-      return dateStr
+      return dateStr;
     }
-  }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="backdrop-blur-xl bg-black/90 border-2 border-white/30 text-white max-w-2xl">
         <DialogHeader>
           <DialogTitle className="text-2xl">{title}</DialogTitle>
-          <DialogDescription className="text-gray-400">
-            {description}
-          </DialogDescription>
+          <DialogDescription className="text-gray-400">{description}</DialogDescription>
         </DialogHeader>
 
         <div className="mt-4">
           {loading && (
-            <div className="flex items-center justify-center py-12" role="status" aria-live="polite">
+            <div
+              className="flex items-center justify-center py-12"
+              role="status"
+              aria-live="polite"
+            >
               <Loader2 className="w-8 h-8 animate-spin text-blue-400" aria-hidden="true" />
               <span className="sr-only">Loading metric details...</span>
             </div>
@@ -109,7 +123,11 @@ export function MetricDetailsDialog({ isOpen, onClose, metric, title, descriptio
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-gray-400">
-                        {metric === 'headcount' ? 'Hired' : metric === 'attrition' ? 'Terminated' : 'Updated'}
+                        {metric === 'headcount'
+                          ? 'Hired'
+                          : metric === 'attrition'
+                            ? 'Terminated'
+                            : 'Updated'}
                       </p>
                       <p className="text-sm font-mono text-blue-400">{formatDate(item.date)}</p>
                     </div>
@@ -121,5 +139,5 @@ export function MetricDetailsDialog({ isOpen, onClose, metric, title, descriptio
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

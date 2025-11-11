@@ -7,7 +7,6 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 test.describe('Accessibility E2E Tests', () => {
-
   test('homepage should not have accessibility violations', async ({ page }) => {
     await page.goto('/');
 
@@ -50,7 +49,6 @@ test.describe('Accessibility E2E Tests', () => {
 });
 
 test.describe('Keyboard Navigation Tests', () => {
-
   test('should allow tab navigation through homepage', async ({ page }) => {
     await page.goto('/');
 
@@ -118,7 +116,6 @@ test.describe('Keyboard Navigation Tests', () => {
 });
 
 test.describe('Screen Reader Compatibility Tests', () => {
-
   test('should have proper ARIA landmarks', async ({ page }) => {
     await page.goto('/');
 
@@ -161,7 +158,6 @@ test.describe('Screen Reader Compatibility Tests', () => {
 });
 
 test.describe('Color Contrast Tests', () => {
-
   test('should meet color contrast requirements', async ({ page }) => {
     await page.goto('/');
 
@@ -172,7 +168,7 @@ test.describe('Color Contrast Tests', () => {
 
     // Filter for color contrast violations
     const contrastViolations = accessibilityScanResults.violations.filter(
-      v => v.id === 'color-contrast'
+      (v) => v.id === 'color-contrast'
     );
 
     expect(contrastViolations).toEqual([]);
@@ -180,7 +176,6 @@ test.describe('Color Contrast Tests', () => {
 });
 
 test.describe('Focus Management Tests', () => {
-
   test('should trap focus in modal dialogs', async ({ page }) => {
     await page.goto('/');
 
