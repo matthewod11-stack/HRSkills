@@ -1,35 +1,35 @@
 /**
- * Performance Prediction API
+ * Promotion Prediction API
  *
- * Endpoint: POST /api/ai/predict/performance
+ * Endpoint: POST /api/ai/predict/promotion
  *
- * Predicts employee performance in next review cycle using Vertex AI.
- * Analyzes historical reviews, engagement, training, and other factors
- * to forecast future performance ratings.
+ * Predicts employee promotion readiness using Vertex AI.
+ * Analyzes performance, tenure, skills, and development to forecast
+ * when employees are ready for promotion.
  *
  * Features:
- * - Next review rating prediction (1-5 scale)
- * - Performance trend analysis (improve/maintain/decline)
- * - Influencing factor identification
- * - Personalized development recommendations
- * - Comparison with current performance
+ * - Promotion readiness assessment (not_ready/developing/ready/overdue)
+ * - Probability of promotion in next 12 months
+ * - Estimated time until promotion ready
+ * - Strength and development area identification
+ * - Personalized career development plans
  *
  * Input: { employeeId } or { employeeIds: [...] } or { all: true }
- * Output: PerformancePrediction or PerformancePrediction[]
+ * Output: PromotionPrediction or PromotionPrediction[]
  *
  * Rate limit: 30 requests/minute (shared with other AI endpoints)
  * Cost: $0.000002 per prediction
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth, hasPermission } from '@/lib/auth/session'
-import { applyRateLimit, RateLimitPresets } from '@/lib/middleware/rate-limit'
-import { createSuccessResponse, createErrorResponse } from '@/lib/utils/api-response'
+import { requireAuth, hasPermission, authErrorResponse } from '@/lib/auth/middleware'
+import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter'
+import { createSuccessResponse, handleApiError } from '@/lib/api-helpers'
 import {
-  predictPerformance,
+  predictPromotion,
   isVertexAIAvailable,
   calculatePredictionCost,
-  type PerformancePrediction,
+  type PromotionPrediction,
 } from '@/lib/ai-services/vertex-ai-service'
 import { readFile } from 'fs/promises'
 import { join } from 'path'
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
       return createErrorResponse('Failed to load employee data', 500)
     }
 
-    let predictions: PerformancePrediction[]
+    let predictions: PromotionPrediction[]
 
     if (employeeId) {
       // Single employee prediction
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
         return createErrorResponse('Employee not found', 404)
       }
 
-      const prediction = await predictPerformance(employee)
+      const prediction = await predictPromotion(employee)
       predictions = [prediction]
     } else if (employeeIds && Array.isArray(employeeIds)) {
       // Batch prediction for specific employees
@@ -99,30 +99,23 @@ export async function POST(request: NextRequest) {
         return createErrorResponse('No employees found for provided IDs', 404)
       }
 
-      predictions = await Promise.all(employees.map(emp => predictPerformance(emp)))
+      predictions = await Promise.all(employees.map(emp => predictPromotion(emp)))
     } else if (all) {
       // Predict for all employees
-      predictions = await Promise.all(employeesData.map(emp => predictPerformance(emp)))
+      predictions = await Promise.all(employeesData.map(emp => predictPromotion(emp)))
     } else {
       return createErrorResponse('Must provide employeeId, employeeIds, or all=true', 400)
     }
 
     // Calculate statistics
-    const ratingDistribution = {
-      '5': predictions.filter(p => p.predictedRating >= 4.5).length,
-      '4': predictions.filter(p => p.predictedRating >= 3.5 && p.predictedRating < 4.5).length,
-      '3': predictions.filter(p => p.predictedRating >= 2.5 && p.predictedRating < 3.5).length,
-      '2': predictions.filter(p => p.predictedRating >= 1.5 && p.predictedRating < 2.5).length,
-      '1': predictions.filter(p => p.predictedRating < 1.5).length,
+    const readinessDistribution = {
+      overdue: predictions.filter(p => p.promotionReadiness === 'overdue').length,
+      ready: predictions.filter(p => p.promotionReadiness === 'ready').length,
+      developing: predictions.filter(p => p.promotionReadiness === 'developing').length,
+      not_ready: predictions.filter(p => p.promotionReadiness === 'not_ready').length,
     }
 
-    const trendDistribution = {
-      improve: predictions.filter(p => p.expectedChange === 'improve').length,
-      maintain: predictions.filter(p => p.expectedChange === 'maintain').length,
-      decline: predictions.filter(p => p.expectedChange === 'decline').length,
-    }
-
-    const avgPredictedRating = predictions.reduce((sum, p) => sum + p.predictedRating, 0) / predictions.length
+    const avgProbability = predictions.reduce((sum, p) => sum + p.probabilityOfPromotion, 0) / predictions.length
 
     // Calculate cost
     const cost = calculatePredictionCost(predictions.length)
@@ -135,38 +128,37 @@ export async function POST(request: NextRequest) {
         predictions: employeeId ? predictions[0] : predictions,
         summary: {
           totalEmployees: predictions.length,
-          averagePredictedRating: avgPredictedRating.toFixed(2),
-          ratingDistribution,
-          trendDistribution,
-          highPerformers: ratingDistribution['5'] + ratingDistribution['4'],
-          needsSupport: ratingDistribution['1'] + ratingDistribution['2'],
+          readinessDistribution,
+          averageProbability: avgProbability.toFixed(3),
+          promotionReady: readinessDistribution.overdue + readinessDistribution.ready,
+          needsDevelopment: readinessDistribution.developing + readinessDistribution.not_ready,
         },
       },
       metadata: {
         processingTime,
         estimatedCost: cost,
-        modelType: 'performance',
+        modelType: 'promotion',
         modelVersion: '1.0.0',
-        usedMLModel: !!process.env.VERTEX_AI_PERFORMANCE_ENDPOINT_ID,
+        usedMLModel: !!process.env.VERTEX_AI_PROMOTION_ENDPOINT_ID,
       },
     })
   } catch (error) {
-    console.error('Performance prediction error:', error)
+    console.error('Promotion prediction error:', error)
     return createErrorResponse(
-      error instanceof Error ? error.message : 'Failed to predict performance',
+      error instanceof Error ? error.message : 'Failed to predict promotion readiness',
       500
     )
   }
 }
 
 /**
- * GET endpoint to check if performance prediction is available
+ * GET endpoint to check if promotion prediction is available
  */
 export async function GET(request: NextRequest) {
   try {
     const isEnabled = process.env.NEXT_PUBLIC_ENABLE_VERTEX_AI === 'true'
     const isAvailable = isEnabled ? await isVertexAIAvailable() : false
-    const hasEndpoint = !!process.env.VERTEX_AI_PERFORMANCE_ENDPOINT_ID
+    const hasEndpoint = !!process.env.VERTEX_AI_PROMOTION_ENDPOINT_ID
 
     return NextResponse.json({
       success: true,
@@ -174,22 +166,22 @@ export async function GET(request: NextRequest) {
         enabled: isEnabled,
         available: isAvailable,
         modelDeployed: hasEndpoint,
-        modelType: 'AutoML Regression',
+        modelType: 'AutoML Binary Classification',
         features: [
-          'Next review rating prediction (1-5 scale)',
-          'Performance trend analysis (improve/maintain/decline)',
-          'Influencing factor identification',
-          'Development recommendations',
-          'Comparison with current performance',
+          'Promotion readiness assessment (not_ready/developing/ready/overdue)',
+          'Probability of promotion in next 12 months',
+          'Estimated months until promotion ready',
+          'Strengths and development areas',
+          'Personalized career development recommendations',
         ],
         predictionFactors: [
-          'Historical review scores',
-          'Review sentiment analysis',
-          'Employee engagement (eNPS)',
-          'Training and development hours',
-          'Tenure and experience',
-          'Manager feedback patterns',
-          'Team dynamics',
+          'Performance review ratings',
+          'Tenure in current role',
+          'Time since last promotion',
+          'Skills and training investment',
+          'Leadership indicators',
+          'Employee engagement',
+          'Team size and management experience',
         ],
         pricing: {
           costPerPrediction: 0.000002,
@@ -199,6 +191,6 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    return createErrorResponse('Failed to check performance prediction status', 500)
+    return createErrorResponse('Failed to check promotion prediction status', 500)
   }
 }

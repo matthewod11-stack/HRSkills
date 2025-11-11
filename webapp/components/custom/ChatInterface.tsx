@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Bot, User, Sparkles, Zap, FileText, Users as UsersIcon, BookOpen, Edit3, Copy, Check, Shield, AlertTriangle, FileUp } from 'lucide-react';
+import { Send, Bot, User, Sparkles, Zap, FileText, Users as UsersIcon, Edit3, Copy, Check, Shield, AlertTriangle, FileUp, RotateCcw } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { detectSensitivePII } from '@/lib/pii-detector';
@@ -32,15 +32,103 @@ interface Message {
   workflowConfidence?: number;
   workflowState?: WorkflowState;
   suggestedActions?: any[];
+  suggestedFollowUps?: string[];
 }
 
 const initialMessages: Message[] = [];
+
+const createConversationId = () => `conv_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
 const suggestions = [
   { icon: FileText, text: 'Generate an offer', gradient: 'from-blue-500 to-cyan-500' },
   { icon: UsersIcon, text: 'Create a PIP', gradient: 'from-purple-500 to-pink-500' },
   { icon: Zap, text: 'Write a JD', gradient: 'from-green-500 to-emerald-500' },
 ];
+
+function sanitizePipContent(rawContent: string): string {
+  if (!rawContent) {
+    return '';
+  }
+
+  const normalized = rawContent.replace(/\r\n/g, '\n');
+  const lower = normalized.toLowerCase();
+  const markerIndex = lower.indexOf('performance improvement plan');
+
+  if (markerIndex === -1) {
+    return '';
+  }
+
+  let startIndex = markerIndex;
+
+  while (startIndex > 0 && normalized[startIndex - 1] !== '\n') {
+    startIndex--;
+  }
+
+  let pipBody = normalized.slice(startIndex).trimStart();
+
+  const closingPhrases = [
+    'give me those details',
+    'share those details',
+    'once you provide the details'
+  ];
+
+  for (const phrase of closingPhrases) {
+    const closingIndex = pipBody.toLowerCase().lastIndexOf(phrase);
+    if (closingIndex !== -1) {
+      pipBody = pipBody.slice(0, closingIndex).replace(/\s*$/, '');
+      break;
+    }
+  }
+
+  pipBody = pipBody.replace(/\n-{3,}\s*$/g, '').trim();
+
+  const requiredSections = [
+    '## performance issues',
+    '## improvement goals',
+    '## support & resources',
+    '## check-in schedule'
+  ];
+
+  const hasAllSections = requiredSections.every(section => pipBody.toLowerCase().includes(section));
+
+  if (!hasAllSections) {
+    return '';
+  }
+
+  return pipBody;
+}
+
+function enhanceContextPanelData(panelData: ContextPanelData | null): ContextPanelData | null {
+  if (!panelData || panelData.type !== 'document') {
+    return panelData;
+  }
+
+  const documentType = panelData.config?.documentType;
+  const rawContent = panelData.data?.content ?? '';
+
+  if (documentType === 'pip') {
+    const sanitized = sanitizePipContent(rawContent);
+    if (!sanitized || sanitized.trim().split('\n').length < 10) {
+      return {
+        ...panelData,
+        data: {
+          ...panelData.data,
+          content: ''
+        }
+      };
+    }
+
+    return {
+      ...panelData,
+      data: {
+        ...panelData.data,
+        content: sanitized
+      }
+    };
+  }
+
+  return panelData;
+}
 
 // Skills array removed - workflow detection is now automatic
 
@@ -61,7 +149,8 @@ const MessageItem = memo(function MessageItem({
   onUpdateEdit,
   onSaveEdit,
   onCopy,
-  onExportToGoogleDocs
+  onExportToGoogleDocs,
+  onFollowUp
 }: {
   message: Message;
   conversationId: string;
@@ -70,6 +159,7 @@ const MessageItem = memo(function MessageItem({
   onSaveEdit: (id: number) => void;
   onCopy: (content: string) => void;
   onExportToGoogleDocs: (message: Message) => Promise<void>;
+  onFollowUp: (text: string) => void;
 }) {
   const [isExporting, setIsExporting] = useState(false);
 
@@ -157,6 +247,24 @@ const MessageItem = memo(function MessageItem({
                   />
                 </div>
               )}
+              {message.suggestedFollowUps && message.suggestedFollowUps.length > 0 && message.role === 'assistant' && (
+                <div className="mb-3">
+                  <p className="text-xs text-secondary font-medium mb-2">
+                    Suggested follow-ups
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {message.suggestedFollowUps.map((followUp, index) => (
+                      <button
+                        key={index}
+                        onClick={() => onFollowUp(followUp)}
+                        className="px-3 py-1 bg-white/5 hover:bg-white/10 border border-white/20 rounded-lg text-xs transition-premium"
+                      >
+                        {followUp}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="prose prose-invert prose-sm max-w-none">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {message.content}
@@ -217,7 +325,7 @@ export function ChatInterface({ onContextPanelChange }: ChatInterfaceProps = {})
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [conversationId] = useState<string>(() => `conv_${Date.now()}_${Math.random().toString(36).substring(7)}`);
+  const [conversationId, setConversationId] = useState<string>(() => createConversationId());
   const [piiWarning, setPiiWarning] = useState<{ show: boolean; types: string[]; message: string; pendingText: string }>({
     show: false,
     types: [],
@@ -260,9 +368,83 @@ export function ChatInterface({ onContextPanelChange }: ChatInterfaceProps = {})
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    const historyWithNewMessage = [...messages, userMessage];
+    setMessages(historyWithNewMessage);
     setInput('');
     setIsTyping(true);
+
+    const conversationHistoryPayload = historyWithNewMessage.slice(-4).map(m => ({
+      role: m.role,
+      content: m.content
+    }));
+
+    const contextDetection = detectContext(messageText);
+    if (contextDetection.panelData?.type === 'analytics') {
+      try {
+        const response = await fetch('/api/analytics/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders()
+          },
+          body: JSON.stringify({
+            message: messageText,
+            sessionId: conversationId,
+            conversationHistory: conversationHistoryPayload
+          })
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.error?.message || 'Analytics assistant error');
+        }
+
+        const assistantMessage: Message = {
+          id: messages.length + 2,
+          role: 'assistant',
+          content: result.data.content,
+          timestamp: new Date(),
+          detectedWorkflow: 'analytics',
+          workflowConfidence: 100,
+          suggestedFollowUps: result.data.suggestedFollowUps || []
+        };
+
+        setMessages((prev) => [...prev, assistantMessage]);
+
+        if (onContextPanelChange) {
+          onContextPanelChange(
+            enhanceContextPanelData({
+            type: 'analytics',
+            title: 'Analytics Insight',
+            config: {
+              chartType: result.data.chartConfig?.type || contextDetection.panelData.config?.chartType || 'bar',
+              filters: contextDetection.panelData.config?.filters
+            },
+            data: {
+              metric: contextDetection.panelData.data?.metric || 'headcount',
+              chartConfig: result.data.chartConfig,
+              analysisSummary: result.data.content,
+              suggestedFollowUps: result.data.suggestedFollowUps || [],
+              metadata: result.data.metadata
+            }
+          })
+          );
+        }
+      } catch (error: any) {
+        console.error('Analytics chat error:', error);
+        const errorMessage: Message = {
+          id: messages.length + 2,
+          role: 'assistant',
+          content: `Sorry, I couldn't run that analysis: ${error.message || 'Unknown error'}. Please try again later.`,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+      } finally {
+        setIsTyping(false);
+      }
+      return;
+    }
 
     try {
       // Call chat API - workflow detection is automatic
@@ -275,7 +457,7 @@ export function ChatInterface({ onContextPanelChange }: ChatInterfaceProps = {})
         body: JSON.stringify({
           message: messageText,
           conversationId,
-          history: messages.map(m => ({ role: m.role, content: m.content }))
+          history: historyWithNewMessage.map(m => ({ role: m.role, content: m.content }))
         })
       });
 
@@ -302,12 +484,12 @@ export function ChatInterface({ onContextPanelChange }: ChatInterfaceProps = {})
       if (onContextPanelChange) {
         // Check if API response includes contextPanel data
         if (data.contextPanel) {
-          onContextPanelChange(data.contextPanel);
+          onContextPanelChange(enhanceContextPanelData(data.contextPanel));
         } else {
           // Fallback: client-side detection
           const detection = detectContext(messageText, data.reply);
           if (detection.panelData && detection.confidence >= 70) {
-            onContextPanelChange(detection.panelData);
+            onContextPanelChange(enhanceContextPanelData(detection.panelData));
           }
         }
       }
@@ -467,6 +649,15 @@ export function ChatInterface({ onContextPanelChange }: ChatInterfaceProps = {})
     }
   }, [getAuthHeaders]);
 
+  const handleResetChat = () => {
+    setMessages(initialMessages);
+    setInput('');
+    setIsTyping(false);
+    setConversationId(createConversationId());
+    setPiiWarning({ show: false, types: [], message: '', pendingText: '' });
+    onContextPanelChange?.(null);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -493,15 +684,26 @@ export function ChatInterface({ onContextPanelChange }: ChatInterfaceProps = {})
               </div>
             </div>
 
-            {/* Workflow detection indicator - shows when active */}
-            {messages.length > 0 && messages[messages.length - 1].detectedWorkflow && messages[messages.length - 1].detectedWorkflow !== 'general' && (
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-violet/10 border border-violet/20 rounded-lg">
-                <Sparkles className="w-3.5 h-3.5 text-violet" />
-                <span className="text-xs font-medium text-violet capitalize">
-                  {messages[messages.length - 1].detectedWorkflow?.replace('_', ' ')} workflow
-                </span>
-              </div>
-            )}
+            <div className="flex items-center gap-3">
+              {messages.length > 0 && messages[messages.length - 1].detectedWorkflow && messages[messages.length - 1].detectedWorkflow !== 'general' && (
+                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-violet/10 border border-violet/20 rounded-lg">
+                  <Sparkles className="w-3.5 h-3.5 text-violet" />
+                  <span className="text-xs font-medium text-violet capitalize">
+                    {messages[messages.length - 1].detectedWorkflow?.replace('_', ' ')} workflow
+                  </span>
+                </div>
+              )}
+              <motion.button
+                onClick={handleResetChat}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-sm font-medium transition-premium"
+                aria-label="Start a new chat"
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span>Reset chat</span>
+              </motion.button>
+            </div>
           </div>
         </div>
 
@@ -518,6 +720,7 @@ export function ChatInterface({ onContextPanelChange }: ChatInterfaceProps = {})
                 onSaveEdit={saveEdit}
                 onCopy={copyToClipboard}
                 onExportToGoogleDocs={exportToGoogleDocs}
+                onFollowUp={handleSuggestionClick}
               />
             ))}
           </AnimatePresence>

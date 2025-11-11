@@ -8,10 +8,10 @@
 
 ## Overview
 
-Implemented interactive popup dialogs for the three main HR metrics on the dashboard homepage:
+Implemented interactive experiences for the three main HR metrics on the dashboard homepage:
 - **Total Headcount** → Shows last 5 new hires
 - **Attrition Rate** → Shows last 5 terminations (YTD)
-- **Open Positions** → Shows all current open roles
+- **9Box High Performers** → Launches the nine-box performance context panel
 
 ---
 
@@ -23,13 +23,13 @@ Implemented interactive popup dialogs for the three main HR metrics on the dashb
 **Endpoints**:
 - `GET /api/metrics/details?metric=headcount` - Returns last 5 new hires
 - `GET /api/metrics/details?metric=attrition` - Returns last 5 terminations
-- `GET /api/metrics/details?metric=openPositions` - Returns open roles
+- *(Nine-box high performer metrics are loaded via `/api/analytics?metric=nine-box` and do not rely on this endpoint.)*
 
 **Data Format**:
 ```typescript
 {
   success: true,
-  metric: 'headcount' | 'attrition' | 'openPositions',
+  metric: 'headcount' | 'attrition',
   data: [
     {
       name: string,
@@ -45,7 +45,7 @@ Implemented interactive popup dialogs for the three main HR metrics on the dashb
 **Implementation Details**:
 - **Headcount**: Filters active employees, sorts by hire_date DESC, takes first 5
 - **Attrition**: Filters YTD terminations, sorts by termination_date DESC, takes first 5
-- **Open Positions**: Filters employees with status='open', returns all
+- **9Box High Performers**: Calculated in `/api/analytics?metric=nine-box` and surfaced via the context panel
 
 ### 2. `/webapp/components/custom/MetricDetailsDialog.tsx` - Dialog Component
 **Purpose**: Reusable modal dialog for displaying metric details
@@ -63,7 +63,7 @@ Implemented interactive popup dialogs for the three main HR metrics on the dashb
 interface MetricDetailsDialogProps {
   isOpen: boolean
   onClose: () => void
-  metric: 'headcount' | 'attrition' | 'openPositions' | null
+  metric: 'headcount' | 'attrition' | null
   title: string
   description: string
 }
@@ -108,12 +108,13 @@ interface MetricCardProps {
 - Import MetricDetailsDialog component
 - Add state for dialog management:
   - `metricDialogOpen`: boolean
-  - `selectedMetric`: 'headcount' | 'attrition' | 'openPositions' | null
+  - `selectedMetric`: 'headcount' | 'attrition' | null
   - `dialogTitle`: string
   - `dialogDescription`: string
 - Added `handleMetricClick()` function
 - Added `handleDialogClose()` function
-- Wired onClick handlers to each MetricCard
+- Wired onClick handlers to headcount and attrition cards
+- Added `handleNineBoxClick()` function to open the performance context panel instead of the dialog
 - Rendered MetricDetailsDialog at bottom of component tree
 
 **MetricCard Click Handlers**:
@@ -132,12 +133,8 @@ onClick={() => handleMetricClick(
   'Last 5 employees who left the company this year'
 )}
 
-// Open Positions
-onClick={() => handleMetricClick(
-  'openPositions',
-  'Open Positions',
-  'Current open roles awaiting candidates'
-)}
+// 9Box High Performers
+onClick={handleNineBoxClick}
 ```
 
 ### 3. `/webapp/components/ui/dialog.tsx` - Fixed Import
@@ -208,10 +205,10 @@ The API intelligently handles various field name variations:
 3. `position`
 4. 'No Title' (fallback)
 
-**Date Fields**:
+**Date / Score Fields**:
 - **Headcount**: `hire_date` or `start_date`
 - **Attrition**: `termination_date` or `exit_date`
-- **Open Positions**: `opening_date` or `created_date`
+- **9Box**: `ai_performance_score`, `ai_potential_score`, `current_performance_rating`, `manager_rating`
 
 ### Date Formatting
 ```javascript
@@ -304,7 +301,7 @@ if (!hasPermission(authResult.user, 'analytics', 'read')) {
 ### ✅ Functional Testing
 - [x] Click "View Details" on Total Headcount opens dialog
 - [x] Click "View Details" on Attrition Rate opens dialog
-- [x] Click "View Details" on Open Positions opens dialog
+- [x] Click "9Box High Performers" opens performance context panel
 - [x] Dialog shows loading state while fetching
 - [x] Dialog displays data correctly when loaded
 - [x] Dialog shows error message on API failure
@@ -316,7 +313,7 @@ if (!hasPermission(authResult.user, 'analytics', 'read')) {
 ### ✅ Data Validation
 - [x] Last 5 new hires sorted by hire date (newest first)
 - [x] Last 5 terminations sorted by exit date (newest first)
-- [x] All open positions displayed
+- [x] Nine-box grid buckets populated with counts and categories
 - [x] Dates formatted correctly
 - [x] Names displayed correctly
 - [x] Roles displayed correctly
@@ -495,7 +492,7 @@ webapp/
 ### Primary Goals
 - ✅ Total Headcount metric opens popup with last 5 new hires
 - ✅ Attrition Rate metric opens popup with last 5 terminations
-- ✅ Open Positions metric opens popup with current open roles
+- ✅ 9Box High Performers tile opens performance grid context panel
 - ✅ All popups display name, role, and date correctly
 
 ### Secondary Goals
@@ -533,7 +530,7 @@ webapp/
 
 The metric popup flows feature is **fully implemented and production-ready**.
 
-Users can now click "View Details" on any of the three main metrics (Total Headcount, Attrition Rate, Open Positions) to see a beautifully designed popup with relevant employee data. The implementation follows best practices for:
+Users can now click "View Details" on Total Headcount or Attrition Rate to see detailed popups, or click the 9Box High Performers tile to explore the performance grid. The implementation follows best practices for:
 - Security (authentication + permissions)
 - Performance (lazy loading, efficient queries)
 - UX (loading states, error handling, animations)

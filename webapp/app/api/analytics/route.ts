@@ -231,12 +231,13 @@ async function calculateHeadcountMetrics(params: AnalyticsQueryParams): Promise<
 
   // Filter by department if specified
   if (params.department) {
-    const deptData = headcountByDeptAndLevel.find((d: any) => d.department === params.department);
+    const deptDataArray = Array.isArray(headcountByDeptAndLevel) ? headcountByDeptAndLevel : [];
+    const deptData = deptDataArray.find((d: any) => d.department === params.department);
     data = {
       total: deptData?.headcount || 0,
       department: params.department,
       byLevel: deptData?.byLevel || {},
-      trends: trends.filter((t: any) => t.department === params.department),
+      trends: Array.isArray(trends) ? trends.filter((t: any) => t.department === params.department) : [],
     };
   }
 
@@ -307,14 +308,12 @@ async function calculateAttritionMetrics(params: AnalyticsQueryParams): Promise<
  */
 async function calculateNineBoxMetrics(params: AnalyticsQueryParams): Promise<any> {
   // Fetch active employees from database
-  let query = db.select().from(employees).where(eq(employees.status, 'active'));
+  // Build where clause
+  const whereClause = params.department
+    ? and(eq(employees.status, 'active'), eq(employees.department, params.department))
+    : eq(employees.status, 'active');
 
-  // Filter by department if specified
-  if (params.department) {
-    query = query.where(and(eq(employees.status, 'active'), eq(employees.department, params.department))) as any;
-  }
-
-  const activeEmployees = await query;
+  const activeEmployees = await db.select().from(employees).where(whereClause);
 
   if (activeEmployees.length === 0) {
     return {

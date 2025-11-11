@@ -5,9 +5,6 @@
  * provides utilities for checking initialization status.
  */
 
-import { db } from '@/lib/db'
-import { employees, conversations } from '@/db/schema'
-
 export interface FirstRunStatus {
   isFirstRun: boolean
   hasEmployees: boolean
@@ -26,6 +23,10 @@ export interface FirstRunStatus {
  */
 export async function checkFirstRun(): Promise<FirstRunStatus> {
   try {
+    // Dynamic import to avoid bundling SQLite in client-side code
+    const { db } = await import('@/lib/db')
+    const { employees, conversations } = await import('@/db/schema')
+
     // Check if employees table has data
     const employeeCount = await db.select({ count: employees.id }).from(employees).execute()
     const hasEmployees = employeeCount.length > 0
@@ -73,6 +74,8 @@ export async function checkFirstRun(): Promise<FirstRunStatus> {
  */
 export async function hasDemoData(): Promise<boolean> {
   try {
+    const { db } = await import('@/lib/db')
+    const { employees } = await import('@/db/schema')
     const employeeCount = await db.select({ count: employees.id }).from(employees).execute()
     return employeeCount.length > 0
   } catch (error) {

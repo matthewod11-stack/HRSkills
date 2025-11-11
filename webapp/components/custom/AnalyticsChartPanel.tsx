@@ -25,6 +25,9 @@ interface AnalyticsChartPanelProps {
   chartType?: 'bar' | 'line' | 'pie';
   department?: string;
   dateRange?: string;
+  chartConfig?: any;
+  analysisSummary?: string;
+  metadata?: any;
 }
 
 export function AnalyticsChartPanel({
@@ -32,15 +35,30 @@ export function AnalyticsChartPanel({
   chartType = 'bar',
   department,
   dateRange = 'last_12_months',
+  chartConfig,
+  analysisSummary,
+  metadata
 }: AnalyticsChartPanelProps) {
   const { getAuthHeaders } = useAuth();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [chartConfigState, setChartConfigState] = useState<any | null>(chartConfig || null);
+  const [analysis, setAnalysis] = useState<string>(analysisSummary || '');
 
   useEffect(() => {
+    if (chartConfig) {
+      setChartConfigState(chartConfig);
+      setAnalysis(analysisSummary || '');
+      setLoading(false);
+      setError(null);
+      return;
+    }
+    setChartConfigState(null);
+    setAnalysis('');
     fetchAnalyticsData();
-  }, [metric, department, dateRange]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [metric, department, dateRange, chartConfig, analysisSummary]);
 
   const fetchAnalyticsData = async () => {
     setLoading(true);
@@ -222,8 +240,10 @@ export function AnalyticsChartPanel({
     return titles[metric] || 'Analytics';
   };
 
-  const chartData = getChartData();
-  const ChartComponent = chartType === 'line' ? Line : chartType === 'pie' ? Pie : Bar;
+  const chartData = chartConfigState ? chartConfigState.data : getChartData();
+  const resolvedChartType = chartConfigState?.type || chartType;
+  const ChartComponent = resolvedChartType === 'line' ? Line : resolvedChartType === 'pie' ? Pie : Bar;
+  const chartOptions = chartConfigState?.options || getChartOptions();
 
   return (
     <div className="flex flex-col h-full">
@@ -242,23 +262,27 @@ export function AnalyticsChartPanel({
 
         <div className="flex items-center gap-2">
           {/* Refresh Button */}
-          <button
-            onClick={fetchAnalyticsData}
-            disabled={loading}
-            className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/20 hover:border-white/30 rounded-lg text-xs transition-all flex items-center gap-1 disabled:opacity-50"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
+          {!chartConfigState && (
+            <button
+              onClick={fetchAnalyticsData}
+              disabled={loading}
+              className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/20 hover:border-white/30 rounded-lg text-xs transition-all flex items-center gap-1 disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+          )}
 
           {/* Export CSV */}
-          <button
-            onClick={handleExportCSV}
-            className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/20 hover:border-white/30 rounded-lg text-xs transition-all flex items-center gap-1"
-          >
-            <Download className="w-3.5 h-3.5" />
-            Export CSV
-          </button>
+          {!chartConfigState && (
+            <button
+              onClick={handleExportCSV}
+              className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/20 hover:border-white/30 rounded-lg text-xs transition-all flex items-center gap-1"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Export CSV
+            </button>
+          )}
         </div>
       </div>
 
@@ -278,7 +302,7 @@ export function AnalyticsChartPanel({
             animate={{ opacity: 1, scale: 1 }}
             className="h-full"
           >
-            <ChartComponent data={chartData} options={getChartOptions()} />
+            <ChartComponent data={chartData} options={chartOptions} />
           </motion.div>
         ) : (
           <div className="flex items-center justify-center h-full text-gray-400">
@@ -288,7 +312,7 @@ export function AnalyticsChartPanel({
       </div>
 
       {/* Summary Stats */}
-      {!loading && data && (
+      {!loading && !chartConfigState && data && (
         <div className="mt-4 pt-4 border-t border-white/10">
           <div className="grid grid-cols-3 gap-4 text-center">
             {metric === 'headcount' && (
@@ -328,6 +352,18 @@ export function AnalyticsChartPanel({
               </>
             )}
           </div>
+        </div>
+      )}
+
+      {!loading && chartConfigState && analysis && (
+        <div className="mt-4 pt-4 border-t border-white/10 text-sm text-gray-200 whitespace-pre-line">
+          {analysis}
+        </div>
+      )}
+
+      {!loading && chartConfigState && metadata && (
+        <div className="mt-3 text-xs text-gray-400">
+          Rows returned: {metadata.rowsReturned ?? metadata?.metadata?.rowsReturned ?? '—'}
         </div>
       )}
     </div>

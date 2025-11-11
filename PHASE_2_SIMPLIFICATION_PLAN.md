@@ -555,6 +555,8 @@ export function getAnthropicClient(user?: User) {
 - Surface banner (“Powered by shared Anthropic key • add your own for unlimited usage”).
 - Rotate key via secrets manager and alert when 80% of quota used.
 
+> **2025-11-10 Update:** Legacy environments can run `scripts/migration/align-ai-quota-usage.sql` (or drop `data/hrskills.db`) to align the `ai_quota_usage` table with the new shared-key quota schema before exercising the zero-config chat flow.
+
 **2. Precomputed Analytics Reality**
 ```ts
 // scripts/seed-demo-analytics.ts
@@ -1257,18 +1259,11 @@ Before launch we need proactive insights plus an action system that can be trust
 
 #### Task 5.1: Implement Action Execution System
 **Priority:** Critical
-**Effort:** 8 days (originally estimated 5 days)
-**Status:** ✅ COMPLETED
+**Effort:** 5 days
+
+> **2025-11-10 Status:** Work reset to planning—previous executor code was removed during the simplification rollback. Revisit once the command center and quota flow are solid again.
 
 **Purpose:** Transform from "AI that answers" to "AI that does"
-
-**Actual Implementation Timeline:**
-- **Days 1-3:** Workflow infrastructure (detection, routing, configuration)
-- **Day 4:** State persistence & database integration
-- **Day 5:** State machine logic & transitions
-- **Day 6:** UI integration & progress tracking
-- **Day 7:** Action types & executor framework
-- **Day 8:** Action UI components & document handler
 
 **Action Types:**
 ```typescript
@@ -1485,49 +1480,6 @@ export function ActionButtons({ actions }: { actions: Action[] }) {
 - ✅ Users can execute actions with one click
 - ✅ All actions are logged and auditable
 - ✅ Dangerous actions require approval
-
-**Actual Deliverables (Completed):**
-
-1. **Workflow System** (`lib/workflows/`)
-   - Automatic workflow detection (8 workflows: hiring, performance, onboarding, etc.)
-   - Confidence-based routing with context factors
-   - Hybrid state tracking (stateless → stateful at 75% confidence)
-   - Complete workflow catalog with capabilities
-
-2. **State Machine** (`lib/workflows/state-machine/`)
-   - WorkflowStateMachine class with full lifecycle management
-   - Database persistence (conversations.workflowStateJson + workflowSnapshots)
-   - Step tracking, progress calculation, validation
-   - Transition history and rollback support
-
-3. **Action Framework** (`lib/workflows/actions/`)
-   - 8 action types (create_document, send_email, send_slack_message, etc.)
-   - ActionExecutor with timeout, retries, rate limiting
-   - Permission checks and validation pipeline
-   - Audit trail with execution statistics
-   - Handler pattern for extensibility
-
-4. **UI Components** (`components/custom/`)
-   - WorkflowProgress: Visual progress bars with step tracking
-   - ActionButtons: Interactive action cards with execution feedback
-   - Real-time status updates (pending → executing → completed/failed)
-   - Batch execution support
-
-5. **API Endpoints** (`app/api/`)
-   - POST /api/chat - Enhanced with workflow state & suggested actions
-   - POST /api/actions - Single action execution
-   - PUT /api/actions - Batch action execution
-   - GET /api/actions/history - Audit trail
-
-6. **Document Handler** (`lib/workflows/actions/handlers/`)
-   - Complete create_document implementation
-   - Support for 8 document types (job descriptions, offers, PIPs, etc.)
-   - Format conversion (markdown, HTML, plain text)
-   - Validation with permission checks
-
-**Files Created:** 15+ files, ~3,000 lines of code
-**TypeScript Coverage:** 100% type-safe
-**Integration:** Full end-to-end workflow → state → actions → UI
 
 ---
 
@@ -2002,6 +1954,14 @@ Based on Phase 2 learnings, potential future enhancements:
 7. **Integration Marketplace** - Community-built integrations
 
 But only if Phase 2 proves the simplified approach works!
+
+---
+
+## Next Version Suggestions
+
+- Guard `/api/chat` context detection so `contextPanelData` is defined before we touch it (caught during the quota smoke test).
+- Swap the ad-hoc schema alignment helper for a lightweight Drizzle migration runner to avoid future drift between `schema.ts` and `lib/db/index.ts`.
+- Extend the zero-config verification script to POST `/api/chat` with a mocked `ANTHROPIC_API_KEY`, asserting we fail gracefully on upstream auth but never on local quota plumbing.
 
 ---
 

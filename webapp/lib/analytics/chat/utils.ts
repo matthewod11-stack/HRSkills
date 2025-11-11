@@ -188,41 +188,82 @@ export function generateFollowUps(intent: QueryIntent, query: string): string[] 
  * Populate analysis template with actual data values
  */
 export function populateAnalysisTemplate(template: string, rows: any[]): string {
-  let result = template;
+  if (rows.length === 0) return template;
 
-  if (rows.length === 0) return result;
-
-  // Calculate common metrics for replacement
   const firstRow = rows[0];
   const keys = Object.keys(firstRow);
-  const labelKey = keys[0];
-  const valueKey = keys[1];
 
-  // Replace common placeholders
-  result = result.replace(/{total_count}/g, String(rows.length));
-  result = result.replace(/{row_count}/g, String(rows.length));
-
-  // If it's a simple aggregation, add the values
-  if (rows.length <= 10) {
-    const dataPoints = rows.map(row => `${row[labelKey]}: ${row[valueKey]}`).join(', ');
-    result = result.replace(/{data_summary}/g, dataPoints);
+  if (keys.length === 0) {
+    return 'I analyzed your data but the result set did not include any columns to summarize.';
   }
 
-  // Find top/max values
+  const labelKey = keys[0];
+  const valueKey = keys[1] ?? keys[0];
+
+  const formatValue = (value: any) => {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value.toLocaleString();
+    }
+    if (typeof value === 'string') {
+      return value;
+    }
+    if (value instanceof Date) {
+      return value.toISOString().split('T')[0];
+    }
+    return String(value);
+  };
+
+  let populated = template
+    .replace(/{total_count}/g, String(rows.length))
+    .replace(/{row_count}/g, String(rows.length));
+
+  if (rows.length <= 10) {
+    const dataPoints = rows
+      .map(row => `${formatValue(row[labelKey])}: ${formatValue(row[valueKey])}`)
+      .join('; ');
+    populated = populated.replace(/{data_summary}/g, dataPoints);
+  }
+
   const sortedRows = [...rows].sort((a, b) => Number(b[valueKey]) - Number(a[valueKey]));
   if (sortedRows.length > 0) {
-    result = result.replace(/{top_[^}]+}/g, (match) => {
-      if (match.includes('count')) return String(sortedRows[0][valueKey]);
-      return String(sortedRows[0][labelKey]);
+    populated = populated.replace(/{top_[^}]+}/g, (match) => {
+      if (match.includes('count') || match.includes('value')) {
+        return formatValue(sortedRows[0][valueKey]);
+      }
+      return formatValue(sortedRows[0][labelKey]);
     });
   }
 
-  // If the template still has unreplaced placeholders, add the raw data summary
-  if (result.includes('{')) {
-    result += `\n\nKey findings from ${rows.length} data points:\n`;
-    result += JSON.stringify(rows.slice(0, 5), null, 2);
-    if (rows.length > 5) result += `\n... and ${rows.length - 5} more`;
+  // If any placeholders remain, fall back to a clean human-readable summary
+  if (/{[^}]+}/.test(populated) || populated.trim().length === 0) {
+    const topRows = rows.slice(0, Math.min(rows.length, 5));
+    const listItems = topRows
+      .map(row => `- ${formatValue(row[labelKey])}: ${formatValue(row[valueKey])}`)
+      .join('\n');
+
+    const additionalNote = rows.length > topRows.length
+      ? `\n- …and ${rows.length - topRows.length} more categories`
+      : '';
+
+    const hasNumericValue = rows.some(row => Number.isFinite(Number(row[valueKey])));
+    const totalValue = hasNumericValue
+      ? rows.reduce((sum, row) => {
+        const value = Number(row[valueKey]);
+        return Number.isFinite(value) ? sum + value : sum;
+      }, 0)
+      : null;
+
+    const totalLine = totalValue !== null
+      ? `\n- Total across all categories: ${totalValue.toLocaleString()}`
+      : '';
+
+    populated = [
+      `Here’s what I found across ${rows.length} data point${rows.length === 1 ? '' : 's'}:`,
+      listItems,
+      additionalNote,
+      totalLine
+    ].filter(Boolean).join('\n');
   }
 
-  return result;
+  return populated.trim();
 }

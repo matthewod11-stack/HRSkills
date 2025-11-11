@@ -48,12 +48,12 @@ export const MetricCard = memo(function MetricCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay }}
       whileHover={{ scale: 1.02, y: -5 }}
-      className="relative group cursor-pointer"
+      className="relative group cursor-pointer h-full"
       onClick={onClick}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-violet/10 to-violet-light/10 rounded-2xl blur-xl group-hover:blur-2xl transition-premium opacity-0 group-hover:opacity-100" />
 
-      <div className="relative backdrop-blur-xl bg-card border border-border rounded-2xl p-6 hover:border-violet/50 shadow-soft hover:shadow-panel-hover transition-premium">
+      <div className="relative backdrop-blur-xl bg-card border border-border rounded-2xl p-6 hover:border-violet/50 shadow-soft hover:shadow-panel-hover transition-premium h-full flex flex-col">
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             <p className="text-secondary text-sm mb-2 font-medium">{title}</p>
@@ -105,7 +105,7 @@ export const MetricCard = memo(function MetricCard({
         </div>
 
         <motion.div
-          className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 mt-auto"
           initial={{ opacity: 0 }}
         >
           <button

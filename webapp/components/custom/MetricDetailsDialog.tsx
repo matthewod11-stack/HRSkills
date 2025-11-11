@@ -11,10 +11,12 @@ interface MetricDetail {
   date: string | null
 }
 
+type MetricDetailsType = 'headcount' | 'attrition' | null
+
 interface MetricDetailsDialogProps {
   isOpen: boolean
   onClose: () => void
-  metric: 'headcount' | 'attrition' | 'openPositions' | null
+  metric: MetricDetailsType
   title: string
   description: string
 }
@@ -107,9 +109,7 @@ export function MetricDetailsDialog({ isOpen, onClose, metric, title, descriptio
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-gray-400">
-                        {metric === 'headcount' && 'Hired'}
-                        {metric === 'attrition' && 'Terminated'}
-                        {metric === 'openPositions' && 'Opened'}
+                        {metric === 'headcount' ? 'Hired' : metric === 'attrition' ? 'Terminated' : 'Updated'}
                       </p>
                       <p className="text-sm font-mono text-blue-400">{formatDate(item.date)}</p>
                     </div>

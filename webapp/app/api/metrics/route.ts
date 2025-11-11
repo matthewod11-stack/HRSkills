@@ -36,7 +36,12 @@ export async function GET(request: NextRequest) {
         attritionRate: 0,
         openPositions: 0,
         lastUpdated: new Date().toISOString()
-      }, { status: 200 })
+      }, {
+        status: 200,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
+        }
+      })
     }
 
     // Calculate active headcount
@@ -80,7 +85,11 @@ export async function GET(request: NextRequest) {
       lastUpdated: new Date().toISOString()
     }
 
-    return NextResponse.json(metrics)
+    return NextResponse.json(metrics, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
+      }
+    })
   } catch (error: any) {
     return handleApiError(error, {
       endpoint: '/api/metrics',

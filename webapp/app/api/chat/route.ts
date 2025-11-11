@@ -144,7 +144,34 @@ export async function POST(request: NextRequest) {
 
   try {
     const startTime = Date.now() // Track request start time
-    const { message, skill, history, conversationId } = await request.json()
+    const payload = await request.json()
+
+    const rawMessage = payload?.message
+    if (!rawMessage || typeof rawMessage !== 'string' || !rawMessage.trim()) {
+      return NextResponse.json(
+        { success: false, error: 'message is required' },
+        { status: 400 }
+      )
+    }
+
+    const message = rawMessage.trim()
+    const skill = payload?.skill
+    const history: Array<{ role: string; content: string; workflowId?: WorkflowId }> = Array.isArray(payload?.history)
+      ? payload.history.filter(
+          (entry: any): entry is { role: string; content: string; workflowId?: WorkflowId } =>
+            entry &&
+            typeof entry === 'object' &&
+            typeof entry.role === 'string' &&
+            typeof entry.content === 'string'
+        )
+      : []
+
+    const conversationId: string | undefined =
+      typeof payload?.conversationId === 'string' && payload.conversationId.length > 0
+        ? payload.conversationId
+        : undefined
+
+    const cacheable = history.length === 0
 
     // Generate cache key from message + employee data hash
     const crypto = require('crypto')
@@ -477,29 +504,6 @@ Your goal: Help this startup scale its people, culture, and leadership with the 
       userId: authResult.user.userId
     })
 
-    // Store in cache (only for simple queries without history)
-    if (!history || history.length === 0) {
-      // Limit cache size
-      if (responseCache.size >= MAX_CACHE_SIZE) {
-        // Remove oldest entry
-        const firstKey = responseCache.keys().next().value
-        if (firstKey) {
-          responseCache.delete(firstKey)
-        }
-      }
-
-      responseCache.set(cacheKey, {
-        reply,
-        detectedWorkflow: workflowMatch.workflowId,
-        workflowConfidence: workflowMatch.confidence,
-        contextPanel: contextPanelData,
-        timestamp: Date.now(),
-        dataHash
-      })
-
-      console.log(`Cached response for query: "${message.substring(0, 50)}..." (workflow: ${workflowMatch.workflowId}, panel: ${contextPanelData?.type || 'none'}, cache size: ${responseCache.size})`)
-    }
-
     // ========================================================================
     // ACTION SUGGESTION SYSTEM (Smart Routing Enhancement)
     // ========================================================================
@@ -537,6 +541,27 @@ Your goal: Help this startup scale its people, culture, and leadership with the 
     if (contextDetection.panelData && contextDetection.confidence >= 70) {
       contextPanelData = contextDetection.panelData
       console.log(`Context panel detected: ${contextDetection.panelData.type} (${contextDetection.confidence}% confidence)`)
+    }
+
+    // Store in cache (only for simple queries without history)
+    if (cacheable) {
+      if (responseCache.size >= MAX_CACHE_SIZE) {
+        const firstKey = responseCache.keys().next().value
+        if (firstKey) {
+          responseCache.delete(firstKey)
+        }
+      }
+
+      responseCache.set(cacheKey, {
+        reply,
+        detectedWorkflow: workflowMatch.workflowId,
+        workflowConfidence: workflowMatch.confidence,
+        contextPanel: contextPanelData,
+        timestamp: Date.now(),
+        dataHash
+      })
+
+      console.log(`Cached response for query: "${message.substring(0, 50)}..." (workflow: ${workflowMatch.workflowId}, panel: ${contextPanelData?.type || 'none'}, cache size: ${responseCache.size})`)
     }
 
     // Build response with workflow state information

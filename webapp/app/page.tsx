@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import {
   Users,
   TrendingDown,
-  Briefcase,
+  Grid3x3,
   Settings
 } from 'lucide-react';
 import { FloatingOrbs } from '@/components/custom/FloatingOrbs';
@@ -18,7 +18,7 @@ import { AnalyticsChartPanel } from '@/components/custom/AnalyticsChartPanel';
 import { PerformanceGridPanel } from '@/components/custom/PerformanceGridPanel';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { logComponentError } from '@/lib/errorLogging';
-import { get } from '@/lib/api-helpers/fetch-with-retry';
+import { fetchWithRetry } from '@/lib/api-helpers/fetch-with-retry';
 import { DialogSkeleton } from '@/components/ui/skeletons';
 
 // Lazy load heavy dialog components
@@ -39,16 +39,34 @@ const CommandPalette = dynamic(
   }
 );
 
-type MetricType = 'headcount' | 'attrition' | 'openPositions' | null;
+type MetricType = 'headcount' | 'attrition' | null;
+type MetricsState = {
+  headcount: number;
+  attritionRate: number;
+  lastUpdated: string | null;
+};
+
+type NineBoxSummary = {
+  highPerformers: number;
+  coreEmployees: number;
+  developmentNeeded: number;
+  totalAnalyzed: number;
+  avgRatingInflation?: number;
+};
 
 export default function Home() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [commandOpen, setCommandOpen] = useState(false);
-  const [metrics, setMetrics] = useState({
+  const [metrics, setMetrics] = useState<MetricsState>({
     headcount: 0,
     attritionRate: 0,
-    openPositions: 0
+    lastUpdated: null
   });
+  const [metricsStatus, setMetricsStatus] = useState<'idle' | 'loading' | 'live' | 'empty' | 'error'>('idle');
+  const [metricsError, setMetricsError] = useState<string | null>(null);
+  const [nineBoxSummary, setNineBoxSummary] = useState<NineBoxSummary | null>(null);
+  const [nineBoxStatus, setNineBoxStatus] = useState<'idle' | 'loading' | 'live' | 'empty' | 'error'>('idle');
+  const [nineBoxError, setNineBoxError] = useState<string | null>(null);
   const [metricDialogOpen, setMetricDialogOpen] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState<MetricType>(null);
   const [dialogTitle, setDialogTitle] = useState('');
@@ -82,18 +100,139 @@ export default function Home() {
     return () => clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    // Fetch real metrics from API with retry logic
-    get('/api/metrics')
-      .then(data => {
-        setMetrics({
-          headcount: data.headcount || 0,
-          attritionRate: data.attritionRate || 0,
-          openPositions: data.openPositions || 0
-        });
-      })
-      .catch(err => console.error('Failed to fetch metrics:', err));
+  const fetchMetrics = useCallback(async () => {
+    setMetricsStatus('loading');
+    setNineBoxStatus('loading');
+    setMetricsError(null);
+    setNineBoxError(null);
+
+    try {
+      const data = await fetchWithRetry<any>(`/api/metrics?_=${Date.now()}`, {
+        method: 'GET',
+        cache: 'no-store'
+      });
+
+      setMetrics({
+        headcount: typeof data?.headcount === 'number' ? data.headcount : 0,
+        attritionRate: typeof data?.attritionRate === 'number' ? data.attritionRate : 0,
+        lastUpdated: typeof data?.lastUpdated === 'string' ? data.lastUpdated : null
+      });
+
+      if (data?.error) {
+        setMetricsStatus('empty');
+        setMetricsError(data.message || data.error);
+      } else {
+        setMetricsStatus('live');
+        setMetricsError(null);
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch metrics:', error);
+      setMetrics({
+        headcount: 0,
+        attritionRate: 0,
+        lastUpdated: null
+      });
+      setMetricsStatus('error');
+      setMetricsError(error?.message || 'Failed to load metrics');
+    }
+
+    try {
+      const analyticsResult = await fetchWithRetry<any>(`/api/analytics?metric=nine-box&_=${Date.now()}`, {
+        method: 'GET',
+        cache: 'no-store'
+      });
+
+      const normalizeAnalyticsError = (rawError: unknown) => {
+        if (!rawError) return 'Nine-box analytics unavailable';
+        const message =
+          typeof rawError === 'string'
+            ? rawError
+            : typeof rawError === 'object' && rawError !== null && 'message' in rawError
+              ? String((rawError as any).message)
+              : '';
+        if (message.toLowerCase().includes('no employee data')) {
+          return 'Missing data';
+        }
+        return message || 'Nine-box analytics unavailable';
+      };
+
+      if (!analyticsResult?.success) {
+        setNineBoxSummary(null);
+        setNineBoxStatus('empty');
+        setNineBoxError(normalizeAnalyticsError(analyticsResult?.error));
+        return;
+      }
+
+      const summary: NineBoxSummary | undefined = analyticsResult?.data?.summary;
+
+      if (summary && typeof summary.highPerformers === 'number') {
+        setNineBoxSummary(summary);
+        setNineBoxStatus('live');
+        setNineBoxError(null);
+      } else {
+        setNineBoxSummary(null);
+        setNineBoxStatus('empty');
+        setNineBoxError('Missing data');
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch nine-box analytics:', error);
+      setNineBoxSummary(null);
+      setNineBoxStatus('error');
+      setNineBoxError(
+        error?.message?.toLowerCase()?.includes('no employee data')
+          ? 'Missing data'
+          : error?.message || 'Failed to load nine-box analytics'
+      );
+    }
   }, []);
+
+  useEffect(() => {
+    fetchMetrics();
+  }, [fetchMetrics]);
+
+  const metricsLoading = metricsStatus === 'loading' || metricsStatus === 'idle';
+  const metricsHasData = metricsStatus === 'live';
+  const metricsUnavailable = metricsStatus === 'empty';
+  const metricsFailed = metricsStatus === 'error';
+  const nineBoxLoading = nineBoxStatus === 'loading' || nineBoxStatus === 'idle';
+  const nineBoxHasData = nineBoxStatus === 'live';
+  const nineBoxUnavailable = nineBoxStatus === 'empty';
+  const nineBoxFailed = nineBoxStatus === 'error';
+
+  const headcountDisplay = (metricsLoading || metricsFailed) ? '—' : metrics.headcount;
+  const attritionDisplay = (metricsLoading || metricsFailed) ? '—' : `${metrics.attritionRate}%`;
+  const nineBoxDisplay = (nineBoxLoading || nineBoxFailed) ? '—' : (nineBoxSummary?.highPerformers ?? 0);
+
+  const metricsStatusLabel = metricsLoading
+    ? 'Loading...'
+    : metricsHasData
+      ? 'Live data'
+      : metricsUnavailable
+        ? 'No data'
+        : metricsFailed
+          ? 'Error'
+          : '—';
+  const nineBoxStatusLabel = nineBoxLoading
+    ? 'Loading...'
+    : nineBoxHasData
+      ? 'Analyzed'
+      : nineBoxUnavailable
+        ? (nineBoxError ?? 'No data')
+        : nineBoxFailed
+          ? (nineBoxError ?? 'Error')
+          : '—';
+
+  const headcountProgress = metricsHasData ? Math.min(Math.round((metrics.headcount / 200) * 100), 100) : 0;
+  const attritionProgress = metricsHasData ? Math.max(0, 100 - Math.min(Math.round(metrics.attritionRate), 100)) : 0;
+  const nineBoxProgress =
+    nineBoxHasData && nineBoxSummary?.totalAnalyzed
+      ? Math.min(Math.round((nineBoxSummary.highPerformers / Math.max(nineBoxSummary.totalAnalyzed, 1)) * 100), 100)
+      : 0;
+  const attritionIsPositive = metricsHasData ? metrics.attritionRate <= 10 : false;
+  const nineBoxIsPositive =
+    nineBoxHasData && nineBoxSummary?.totalAnalyzed
+      ? (nineBoxSummary.highPerformers / Math.max(nineBoxSummary.totalAnalyzed, 1)) >= 0.3
+      : false;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -131,6 +270,22 @@ export default function Home() {
     setDialogTitle(title);
     setDialogDescription(description);
     setMetricDialogOpen(true);
+  };
+
+  const handleNineBoxClick = () => {
+    setMetricDialogOpen(false);
+    setSelectedMetric(null);
+    setContextPanelData({
+      type: 'performance',
+      title: '9Box High Performers',
+      data: {
+        metric: 'nine-box',
+        summary: nineBoxSummary,
+      },
+      config: {
+        highlights: ['High-High', 'High-Medium', 'Medium-High'],
+      },
+    });
   };
 
   const handleDialogClose = () => {
@@ -186,110 +341,124 @@ export default function Home() {
         <main className="max-w-[1800px] mx-auto px-6 py-8">
           {/* Metrics Grid - Top Row - 3 Cards */}
           <section aria-label="Key metrics">
-            <h2 className="sr-only">Key Metrics Overview</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <MetricCard
-              title="Total Headcount"
-              value={metrics.headcount}
-              change="+2.5%"
-              isPositive={true}
-              icon={Users}
-              progress={75}
-              delay={0}
-              onClick={() => handleMetricClick('headcount', 'Recent New Hires', 'Last 5 employees who joined the company')}
-            />
-            <MetricCard
-              title="Attrition Rate"
-              value={`${metrics.attritionRate}%`}
-              change="-0.5%"
-              isPositive={true}
-              icon={TrendingDown}
-              progress={15}
-              delay={0.1}
-              onClick={() => handleMetricClick('attrition', 'Recent Terminations', 'Last 5 employees who left the company this year')}
-            />
-            <MetricCard
-              title="Open Positions"
-              value={metrics.openPositions}
-              change="+3"
-              isPositive={false}
-              icon={Briefcase}
-              progress={40}
-              delay={0.2}
-              onClick={() => handleMetricClick('openPositions', 'Open Positions', 'Current open roles awaiting candidates')}
-            />
+            <div className="flex items-center justify-between mb-4 gap-2">
+              <h2 className="text-lg font-semibold text-foreground">Key Metrics</h2>
+              <button
+                onClick={fetchMetrics}
+                disabled={metricsLoading}
+                className="px-3 py-2 text-sm font-medium rounded-lg border border-border bg-white/5 hover:bg-white/10 transition-premium disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-live="polite"
+              >
+                {metricsLoading ? 'Refreshing…' : 'Refresh'}
+              </button>
             </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+              <MetricCard
+                title="Total Headcount"
+                value={headcountDisplay}
+                change={metricsStatusLabel}
+                isPositive={metricsHasData}
+                icon={Users}
+                progress={headcountProgress}
+                delay={0}
+                onClick={() => handleMetricClick('headcount', 'Recent New Hires', 'Last 5 employees who joined the company')}
+              />
+              <MetricCard
+                title="Attrition Rate"
+                value={attritionDisplay}
+                change={metricsStatusLabel}
+                isPositive={attritionIsPositive}
+                icon={TrendingDown}
+                progress={attritionProgress}
+                delay={0.1}
+                onClick={() => handleMetricClick('attrition', 'Recent Terminations', 'Last 5 employees who left the company this year')}
+              />
+              <MetricCard
+                title="9Box High Performers"
+                value={nineBoxDisplay}
+                change={nineBoxStatusLabel}
+                isPositive={nineBoxIsPositive}
+                icon={Grid3x3}
+                progress={nineBoxProgress}
+                delay={0.2}
+                onClick={handleNineBoxClick}
+              />
+            </div>
+            {metricsError && (
+              <p className="text-sm text-warning font-medium">{metricsError}</p>
+            )}
+            {nineBoxError && !nineBoxHasData && (
+              <p className="text-sm text-warning font-medium">{nineBoxError}</p>
+            )}
+            {metricsHasData && metrics.lastUpdated && (
+              <p className="text-xs text-secondary font-medium">Last updated: {new Date(metrics.lastUpdated).toLocaleString()}</p>
+            )}
           </section>
 
           {/* Main Layout - Chat First with Dynamic Context Panel */}
           <div className="flex flex-col lg:flex-row gap-6">
-            {/* Main Chat Interface - Full Width by Default */}
+            {/* Chat Interface */}
             <section
               aria-label="HR Assistant Chat"
-              className="flex-1 order-1 lg:order-2 min-h-[700px]"
+              className={`order-1 w-full min-h-[700px] ${contextPanelData?.type ? 'lg:order-1 lg:flex-[0_0_60%] lg:max-w-[60%]' : 'lg:order-1 lg:flex-[1_1_100%] lg:max-w-full'}`}
             >
-              <div className="flex flex-col gap-6">
-                {/* Context Panel - Appears above chat when triggered */}
-                {contextPanelData?.type && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="order-1"
-                  >
-                    <ContextPanel
-                      panelData={contextPanelData}
-                      onClose={() => setContextPanelData(null)}
-                    >
-                      {/* Render appropriate panel based on type */}
-                      {contextPanelData.type === 'document' && (
-                        <DocumentEditorPanel
-                          content={contextPanelData.data?.content || ''}
-                          documentType={contextPanelData.config?.documentType}
-                          employeeName={contextPanelData.data?.employeeName}
-                          onExport={async (content) => {
-                            // TODO: Implement Google Docs export
-                            console.log('Export to Google Docs:', content);
-                          }}
-                        />
-                      )}
-                      {contextPanelData.type === 'analytics' && (
-                        <AnalyticsChartPanel
-                          metric={contextPanelData.data?.metric || 'headcount'}
-                          chartType={contextPanelData.config?.chartType}
-                          department={contextPanelData.config?.filters?.department}
-                          dateRange={contextPanelData.config?.filters?.dateRange}
-                        />
-                      )}
-                      {contextPanelData.type === 'performance' && (
-                        <PerformanceGridPanel
-                          department={contextPanelData.config?.filters?.department}
-                          highlights={contextPanelData.config?.highlights}
-                          onEmployeeClick={(employee) => {
-                            console.log('Employee clicked:', employee);
-                            // TODO: Inject employee context into chat
-                          }}
-                        />
-                      )}
-                    </ContextPanel>
-                  </motion.div>
-                )}
-
-                {/* Chat Interface - Pushed down when context panel is active */}
-                <div className="order-2 h-[700px]">
-                  <ErrorBoundary
-                    level="section"
-                    onError={(error, errorInfo) => {
-                      logComponentError(error, errorInfo, 'ChatInterface');
-                    }}
-                  >
-                    <ChatInterface
-                      onContextPanelChange={setContextPanelData}
-                    />
-                  </ErrorBoundary>
-                </div>
+              <div className="h-[700px]">
+                <ErrorBoundary
+                  level="section"
+                  onError={(error, errorInfo) => {
+                    logComponentError(error, errorInfo, 'ChatInterface');
+                  }}
+                >
+                  <ChatInterface
+                    onContextPanelChange={setContextPanelData}
+                  />
+                </ErrorBoundary>
               </div>
             </section>
+
+            {/* Context / Document Panel */}
+            {contextPanelData?.type && (
+              <aside className="order-2 lg:order-2 w-full lg:flex-[0_0_40%] lg:max-w-[40%] shrink-0">
+                <ContextPanel
+                  panelData={contextPanelData}
+                  onClose={() => setContextPanelData(null)}
+                >
+                  {/* Render appropriate panel based on type */}
+                  {contextPanelData.type === 'document' && (
+                    <DocumentEditorPanel
+                      content={contextPanelData.data?.content || ''}
+                      documentType={contextPanelData.config?.documentType}
+                      employeeName={contextPanelData.data?.employeeName}
+                      onExport={async (content) => {
+                        // TODO: Implement Google Docs export
+                        console.log('Export to Google Docs:', content);
+                      }}
+                    />
+                  )}
+                  {contextPanelData.type === 'analytics' && (
+                    <AnalyticsChartPanel
+                      metric={contextPanelData.data?.metric || 'headcount'}
+                      chartType={contextPanelData.config?.chartType}
+                      department={contextPanelData.config?.filters?.department}
+                      dateRange={contextPanelData.config?.filters?.dateRange}
+                      chartConfig={contextPanelData.data?.chartConfig}
+                      analysisSummary={contextPanelData.data?.analysisSummary}
+                      metadata={contextPanelData.data?.metadata}
+                    />
+                  )}
+                  {contextPanelData.type === 'performance' && (
+                    <PerformanceGridPanel
+                      department={contextPanelData.config?.filters?.department}
+                      highlights={contextPanelData.config?.highlights}
+                      onEmployeeClick={(employee) => {
+                        console.log('Employee clicked:', employee);
+                        // TODO: Inject employee context into chat
+                      }}
+                    />
+                  )}
+                </ContextPanel>
+              </aside>
+            )}
           </div>
         </main>
       </div>

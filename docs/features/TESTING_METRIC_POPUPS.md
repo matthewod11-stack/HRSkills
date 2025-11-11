@@ -2,7 +2,7 @@
 
 ## ✅ Status: Popup is Working!
 
-The popup functionality is confirmed working. You saw the dialog open with the error "Missing authorization header" because you're not logged in.
+The popup functionality is confirmed working. You saw the dialog open with the error "Missing authorization header" because you're not logged in. The new 9Box tile opens the performance context panel instead of the dialog.
 
 ---
 
@@ -13,7 +13,7 @@ The popup functionality is confirmed working. You saw the dialog open with the e
 2. **Navigate to Data Center** (`/data-sources`)
 3. **Upload employee data** (CSV or Excel with employee records)
 4. **Return to homepage** (`/`)
-5. **Click "View Details"** on any metric card
+5. **Click "View Details"** on headcount or attrition, or **click the 9Box tile** to open the performance panel
 
 ### Option 2: Test Without Authentication (Temporary)
 
@@ -84,22 +84,24 @@ export async function GET(request: NextRequest) {
 └─────────────────────────────────────────┘
 ```
 
-**Open Positions → Click "View Details":**
+**9Box High Performers → Click Tile:**
 ```
 ┌─────────────────────────────────────────┐
-│  Open Positions                     [X] │
-│  Current open roles awaiting candidates │
-│                                         │
-│  ┌───────────────────────────────────┐  │
-│  │ REQ-001                 Opened    │  │
-│  │ Senior DevOps Engineer  Aug 15    │  │
-│  └───────────────────────────────────┘  │
-│  ┌───────────────────────────────────┐  │
-│  │ REQ-002                 Opened    │  │
-│  │ Product Designer        Sep 1     │  │
-│  └───────────────────────────────────┘  │
-│  ... (all open positions)               │
+│  9Box High Performers              [ ] │
+│  Launches right-rail performance grid   │
 └─────────────────────────────────────────┘
+
+Context Panel (right rail):
+┌──────────────────────────────────────────────┐
+│  9-Box Performance Grid                 [X]  │
+│  All Departments • 120 employees             │
+│                                              │
+│  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐         │
+│  │Perf\Pot│ Low   │ Med   │ High  │         │
+│  │ High   │  2    │  5    │  12   │         │
+│  └──────┘ └──────┘ └──────┘ └──────┘         │
+│  ... (grid continues)                        │
+└──────────────────────────────────────────────┘
 ```
 
 ### When Authenticated WITHOUT Data:
@@ -144,11 +146,11 @@ For the popups to display properly, your employee data should include:
 - **Date**: `termination_date` or `exit_date`
 - **Must have**: A termination date in current year (2025)
 
-### For Open Positions:
-- **Name**: `requisition_id` or `job_id`
-- **Role**: `job_title`, or `title`, or `position`
-- **Date**: `opening_date` or `created_date`
-- **Status**: `status` = "open"
+### For 9Box High Performers:
+- **Performance Score**: `ai_performance_score`, `current_performance_rating`, or `manager_rating`
+- **Potential Score**: `ai_potential_score` (falls back to performance-derived banding)
+- **Optional**: `rating_inflation` for summary stats
+- **Status**: `status` = "active"
 
 ---
 
@@ -186,7 +188,7 @@ REQ002,N/A,Product Designer,2025-09-01,open,
 ### ✅ Data Display
 - [x] Shows up to 5 recent new hires (sorted by hire date)
 - [x] Shows up to 5 recent terminations (sorted by termination date)
-- [x] Shows all open positions
+- [x] Performance grid renders 3x3 layout with counts per cell
 - [x] Dates formatted as "Oct 15, 2025"
 - [x] Names and roles displayed correctly
 

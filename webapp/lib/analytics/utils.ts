@@ -1,11 +1,30 @@
 import { readFile } from 'fs/promises';
+import { existsSync } from 'fs';
 import path from 'path';
 import { parseCSV, parseExcel, getFileExtension } from './parser';
 import { DataFile, DataMetadata } from '@/lib/types/data-sources';
 
-const DATA_DIR = path.join(process.cwd(), '..', 'data');
-const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
-const METADATA_PATH = path.join(DATA_DIR, 'metadata.json');
+const DEFAULT_DATA_DIRECTORIES = [
+  process.env.ANALYTICS_DATA_DIR,
+  path.join(process.cwd(), 'data'),
+  path.join(process.cwd(), '..', 'data'),
+  path.join(process.cwd(), '..', '..', 'data'),
+  path.resolve(__dirname, '../../../../../data')
+].filter((dir): dir is string => Boolean(dir));
+
+export function resolveDataPath(...segments: string[]): string | null {
+  for (const baseDir of DEFAULT_DATA_DIRECTORIES) {
+    const candidate = path.join(baseDir, ...segments);
+    if (existsSync(candidate)) {
+      return candidate;
+    }
+  }
+  return null;
+}
+
+const DATA_DIR = resolveDataPath() ?? path.join(process.cwd(), '..', 'data');
+const UPLOADS_DIR = resolveDataPath('uploads') ?? path.join(DATA_DIR, 'uploads');
+const METADATA_PATH = resolveDataPath('metadata.json') ?? path.join(DATA_DIR, 'metadata.json');
 
 /**
  * Read metadata.json
@@ -55,15 +74,26 @@ export async function loadDataFile(fileId: string): Promise<any[]> {
 export async function loadDataFileByType(fileType: string): Promise<any[] | null> {
   // For employee_master, load from the master-employees.json file
   if (fileType === 'employee_master') {
-    try {
-      const masterFilePath = path.join(DATA_DIR, 'master-employees.json');
-      const content = await readFile(masterFilePath, 'utf-8');
-      const data = JSON.parse(content);
-      return Array.isArray(data) ? data : [];
-    } catch (error) {
-      console.error('Failed to load master employees:', error);
-      return null;
+    const candidateFiles = [
+      resolveDataPath('master-employees.json'),
+      resolveDataPath('backups', 'master-employees.backup.json'),
+      resolveDataPath('backups', 'master-employees.backup-sources.json'),
+    ].filter((file): file is string => Boolean(file));
+
+    for (const filePath of candidateFiles) {
+      try {
+        const content = await readFile(filePath, 'utf-8');
+        const data = JSON.parse(content);
+        if (Array.isArray(data) && data.length > 0) {
+          return data;
+        }
+      } catch (error) {
+        console.warn(`Failed to load mock employee data from ${filePath}:`, error);
+      }
     }
+
+    console.error('No employee mock data sources were accessible. Checked paths:', candidateFiles);
+    return null;
   }
 
   // For other file types, use metadata

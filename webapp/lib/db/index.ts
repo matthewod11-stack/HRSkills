@@ -170,6 +170,7 @@ function initializeSchema(sqlite: Database.Database) {
       CREATE TABLE IF NOT EXISTS user_preferences (
         user_id TEXT PRIMARY KEY,
         preferences_json TEXT NOT NULL,
+        anthropic_api_key TEXT,
         updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
 
@@ -210,6 +211,18 @@ function initializeSchema(sqlite: Database.Database) {
         user_id TEXT,
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
+
+      -- AI quota usage table (for shared key rate limiting)
+      CREATE TABLE IF NOT EXISTS ai_quota_usage (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        date TEXT NOT NULL,
+        request_count INTEGER NOT NULL DEFAULT 0,
+        tokens_used INTEGER NOT NULL DEFAULT 0,
+        quota_limit INTEGER NOT NULL DEFAULT 100,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
     `);
 
     // Create indexes
@@ -248,12 +261,18 @@ function initializeSchema(sqlite: Database.Database) {
       CREATE INDEX IF NOT EXISTS idx_ai_usage_provider ON ai_usage(provider);
       CREATE INDEX IF NOT EXISTS idx_ai_usage_created ON ai_usage(created_at);
       CREATE INDEX IF NOT EXISTS idx_ai_usage_user ON ai_usage(user_id);
+
+      -- AI quota usage indexes
+      CREATE INDEX IF NOT EXISTS idx_quota_user_date ON ai_quota_usage(user_id, date);
+      CREATE INDEX IF NOT EXISTS idx_quota_date ON ai_quota_usage(date);
     `);
 
     console.log('[DB] Schema initialization complete');
   } else {
     console.log('[DB] Schema already exists, skipping initialization');
   }
+
+  ensureQuotaSchemaAlignment(sqlite);
 }
 
 /**
@@ -302,3 +321,52 @@ export function getDbStats() {
 // Export schema and database instance
 export { schema };
 export const db = getDatabase();
+
+/**
+ * Ensure ai_quota_usage aligns with current schema (handles pre-existing databases).
+ */
+function ensureQuotaSchemaAlignment(sqlite: Database.Database) {
+  try {
+    const pragma = sqlite.prepare(`PRAGMA table_info('ai_quota_usage')`).all() as Array<{
+      name: string;
+    }>;
+
+    if (pragma.length === 0) {
+      return;
+    }
+
+    const columnNames = new Set(pragma.map(col => col.name));
+
+    sqlite.transaction(() => {
+      // Rename legacy columns if present
+      if (columnNames.has('usage_date') && !columnNames.has('date')) {
+        sqlite.exec(`ALTER TABLE ai_quota_usage RENAME COLUMN usage_date TO date;`);
+        console.log('[DB] Migrated ai_quota_usage.usage_date -> date');
+      }
+
+      if (columnNames.has('token_count') && !columnNames.has('tokens_used')) {
+        sqlite.exec(`ALTER TABLE ai_quota_usage RENAME COLUMN token_count TO tokens_used;`);
+        console.log('[DB] Migrated ai_quota_usage.token_count -> tokens_used');
+      }
+
+      // Refresh column info after potential renames
+      const refreshed = sqlite.prepare(`PRAGMA table_info('ai_quota_usage')`).all() as Array<{
+        name: string;
+      }>;
+      const refreshedNames = new Set(refreshed.map(col => col.name));
+
+      if (!refreshedNames.has('quota_limit')) {
+        sqlite.exec(`ALTER TABLE ai_quota_usage ADD COLUMN quota_limit INTEGER NOT NULL DEFAULT 100;`);
+        console.log('[DB] Added ai_quota_usage.quota_limit column with default 100');
+      }
+
+      // Ensure indexes target the expected columns
+      sqlite.exec(`
+        CREATE INDEX IF NOT EXISTS idx_quota_user_date ON ai_quota_usage(user_id, date);
+        CREATE INDEX IF NOT EXISTS idx_quota_date ON ai_quota_usage(date);
+      `);
+    })();
+  } catch (error) {
+    console.error('[DB] Failed to align ai_quota_usage schema:', error);
+  }
+}

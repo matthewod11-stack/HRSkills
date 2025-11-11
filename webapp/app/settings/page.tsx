@@ -27,7 +27,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { AIMetricsDashboard } from '@/components/custom/AIMetricsDashboard';
 import { QuotaBanner } from '@/components/custom/QuotaBanner';
-import { getDaysSinceFirstRun } from '@/lib/first-run';
+import { getDaysSinceFirstRun } from '@/lib/first-run-client';
 import useSWR from 'swr';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());

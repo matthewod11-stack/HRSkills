@@ -22,9 +22,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth, hasPermission } from '@/lib/auth/session'
-import { applyRateLimit, RateLimitPresets } from '@/lib/middleware/rate-limit'
-import { createSuccessResponse, createErrorResponse } from '@/lib/utils/api-response'
+import { requireAuth, hasPermission, authErrorResponse } from '@/lib/auth/middleware'
+import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter'
+import { createSuccessResponse, handleApiError } from '@/lib/api-helpers'
 import {
   predictAttrition,
   batchPredictAttrition,

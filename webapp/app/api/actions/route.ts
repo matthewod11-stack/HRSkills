@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     const validation = validateRequiredFields(body, ['action'])
     if (!validation.valid) {
       return NextResponse.json(
-        { success: false, error: validation.error },
+        { success: false, error: `Missing required fields: ${validation.missing.join(', ')}` },
         { status: 400 }
       )
     }
@@ -107,7 +107,7 @@ export async function PUT(request: NextRequest) {
     const validation = validateRequiredFields(body, ['actions'])
     if (!validation.valid) {
       return NextResponse.json(
-        { success: false, error: validation.error },
+        { success: false, error: `Missing required fields: ${validation.missing.join(', ')}` },
         { status: 400 }
       )
     }
