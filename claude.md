@@ -26,6 +26,58 @@ Context Panels  Failover   Type-safe ORM    Drive/Docs/Sheets
 
 ---
 
+## 🤖 Custom Agents (Use These When Appropriate)
+
+You have access to specialized agents that should be invoked proactively for specific tasks:
+
+### When to Use Built-in Agents
+
+**Code Quality & Security:**
+- **code-review-quality** - Use after implementing features, before commits, when user asks to "review", "check", or "audit" code
+- **security-auditor** - Use when handling PII/HR data, implementing auth, before production deploys, integrating third-party services
+- **performance-profiler** - Use when optimizing queries, implementing new features with database access, investigating slow performance
+
+**Documentation & Testing:**
+- **docs-sync-checker** - Use after adding new API endpoints, modifying features, before merging PRs
+- **test-generator** - Use after writing new utilities/functions, creating new API routes, refactoring components
+- **accessibility-auditor** - Use after creating/modifying React components, implementing new UI features, before releases
+
+**React & Architecture:**
+- **react-component-refactor** - Use when code reviews reveal duplication, prop drilling >3 levels, components >300 lines
+- **state-refactor-architect** - Use when implementing features with shared state, performance issues from re-renders, considering Zustand migration
+
+**Infrastructure:**
+- **dockerfile-cicd-engineer** - Use when setting up deployment, optimizing Docker builds, implementing CI/CD pipelines
+- **dependency-audit** - Use monthly, after security advisories, before major releases, when adding new dependencies
+
+### Example Usage Triggers
+
+```
+User: "I just added a new employee export feature"
+→ Invoke: code-review-quality, security-auditor (PII handling), test-generator
+
+User: "Review this authentication middleware I wrote"
+→ Invoke: security-auditor, code-review-quality
+
+User: "The analytics dashboard is slow"
+→ Invoke: performance-profiler
+
+User: "I refactored the chat components"
+→ Invoke: react-component-refactor, accessibility-auditor, test-generator
+
+User: "Added new /api/payroll endpoint"
+→ Invoke: docs-sync-checker, security-auditor (sensitive data), test-generator
+```
+
+### Agent Invocation Best Practices
+
+1. **Be Proactive** - Don't wait for user to ask, invoke when patterns match
+2. **Combine Agents** - Run multiple in parallel when relevant (e.g., security + code review)
+3. **Context Matters** - This is an HR platform with PII, so security-auditor should be frequently used
+4. **Before Commits** - Always consider code-review-quality before git commits
+
+---
+
 ## ⚡ Quick Commands Reference
 
 ```bash
