@@ -70,10 +70,24 @@ export async function loadDataFile(fileId: string): Promise<any[]> {
 
 /**
  * Load data file by type (finds the most recent upload of that type)
+ *
+ * @deprecated This function is deprecated for employee_master type.
+ * Use SQLite database with Drizzle ORM instead:
+ *
+ * ```ts
+ * import { db } from '@/lib/db'
+ * import { employees } from '@/db/schema'
+ * const employeeData = await db.select().from(employees)
+ * ```
  */
 export async function loadDataFileByType(fileType: string): Promise<any[] | null> {
-  // For employee_master, load from the master-employees.json file
+  // DEPRECATED: For employee_master, use SQLite instead
   if (fileType === 'employee_master') {
+    console.warn(
+      '[DEPRECATED] loadDataFileByType("employee_master") is deprecated. ' +
+      'Use SQLite database with Drizzle ORM instead. ' +
+      'See /lib/db/index.ts for database access.'
+    );
     const candidateFiles = [
       resolveDataPath('master-employees.json'),
       resolveDataPath('backups', 'master-employees.backup.json'),

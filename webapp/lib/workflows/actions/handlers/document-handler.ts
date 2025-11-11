@@ -2,7 +2,7 @@
  * Document Creation Action Handler
  *
  * Handles creation of HR documents (job descriptions, offer letters, PIPs, etc.)
- * Saves to local storage or Google Drive based on configuration.
+ * Saves to SQLite database with optional Google Drive export.
  */
 
 import type {
@@ -13,6 +13,7 @@ import type {
   ActionValidationResult,
   CreateDocumentPayload
 } from '../types'
+import { createDocument, type CreateDocumentInput } from '@/lib/services/document-service'
 
 /**
  * Document creation handler
@@ -134,37 +135,39 @@ export const documentHandler: ActionHandler<CreateDocumentPayload> = {
         formattedContent = this.stripMarkdown(payload.content)
       }
 
-      // Generate filename
-      const timestamp = new Date().toISOString().split('T')[0]
-      const sanitizedTitle = payload.title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '')
+      // Prepare metadata
+      const metadata = {
+        format: payload.format || 'markdown',
+        workflowId: context.workflowId,
+        userId: context.userId,
+        destination: payload.destination,
+      }
 
-      const fileName = payload.destination?.fileName || `${sanitizedTitle}-${timestamp}.md`
+      // Create document in database (defaults to 'draft' status)
+      const documentData: CreateDocumentInput = {
+        type: payload.documentType,
+        title: payload.title,
+        content: formattedContent,
+        employeeId: payload.employeeId || null,
+        status: 'draft', // Always create as draft from chat
+        metadataJson: JSON.stringify(metadata),
+      }
 
-      // For now, create a mock document (in production, this would save to Drive/S3)
-      const documentUrl = `/documents/${context.workflowId}/${fileName}`
-      const documentId = `doc_${Date.now()}_${Math.random().toString(36).substring(7)}`
+      const document = await createDocument(documentData)
 
-      // Simulate document creation delay
-      await this.delay(500)
-
-      // In production, this would:
-      // 1. Upload to Google Drive via Drive API
-      // 2. Or save to S3
-      // 3. Or save to local file system
-      // 4. Create database record for tracking
+      // Build document URL
+      const documentUrl = `/documents/${document.id}`
 
       const output = {
-        documentId,
+        documentId: document.id,
         url: documentUrl,
-        title: payload.title,
-        documentType: payload.documentType,
+        title: document.title,
+        documentType: document.type,
+        status: document.status,
         format: payload.format || 'markdown',
         size: formattedContent.length,
-        createdAt: new Date().toISOString(),
-        message: `Document "${payload.title}" created successfully`
+        createdAt: document.createdAt,
+        message: `Document "${payload.title}" created successfully as draft`
       }
 
       return {
@@ -176,7 +179,8 @@ export const documentHandler: ActionHandler<CreateDocumentPayload> = {
         metadata: {
           workflowId: context.workflowId,
           userId: context.userId,
-          documentType: payload.documentType
+          documentType: payload.documentType,
+          documentId: document.id
         }
       }
     } catch (error: any) {

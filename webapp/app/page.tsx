@@ -7,7 +7,8 @@ import {
   Users,
   TrendingDown,
   Grid3x3,
-  Settings
+  Settings,
+  Database
 } from 'lucide-react';
 import { FloatingOrbs } from '@/components/custom/FloatingOrbs';
 import { MetricCard } from '@/components/custom/MetricCard';
@@ -323,6 +324,15 @@ export default function Home() {
                 >
                   <p className="text-sm text-secondary" suppressHydrationWarning>{formatDate(currentTime)}</p>
                   <p className="text-2xl font-mono" suppressHydrationWarning>{formatTime(currentTime)}</p>
+                </button>
+
+                <button
+                  onClick={() => window.location.href = '/data-sources'}
+                  aria-label="Upload Data & Documents"
+                  title="Upload Data & Documents"
+                  className="w-10 h-10 bg-white/5 hover:bg-white/10 border border-border hover:border-violet/50 rounded-lg flex items-center justify-center transition-premium"
+                >
+                  <Database className="w-5 h-5" aria-hidden="true" />
                 </button>
 
                 <button

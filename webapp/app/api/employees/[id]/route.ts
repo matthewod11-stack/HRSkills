@@ -1,35 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readFile, writeFile } from 'fs/promises';
-import path from 'path';
-import { MasterEmployeeRecord } from '@/lib/types/master-employee';
 import { handleApiError } from '@/lib/api-helpers';
-
-const DATA_DIR = path.join(process.cwd(), '..', 'data');
-const MASTER_DATA_PATH = path.join(DATA_DIR, 'master-employees.json');
-
-/**
- * Load master employee data
- */
-async function loadMasterData(): Promise<MasterEmployeeRecord[]> {
-  try {
-    const content = await readFile(MASTER_DATA_PATH, 'utf-8');
-    return JSON.parse(content);
-  } catch (error) {
-    return [];
-  }
-}
-
-/**
- * Save master employee data
- */
-async function saveMasterData(data: MasterEmployeeRecord[]): Promise<void> {
-  await writeFile(MASTER_DATA_PATH, JSON.stringify(data, null, 2), 'utf-8');
-}
+import { db } from '@/lib/db';
+import { employees, employeeMetrics, performanceReviews } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 
 /**
  * GET /api/employees/[id]
  *
- * Get single employee by ID
+ * Get single employee by ID with metrics and reviews
  */
 export async function GET(
   request: NextRequest,
@@ -37,8 +15,13 @@ export async function GET(
 ) {
   try {
     const employeeId = params.id;
-    const employees = await loadMasterData();
-    const employee = employees.find(emp => emp.employee_id === employeeId);
+
+    // Query employee with related data
+    const [employee] = await db
+      .select()
+      .from(employees)
+      .where(eq(employees.id, employeeId))
+      .limit(1);
 
     if (!employee) {
       return NextResponse.json({
@@ -47,9 +30,25 @@ export async function GET(
       }, { status: 404 });
     }
 
+    // Get employee metrics
+    const metrics = await db
+      .select()
+      .from(employeeMetrics)
+      .where(eq(employeeMetrics.employeeId, employeeId));
+
+    // Get performance reviews
+    const reviews = await db
+      .select()
+      .from(performanceReviews)
+      .where(eq(performanceReviews.employeeId, employeeId));
+
     return NextResponse.json({
       success: true,
-      employee
+      employee: {
+        ...employee,
+        metrics,
+        performanceReviews: reviews
+      }
     });
 
   } catch (error: any) {
@@ -73,36 +72,39 @@ export async function PATCH(
     const employeeId = params.id;
     const updates = await request.json();
 
-    const employees = await loadMasterData();
-    const index = employees.findIndex(emp => emp.employee_id === employeeId);
+    // Check if employee exists
+    const [existingEmployee] = await db
+      .select()
+      .from(employees)
+      .where(eq(employees.id, employeeId))
+      .limit(1);
 
-    if (index === -1) {
+    if (!existingEmployee) {
       return NextResponse.json({
         success: false,
         error: 'Employee not found'
       }, { status: 404 });
     }
 
-    // Merge updates
-    employees[index] = {
-      ...employees[index],
-      ...updates,
-      employee_id: employeeId, // Preserve ID
-      updated_at: new Date().toISOString()
-    };
-
-    await saveMasterData(employees);
+    // Update employee with timestamp
+    const [updatedEmployee] = await db
+      .update(employees)
+      .set({
+        ...updates,
+        updatedAt: new Date().toISOString()
+      })
+      .where(eq(employees.id, employeeId))
+      .returning();
 
     return NextResponse.json({
       success: true,
-      employee: employees[index]
+      employee: updatedEmployee
     });
 
   } catch (error: any) {
     return handleApiError(error, {
       endpoint: `/api/employees/${params.id}`,
       method: 'PATCH',
-      requestBody: { employeeId: params.id }
     });
   }
 }
@@ -110,7 +112,7 @@ export async function PATCH(
 /**
  * DELETE /api/employees/[id]
  *
- * Delete single employee
+ * Soft delete employee (set status to terminated)
  */
 export async function DELETE(
   request: NextRequest,
@@ -118,28 +120,42 @@ export async function DELETE(
 ) {
   try {
     const employeeId = params.id;
-    const employees = await loadMasterData();
-    const filtered = employees.filter(emp => emp.employee_id !== employeeId);
 
-    if (filtered.length === employees.length) {
+    // Check if employee exists
+    const [existingEmployee] = await db
+      .select()
+      .from(employees)
+      .where(eq(employees.id, employeeId))
+      .limit(1);
+
+    if (!existingEmployee) {
       return NextResponse.json({
         success: false,
         error: 'Employee not found'
       }, { status: 404 });
     }
 
-    await saveMasterData(filtered);
+    // Soft delete: set status to terminated
+    const [deletedEmployee] = await db
+      .update(employees)
+      .set({
+        status: 'terminated',
+        terminationDate: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      })
+      .where(eq(employees.id, employeeId))
+      .returning();
 
     return NextResponse.json({
       success: true,
-      message: 'Employee deleted'
+      message: 'Employee marked as terminated',
+      employee: deletedEmployee
     });
 
   } catch (error: any) {
     return handleApiError(error, {
       endpoint: `/api/employees/${params.id}`,
       method: 'DELETE',
-      requestBody: { employeeId: params.id }
     });
   }
 }

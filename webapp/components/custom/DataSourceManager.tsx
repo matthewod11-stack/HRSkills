@@ -2,21 +2,39 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Database, Trash2, Eye, FileText, Calendar, BarChart3, X, ArrowLeft, Table2, Users } from 'lucide-react';
+import { Database, Trash2, Eye, FileText, Calendar, BarChart3, X, ArrowLeft, Table2, Users, TrendingUp, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { DataFile, FilePreview, FILE_TYPE_LABELS } from '@/lib/types/data-sources';
 import { SmartFileUpload } from './SmartFileUpload';
 import { useAuth } from '@/lib/auth/auth-context';
+import useSWR from 'swr';
+import { getDaysSinceFirstRun } from '@/lib/first-run-client';
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function DataSourceManager() {
   const { getAuthHeaders } = useAuth();
   const [files, setFiles] = useState<DataFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [preview, setPreview] = useState<{ file: DataFile; data: FilePreview } | null>(null);
+  const [daysSinceFirstRun, setDaysSinceFirstRun] = useState(0);
+  const [hasUploadedData, setHasUploadedData] = useState(false);
+
+  // Fetch first-run status
+  const { data: firstRunData } = useSWR('/api/setup/init', fetcher);
 
   useEffect(() => {
     loadFiles();
   }, []);
+
+  useEffect(() => {
+    setDaysSinceFirstRun(getDaysSinceFirstRun());
+
+    // Check if user has uploaded data (more than demo data count)
+    if (firstRunData && firstRunData.employeeCount > 200) {
+      setHasUploadedData(true);
+    }
+  }, [firstRunData]);
 
   const loadFiles = async () => {
     try {
@@ -104,11 +122,62 @@ export function DataSourceManager() {
             <Database className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Data Sources</h1>
-            <p className="text-gray-400">Upload and manage your HR data files</p>
+            <h1 className="text-2xl font-bold">Data Input Hub</h1>
+            <p className="text-gray-400">Upload employee data and manage your document library</p>
           </div>
         </div>
       </div>
+
+      {/* Your Data Overview */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-8 p-6 bg-white/5 border border-white/10 rounded-2xl"
+      >
+        <div className="mb-4">
+          <h2 className="text-lg font-bold">Your Data</h2>
+          <p className="text-xs text-gray-400">Employee data and analytics status</p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-4">
+          <div className="p-4 bg-white/5 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <Users className="w-4 h-4 text-blue-400" />
+              <span className="text-xs text-gray-400">Employees</span>
+            </div>
+            <p className="text-2xl font-bold">
+              {firstRunData?.employeeCount || 0}
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              {hasUploadedData ? 'Your data' : 'Demo data'}
+            </p>
+          </div>
+
+          <div className="p-4 bg-white/5 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp className="w-4 h-4 text-green-400" />
+              <span className="text-xs text-gray-400">Analytics</span>
+            </div>
+            <p className="text-2xl font-bold">
+              {firstRunData?.progress?.percentage || 0}%
+            </p>
+            <p className="text-xs text-gray-500 mt-1">Setup complete</p>
+          </div>
+
+          <div className="p-4 bg-white/5 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <CheckCircle2 className="w-4 h-4 text-purple-400" />
+              <span className="text-xs text-gray-400">Status</span>
+            </div>
+            <p className="text-2xl font-bold">Active</p>
+            <p className="text-xs text-gray-500 mt-1">
+              {daysSinceFirstRun > 0
+                ? `${daysSinceFirstRun} days ago`
+                : 'Just started'}
+            </p>
+          </div>
+        </div>
+      </motion.div>
 
       {/* Upload Section */}
       <div className="mb-8">

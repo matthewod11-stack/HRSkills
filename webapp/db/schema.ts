@@ -155,6 +155,9 @@ export const documents = sqliteTable('documents', {
   title: text('title').notNull(),
   content: text('content').notNull(), // Markdown or HTML
 
+  // Document lifecycle
+  status: text('status').notNull().default('draft'), // draft, final
+
   // Google Drive integration
   googleDocId: text('google_doc_id'), // If exported to Google Docs
   googleDriveUrl: text('google_drive_url'),
@@ -324,6 +327,13 @@ export const aiUsageIndexes = {
 export const aiQuotaIndexes = {
   userIdx: sql`CREATE INDEX IF NOT EXISTS idx_quota_user ON ai_quota_usage(user_id)`,
   dateIdx: sql`CREATE INDEX IF NOT EXISTS idx_quota_date ON ai_quota_usage(date)`,
+};
+
+// Document indexes
+export const documentsIndexes = {
+  statusIdx: sql`CREATE INDEX IF NOT EXISTS idx_documents_status ON documents(status)`,
+  typeCreatedIdx: sql`CREATE INDEX IF NOT EXISTS idx_documents_type_created ON documents(type, created_at DESC)`,
+  employeeIdx: sql`CREATE INDEX IF NOT EXISTS idx_documents_employee ON documents(employee_id)`,
 };
 
 // ============================================================================

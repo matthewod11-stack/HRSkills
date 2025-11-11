@@ -428,18 +428,18 @@ export default function SettingsPage() {
                 <div className="p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-lg">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
-                      <h3 className="text-sm font-medium mb-1">Upload Your Employee Data</h3>
+                      <h3 className="text-sm font-medium mb-1">Data Input Hub</h3>
                       <p className="text-xs text-gray-400">
-                        Currently using demo data (200 employees). Upload your CSV to unlock
-                        personalized analytics and insights.
+                        Currently using demo data (200 employees). Upload your CSV and manage your
+                        document library to unlock personalized analytics and insights.
                       </p>
                     </div>
                     <button
                       onClick={() => router.push('/data-sources')}
                       className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm transition-all whitespace-nowrap"
                     >
-                      <Upload className="w-4 h-4" />
-                      Upload CSV
+                      <Database className="w-4 h-4" />
+                      Go to Data Input Hub →
                     </button>
                   </div>
                 </div>

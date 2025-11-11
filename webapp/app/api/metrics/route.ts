@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { loadDataFileByType } from '@/lib/analytics/utils'
 import { requireAuth, hasPermission, authErrorResponse } from '@/lib/auth/middleware'
 import { handleApiError, createSuccessResponse } from '@/lib/api-helpers'
 import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter'
+import { db } from '@/lib/db'
+import { employees } from '@/db/schema'
+import { eq, and, gte, sql } from 'drizzle-orm'
 
 export async function GET(request: NextRequest) {
   // Apply rate limiting (standard endpoints: 100 req/min)
@@ -25,10 +27,10 @@ export async function GET(request: NextRequest) {
     );
   }
   try {
-    // Load employee data to calculate real metrics
-    const employeeData = await loadDataFileByType('employee_master')
+    // Query employee data from SQLite using Drizzle ORM
+    const allEmployees = await db.select().from(employees)
 
-    if (!employeeData || employeeData.length === 0) {
+    if (!allEmployees || allEmployees.length === 0) {
       return NextResponse.json({
         error: 'No data available',
         message: 'Please upload employee data in the Data Center first.',
@@ -45,23 +47,23 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate active headcount
-    const activeEmployees = employeeData.filter((emp: any) =>
-      !emp.status || emp.status.toLowerCase() === 'active'
+    const activeEmployees = allEmployees.filter(emp =>
+      emp.status === 'active'
     )
     const headcount = activeEmployees.length
 
     // Calculate YTD attrition rate
     // Attrition = (Terminations YTD / Average Headcount) * 100
     const currentYear = new Date().getFullYear()
-    const yearStart = new Date(currentYear, 0, 1)
+    const yearStart = new Date(currentYear, 0, 1).toISOString()
 
-    const terminatedYTD = employeeData.filter((emp: any) => {
-      if (!emp.termination_date && !emp.exit_date) return false
+    const terminatedYTD = allEmployees.filter(emp => {
+      if (!emp.terminationDate) return false
 
-      const termDate = emp.termination_date || emp.exit_date
-      const exitDate = new Date(termDate)
+      const exitDate = new Date(emp.terminationDate)
+      const yearStartDate = new Date(yearStart)
 
-      return exitDate >= yearStart && exitDate <= new Date()
+      return exitDate >= yearStartDate && exitDate <= new Date()
     }).length
 
     // Average headcount = (Starting headcount + Current headcount) / 2
@@ -73,10 +75,8 @@ export async function GET(request: NextRequest) {
       attritionRate = parseFloat(((terminatedYTD / avgHeadcount) * 100).toFixed(1))
     }
 
-    // Count open positions
-    const openPositions = employeeData.filter((emp: any) =>
-      emp.status && emp.status.toLowerCase() === 'open'
-    ).length
+    // Open positions (if we track them in the future)
+    const openPositions = 0  // Not tracked in current schema
 
     const metrics = {
       headcount,

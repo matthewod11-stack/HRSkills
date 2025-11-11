@@ -108,6 +108,7 @@ export interface CreateDocumentPayload {
   documentType: 'job_description' | 'offer_letter' | 'pip' | 'termination_letter' | 'interview_guide' | 'performance_review' | 'onboarding_checklist' | 'custom'
   title: string
   content: string
+  employeeId?: string
   format?: 'markdown' | 'html' | 'plain'
   destination?: {
     type: 'google_drive' | 'local' | 's3'

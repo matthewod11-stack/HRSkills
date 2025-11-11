@@ -32,7 +32,9 @@ import {
 import { randomUUID } from 'crypto';
 
 // Paths
-const DATA_DIR = path.join(process.cwd(), 'data');
+const SCRIPT_DIR = path.dirname(new URL(import.meta.url).pathname);
+const PROJECT_ROOT = path.join(SCRIPT_DIR, '..');
+const DATA_DIR = path.join(PROJECT_ROOT, 'data');
 const MASTER_DATA_PATH = path.join(DATA_DIR, 'master-employees.json');
 const BACKUP_DIR = path.join(DATA_DIR, 'backups');
 
