@@ -126,9 +126,9 @@ export function ContextPanel({ panelData, onClose, children }: ContextPanelProps
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: 40, opacity: 0 }}
           transition={{ duration: 0.3, ease: 'easeInOut' }}
-          className="relative flex h-full"
+          className="relative flex h-full w-full"
         >
-          <div className="relative group flex h-full flex-1">
+          <div className="relative group flex h-full w-full">
             {/* Glassmorphic background with gradient */}
             <div
               className={`absolute inset-0 bg-gradient-to-br ${accent.glow} rounded-3xl blur-2xl group-hover:blur-3xl transition-all duration-500 opacity-70`}

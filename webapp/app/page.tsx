@@ -348,6 +348,24 @@ export default function Home() {
     setMetricDialogOpen(true);
   };
 
+  const handleHeadcountClick = () => {
+    setMetricDialogOpen(false);
+    setSelectedMetric(null);
+    setContextPanelData({
+      type: 'analytics',
+      title: 'Headcount Analytics',
+      data: {
+        metric: 'headcount',
+      },
+      config: {
+        chartType: 'bar',
+        filters: {
+          dateRange: 'last_12_months',
+        },
+      },
+    });
+  };
+
   const handleNineBoxClick = () => {
     setMetricDialogOpen(false);
     setSelectedMetric(null);
@@ -450,13 +468,7 @@ export default function Home() {
                 icon={Users}
                 progress={headcountProgress}
                 delay={0}
-                onClick={() =>
-                  handleMetricClick(
-                    'headcount',
-                    'Recent New Hires',
-                    'Last 5 employees who joined the company'
-                  )
-                }
+                onClick={handleHeadcountClick}
               />
               <MetricCard
                 title="Attrition Rate"
@@ -493,17 +505,13 @@ export default function Home() {
 
           {/* Main Layout - Chat First with Dynamic Context Panel */}
           <div
-            className={`grid grid-cols-1 gap-6 lg:gap-4 ${
-              contextPanelData?.type ? 'lg:grid-cols-12' : 'lg:grid-cols-12'
-            }`}
+            className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-4"
           >
             {/* Chat Interface */}
             <section
               aria-label="HR Assistant Chat"
               className={`order-1 w-full ${
-                contextPanelData?.type
-                  ? 'lg:order-1 lg:col-span-8'
-                  : 'lg:order-1 lg:col-span-12'
+                contextPanelData?.type ? 'lg:col-span-2' : 'lg:col-span-3'
               }`}
             >
               <div className="h-full max-h-[calc(100vh-360px)] min-h-[500px]">
@@ -520,7 +528,7 @@ export default function Home() {
 
             {/* Context / Document Panel */}
             {contextPanelData?.type && (
-              <aside className="order-2 lg:order-2 w-full lg:col-span-4 lg:col-start-9">
+              <aside className="order-2 lg:order-2 w-full lg:col-span-1">
                 <div className="h-full max-h-[calc(100vh-360px)] min-h-[500px]">
                   <ContextPanel
                     panelData={contextPanelData}

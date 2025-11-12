@@ -273,7 +273,7 @@ export function AnalyticsChartPanel({
   const chartOptions = chartConfigState?.options || getChartOptions();
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-[620px]">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 pb-4 border-b border-white/10">
         <div className="flex items-center gap-2">
