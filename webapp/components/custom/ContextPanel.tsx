@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type CSSProperties } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, FileText, BarChart3, Grid3x3 } from 'lucide-react';
+import { X, FileText, BarChart3, Grid3x3, Smile } from 'lucide-react';
 
-export type ContextPanelType = 'document' | 'analytics' | 'performance' | null;
+export type ContextPanelType = 'document' | 'analytics' | 'performance' | 'enps' | null;
 
 export interface ContextPanelData {
   type: ContextPanelType;
@@ -26,9 +26,15 @@ interface ContextPanelProps {
   panelData: ContextPanelData | null;
   onClose: () => void;
   children?: React.ReactNode;
+  alignmentStyle?: CSSProperties;
 }
 
-export function ContextPanel({ panelData, onClose, children }: ContextPanelProps) {
+export function ContextPanel({
+  panelData,
+  onClose,
+  children,
+  alignmentStyle,
+}: ContextPanelProps) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -73,6 +79,16 @@ export function ContextPanel({ panelData, onClose, children }: ContextPanelProps
           closeButtonBorder: 'border-orange-400/40 hover:border-orange-300/60',
           closeButtonBg: 'bg-white/5 hover:bg-white/10',
         };
+      case 'enps':
+        return {
+          glow: 'from-blue-500/15 via-purple-400/10 to-indigo-500/10',
+          containerBg: 'bg-black/45',
+          containerBorder: 'border-blue-400/40 hover:border-blue-300/60',
+          headerGradient: 'from-blue-500/15 to-purple-500/10',
+          iconBg: 'from-blue-500 to-purple-600',
+          closeButtonBorder: 'border-blue-400/40 hover:border-blue-300/60',
+          closeButtonBg: 'bg-white/5 hover:bg-white/10',
+        };
       default:
         return {
           glow: 'from-blue-500/10 via-purple-500/10 to-pink-500/10',
@@ -96,6 +112,8 @@ export function ContextPanel({ panelData, onClose, children }: ContextPanelProps
         return <BarChart3 className="w-5 h-5" />;
       case 'performance':
         return <Grid3x3 className="w-5 h-5" />;
+      case 'enps':
+        return <Smile className="w-5 h-5" />;
       default:
         return null;
     }
@@ -111,6 +129,8 @@ export function ContextPanel({ panelData, onClose, children }: ContextPanelProps
         return 'Analytics';
       case 'performance':
         return 'Performance Grid';
+      case 'enps':
+        return 'Employee Satisfaction (eNPS)';
       default:
         return 'Context Panel';
     }
@@ -127,6 +147,7 @@ export function ContextPanel({ panelData, onClose, children }: ContextPanelProps
           exit={{ x: 40, opacity: 0 }}
           transition={{ duration: 0.3, ease: 'easeInOut' }}
           className="relative flex h-full w-full"
+          style={{ minWidth: 0, ...alignmentStyle }}
         >
           <div className="relative group flex h-full w-full">
             {/* Glassmorphic background with gradient */}

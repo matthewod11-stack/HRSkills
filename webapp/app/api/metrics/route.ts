@@ -6,6 +6,7 @@ import { db } from '@/lib/db';
 import { employees } from '@/db/schema';
 import { eq, and, gte, sql } from 'drizzle-orm';
 import { getAggregatedMetrics } from '@/lib/performance-monitor';
+import { calculateENPS } from '@/lib/analytics/enps-sql';
 
 /**
  * GET /api/metrics
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest) {
           error: 'No data available',
           message: 'Please upload employee data in the Data Center first.',
           headcount: 0,
-          attritionRate: 0,
+          enpsScore: 0,
           openPositions: 0,
           lastUpdated: new Date().toISOString(),
         },
@@ -71,22 +72,9 @@ export async function GET(request: NextRequest) {
     const activeEmployees = allEmployees.filter((emp) => emp.status === 'active');
     const headcount = activeEmployees.length;
 
-    // Calculate YTD attrition rate
-    const currentYear = new Date().getFullYear();
-    const yearStart = new Date(currentYear, 0, 1).toISOString();
-
-    const terminatedYTD = allEmployees.filter((emp) => {
-      if (!emp.terminationDate) return false;
-      const exitDate = new Date(emp.terminationDate);
-      const yearStartDate = new Date(yearStart);
-      return exitDate >= yearStartDate && exitDate <= new Date();
-    }).length;
-
-    const avgHeadcount = headcount + terminatedYTD;
-    let attritionRate = 0;
-    if (avgHeadcount > 0) {
-      attritionRate = parseFloat(((terminatedYTD / avgHeadcount) * 100).toFixed(1));
-    }
+    // Calculate eNPS score
+    const enpsData = await calculateENPS();
+    const enpsScore = enpsData.currentScore?.score || 0;
 
     const openPositions = 0; // Not tracked in current schema
 
@@ -95,7 +83,7 @@ export async function GET(request: NextRequest) {
       // Return dashboard summary
       const metrics = {
         headcount,
-        attritionRate,
+        enpsScore,
         openPositions,
         lastUpdated: new Date().toISOString(),
       };

@@ -25,6 +25,7 @@ import {
   calculateSpanOfControl,
 } from '@/lib/analytics/headcount-sql';
 import { calculateAttrition, getAttritionByDepartment } from '@/lib/analytics/attrition-sql';
+import { calculateENPS, calculateENPSByDepartment } from '@/lib/analytics/enps-sql';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -37,6 +38,7 @@ type AnalyticsMetric =
   | 'diversity'
   | 'performance'
   | 'engagement'
+  | 'enps' // Employee Net Promoter Score
   | 'compensation'
   | 'costs';
 
@@ -619,15 +621,41 @@ async function calculateCompensationMetrics(params: AnalyticsQueryParams): Promi
 }
 
 /**
- * Calculate engagement metrics (placeholder)
+ * Calculate engagement metrics (eNPS)
  */
 async function calculateEngagementMetrics(params: AnalyticsQueryParams): Promise<any> {
-  // TODO: Implement engagement metrics when engagement survey data is available
+  // Calculate eNPS metrics
+  const enpsData = await calculateENPS();
+
+  // Filter by department if specified
+  if (params.department) {
+    const deptData = enpsData.byDepartment.find((d) => d.department === params.department);
+    return {
+      score: deptData?.score || 0,
+      department: params.department,
+      distribution: deptData
+        ? {
+            promoters: deptData.promoters,
+            passives: deptData.passives,
+            detractors: deptData.detractors,
+            total: deptData.total,
+          }
+        : null,
+      trends: enpsData.trends.filter((t) => t.quarter),
+      message: deptData
+        ? undefined
+        : `No eNPS data found for department: ${params.department}`,
+    };
+  }
+
+  // Return overall eNPS data
   return {
-    score: 0,
-    participation: 0,
-    byDepartment: {},
-    message: 'Engagement metrics require survey data. This is a placeholder.',
+    score: enpsData.currentScore?.score || 0,
+    currentQuarter: enpsData.currentScore?.quarter,
+    distribution: enpsData.distribution,
+    trends: enpsData.trends,
+    byDepartment: enpsData.byDepartment,
+    summary: enpsData.summary,
   };
 }
 
@@ -677,6 +705,7 @@ export async function GET(request: NextRequest) {
             'diversity',
             'performance',
             'engagement',
+            'enps',
             'compensation',
             'costs',
           ],
@@ -729,6 +758,7 @@ export async function GET(request: NextRequest) {
         data = await calculatePerformanceMetrics(params);
         break;
       case 'engagement':
+      case 'enps':
         data = await calculateEngagementMetrics(params);
         break;
       case 'compensation':
@@ -749,6 +779,7 @@ export async function GET(request: NextRequest) {
               'diversity',
               'performance',
               'engagement',
+              'enps',
               'compensation',
               'costs',
             ],

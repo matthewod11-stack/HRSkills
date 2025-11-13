@@ -1,9 +1,17 @@
 'use client';
 
-import { useState, useEffect, Suspense, useCallback } from 'react';
+import {
+  useState,
+  useEffect,
+  Suspense,
+  useCallback,
+  useRef,
+  useLayoutEffect,
+  type CSSProperties,
+} from 'react';
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
-import { Users, TrendingDown, Grid3x3, Settings, Database } from 'lucide-react';
+import { Users, Smile, Grid3x3, Settings, Database } from 'lucide-react';
 import { FloatingOrbs } from '@/components/custom/FloatingOrbs';
 import { MetricCard } from '@/components/custom/MetricCard';
 import { ChatInterface } from '@/components/custom/ChatInterface';
@@ -11,6 +19,7 @@ import { ContextPanel, ContextPanelData } from '@/components/custom/ContextPanel
 import { DocumentEditorPanel, DocumentExportPayload } from '@/components/custom/DocumentEditorPanel';
 import { AnalyticsChartPanel } from '@/components/custom/AnalyticsChartPanel';
 import { PerformanceGridPanel } from '@/components/custom/PerformanceGridPanel';
+import ENPSPanel from '@/components/custom/ENPSPanel';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { logComponentError } from '@/lib/errorLogging';
 import { fetchWithRetry } from '@/lib/api-helpers/fetch-with-retry';
@@ -39,10 +48,10 @@ const CommandPalette = dynamic(
   }
 );
 
-type MetricType = 'headcount' | 'attrition' | null;
+type MetricType = 'headcount' | 'enps' | null;
 type MetricsState = {
   headcount: number;
-  attritionRate: number;
+  enpsScore: number;
   lastUpdated: string | null;
 };
 
@@ -54,12 +63,17 @@ type NineBoxSummary = {
   avgRatingInflation?: number;
 };
 
+type ExternalChatPrompt = {
+  id: number;
+  text: string;
+};
+
 export default function Home() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [commandOpen, setCommandOpen] = useState(false);
   const [metrics, setMetrics] = useState<MetricsState>({
     headcount: 0,
-    attritionRate: 0,
+    enpsScore: 0,
     lastUpdated: null,
   });
   const [metricsStatus, setMetricsStatus] = useState<
@@ -75,10 +89,104 @@ export default function Home() {
   const [selectedMetric, setSelectedMetric] = useState<MetricType>(null);
   const [dialogTitle, setDialogTitle] = useState('');
   const [dialogDescription, setDialogDescription] = useState('');
+  const [externalChatPrompt, setExternalChatPrompt] = useState<ExternalChatPrompt | null>(null);
+
+  // Layout alignment tracking
+  const metricsLayoutRef = useRef<HTMLDivElement | null>(null);
+  const headcountCardRef = useRef<HTMLDivElement | null>(null);
+  const enpsCardRef = useRef<HTMLDivElement | null>(null);
+  const nineBoxCardRef = useRef<HTMLDivElement | null>(null);
+  const [alignmentMetrics, setAlignmentMetrics] = useState({
+    panelWidth: 0,
+    chatOffset: 0,
+    panelInset: 0,
+    columnGap: 0,
+    layoutWidth: 0,
+    isDesktop: false,
+  });
 
   // Context panel state for Phase 2 dashboard
   const [contextPanelData, setContextPanelData] = useState<ContextPanelData | null>(null);
   const { getAuthHeaders } = useAuth();
+
+  useLayoutEffect(() => {
+    if (typeof window === 'undefined' || typeof ResizeObserver === 'undefined') {
+      return;
+    }
+
+    let frameId = 0;
+
+    const measure = () => {
+      const layoutEl = metricsLayoutRef.current;
+      const headcountEl = headcountCardRef.current;
+      const nineBoxEl = nineBoxCardRef.current;
+
+      if (!layoutEl || !headcountEl || !nineBoxEl) {
+        return;
+      }
+
+      const layoutRect = layoutEl.getBoundingClientRect();
+      const headcountRect = headcountEl.getBoundingClientRect();
+      const nineBoxRect = nineBoxEl.getBoundingClientRect();
+
+      const computedStyles = getComputedStyle(layoutEl);
+      const columnGap = parseFloat(computedStyles.columnGap || '0') || 0;
+      const chatOffset = Math.max(0, headcountRect.left - layoutRect.left);
+      const panelInset = Math.max(0, layoutRect.right - nineBoxRect.right);
+      const panelWidth = nineBoxRect.width;
+      const layoutWidth = layoutRect.width;
+      const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
+
+      setAlignmentMetrics((current) => {
+        const next = {
+          panelWidth,
+          chatOffset,
+          panelInset,
+          columnGap,
+          layoutWidth,
+          isDesktop,
+        };
+
+        const isSame =
+          Math.abs(current.panelWidth - next.panelWidth) < 0.5 &&
+          Math.abs(current.chatOffset - next.chatOffset) < 0.5 &&
+          Math.abs(current.panelInset - next.panelInset) < 0.5 &&
+          Math.abs(current.columnGap - next.columnGap) < 0.5 &&
+          Math.abs(current.layoutWidth - next.layoutWidth) < 0.5 &&
+          current.isDesktop === next.isDesktop;
+
+        return isSame ? current : next;
+      });
+    };
+
+    const handleResize = () => {
+      if (frameId) {
+        cancelAnimationFrame(frameId);
+      }
+      frameId = window.requestAnimationFrame(measure);
+    };
+
+    handleResize();
+
+    const resizeObserver = new ResizeObserver(handleResize);
+    const observedElements = [
+      metricsLayoutRef.current,
+      headcountCardRef.current,
+      enpsCardRef.current,
+      nineBoxCardRef.current,
+    ].filter((el): el is Element => Boolean(el));
+
+    observedElements.forEach((el) => resizeObserver.observe(el));
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      if (frameId) {
+        cancelAnimationFrame(frameId);
+      }
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   const handleDocumentExport = useCallback(
     async (payload: DocumentExportPayload) => {
@@ -177,7 +285,7 @@ export default function Home() {
 
       setMetrics({
         headcount: typeof data?.headcount === 'number' ? data.headcount : 0,
-        attritionRate: typeof data?.attritionRate === 'number' ? data.attritionRate : 0,
+        enpsScore: typeof data?.enpsScore === 'number' ? data.enpsScore : 0,
         lastUpdated: typeof data?.lastUpdated === 'string' ? data.lastUpdated : null,
       });
 
@@ -192,7 +300,7 @@ export default function Home() {
       console.error('Failed to fetch metrics:', error);
       setMetrics({
         headcount: 0,
-        attritionRate: 0,
+        enpsScore: 0,
         lastUpdated: null,
       });
       setMetricsStatus('error');
@@ -266,7 +374,8 @@ export default function Home() {
   const nineBoxFailed = nineBoxStatus === 'error';
 
   const headcountDisplay = metricsLoading || metricsFailed ? '—' : metrics.headcount;
-  const attritionDisplay = metricsLoading || metricsFailed ? '—' : `${metrics.attritionRate}%`;
+  const enpsDisplay = metricsLoading || metricsFailed ? '—' :
+    metrics.enpsScore >= 0 ? `+${metrics.enpsScore}` : `${metrics.enpsScore}`;
   const nineBoxDisplay =
     nineBoxLoading || nineBoxFailed ? '—' : (nineBoxSummary?.highPerformers ?? 0);
 
@@ -292,8 +401,8 @@ export default function Home() {
   const headcountProgress = metricsHasData
     ? Math.min(Math.round((metrics.headcount / 200) * 100), 100)
     : 0;
-  const attritionProgress = metricsHasData
-    ? Math.max(0, 100 - Math.min(Math.round(metrics.attritionRate), 100))
+  const enpsProgress = metricsHasData
+    ? Math.min(Math.max(Math.round((metrics.enpsScore + 100) / 2), 0), 100) // Map -100 to +100 → 0 to 100
     : 0;
   const nineBoxProgress =
     nineBoxHasData && nineBoxSummary?.totalAnalyzed
@@ -304,7 +413,7 @@ export default function Home() {
           100
         )
       : 0;
-  const attritionIsPositive = metricsHasData ? metrics.attritionRate <= 10 : false;
+  const enpsIsPositive = metricsHasData ? metrics.enpsScore >= 30 : false; // 30+ is "Great"
   const nineBoxIsPositive =
     nineBoxHasData && nineBoxSummary?.totalAnalyzed
       ? nineBoxSummary.highPerformers / Math.max(nineBoxSummary.totalAnalyzed, 1) >= 0.3
@@ -341,11 +450,8 @@ export default function Home() {
     });
   };
 
-  const handleMetricClick = (metric: MetricType, title: string, description: string) => {
-    setSelectedMetric(metric);
-    setDialogTitle(title);
-    setDialogDescription(description);
-    setMetricDialogOpen(true);
+  const triggerChatPrompt = (text: string) => {
+    setExternalChatPrompt({ id: Date.now(), text });
   };
 
   const handleHeadcountClick = () => {
@@ -364,6 +470,19 @@ export default function Home() {
         },
       },
     });
+    triggerChatPrompt('Give me a snapshot of headcount trends over the last 12 months.');
+  };
+
+  const handleENPSClick = () => {
+    setMetricDialogOpen(false);
+    setSelectedMetric(null);
+    setContextPanelData({
+      type: 'enps',
+      title: 'Employee Satisfaction (eNPS)',
+      data: {},
+      config: {},
+    });
+    triggerChatPrompt('Summarize our latest eNPS results and call out any risks I should know.');
   };
 
   const handleNineBoxClick = () => {
@@ -380,12 +499,40 @@ export default function Home() {
         highlights: ['High-High', 'High-Medium', 'Medium-High'],
       },
     });
+    triggerChatPrompt('Highlight high performers in the latest nine-box grid and flag any talent risks.');
   };
 
   const handleDialogClose = () => {
     setMetricDialogOpen(false);
     setSelectedMetric(null);
   };
+
+  const isPanelActive = Boolean(contextPanelData?.type);
+  const isAlignmentReady =
+    alignmentMetrics.isDesktop && alignmentMetrics.panelWidth > 0 && isPanelActive;
+
+  const gridStyle: CSSProperties | undefined = isAlignmentReady
+    ? {
+        gridTemplateColumns: `minmax(0, 1fr) minmax(0, 1fr) minmax(0, ${alignmentMetrics.panelWidth}px)`,
+      }
+    : undefined;
+
+  const contextPanelStyle: CSSProperties | undefined = isPanelActive
+    ? {
+        width: '100%',
+        ...(alignmentMetrics.isDesktop && alignmentMetrics.panelWidth > 0
+          ? { maxWidth: `${alignmentMetrics.panelWidth}px` }
+          : {}),
+        ...(alignmentMetrics.isDesktop && alignmentMetrics.panelInset > 0
+          ? { marginRight: `${alignmentMetrics.panelInset}px` }
+          : {}),
+      }
+    : undefined;
+
+  const chatAlignmentStyle: CSSProperties | undefined =
+    alignmentMetrics.isDesktop && alignmentMetrics.chatOffset > 0
+      ? { paddingLeft: `${alignmentMetrics.chatOffset}px` }
+      : undefined;
 
   return (
     <div className="min-h-screen bg-radial-dark text-white overflow-hidden">
@@ -460,42 +607,42 @@ export default function Home() {
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
-              <MetricCard
-                title="Total Headcount"
-                value={headcountDisplay}
-                change={metricsStatusLabel}
-                isPositive={metricsHasData}
-                icon={Users}
-                progress={headcountProgress}
-                delay={0}
-                onClick={handleHeadcountClick}
-              />
-              <MetricCard
-                title="Attrition Rate"
-                value={attritionDisplay}
-                change={metricsStatusLabel}
-                isPositive={attritionIsPositive}
-                icon={TrendingDown}
-                progress={attritionProgress}
-                delay={0.1}
-                onClick={() =>
-                  handleMetricClick(
-                    'attrition',
-                    'Recent Terminations',
-                    'Last 5 employees who left the company this year'
-                  )
-                }
-              />
-              <MetricCard
-                title="9Box High Performers"
-                value={nineBoxDisplay}
-                change={nineBoxStatusLabel}
-                isPositive={nineBoxIsPositive}
-                icon={Grid3x3}
-                progress={nineBoxProgress}
-                delay={0.2}
-                onClick={handleNineBoxClick}
-              />
+              <div ref={headcountCardRef} className="h-full">
+                <MetricCard
+                  title="Total Headcount"
+                  value={headcountDisplay}
+                  change={metricsStatusLabel}
+                  isPositive={metricsHasData}
+                  icon={Users}
+                  progress={headcountProgress}
+                  delay={0}
+                  onClick={handleHeadcountClick}
+                />
+              </div>
+              <div ref={enpsCardRef} className="h-full">
+                <MetricCard
+                  title="Employee Satisfaction (eNPS)"
+                  value={enpsDisplay}
+                  change={metricsStatusLabel}
+                  isPositive={enpsIsPositive}
+                  icon={Smile}
+                  progress={enpsProgress}
+                  delay={0.1}
+                  onClick={handleENPSClick}
+                />
+              </div>
+              <div ref={nineBoxCardRef} className="h-full">
+                <MetricCard
+                  title="9Box High Performers"
+                  value={nineBoxDisplay}
+                  change={nineBoxStatusLabel}
+                  isPositive={nineBoxIsPositive}
+                  icon={Grid3x3}
+                  progress={nineBoxProgress}
+                  delay={0.2}
+                  onClick={handleNineBoxClick}
+                />
+              </div>
             </div>
             {metricsError && <p className="text-sm text-warning font-medium">{metricsError}</p>}
             {nineBoxError && !nineBoxHasData && (
@@ -505,14 +652,17 @@ export default function Home() {
 
           {/* Main Layout - Chat First with Dynamic Context Panel */}
           <div
-            className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-4"
+            ref={metricsLayoutRef}
+            className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-4"
+            style={gridStyle}
           >
             {/* Chat Interface */}
             <section
               aria-label="HR Assistant Chat"
-              className={`order-1 w-full ${
+              className={`order-1 min-w-0 w-full ${
                 contextPanelData?.type ? 'lg:col-span-2' : 'lg:col-span-3'
               }`}
+              style={chatAlignmentStyle}
             >
               <div className="h-full max-h-[calc(100vh-360px)] min-h-[500px]">
                 <ErrorBoundary
@@ -521,18 +671,30 @@ export default function Home() {
                     logComponentError(error, errorInfo, 'ChatInterface');
                   }}
                 >
-                  <ChatInterface onContextPanelChange={setContextPanelData} />
+                  <ChatInterface
+                    onContextPanelChange={setContextPanelData}
+                    externalPrompt={externalChatPrompt}
+                    onExternalPromptConsumed={(promptId) => {
+                      setExternalChatPrompt((current) =>
+                        current && current.id === promptId ? null : current
+                      );
+                    }}
+                  />
                 </ErrorBoundary>
               </div>
             </section>
 
             {/* Context / Document Panel */}
             {contextPanelData?.type && (
-              <aside className="order-2 lg:order-2 w-full lg:col-span-1">
+              <aside
+                className="order-2 lg:order-2 min-w-0 w-full lg:col-span-1"
+                style={contextPanelStyle}
+              >
                 <div className="h-full max-h-[calc(100vh-360px)] min-h-[500px]">
                   <ContextPanel
                     panelData={contextPanelData}
                     onClose={() => setContextPanelData(null)}
+                    alignmentStyle={contextPanelStyle}
                   >
                     {/* Render appropriate panel based on type */}
                     {contextPanelData.type === 'document' && (
@@ -567,6 +729,9 @@ export default function Home() {
                           // TODO: Inject employee context into chat
                         }}
                       />
+                    )}
+                    {contextPanelData.type === 'enps' && (
+                      <ENPSPanel data={contextPanelData.data} />
                     )}
                   </ContextPanel>
                 </div>

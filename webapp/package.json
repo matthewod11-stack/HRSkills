@@ -23,7 +23,8 @@
     "validate": "npm run type-check && npm run lint && npm run test",
     "clean": "rm -rf .next out node_modules/.cache",
     "migrate:json-to-sqlite": "tsx ../scripts/migrate-json-to-sqlite.ts",
-    "db:stats": "tsx ../scripts/db-stats.ts"
+    "db:stats": "tsx ../scripts/db-stats.ts",
+    "seed:enps": "tsx ../scripts/seed-enps-data.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.68.0",

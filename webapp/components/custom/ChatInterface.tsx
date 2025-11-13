@@ -333,11 +333,22 @@ const MessageItem = memo(function MessageItem({
   );
 });
 
+type ExternalChatPrompt = {
+  id: number;
+  text: string;
+};
+
 interface ChatInterfaceProps {
   onContextPanelChange?: (panelData: ContextPanelData | null) => void;
+  externalPrompt?: ExternalChatPrompt | null;
+  onExternalPromptConsumed?: (promptId: number) => void;
 }
 
-export function ChatInterface({ onContextPanelChange }: ChatInterfaceProps = {}) {
+export function ChatInterface({
+  onContextPanelChange,
+  externalPrompt,
+  onExternalPromptConsumed,
+}: ChatInterfaceProps = {}) {
   const { getAuthHeaders } = useAuth();
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState('');
@@ -356,6 +367,7 @@ export function ChatInterface({ onContextPanelChange }: ChatInterfaceProps = {})
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const activePromptIdRef = useRef<number | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -679,6 +691,32 @@ export function ChatInterface({ onContextPanelChange }: ChatInterfaceProps = {})
     },
     [getAuthHeaders]
   );
+
+  useEffect(() => {
+    if (!externalPrompt || isTyping) {
+      return;
+    }
+
+    if (activePromptIdRef.current === externalPrompt.id) {
+      return;
+    }
+
+    activePromptIdRef.current = externalPrompt.id;
+
+    const promptId = externalPrompt.id;
+    const promptText = externalPrompt.text;
+
+    void (async () => {
+      try {
+        await handleSend(promptText, true);
+      } finally {
+        onExternalPromptConsumed?.(promptId);
+        if (activePromptIdRef.current === promptId) {
+          activePromptIdRef.current = null;
+        }
+      }
+    })();
+  }, [externalPrompt, handleSend, isTyping, onExternalPromptConsumed]);
 
   const handleResetChat = () => {
     setMessages(initialMessages);

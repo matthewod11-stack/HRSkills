@@ -70,6 +70,12 @@ export const employeeMetrics = sqliteTable(
     surveyQuarter: text('survey_quarter'), // e.g., "Q1 2025"
     surveyResponseDate: text('survey_response_date'),
     surveyCategory: text('survey_category'), // Promoter, Passive, Detractor
+    surveyComment: text('survey_comment'), // Open-ended feedback from employee
+
+    // AI sentiment analysis (for survey comments)
+    sentiment: text('sentiment'), // positive, neutral, negative
+    sentimentConfidence: real('sentiment_confidence'), // 0-1 confidence score
+    sentimentAnalyzedAt: text('sentiment_analyzed_at'), // Timestamp of analysis
 
     // Performance metrics
     performanceRating: real('performance_rating'), // 1-5 scale

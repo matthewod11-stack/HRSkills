@@ -45,6 +45,15 @@ const contextPatterns = {
     /high potential|future leader/i,
     /calibration|talent calibration/i,
   ],
+  enps: [
+    /show|display|what.*(enps|employee satisfaction|net promoter)/i,
+    /enps score|satisfaction score|nps/i,
+    /promoter|detractor|passive/i,
+    /employee sentiment|engagement survey/i,
+    /employee feedback|survey results|satisfaction trend/i,
+    /how (satisfied|happy) are (employees|our people)/i,
+    /employee morale|workforce sentiment/i,
+  ],
 };
 
 /**
@@ -156,7 +165,7 @@ function getPerformanceHighlights(message: string): string[] {
  */
 export function detectContext(message: string, aiResponse?: string): DetectionResult {
   const messageLower = message.toLowerCase();
-  let bestMatch: { type: 'document' | 'analytics' | 'performance' | null; confidence: number } = {
+  let bestMatch: { type: 'document' | 'analytics' | 'performance' | 'enps' | null; confidence: number } = {
     type: null,
     confidence: 0,
   };
@@ -168,7 +177,7 @@ export function detectContext(message: string, aiResponse?: string): DetectionRe
         const confidence = 85 + Math.random() * 15; // 85-100%
         if (confidence > bestMatch.confidence) {
           bestMatch = {
-            type: contextType as 'document' | 'analytics' | 'performance',
+            type: contextType as 'document' | 'analytics' | 'performance' | 'enps',
             confidence,
           };
         }
@@ -228,6 +237,20 @@ export function detectContext(message: string, aiResponse?: string): DetectionRe
             department: entities.department,
           },
           highlights: getPerformanceHighlights(message),
+        },
+        data: {},
+      };
+      break;
+
+    case 'enps':
+      panelData = {
+        type: 'enps',
+        title: 'Employee Satisfaction (eNPS)',
+        config: {
+          filters: {
+            department: entities.department,
+            dateRange: entities.dateRange || 'last_12_months',
+          },
         },
         data: {},
       };
