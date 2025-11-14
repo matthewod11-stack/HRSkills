@@ -58,7 +58,9 @@ async function sendMetric(metric: Metric): Promise<void> {
   try {
     // Only send in production
     if (process.env.NODE_ENV !== 'production') {
-      console.log('[Monitoring]', metric);
+      const formattedMetric =
+        typeof metric === 'string' ? metric : JSON.stringify(metric, null, 2);
+      console.debug('[Monitoring]', formattedMetric);
       return;
     }
 
@@ -84,7 +86,9 @@ async function sendError(error: ErrorLog): Promise<void> {
   try {
     // Only send in production
     if (process.env.NODE_ENV !== 'production') {
-      console.log('[Error]', error);
+      const formattedError =
+        typeof error === 'string' ? error : JSON.stringify(error, null, 2);
+      console.error('[Error]', formattedError);
       return;
     }
 

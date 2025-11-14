@@ -222,7 +222,7 @@ export function WelcomeDialog({ onClose, onQuickStart }: WelcomeDialogProps) {
               <Database className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
               <div className="flex-1 space-y-1 text-sm">
                 <p className="font-medium text-blue-900 dark:text-blue-100">
-                  You're using demo data
+                  You&apos;re using demo data
                 </p>
                 <p className="text-blue-700 dark:text-blue-300">
                   200 employees with realistic metrics, flight risks, and performance data. You can
@@ -256,7 +256,7 @@ export function WelcomeDialog({ onClose, onQuickStart }: WelcomeDialogProps) {
               onClick={handleClose}
               className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             >
-              Don't show this again
+              Don&apos;t show this again
             </button>
           </div>
         </div>

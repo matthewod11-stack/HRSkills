@@ -177,6 +177,9 @@ export async function finalizeDocument(id: string): Promise<Document> {
  * Soft delete a document
  * In the future, we could add a 'deleted' status instead of hard delete
  * For now, we'll use hard delete with audit logging
+ * 
+ * Note: Audit logging is handled in the API route layer to ensure
+ * complete request context (user, IP, user agent, etc.) is captured
  */
 export async function deleteDocument(id: string): Promise<void> {
   const result = await db.delete(documents).where(eq(documents.id, id)).returning();
@@ -184,9 +187,6 @@ export async function deleteDocument(id: string): Promise<void> {
   if (!result || result.length === 0) {
     throw new Error(`Document not found: ${id}`);
   }
-
-  // TODO: Add audit log entry for document deletion
-  // This should be added when the audit logging system is implemented
 }
 
 /**

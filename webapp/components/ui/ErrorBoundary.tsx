@@ -1,6 +1,7 @@
 'use client';
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import * as Sentry from '@sentry/nextjs';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -41,8 +42,27 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     // Store error info for display
     this.setState({ errorInfo });
 
-    // TODO: Send to error monitoring service (e.g., Sentry, LogRocket)
-    // Example: logErrorToService(error, errorInfo);
+    // Send to error monitoring service (Sentry)
+    try {
+      Sentry.captureException(error, {
+        level: 'error',
+        tags: {
+          component: 'ErrorBoundary',
+          boundaryLevel: this.props.level || 'section',
+        },
+        contexts: {
+          react: {
+            componentStack: errorInfo.componentStack,
+          },
+        },
+        extra: {
+          errorBoundaryLevel: this.props.level || 'section',
+        },
+      });
+    } catch (sentryError) {
+      // Silently fail - don't break the app if Sentry fails
+      console.error('[ErrorBoundary] Failed to send to Sentry:', sentryError);
+    }
   }
 
   handleReset = () => {

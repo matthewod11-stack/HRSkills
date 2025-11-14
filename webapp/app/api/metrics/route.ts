@@ -129,15 +129,22 @@ export async function GET(request: NextRequest) {
     }
 
     if (type === 'attrition') {
+      // Calculate terminated employees year-to-date
+      const terminatedEmployees = allEmployees.filter((emp) => {
+        if (!emp.terminationDate) return false;
+        const exitDate = new Date(emp.terminationDate);
+        const yearStartDate = new Date(new Date().getFullYear(), 0, 1); // Jan 1 of current year
+        return exitDate >= yearStartDate && exitDate <= new Date();
+      });
+
+      const terminatedYTD = terminatedEmployees.length;
+      const attritionRate = activeEmployees.length > 0
+        ? (terminatedYTD / (activeEmployees.length + terminatedYTD)) * 100
+        : 0;
+
       if (details) {
         // Get last 5 terminations (sorted by termination_date DESC)
-        const recentTerminations = allEmployees
-          .filter((emp) => {
-            if (!emp.terminationDate) return false;
-            const exitDate = new Date(emp.terminationDate);
-            const yearStartDate = new Date(yearStart);
-            return exitDate >= yearStartDate && exitDate <= new Date();
-          })
+        const recentTerminations = terminatedEmployees
           .sort((a, b) => {
             const dateA = new Date(a.terminationDate!).getTime();
             const dateB = new Date(b.terminationDate!).getTime();

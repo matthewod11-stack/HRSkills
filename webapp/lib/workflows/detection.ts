@@ -17,10 +17,11 @@ import type {
 import { WORKFLOWS, getWorkflow } from './workflows.config';
 
 // Confidence thresholds
-const CONFIDENCE_THRESHOLD = 75; // Minimum confidence to trigger workflow
+const MIN_SCORE_THRESHOLD = 7; // Minimum raw score to trigger workflow
 const HIGH_CONFIDENCE_THRESHOLD = 90; // Very confident match
 const CONTEXT_BOOST = 10; // Points added when context hints match
 const CONVERSATION_HISTORY_BOOST = 15; // Points when workflow is already active
+const CONFIDENCE_SCALE = 10; // Multiplier to convert score -> confidence
 
 /**
  * Detect which workflow should handle this message
@@ -33,6 +34,7 @@ export function detectWorkflow(context: DetectionContext): WorkflowMatch {
 
   // Normalize message for matching
   const normalizedMessage = message.toLowerCase().trim();
+  const tokens = normalizedMessage.split(/\s+/);
 
   // If conversation is already in a workflow, boost that workflow's score
   const workflowBoost =
@@ -84,6 +86,14 @@ export function detectWorkflow(context: DetectionContext): WorkflowMatch {
       contextFactors.push('conversation_continuity');
     }
 
+    if (
+      workflow.keywords &&
+      workflow.keywords.some((keyword) => tokens.includes(keyword.toLowerCase()))
+    ) {
+      score += CONTEXT_BOOST;
+      contextFactors.push('keyword_boost');
+    }
+
     // Only include workflows with at least one match
     if (score > 0) {
       scores.push({
@@ -99,7 +109,7 @@ export function detectWorkflow(context: DetectionContext): WorkflowMatch {
   scores.sort((a, b) => b.score - a.score);
 
   // If no matches or top score is below threshold, return general
-  if (scores.length === 0 || scores[0].score < CONFIDENCE_THRESHOLD) {
+  if (scores.length === 0 || scores[0].score < MIN_SCORE_THRESHOLD) {
     return {
       workflowId: 'general',
       confidence: 0,
@@ -112,11 +122,8 @@ export function detectWorkflow(context: DetectionContext): WorkflowMatch {
   // Return top match
   const topMatch = scores[0];
 
-  // Normalize confidence to 0-100 scale
-  // Scores can range from ~7 (single low-weight match) to 100+ (multiple high-weight matches)
-  // We'll cap at 100 for confidence calculation
-  const rawConfidence = Math.min(topMatch.score, 100);
-  const confidence = Math.round(rawConfidence);
+  // Normalize confidence to 0-100 scale using multiplier
+  const confidence = Math.min(Math.round(topMatch.score * CONFIDENCE_SCALE), 100);
 
   return {
     workflowId: topMatch.workflowId,
@@ -234,20 +241,11 @@ export function detectDocumentType(message: string): {
  * @returns Employee name or null
  */
 export function detectEmployeeMention(message: string): string | null {
-  // Common patterns for employee mentions
-  const patterns = [
-    /(?:about|for|with)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/,
-    /(?:employee|person|individual)\s+(?:named\s+)?([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/,
-    /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)'s\s+(?:performance|review|feedback)/,
-  ];
-
-  for (const pattern of patterns) {
-    const match = message.match(pattern);
-    if (match && match[1]) {
-      return match[1];
-    }
+  const directMatch = message.match(/([A-Z][a-z]+\s+[A-Z][a-z]+)/);
+  if (directMatch) {
+    const candidate = directMatch[1];
+    return candidate;
   }
-
   return null;
 }
 

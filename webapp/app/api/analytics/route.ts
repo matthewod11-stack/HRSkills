@@ -228,41 +228,48 @@ function convertToCSV(data: any, metric: string): string {
  * Calculate headcount metrics
  */
 async function calculateHeadcountMetrics(params: AnalyticsQueryParams): Promise<any> {
-  const [headcount, headcountByDeptAndLevel, trends, spanOfControl] = await Promise.all([
+  const [headcount, headcountByDeptAndLevel, trendData, spanOfControl] = await Promise.all([
     calculateHeadcount(),
     calculateHeadcountByDeptAndLevel(),
-    calculateHeadcountTrends(),
+    calculateHeadcountTrends(params.department || undefined),
     calculateSpanOfControl(),
   ]);
 
-  let data: any = {
+  const baseData = {
     total: headcount.totalHeadcount,
     byDepartment: headcount.byDepartment,
     byLocation: headcount.byLocation || {},
-    trends,
+    trends: trendData.history,
+    trendSummary: trendData.summary,
     spanOfControl,
   };
 
   // Filter by department if specified
   if (params.department) {
-    const deptDataArray = Array.isArray(headcountByDeptAndLevel) ? headcountByDeptAndLevel : [];
-    const deptData = deptDataArray.find((d: any) => d.department === params.department);
-    data = {
-      total: deptData?.headcount || 0,
-      department: params.department,
-      byLevel: deptData?.byLevel || {},
-      trends: Array.isArray(trends)
-        ? trends.filter((t: any) => t.department === params.department)
-        : [],
+    const department = params.department;
+    const byLevel =
+      (headcountByDeptAndLevel as Record<string, Record<string, number>>)[department] || {};
+
+    const departmentTotal = headcount.byDepartment?.[department] || 0;
+
+    return {
+      total: departmentTotal,
+      department,
+      byLevel,
+      trends: trendData.history,
+      trendSummary: trendData.summary,
     };
   }
 
   // Apply groupBy
   if (params.groupBy === 'department') {
-    data.grouped = headcountByDeptAndLevel;
+    return {
+      ...baseData,
+      grouped: headcountByDeptAndLevel,
+    };
   }
 
-  return data;
+  return baseData;
 }
 
 /**
@@ -323,15 +330,23 @@ async function calculateAttritionMetrics(params: AnalyticsQueryParams): Promise<
  * Calculate 9-box grid metrics
  */
 async function calculateNineBoxMetrics(params: AnalyticsQueryParams): Promise<any> {
-  // Fetch active employees from database
+  // Import helpers for performance metrics and rating inflation
+  const { getEmployeesWithLatestMetrics, getPerformanceScore, getPotentialScore } = await import(
+    '@/lib/analytics/employee-metrics-helper'
+  );
+  const { calculateRatingInflationBatch, calculateAverageInflation } = await import(
+    '@/lib/analytics/rating-inflation-calculator'
+  );
+
   // Build where clause
   const whereClause = params.department
     ? and(eq(employees.status, 'active'), eq(employees.department, params.department))
     : eq(employees.status, 'active');
 
-  const activeEmployees = await db.select().from(employees).where(whereClause);
+  // Fetch active employees with their latest performance metrics
+  const employeesWithMetrics = await getEmployeesWithLatestMetrics(whereClause);
 
-  if (activeEmployees.length === 0) {
+  if (employeesWithMetrics.length === 0) {
     return {
       grid: [],
       summary: {
@@ -344,6 +359,10 @@ async function calculateNineBoxMetrics(params: AnalyticsQueryParams): Promise<an
       message: 'No active employees found for analysis.',
     };
   }
+
+  // Calculate rating inflation for all employees (batch operation)
+  const employeeIds = employeesWithMetrics.map((e) => e.emp.id);
+  const inflationMap = await calculateRatingInflationBatch(employeeIds);
 
   // Initialize 9-box grid
   const cells = new Map<string, any>();
@@ -363,44 +382,35 @@ async function calculateNineBoxMetrics(params: AnalyticsQueryParams): Promise<an
   }
 
   // Place employees into cells
-  let totalInflation = 0;
-  let inflationCount = 0;
-
-  for (const emp of activeEmployees) {
-    const perfScore =
-      emp.ai_performance_score ?? emp.current_performance_rating ?? emp.manager_rating ?? 3;
-
-    let potScore = emp.ai_potential_score;
-    if (!potScore) {
-      const perf = emp.current_performance_rating ?? emp.manager_rating ?? 3;
-      if (perf >= 4) potScore = 2.5;
-      else if (perf >= 3) potScore = 2;
-      else potScore = 1.5;
-    }
+  for (const { emp, metrics } of employeesWithMetrics) {
+    // Get performance and potential scores (with fallback to defaults)
+    const perfScore = getPerformanceScore(metrics, 3);
+    const potScore = getPotentialScore(metrics, 2);
 
     const perfLevel = getPerformanceLevel(perfScore);
     const potLevel = getPotentialLevel(potScore);
     const key = `${perfLevel}-${potLevel}`;
 
+    // Get rating inflation data for this employee
+    const inflation = inflationMap.get(emp.id);
+
     const cell = cells.get(key);
     if (cell) {
       cell.count++;
       cell.employees.push({
-        id: emp.employee_id,
-        name: emp.name || `${emp.first_name || ''} ${emp.last_name || ''}`.trim(),
+        id: emp.id,
+        name: emp.fullName || `${emp.firstName || ''} ${emp.lastName || ''}`.trim(),
         department: emp.department || 'Unknown',
         aiPerformanceScore: perfScore,
         aiPotentialScore: potScore,
-        managerRating: emp.manager_rating ?? null,
-        ratingInflation: emp.rating_inflation ?? null,
+        managerRating: inflation?.managerRating || null,
+        ratingInflation: inflation?.inflation || null,
       });
-
-      if (emp.rating_inflation !== null && emp.rating_inflation !== undefined) {
-        totalInflation += emp.rating_inflation;
-        inflationCount++;
-      }
     }
   }
+
+  // Calculate average rating inflation across all employees
+  const avgRatingInflation = calculateAverageInflation(inflationMap);
 
   // Calculate summary metrics
   const highPerformers =
@@ -418,15 +428,13 @@ async function calculateNineBoxMetrics(params: AnalyticsQueryParams): Promise<an
     (cells.get('Low-Medium')?.count || 0) +
     (cells.get('Low-Low')?.count || 0);
 
-  const avgRatingInflation = inflationCount > 0 ? totalInflation / inflationCount : 0;
-
   return {
     grid: Array.from(cells.values()),
     summary: {
       highPerformers,
       coreEmployees,
       developmentNeeded,
-      totalAnalyzed: activeEmployees.length,
+      totalAnalyzed: employeesWithMetrics.length,
       avgRatingInflation: parseFloat(avgRatingInflation.toFixed(2)),
     },
   };
@@ -454,7 +462,7 @@ async function calculateDiversityMetrics(params: AnalyticsQueryParams): Promise<
 
   for (const emp of activeEmployees) {
     const gender = emp.gender || 'Not Specified';
-    const ethnicity = emp.ethnicity || 'Not Specified';
+    const ethnicity = emp.raceEthnicity || 'Not Specified';
 
     genderCounts[gender] = (genderCounts[gender] || 0) + 1;
     ethnicityCounts[ethnicity] = (ethnicityCounts[ethnicity] || 0) + 1;
@@ -490,10 +498,15 @@ async function calculateDiversityMetrics(params: AnalyticsQueryParams): Promise<
  * Calculate performance metrics
  */
 async function calculatePerformanceMetrics(params: AnalyticsQueryParams): Promise<any> {
-  // Fetch active employees with performance data
-  const activeEmployees = await db.select().from(employees).where(eq(employees.status, 'active'));
+  // Import helper for performance metrics
+  const { getEmployeesWithLatestMetrics, getPerformanceScore } = await import(
+    '@/lib/analytics/employee-metrics-helper'
+  );
 
-  if (activeEmployees.length === 0) {
+  // Fetch active employees with their latest performance metrics
+  const employeesWithMetrics = await getEmployeesWithLatestMetrics(eq(employees.status, 'active'));
+
+  if (employeesWithMetrics.length === 0) {
     return {
       average: 0,
       distribution: {},
@@ -512,8 +525,9 @@ async function calculatePerformanceMetrics(params: AnalyticsQueryParams): Promis
     '1': 0,
   };
 
-  for (const emp of activeEmployees) {
-    const rating = emp.current_performance_rating ?? emp.manager_rating ?? emp.ai_performance_score;
+  for (const { emp, metrics } of employeesWithMetrics) {
+    // Get performance rating from metrics (defaults to 3 if no metrics)
+    const rating = getPerformanceScore(metrics, 3);
 
     if (rating !== null && rating !== undefined) {
       totalRating += rating;
@@ -532,7 +546,7 @@ async function calculatePerformanceMetrics(params: AnalyticsQueryParams): Promis
     average,
     distribution,
     total: ratingCount,
-    analyzed: activeEmployees.length,
+    analyzed: employeesWithMetrics.length,
   };
 }
 
@@ -562,9 +576,9 @@ async function calculateCompensationMetrics(params: AnalyticsQueryParams): Promi
   const byLevel: Record<string, any> = {};
 
   for (const emp of activeEmployees) {
-    const base = emp.compensation_base || 0;
-    const bonus = emp.compensation_bonus || 0;
-    const equity = emp.compensation_equity || 0;
+    const base = emp.compensationBase || 0;
+    const bonus = emp.compensationBonus || 0;
+    const equity = emp.compensationEquity || 0;
 
     totalBase += base;
     totalBonus += bonus;

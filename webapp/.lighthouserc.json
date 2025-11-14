@@ -1,0 +1,57 @@
+{
+  "ci": {
+    "collect": {
+      "url": ["http://localhost:3000/"],
+      "numberOfRuns": 3,
+      "settings": {
+        "preset": "desktop",
+        "throttling": {
+          "rttMs": 40,
+          "throughputKbps": 10240,
+          "cpuSlowdownMultiplier": 1
+        }
+      }
+    },
+    "assert": {
+      "preset": "lighthouse:recommended",
+      "assertions": {
+        "categories:performance": ["warn", {"minScore": 0.80}],
+        "categories:accessibility": ["error", {"minScore": 0.90}],
+        "categories:best-practices": ["warn", {"minScore": 0.85}],
+        "categories:seo": ["warn", {"minScore": 0.85}],
+
+        "first-contentful-paint": ["warn", {"maxNumericValue": 1500}],
+        "largest-contentful-paint": ["warn", {"maxNumericValue": 2500}],
+        "speed-index": ["warn", {"maxNumericValue": 3000}],
+        "total-blocking-time": ["warn", {"maxNumericValue": 300}],
+        "cumulative-layout-shift": ["warn", {"maxNumericValue": 0.1}],
+
+        "interactive": ["warn", {"maxNumericValue": 3500}],
+        "max-potential-fid": ["warn", {"maxNumericValue": 130}],
+
+        "bootup-time": ["warn", {"maxNumericValue": 3500}],
+        "mainthread-work-breakdown": ["warn", {"maxNumericValue": 4000}],
+
+        "dom-size": ["warn", {"maxNumericValue": 1500}],
+        "uses-long-cache-ttl": "off",
+        "unused-javascript": ["warn", {"maxLength": 3}],
+        "unused-css-rules": ["warn", {"maxLength": 3}],
+
+        "uses-responsive-images": "off",
+        "offscreen-images": "off",
+        "unminified-css": "off",
+        "unminified-javascript": "off",
+        "modern-image-formats": "off",
+        "uses-optimized-images": "off",
+        "uses-text-compression": "off",
+        "uses-rel-preconnect": "off",
+        "font-display": "off",
+        "third-party-summary": "off"
+      }
+    },
+    "upload": {
+      "target": "filesystem",
+      "outputDir": "./lighthouse-reports"
+    }
+  }
+}

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { handleApiError } from '@/lib/api-helpers';
+import * as Sentry from '@sentry/nextjs';
+import { logAuditEvent } from '@/lib/security/audit-logger';
 
 /**
  * POST /api/analytics/errors
@@ -33,49 +35,57 @@ export async function POST(request: NextRequest) {
       stack: error.stack?.substring(0, 200), // Truncate stack trace for console
     });
 
-    // TODO: Store in database or send to error tracking service
-    // Example implementations:
-    //
-    // 1. PostgreSQL:
-    // await db.errors.create({
-    //   data: {
-    //     message: error.message,
-    //     stack: error.stack,
-    //     url: error.url,
-    //     userAgent: error.userAgent,
-    //     type: error.type,
-    //     timestamp: new Date(error.timestamp),
-    //   },
-    // });
-    //
-    // 2. Sentry:
-    // Sentry.captureException(new Error(error.message), {
-    //   contexts: {
-    //     error: {
-    //       stack: error.stack,
-    //       url: error.url,
-    //       userAgent: error.userAgent,
-    //       type: error.type,
-    //     },
-    //   },
-    // });
-    //
-    // 3. Custom Error Service:
-    // await fetch('https://errors.example.com/log', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(error),
-    // });
-
     // Check for critical errors that need immediate attention
     const criticalKeywords = ['security', 'auth', 'payment', 'data loss'];
     const isCritical = criticalKeywords.some((keyword) =>
       error.message.toLowerCase().includes(keyword)
     );
 
-    if (isCritical) {
-      console.error('🚨 CRITICAL ERROR DETECTED:', error.message);
-      // TODO: Send alert (email, Slack, PagerDuty, etc.)
+    // Determine severity level
+    const severity = isCritical ? 'fatal' : 'error';
+
+    // Send to Sentry error tracking service
+    try {
+      const sentryEventId = Sentry.captureException(new Error(error.message), {
+        level: severity as Sentry.SeverityLevel,
+        tags: {
+          errorType: error.type,
+          source: 'client-side',
+        },
+        contexts: {
+          error: {
+            stack: error.stack,
+            url: error.url,
+            userAgent: error.userAgent,
+            type: error.type,
+            timestamp: new Date(error.timestamp).toISOString(),
+          },
+        },
+        extra: {
+          originalError: error,
+        },
+      });
+
+      // Log critical errors to audit log for compliance
+      if (isCritical) {
+        console.error('🚨 CRITICAL ERROR DETECTED:', error.message);
+        
+        // Log to security audit log
+        await logAuditEvent({
+          eventType: 'api.error',
+          severity: 'critical',
+          success: false,
+          message: `Critical client-side error: ${error.message}`,
+          metadata: {
+            errorType: error.type,
+            url: error.url,
+            sentryEventId,
+          },
+        });
+      }
+    } catch (sentryError) {
+      // Silently fail - don't break the endpoint if Sentry fails
+      console.error('[Analytics - Errors] Failed to send to Sentry:', sentryError);
     }
 
     return NextResponse.json({ success: true }, { status: 200 });
@@ -99,14 +109,16 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const type = searchParams.get('type'); // 'error' or 'unhandledrejection'
 
-    // TODO: Retrieve errors from database with filters
-    // For now, return empty array
-
+    // Note: Errors are stored in Sentry, not in our database
+    // For retrieving errors, use Sentry's API or dashboard
+    // This endpoint returns a message indicating where to find errors
+    
     return NextResponse.json({
       errors: [],
       count: 0,
-      message: 'Errors endpoint - implement database retrieval',
+      message: 'Errors are tracked in Sentry. Use Sentry dashboard or API to retrieve error logs.',
       filters: { limit, type },
+      sentryIntegration: true,
     });
   } catch (error) {
     return handleApiError(error, {

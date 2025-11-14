@@ -66,7 +66,7 @@ describe('Component Memoization Tests', () => {
       );
 
       const changeElement = screen.getByText('+25%');
-      expect(changeElement).toHaveClass('text-green-400');
+      expect(changeElement).toHaveClass('text-success');
     });
 
     it('should apply correct color for negative change', () => {
@@ -82,7 +82,7 @@ describe('Component Memoization Tests', () => {
       );
 
       const changeElement = screen.getByText('-5%');
-      expect(changeElement).toHaveClass('text-red-400');
+      expect(changeElement).toHaveClass('text-error');
     });
   });
 

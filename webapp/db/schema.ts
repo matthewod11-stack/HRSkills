@@ -40,6 +40,8 @@ export const employees = sqliteTable('employees', {
   // Compensation (optional)
   compensationCurrency: text('compensation_currency').default('USD'),
   compensationBase: real('compensation_base'),
+  compensationBonus: real('compensation_bonus'), // Annual bonus
+  compensationEquity: real('compensation_equity'), // Annual equity value
 
   // Metadata
   dataSources: text('data_sources'), // JSON array of source files
@@ -292,6 +294,20 @@ export const aiUsage = sqliteTable('ai_usage', {
 });
 
 // ============================================================================
+// WEB VITALS METRICS TABLE (Core Web Vitals tracking)
+// ============================================================================
+export const webVitalsMetrics = sqliteTable('web_vitals_metrics', {
+  id: text('id').primaryKey(),
+  metricName: text('metric_name').notNull(), // 'LCP' | 'FID' | 'CLS' | 'FCP' | 'TTFB'
+  value: real('value').notNull(),
+  rating: text('rating').notNull(), // 'good' | 'needs-improvement' | 'poor'
+  timestamp: text('timestamp').notNull(), // ISO date string
+  url: text('url'), // Page URL where metric was captured
+  userAgent: text('user_agent'), // Browser info
+  navigationType: text('navigation_type'), // Optional, for TTFB
+});
+
+// ============================================================================
 // AI QUOTA USAGE TABLE (for shared key rate limiting)
 // ============================================================================
 export const aiQuotaUsage = sqliteTable(
@@ -330,6 +346,8 @@ export const employeesIndexes = {
   managerIdx: sql`CREATE INDEX IF NOT EXISTS idx_employees_manager ON employees(manager_id)`,
   statusIdx: sql`CREATE INDEX IF NOT EXISTS idx_employees_status ON employees(status)`,
   hireDateIdx: sql`CREATE INDEX IF NOT EXISTS idx_employees_hire_date ON employees(hire_date)`,
+  emailIdx: sql`CREATE INDEX IF NOT EXISTS idx_employees_email ON employees(email)`, // Auth lookups (50-100x speedup)
+  locationIdx: sql`CREATE INDEX IF NOT EXISTS idx_employees_location ON employees(location)`, // Geo analytics
 };
 
 // Metrics indexes
@@ -337,6 +355,7 @@ export const metricsIndexes = {
   employeeIdx: sql`CREATE INDEX IF NOT EXISTS idx_metrics_employee ON employee_metrics(employee_id)`,
   dateIdx: sql`CREATE INDEX IF NOT EXISTS idx_metrics_date ON employee_metrics(metric_date)`,
   flightRiskIdx: sql`CREATE INDEX IF NOT EXISTS idx_metrics_flight_risk ON employee_metrics(flight_risk)`,
+  performanceRatingIdx: sql`CREATE INDEX IF NOT EXISTS idx_metrics_performance_rating ON employee_metrics(performance_rating)`, // 9-box grid queries
 };
 
 // Reviews indexes
@@ -385,6 +404,13 @@ export const documentsIndexes = {
   employeeIdx: sql`CREATE INDEX IF NOT EXISTS idx_documents_employee ON documents(employee_id)`,
 };
 
+// Web Vitals metrics indexes
+export const webVitalsIndexes = {
+  timestampIdx: sql`CREATE INDEX IF NOT EXISTS idx_web_vitals_timestamp ON web_vitals_metrics(timestamp DESC)`,
+  metricNameIdx: sql`CREATE INDEX IF NOT EXISTS idx_web_vitals_metric_name ON web_vitals_metrics(metric_name)`,
+  ratingIdx: sql`CREATE INDEX IF NOT EXISTS idx_web_vitals_rating ON web_vitals_metrics(rating)`,
+};
+
 // ============================================================================
 // TYPE EXPORTS (for TypeScript type inference)
 // ============================================================================
@@ -421,3 +447,6 @@ export type NewAIUsage = typeof aiUsage.$inferInsert;
 
 export type AIQuotaUsage = typeof aiQuotaUsage.$inferSelect;
 export type NewAIQuotaUsage = typeof aiQuotaUsage.$inferInsert;
+
+export type WebVitalsMetric = typeof webVitalsMetrics.$inferSelect;
+export type NewWebVitalsMetric = typeof webVitalsMetrics.$inferInsert;

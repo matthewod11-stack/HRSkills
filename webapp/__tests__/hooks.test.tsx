@@ -8,8 +8,7 @@ import {
   useDebouncedCallback,
   useLocalStorage,
   usePagination,
-  useAsync,
-  useFetch,
+  useInfinitePagination,
   useToggle,
   useBoolean,
   useCounter,
@@ -199,69 +198,30 @@ describe('usePagination', () => {
   });
 });
 
-describe('useAsync', () => {
-  it('should start in idle state', () => {
-    const asyncFn = jest.fn(() => Promise.resolve('data'));
-    const { result } = renderHook(() => useAsync(asyncFn, false));
+describe('useInfinitePagination', () => {
+  it('should load additional items asynchronously', async () => {
+    const { result } = renderHook(() => useInfinitePagination(50, 10));
 
-    expect(result.current.status).toBe('idle');
-    expect(result.current.isIdle).toBe(true);
-    expect(result.current.isLoading).toBe(false);
+    expect(result.current.loadedItems).toBe(10);
+    expect(result.current.hasMore).toBe(true);
+
+    await act(async () => {
+      const promise = result.current.loadMore();
+      jest.advanceTimersByTime(500);
+      await promise;
+    });
+
+    expect(result.current.loadedItems).toBe(20);
   });
 
-  it('should handle successful async operation', async () => {
-    const asyncFn = jest.fn(() => Promise.resolve('success'));
-    const { result } = renderHook(() => useAsync(asyncFn, false));
-
-    act(() => {
-      result.current.execute();
-    });
-
-    expect(result.current.isLoading).toBe(true);
-
-    await waitFor(() => {
-      expect(result.current.isSuccess).toBe(true);
-    });
-
-    expect(result.current.data).toBe('success');
-    expect(result.current.error).toBeNull();
-  });
-
-  it('should handle failed async operation', async () => {
-    const error = new Error('Failed');
-    const asyncFn = jest.fn(() => Promise.reject(error));
-    const { result } = renderHook(() => useAsync(asyncFn, false));
-
-    act(() => {
-      result.current.execute().catch(() => {});
-    });
-
-    await waitFor(() => {
-      expect(result.current.isError).toBe(true);
-    });
-
-    expect(result.current.error).toEqual(error);
-    expect(result.current.data).toBeNull();
-  });
-
-  it('should reset state', async () => {
-    const asyncFn = jest.fn(() => Promise.resolve('data'));
-    const { result } = renderHook(() => useAsync(asyncFn, false));
-
-    act(() => {
-      result.current.execute();
-    });
-
-    await waitFor(() => {
-      expect(result.current.isSuccess).toBe(true);
-    });
+  it('should reset to first page', () => {
+    const { result } = renderHook(() => useInfinitePagination(20, 10));
 
     act(() => {
       result.current.reset();
     });
 
-    expect(result.current.isIdle).toBe(true);
-    expect(result.current.data).toBeNull();
+    expect(result.current.loadedItems).toBe(10);
   });
 });
 

@@ -33,13 +33,12 @@ interface QuotaBannerProps {
 export function QuotaBanner({ quotaStatus, className = '' }: QuotaBannerProps) {
   const [timeUntilReset, setTimeUntilReset] = useState('');
 
-  // Don't show banner if user has personal API key
-  if (!quotaStatus || quotaStatus.hasPersonalKey) {
-    return null;
-  }
-
   // Calculate time until reset
   useEffect(() => {
+    // Don't run if no quota status or user has personal key
+    if (!quotaStatus || quotaStatus.hasPersonalKey) {
+      return;
+    }
     const updateTimeUntilReset = () => {
       if (!quotaStatus?.quotaResetAt) return;
 
@@ -71,6 +70,11 @@ export function QuotaBanner({ quotaStatus, className = '' }: QuotaBannerProps) {
 
     return () => clearInterval(interval);
   }, [quotaStatus?.quotaResetAt]);
+
+  // Don't show banner if user has personal API key
+  if (!quotaStatus || quotaStatus.hasPersonalKey) {
+    return null;
+  }
 
   // Calculate usage percentage
   const usagePercent = Math.round((quotaStatus.requestsToday / quotaStatus.quotaLimit) * 100);
@@ -126,7 +130,7 @@ export function QuotaBanner({ quotaStatus, className = '' }: QuotaBannerProps) {
             <div className="space-y-2">
               <p className="font-semibold text-red-900 dark:text-red-100">Daily quota exceeded</p>
               <p className="text-red-800 dark:text-red-200">
-                You've used all {quotaStatus.quotaLimit} free requests today. Add your own API key
+                You&apos;ve used all {quotaStatus.quotaLimit} free requests today. Add your own API key
                 for unlimited usage, or wait for quota reset.
               </p>
             </div>
@@ -136,7 +140,7 @@ export function QuotaBanner({ quotaStatus, className = '' }: QuotaBannerProps) {
                 {quotaStatus.requestsRemaining} of {quotaStatus.quotaLimit} free requests remaining
               </p>
               <p className="text-gray-700 dark:text-gray-300">
-                You're using a shared API key. Add your own Anthropic API key in Settings for
+                You&apos;re using a shared API key. Add your own Anthropic API key in Settings for
                 unlimited usage.
               </p>
             </div>

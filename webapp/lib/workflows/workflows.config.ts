@@ -39,6 +39,7 @@ const HIRING_WORKFLOW: Workflow = {
     // Skills gap (hiring-related)
     { pattern: /skills\s+gap/i, weight: 8, contextHints: ['hire', 'recruit', 'need'] },
   ],
+  keywords: ['hire', 'hiring', 'offer', 'candidate', 'jd', 'job', 'interview', 'scorecard'],
 
   capabilities: [
     {
@@ -572,13 +573,9 @@ const ANALYTICS_WORKFLOW: Workflow = {
     { pattern: /trend|forecast|predict/i, weight: 8 },
 
     // Specific metrics
-    { pattern: /headcount/i, weight: 9 },
+    { pattern: /headcount/i, weight: 12 },
     { pattern: /turnover|attrition|retention/i, weight: 10 },
-    {
-      pattern: /diversity|dei|inclusion/i,
-      weight: 9,
-      contextHints: ['metrics', 'report', 'analysis'],
-    },
+    { pattern: /diversity|dei|inclusion/i, weight: 9, contextHints: ['metrics', 'report', 'analysis'] },
     { pattern: /\benps\b|engagement\s+score/i, weight: 10 },
     { pattern: /flight\s+risk/i, weight: 11 },
 
@@ -595,6 +592,7 @@ const ANALYTICS_WORKFLOW: Workflow = {
     { pattern: /by\s+department|by\s+team|by\s+location/i, weight: 8 },
     { pattern: /breakdown|distribution/i, weight: 7 },
   ],
+  keywords: ['headcount', 'turnover', 'attrition', 'analytics', 'metrics', 'enps', 'diversity'],
 
   capabilities: [
     {

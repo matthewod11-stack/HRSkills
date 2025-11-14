@@ -60,7 +60,7 @@ export function ChartRenderError({ error, onReset }: ErrorFallbackProps) {
       </h3>
 
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 max-w-md">
-        The chart couldn't be displayed. This might be due to invalid data format or a rendering
+        The chart couldn&apos;t be displayed. This might be due to invalid data format or a rendering
         issue.
       </p>
 
@@ -193,7 +193,7 @@ export function NetworkError({ onRetry }: ErrorFallbackProps) {
       </h3>
 
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 max-w-md">
-        It looks like you're offline or experiencing network issues. Please check your connection
+        It looks like you&apos;re offline or experiencing network issues. Please check your connection
         and try again.
       </p>
 
@@ -224,7 +224,7 @@ export function SectionError({ error, onReset }: ErrorFallbackProps) {
           </h3>
 
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-            This section couldn't load properly. You can continue using other parts of the
+            This section couldn&apos;t load properly. You can continue using other parts of the
             application.
           </p>
 

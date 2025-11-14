@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 
+// Sentry configuration (wraps Next.js config)
+const { withSentryConfig } = require('@sentry/nextjs');
+
 // Bundle analyzer (run with ANALYZE=true npm run build)
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
@@ -221,4 +224,44 @@ const nextConfig = {
   },
 };
 
-module.exports = withBundleAnalyzer(withPWA(nextConfig));
+// Sentry configuration options (merged with wizard settings)
+const sentryWebpackPluginOptions = {
+  // For all available options, see:
+  // https://github.com/getsentry/sentry-webpack-plugin#options
+
+  // Organization and project from Sentry wizard
+  org: process.env.SENTRY_ORG || "foundryhr",
+  project: process.env.SENTRY_PROJECT || "hrcommandcenter",
+
+  // Only upload source maps if auth token is provided
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+
+  // Suppresses source map uploading logs during build (unless in CI)
+  silent: !process.env.CI,
+
+  // Upload a larger set of source maps for prettier stack traces (increases build time)
+  widenClientFileUpload: true,
+
+  // Automatically tree-shake Sentry logger statements to reduce bundle size
+  disableLogger: true,
+
+  // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers
+  tunnelRoute: "/monitoring",
+
+  // Enables automatic instrumentation of Vercel Cron Monitors
+  automaticVercelMonitors: true,
+
+  // Disable plugins if no auth token (source maps won't upload without token)
+  disableClientWebpackPlugin: !process.env.SENTRY_AUTH_TOKEN,
+  disableServerWebpackPlugin: !process.env.SENTRY_AUTH_TOKEN,
+};
+
+// Export with Sentry wrapper (only wraps if DSN is configured)
+const config = withBundleAnalyzer(withPWA(nextConfig));
+
+// Only wrap with Sentry if DSN is configured
+if (process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN) {
+  module.exports = withSentryConfig(config, sentryWebpackPluginOptions);
+} else {
+  module.exports = config;
+}

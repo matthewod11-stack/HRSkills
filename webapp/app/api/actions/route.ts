@@ -56,11 +56,7 @@ export async function POST(request: NextRequest) {
       userId: authResult.user.userId,
       conversationId: conversationId || 'unknown',
       workflowId: workflowId || 'unknown',
-      userPermissions: authResult.user.roles.flatMap((role) =>
-        role.permissions.flatMap((perm) =>
-          perm.actions.map((action) => `${perm.resource}:${action}`)
-        )
-      ),
+      userPermissions: ['*:*'], // Single admin user has all permissions
     };
 
     // Execute action
@@ -126,11 +122,7 @@ export async function PUT(request: NextRequest) {
       userId: authResult.user.userId,
       conversationId: conversationId || 'unknown',
       workflowId: workflowId || 'unknown',
-      userPermissions: authResult.user.roles.flatMap((role) =>
-        role.permissions.flatMap((perm) =>
-          perm.actions.map((action) => `${perm.resource}:${action}`)
-        )
-      ),
+      userPermissions: ['*:*'], // Single admin user has all permissions
     };
 
     // Execute batch

@@ -24,7 +24,11 @@
     "clean": "rm -rf .next out node_modules/.cache",
     "migrate:json-to-sqlite": "tsx ../scripts/migrate-json-to-sqlite.ts",
     "db:stats": "tsx ../scripts/db-stats.ts",
-    "seed:enps": "tsx ../scripts/seed-enps-data.ts"
+    "db:apply-indexes": "tsx scripts/apply-performance-indexes.ts",
+    "db:test-performance": "tsx scripts/test-performance-improvements.ts",
+    "seed:enps": "tsx ../scripts/seed-enps-data.ts",
+    "test:lighthouse": "lhci autorun",
+    "test:performance": "npm run test:lighthouse && npm run db:test-performance"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.68.0",
@@ -40,6 +44,7 @@
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-toast": "^1.2.15",
+    "@sentry/nextjs": "^10.25.0",
     "axios": "^1.7.0",
     "better-sqlite3": "^12.4.1",
     "chart.js": "^4.5.1",
@@ -63,7 +68,6 @@
     "react-dropzone": "^14.3.8",
     "react-hook-form": "^7.66.0",
     "react-markdown": "^10.1.0",
-    "recharts": "^2.15.4",
     "remark-gfm": "^4.0.1",
     "simple-statistics": "^7.8.8",
     "sonner": "^2.0.7",
@@ -72,12 +76,14 @@
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
     "uuid": "^13.0.0",
+    "web-vitals": "^5.1.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.1/xlsx-0.20.1.tgz",
     "zod": "^4.1.12"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",
     "@axe-core/react": "^4.11.0",
+    "@lhci/cli": "^0.15.1",
     "@next/bundle-analyzer": "^16.0.1",
     "@playwright/test": "^1.56.1",
     "@testing-library/jest-dom": "^6.9.1",

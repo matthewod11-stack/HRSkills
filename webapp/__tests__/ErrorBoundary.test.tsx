@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { ErrorBoundary, useErrorHandler } from '@/components/ui/ErrorBoundary';
 
@@ -23,6 +23,19 @@ function ThrowError({ shouldThrow }: { shouldThrow: boolean }) {
     throw new Error('Test error');
   }
   return <div>No error</div>;
+}
+
+function ResettableErrorDemo() {
+  const [shouldThrow, setShouldThrow] = React.useState(true);
+
+  return (
+    <>
+      <button onClick={() => setShouldThrow(false)}>Resolve Error</button>
+      <ErrorBoundary>
+        <ThrowError shouldThrow={shouldThrow} />
+      </ErrorBoundary>
+    </>
+  );
 }
 
 describe('ErrorBoundary', () => {
@@ -130,29 +143,18 @@ describe('ErrorBoundary', () => {
   });
 
   describe('Reset functionality', () => {
-    it('should reset error state when Try Again button is clicked', () => {
-      const { rerender } = render(
-        <ErrorBoundary>
-          <ThrowError shouldThrow={true} />
-        </ErrorBoundary>
-      );
+    it('should reset error state when Try Again button is clicked', async () => {
+      render(<ResettableErrorDemo />);
 
-      // Error should be displayed
       expect(screen.getByRole('alert')).toBeInTheDocument();
 
-      // Click Try Again button
-      const tryAgainButton = screen.getByText('Try Again');
-      fireEvent.click(tryAgainButton);
+      // Resolve the underlying issue and retry
+      fireEvent.click(screen.getByText('Resolve Error'));
+      fireEvent.click(screen.getByText('Try Again'));
 
-      // Re-render with no error
-      rerender(
-        <ErrorBoundary>
-          <ThrowError shouldThrow={false} />
-        </ErrorBoundary>
-      );
-
-      // Error should be cleared
-      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      });
       expect(screen.getByText('No error')).toBeInTheDocument();
     });
   });
@@ -174,7 +176,8 @@ describe('ErrorBoundary', () => {
       );
 
       expect(screen.getByText(/Error Details/i)).toBeInTheDocument();
-      expect(screen.getByText(/Test error/)).toBeInTheDocument();
+      const errorMessages = screen.getAllByText(/Test error/);
+      expect(errorMessages.length).toBeGreaterThan(0);
     });
 
     it('should hide error details in production mode', () => {

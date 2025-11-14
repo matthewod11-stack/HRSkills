@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
 
     if (!validation.success) {
       return validationError('Invalid document data', {
-        errors: validation.error.errors,
+        errors: validation.error.issues,
       });
     }
 

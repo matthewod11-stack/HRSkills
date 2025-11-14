@@ -13,7 +13,8 @@
  */
 
 import { ReactNode } from 'react';
-import { SimpleAuthUser, SimpleRole, RoleName } from '@/lib/auth/roles-v2';
+import { SimpleRole, RoleName } from '@/lib/auth/roles-v2';
+import { useAuth } from '@/lib/auth/auth-context';
 
 interface RoleGuardProps {
   children: ReactNode;
@@ -28,47 +29,12 @@ interface RoleSpecificGuardProps extends RoleGuardProps {
   role: RoleName;
 }
 
-/**
- * Hook to get current user from context
- * TODO: Replace with actual auth context when implemented
- */
-function useAuth(): SimpleAuthUser | null {
-  // For now, return dev user in development
-  if (process.env.NODE_ENV === 'development') {
-    return {
-      userId: 'dev-user',
-      email: 'dev@hrskills.local',
-      name: 'Developer',
-      role: {
-        id: 'role_admin',
-        name: 'admin',
-        description: 'Full access to all features',
-        permissions: {
-          chat: true,
-          viewEmployees: true,
-          editEmployees: true,
-          viewAnalytics: true,
-          exportData: true,
-          uploadData: true,
-          manageSettings: true,
-          takeActions: true,
-        },
-      },
-      sessionId: 'dev-session',
-      iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + 86400,
-    };
-  }
-
-  // TODO: Get from AuthContext
-  return null;
-}
 
 /**
  * Render children only if user is admin
  */
 export function RequireAdmin({ children, fallback = null }: RoleGuardProps) {
-  const user = useAuth();
+  const { user } = useAuth();
 
   if (!user || user.role.name !== 'admin') {
     return <>{fallback}</>;
@@ -81,7 +47,7 @@ export function RequireAdmin({ children, fallback = null }: RoleGuardProps) {
  * Render children only if user has specific permission
  */
 export function RequirePermission({ children, permission, fallback = null }: PermissionGuardProps) {
-  const user = useAuth();
+  const { user } = useAuth();
 
   if (!user || !user.role.permissions[permission]) {
     return <>{fallback}</>;
@@ -94,7 +60,7 @@ export function RequirePermission({ children, permission, fallback = null }: Per
  * Render children only for specific role
  */
 export function ShowForRole({ children, role, fallback = null }: RoleSpecificGuardProps) {
-  const user = useAuth();
+  const { user } = useAuth();
 
   if (!user || user.role.name !== role) {
     return <>{fallback}</>;
@@ -107,7 +73,7 @@ export function ShowForRole({ children, role, fallback = null }: RoleSpecificGua
  * Hide children for specific role
  */
 export function HideForRole({ children, role }: RoleSpecificGuardProps) {
-  const user = useAuth();
+  const { user } = useAuth();
 
   if (user && user.role.name === role) {
     return null;
@@ -128,7 +94,7 @@ export function RoleSwitch({
   user?: ReactNode;
   fallback?: ReactNode;
 }) {
-  const currentUser = useAuth();
+  const { user: currentUser } = useAuth();
 
   if (!currentUser) {
     return <>{fallback}</>;
@@ -158,7 +124,7 @@ export function PermissionButton({
   onClick?: () => void;
   className?: string;
 }) {
-  const user = useAuth();
+  const { user } = useAuth();
   const hasPermission = user && user.role.permissions[permission];
 
   return (

@@ -87,9 +87,9 @@ export default function OfflinePage() {
         </div>
 
         {/* Main Message */}
-        <h1 className="text-3xl font-bold mb-4">You're offline</h1>
+        <h1 className="text-3xl font-bold mb-4">You&apos;re offline</h1>
         <p className="text-gray-400 mb-8">
-          It looks like you've lost your internet connection. Check your connection and try again.
+          It looks like you&apos;ve lost your internet connection. Check your connection and try again.
         </p>
 
         {/* Retry Button */}

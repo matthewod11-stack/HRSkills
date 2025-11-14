@@ -31,6 +31,7 @@ import {
   deleteDocument,
   type UpdateDocumentInput,
 } from '@/lib/services/document-service';
+import { logAuditEvent, getRequestMetadata } from '@/lib/security/audit-logger';
 import { z } from 'zod';
 
 // ============================================================================
@@ -122,7 +123,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
     if (!validation.success) {
       return validationError('Invalid update data', {
-        errors: validation.error.errors,
+        errors: validation.error.issues,
       });
     }
 
@@ -176,16 +177,31 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return notFoundError('Document');
     }
 
-    // 5. Delete document
-    await deleteDocument(params.id);
+    // 5. Log audit event before deletion (document info will be gone after deletion)
+    const requestMeta = getRequestMetadata(request);
+    await logAuditEvent({
+      eventType: 'data.delete',
+      severity: 'warning',
+      userId: authResult.user.userId,
+      userEmail: authResult.user.email,
+      userRoles: [authResult.user.role], // Convert string role to array
+      sessionId: authResult.user.sessionId,
+      resource: 'document',
+      action: 'delete',
+      success: true,
+      message: `Document deleted: ${existingDocument.title}`,
+      metadata: {
+        documentId: params.id,
+        documentType: existingDocument.type,
+        documentTitle: existingDocument.title,
+        employeeId: existingDocument.employeeId || null,
+        documentStatus: existingDocument.status,
+      },
+      ...requestMeta,
+    });
 
-    // TODO: Add audit log entry
-    // await logAuditEvent({
-    //   action: 'document.deleted',
-    //   userId: authResult.user.userId,
-    //   resourceId: params.id,
-    //   metadata: { documentType: existingDocument.type, title: existingDocument.title }
-    // })
+    // 6. Delete document
+    await deleteDocument(params.id);
 
     return createSuccessResponse({ id: params.id }, 'Document deleted successfully', HttpStatus.OK);
   } catch (error) {

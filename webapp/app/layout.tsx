@@ -4,6 +4,7 @@ import { Roboto } from 'next/font/google';
 import { RootErrorBoundary } from '@/components/ui/RootErrorBoundary';
 import { SmartPrefetch } from '@/components/custom/SmartPrefetch';
 import { MonitoringProvider } from '@/components/custom/MonitoringProvider';
+import { WebVitalsProvider } from '@/components/custom/WebVitalsProvider';
 import { AuthProvider } from '@/lib/auth/auth-context';
 
 const roboto = Roboto({
@@ -50,6 +51,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
             {/* Performance monitoring and error tracking */}
             <MonitoringProvider />
+
+            {/* Web Vitals monitoring (CLS, LCP, FID, INP, TTFB) */}
+            <WebVitalsProvider />
 
             <main id="main-content" tabIndex={-1}>
               {children}

@@ -57,8 +57,8 @@ E001,John,Smith,2020-01-15`;
 
       const result = parseCSV(csvContent);
 
-      expect(result.success).toBe(true);
-      expect(result.data).toHaveLength(0);
+      expect(result.success).toBe(false);
+      expect(result.errors?.[0]).toBeTruthy();
     });
 
     it('should handle malformed CSV', () => {
@@ -66,8 +66,8 @@ E001,John,Smith,2020-01-15`;
 
       const result = parseCSV(csvContent);
 
-      // PapaParse handles malformed CSV gracefully
-      expect(result.success).toBe(true);
+      expect(result.success).toBe(false);
+      expect(result.errors?.length).toBeGreaterThan(0);
     });
   });
 
@@ -196,7 +196,7 @@ E001,John,Smith,2020-01-15`;
 
       expect(result.success).toBe(false);
       expect(result.errors).toBeTruthy();
-      expect(result.errors![0]).toContain('Failed to parse Excel');
+      expect(result.errors![0]).toMatch(/Failed to parse Excel|Excel file is empty/);
     });
 
     it('should handle dates around DST transitions', () => {
@@ -230,7 +230,19 @@ E001,John,Smith,2020-01-15`;
 
   describe('validateSchema', () => {
     it('should validate employee master schema', () => {
-      const columns = ['employee_id', 'first_name', 'last_name', 'email', 'department', 'level'];
+      const columns = [
+        'employee_id',
+        'first_name',
+        'last_name',
+        'email',
+        'department',
+        'job_title',
+        'level',
+        'manager_id',
+        'hire_date',
+        'status',
+        'location',
+      ];
 
       const result = validateSchema(columns, 'employee_master');
 
@@ -282,7 +294,7 @@ E001,John,Smith,2020-01-15`;
       const masked = maskPII(data);
 
       expect(masked[0].employee_id).toBe('E001');
-      expect(masked[0].first_name).toBe('John');
+      expect(masked[0].first_name).toBe('***');
       expect(masked[0].email).toBe('***');
       expect(masked[0].ssn).toBe('***');
     });

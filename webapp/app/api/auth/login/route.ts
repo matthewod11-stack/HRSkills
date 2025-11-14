@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createDemoToken } from '@/lib/auth/middleware';
+import { createDemoToken, generateToken } from '@/lib/auth/middleware';
 import { handleApiError } from '@/lib/api-helpers';
 import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter';
+import { verifyPassword } from '@/lib/auth/password';
 
 /**
  * POST /api/auth/login
@@ -44,9 +45,44 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // In development, accept any password (or no password)
-    // In production, you would validate against a database with hashed passwords
-    if (process.env.NODE_ENV === 'production' && !password) {
+    // Development mode: accept any password (or no password) - completely unchanged
+    if (process.env.NODE_ENV !== 'production') {
+      // Generate JWT token (role is always 'admin' for single-user system)
+      const token = await createDemoToken(email);
+      
+      return NextResponse.json({
+        success: true,
+        token,
+        user: {
+          email,
+          name: email.split('@')[0],
+          role: 'admin',
+        },
+      });
+    }
+
+    // Production mode: validate credentials against environment variables
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
+
+    // If env vars are not set, allow any credentials (graceful fallback for initial setup)
+    if (!adminEmail || !adminPasswordHash) {
+      // Generate JWT token without validation (allows setup without credentials)
+      const token = await createDemoToken(email);
+      
+      return NextResponse.json({
+        success: true,
+        token,
+        user: {
+          email,
+          name: email.split('@')[0],
+          role: 'admin',
+        },
+      });
+    }
+
+    // Env vars are set - validate credentials
+    if (!password) {
       return NextResponse.json(
         {
           success: false,
@@ -56,22 +92,44 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // TODO: In production, validate credentials against database
-    // const user = await db.users.findByEmailAndPassword(email, hashedPassword);
-    // if (!user) {
-    //   return NextResponse.json({ success: false, error: 'Invalid credentials' }, { status: 401 });
-    // }
+    // Validate email matches ADMIN_EMAIL
+    if (email !== adminEmail) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid credentials',
+        },
+        { status: 401 }
+      );
+    }
 
-    // Generate JWT token
-    const token = await createDemoToken(email, role as any);
+    // Validate password against ADMIN_PASSWORD_HASH
+    if (!verifyPassword(password, adminPasswordHash)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid credentials',
+        },
+        { status: 401 }
+      );
+    }
+
+    // Credentials are valid - generate JWT token with admin user info
+    const token = await generateToken({
+      userId: `admin_${Date.now()}`,
+      email: adminEmail,
+      name: adminEmail.split('@')[0],
+      role: 'admin',
+      sessionId: `session_${Date.now()}`,
+    });
 
     return NextResponse.json({
       success: true,
       token,
       user: {
-        email,
-        name: email.split('@')[0],
-        role,
+        email: adminEmail,
+        name: adminEmail.split('@')[0],
+        role: 'admin',
       },
     });
   } catch (error) {

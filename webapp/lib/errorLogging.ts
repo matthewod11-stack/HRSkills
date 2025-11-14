@@ -1,4 +1,5 @@
 import { ErrorInfo } from 'react';
+import * as Sentry from '@sentry/nextjs';
 
 /**
  * Error severity levels for categorization and prioritization
@@ -116,30 +117,67 @@ class ErrorLoggingService {
   }
 
   /**
-   * Send error to external monitoring service
-   * TODO: Integrate with Sentry, LogRocket, Datadog, etc.
+   * Map ErrorSeverity to Sentry severity level
+   */
+  private mapSeverityToSentryLevel(severity: ErrorSeverity): Sentry.SeverityLevel {
+    switch (severity) {
+      case ErrorSeverity.LOW:
+        return 'info';
+      case ErrorSeverity.MEDIUM:
+        return 'warning';
+      case ErrorSeverity.HIGH:
+        return 'error';
+      case ErrorSeverity.CRITICAL:
+        return 'fatal';
+      default:
+        return 'error';
+    }
+  }
+
+  /**
+   * Send error to external monitoring service (Sentry)
    */
   private sendToMonitoringService(errorLog: ErrorLog): void {
-    // Example integration structure:
-    //
-    // if (window.Sentry) {
-    //   window.Sentry.captureException(errorLog.error, {
-    //     level: this.mapSeverityToSentryLevel(errorLog.severity),
-    //     contexts: {
-    //       react: {
-    //         componentStack: errorLog.errorInfo?.componentStack
-    //       },
-    //       custom: errorLog.context
-    //     }
-    //   });
-    // }
+    // Only send in production
+    if (!this.isProduction) {
+      return;
+    }
 
-    // Placeholder: Log that we would send to monitoring service
-    console.log('[ErrorLogging] Would send to monitoring service:', {
-      message: errorLog.error.message,
-      severity: errorLog.severity,
-      component: errorLog.context.component,
-    });
+    try {
+      // Capture exception with Sentry (works in both client and server contexts)
+      Sentry.captureException(errorLog.error, {
+        level: this.mapSeverityToSentryLevel(errorLog.severity),
+        tags: {
+          component: errorLog.context.component || 'unknown',
+          action: errorLog.context.action || 'unknown',
+        },
+        contexts: {
+          react: errorLog.errorInfo
+            ? {
+                componentStack: errorLog.errorInfo.componentStack,
+              }
+            : undefined,
+          custom: {
+            ...errorLog.context,
+            severity: errorLog.severity,
+          },
+        },
+        extra: {
+          url: errorLog.context.url,
+          userAgent: errorLog.context.userAgent,
+          timestamp: errorLog.context.timestamp,
+          additionalData: errorLog.context.additionalData,
+        },
+        user: errorLog.context.userId
+          ? {
+              id: errorLog.context.userId,
+            }
+          : undefined,
+      });
+    } catch (error) {
+      // Silently fail - don't break the app if Sentry fails
+      console.error('[ErrorLogging] Failed to send to Sentry:', error);
+    }
   }
 
   /**

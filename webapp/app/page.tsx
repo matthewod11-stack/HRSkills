@@ -16,14 +16,17 @@ import { FloatingOrbs } from '@/components/custom/FloatingOrbs';
 import { MetricCard } from '@/components/custom/MetricCard';
 import { ChatInterface } from '@/components/custom/ChatInterface';
 import { ContextPanel, ContextPanelData } from '@/components/custom/ContextPanel';
-import { DocumentEditorPanel, DocumentExportPayload } from '@/components/custom/DocumentEditorPanel';
+import type { DocumentExportPayload } from '@/components/custom/DocumentEditorPanel';
 import { AnalyticsChartPanel } from '@/components/custom/AnalyticsChartPanel';
-import { PerformanceGridPanel } from '@/components/custom/PerformanceGridPanel';
-import ENPSPanel from '@/components/custom/ENPSPanel';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { logComponentError } from '@/lib/errorLogging';
 import { fetchWithRetry } from '@/lib/api-helpers/fetch-with-retry';
-import { DialogSkeleton } from '@/components/ui/skeletons';
+import {
+  DialogSkeleton,
+  DocumentEditorSkeleton,
+  PerformanceGridSkeleton,
+  ENPSSkeleton,
+} from '@/components/ui/skeletons';
 import { useAuth } from '@/lib/auth/auth-context';
 
 // Lazy load heavy dialog components
@@ -45,6 +48,38 @@ const CommandPalette = dynamic(
   {
     loading: () => <DialogSkeleton />,
     ssr: false, // Command palette is client-side only
+  }
+);
+
+// Lazy load heavy context panel components
+// Only loaded when user triggers specific panel type, reducing initial bundle
+const DocumentEditorPanel = dynamic(
+  () =>
+    import('@/components/custom/DocumentEditorPanel').then((mod) => ({
+      default: mod.DocumentEditorPanel,
+    })),
+  {
+    loading: () => <DocumentEditorSkeleton />,
+    ssr: false, // Document editor is client-side only (Google Drive integration)
+  }
+);
+
+const PerformanceGridPanel = dynamic(
+  () =>
+    import('@/components/custom/PerformanceGridPanel').then((mod) => ({
+      default: mod.PerformanceGridPanel,
+    })),
+  {
+    loading: () => <PerformanceGridSkeleton />,
+    ssr: false, // Performance grid is client-side only (complex state management)
+  }
+);
+
+const ENPSPanel = dynamic(
+  () => import('@/components/custom/ENPSPanel'),
+  {
+    loading: () => <ENPSSkeleton />,
+    ssr: false, // eNPS panel is client-side only (tabs, complex UI)
   }
 );
 

@@ -5,9 +5,14 @@
  *
  * Displays and executes workflow-suggested actions.
  * Shows action buttons with status indicators and execution feedback.
+ *
+ * Performance optimizations:
+ * - useReducer for complex state (Set/Map) instead of multiple useState
+ * - useCallback for executeAction to prevent recreation on every render
+ * - Removed authHeaders state duplication (use directly from localStorage)
  */
 
-import React, { useState } from 'react';
+import React, { useReducer, useCallback } from 'react';
 import {
   CheckCircle2,
   XCircle,
@@ -21,6 +26,7 @@ import {
   Zap,
 } from 'lucide-react';
 import type { BaseAction, ActionResult } from '@/lib/workflows/actions/types';
+import { useAuth } from '@/lib/auth/auth-context';
 
 interface ActionButtonsProps {
   actions: BaseAction[];
@@ -28,6 +34,56 @@ interface ActionButtonsProps {
   workflowId: string;
   onActionComplete?: (actionId: string, result: ActionResult) => void;
   className?: string;
+}
+
+/**
+ * State shape for useReducer
+ */
+interface ActionButtonsState {
+  executingActions: Set<string>;
+  completedActions: Map<string, ActionResult>;
+}
+
+/**
+ * Action types for reducer
+ */
+type ActionButtonsAction =
+  | { type: 'START_EXECUTION'; actionId: string }
+  | { type: 'COMPLETE_EXECUTION'; actionId: string; result: ActionResult }
+  | { type: 'FINISH_EXECUTION'; actionId: string };
+
+/**
+ * Reducer for managing action execution state
+ */
+function actionButtonsReducer(
+  state: ActionButtonsState,
+  action: ActionButtonsAction
+): ActionButtonsState {
+  switch (action.type) {
+    case 'START_EXECUTION':
+      return {
+        ...state,
+        executingActions: new Set(state.executingActions).add(action.actionId),
+      };
+
+    case 'COMPLETE_EXECUTION':
+      return {
+        ...state,
+        completedActions: new Map(state.completedActions).set(action.actionId, action.result),
+      };
+
+    case 'FINISH_EXECUTION': {
+      const nextExecuting = new Set(state.executingActions);
+      nextExecuting.delete(action.actionId);
+      return {
+        ...state,
+        executingActions: nextExecuting,
+      };
+    }
+
+    default:
+      return state;
+  }
 }
 
 /**
@@ -87,81 +143,76 @@ export function ActionButtons({
   onActionComplete,
   className = '',
 }: ActionButtonsProps) {
-  const [executingActions, setExecutingActions] = useState<Set<string>>(new Set());
-  const [completedActions, setCompletedActions] = useState<Map<string, ActionResult>>(new Map());
-  const [authHeaders, setAuthHeaders] = useState<Record<string, string>>({});
-
-  // Get auth headers on mount
-  React.useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      setAuthHeaders({ Authorization: `Bearer ${token}` });
-    }
-  }, []);
+  const { getAuthHeaders } = useAuth();
+  // Use reducer for complex state (Set/Map) instead of multiple useState
+  const [state, dispatch] = useReducer(actionButtonsReducer, {
+    executingActions: new Set<string>(),
+    completedActions: new Map<string, ActionResult>(),
+  });
 
   /**
    * Execute an action
+   * Memoized to prevent recreation on every render
    */
-  const executeAction = async (action: BaseAction) => {
-    // Mark as executing
-    setExecutingActions((prev) => new Set(prev).add(action.id));
+  const executeAction = useCallback(
+    async (action: BaseAction) => {
+      // Mark as executing
+      dispatch({ type: 'START_EXECUTION', actionId: action.id });
 
-    try {
-      const response = await fetch('/api/actions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...authHeaders,
-        },
-        body: JSON.stringify({
-          action,
-          conversationId,
-          workflowId,
-        }),
-      });
+      try {
+        const response = await fetch('/api/actions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders(),
+          },
+          body: JSON.stringify({
+            action,
+            conversationId,
+            workflowId,
+          }),
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (!data.success) {
-        throw new Error(data.result?.error?.message || 'Action execution failed');
+        if (!data.success) {
+          throw new Error(data.result?.error?.message || 'Action execution failed');
+        }
+
+        // Mark as completed
+        dispatch({ type: 'COMPLETE_EXECUTION', actionId: action.id, result: data.result });
+
+        // Notify parent
+        if (onActionComplete) {
+          onActionComplete(action.id, data.result);
+        }
+      } catch (error: any) {
+        console.error('Action execution error:', error);
+
+        // Record error result
+        const errorResult: ActionResult = {
+          success: false,
+          actionId: action.id,
+          executedAt: new Date().toISOString(),
+          duration: 0,
+          error: {
+            code: 'execution_error',
+            message: error.message || 'Unknown error',
+          },
+        };
+
+        dispatch({ type: 'COMPLETE_EXECUTION', actionId: action.id, result: errorResult });
+
+        if (onActionComplete) {
+          onActionComplete(action.id, errorResult);
+        }
+      } finally {
+        // Remove from executing
+        dispatch({ type: 'FINISH_EXECUTION', actionId: action.id });
       }
-
-      // Mark as completed
-      setCompletedActions((prev) => new Map(prev).set(action.id, data.result));
-
-      // Notify parent
-      if (onActionComplete) {
-        onActionComplete(action.id, data.result);
-      }
-    } catch (error: any) {
-      console.error('Action execution error:', error);
-
-      // Record error result
-      const errorResult: ActionResult = {
-        success: false,
-        actionId: action.id,
-        executedAt: new Date().toISOString(),
-        duration: 0,
-        error: {
-          code: 'execution_error',
-          message: error.message || 'Unknown error',
-        },
-      };
-
-      setCompletedActions((prev) => new Map(prev).set(action.id, errorResult));
-
-      if (onActionComplete) {
-        onActionComplete(action.id, errorResult);
-      }
-    } finally {
-      // Remove from executing
-      setExecutingActions((prev) => {
-        const next = new Set(prev);
-        next.delete(action.id);
-        return next;
-      });
-    }
-  };
+    },
+    [conversationId, workflowId, onActionComplete, getAuthHeaders]
+  );
 
   if (actions.length === 0) {
     return null;
@@ -178,8 +229,8 @@ export function ActionButtons({
         {actions.map((action) => {
           const Icon = getActionIcon(action.type);
           const colors = getPriorityColors(action.priority);
-          const isExecuting = executingActions.has(action.id);
-          const result = completedActions.get(action.id);
+          const isExecuting = state.executingActions.has(action.id);
+          const result = state.completedActions.get(action.id);
           const isCompleted = result !== undefined;
 
           return (
@@ -332,11 +383,11 @@ export function ActionButtons({
       </div>
 
       {/* Batch actions */}
-      {actions.length > 1 && completedActions.size === 0 && (
+      {actions.length > 1 && state.completedActions.size === 0 && (
         <div className="mt-3 flex gap-2">
           <button
             onClick={() => actions.forEach(executeAction)}
-            disabled={executingActions.size > 0}
+            disabled={state.executingActions.size > 0}
             className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
           >
             Execute All ({actions.length})
@@ -345,14 +396,14 @@ export function ActionButtons({
       )}
 
       {/* Summary */}
-      {completedActions.size > 0 && (
+      {state.completedActions.size > 0 && (
         <div className="mt-3 rounded-lg bg-gray-50 p-3 text-xs text-gray-600">
           <div className="flex items-center justify-between">
             <span>
-              {completedActions.size} of {actions.length} completed
+              {state.completedActions.size} of {actions.length} completed
             </span>
             <span>
-              {Array.from(completedActions.values()).filter((r) => r.success).length} successful
+              {Array.from(state.completedActions.values()).filter((r) => r.success).length} successful
             </span>
           </div>
         </div>

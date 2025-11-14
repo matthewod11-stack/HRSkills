@@ -165,7 +165,10 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    return handleApiError(error, 'Failed to retrieve sentiment analysis data');
+    return handleApiError(error, {
+      endpoint: '/api/analytics/enps-sentiment',
+      method: 'GET',
+    });
   }
 }
 
@@ -199,6 +202,9 @@ export async function POST(request: NextRequest) {
       analysis: result,
     });
   } catch (error) {
-    return handleApiError(error, 'Failed to perform sentiment analysis');
+    return handleApiError(error, {
+      endpoint: '/api/analytics/enps-sentiment',
+      method: 'POST',
+    });
   }
 }

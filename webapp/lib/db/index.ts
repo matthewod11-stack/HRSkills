@@ -49,6 +49,9 @@ export function getDatabase() {
 
     // Run schema initialization
     initializeSchema(sqliteInstance);
+    
+    // Run migrations for existing databases
+    runMigrations(sqliteInstance);
   }
 
   return dbInstance;
@@ -88,6 +91,8 @@ function initializeSchema(sqlite: Database.Database) {
         race_ethnicity TEXT,
         compensation_currency TEXT DEFAULT 'USD',
         compensation_base REAL,
+        compensation_bonus REAL,
+        compensation_equity REAL,
         data_sources TEXT,
         attributes TEXT,
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -223,6 +228,18 @@ function initializeSchema(sqlite: Database.Database) {
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
+
+      -- Web Vitals metrics table
+      CREATE TABLE IF NOT EXISTS web_vitals_metrics (
+        id TEXT PRIMARY KEY,
+        metric_name TEXT NOT NULL,
+        value REAL NOT NULL,
+        rating TEXT NOT NULL,
+        timestamp TEXT NOT NULL,
+        url TEXT,
+        user_agent TEXT,
+        navigation_type TEXT
+      );
     `);
 
     // Create indexes
@@ -233,11 +250,14 @@ function initializeSchema(sqlite: Database.Database) {
       CREATE INDEX IF NOT EXISTS idx_employees_manager ON employees(manager_id);
       CREATE INDEX IF NOT EXISTS idx_employees_status ON employees(status);
       CREATE INDEX IF NOT EXISTS idx_employees_hire_date ON employees(hire_date);
+      CREATE INDEX IF NOT EXISTS idx_employees_email ON employees(email);
+      CREATE INDEX IF NOT EXISTS idx_employees_location ON employees(location);
 
       -- Metrics indexes
       CREATE INDEX IF NOT EXISTS idx_metrics_employee ON employee_metrics(employee_id);
       CREATE INDEX IF NOT EXISTS idx_metrics_date ON employee_metrics(metric_date);
       CREATE INDEX IF NOT EXISTS idx_metrics_flight_risk ON employee_metrics(flight_risk);
+      CREATE INDEX IF NOT EXISTS idx_metrics_performance_rating ON employee_metrics(performance_rating);
 
       -- Reviews indexes
       CREATE INDEX IF NOT EXISTS idx_reviews_employee ON performance_reviews(employee_id);
@@ -265,6 +285,11 @@ function initializeSchema(sqlite: Database.Database) {
       -- AI quota usage indexes
       CREATE INDEX IF NOT EXISTS idx_quota_user_date ON ai_quota_usage(user_id, date);
       CREATE INDEX IF NOT EXISTS idx_quota_date ON ai_quota_usage(date);
+
+      -- Web Vitals metrics indexes
+      CREATE INDEX IF NOT EXISTS idx_web_vitals_timestamp ON web_vitals_metrics(timestamp DESC);
+      CREATE INDEX IF NOT EXISTS idx_web_vitals_metric_name ON web_vitals_metrics(metric_name);
+      CREATE INDEX IF NOT EXISTS idx_web_vitals_rating ON web_vitals_metrics(rating);
     `);
 
     console.log('[DB] Schema initialization complete');
@@ -273,6 +298,7 @@ function initializeSchema(sqlite: Database.Database) {
   }
 
   ensureQuotaSchemaAlignment(sqlite);
+  applyPerformanceIndexes(sqlite);
 }
 
 /**
@@ -290,10 +316,69 @@ export function closeDatabase() {
 /**
  * Run database migrations (for schema changes)
  */
-export async function runMigrations() {
-  const db = getDatabase();
-  // Future: Use drizzle-kit for migrations
-  console.log('[DB] No migrations to run');
+function runMigrations(sqlite: Database.Database) {
+  try {
+    console.log('[DB] Running migrations...');
+    
+    // Check if employees table exists (indicates existing database)
+    const employeesTable = sqlite
+      .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='employees'")
+      .get();
+    
+    if (employeesTable) {
+      // Migration: Add compensation_bonus and compensation_equity columns to employees table
+      try {
+        sqlite.exec(`ALTER TABLE employees ADD COLUMN compensation_bonus REAL;`);
+        console.log('[DB] Added column: compensation_bonus');
+      } catch (error: any) {
+        if (!error.message?.includes('duplicate column')) {
+          console.warn('[DB] Could not add compensation_bonus column:', error.message);
+        }
+      }
+      
+      try {
+        sqlite.exec(`ALTER TABLE employees ADD COLUMN compensation_equity REAL;`);
+        console.log('[DB] Added column: compensation_equity');
+      } catch (error: any) {
+        if (!error.message?.includes('duplicate column')) {
+          console.warn('[DB] Could not add compensation_equity column:', error.message);
+        }
+      }
+      
+      // Migration: Create web_vitals_metrics table if it doesn't exist
+      const webVitalsTable = sqlite
+        .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='web_vitals_metrics'")
+        .get();
+      
+      if (!webVitalsTable) {
+        sqlite.exec(`
+          CREATE TABLE IF NOT EXISTS web_vitals_metrics (
+            id TEXT PRIMARY KEY,
+            metric_name TEXT NOT NULL,
+            value REAL NOT NULL,
+            rating TEXT NOT NULL,
+            timestamp TEXT NOT NULL,
+            url TEXT,
+            user_agent TEXT,
+            navigation_type TEXT
+          );
+        `);
+        console.log('[DB] Created table: web_vitals_metrics');
+        
+        // Create indexes for web_vitals_metrics
+        sqlite.exec(`
+          CREATE INDEX IF NOT EXISTS idx_web_vitals_timestamp ON web_vitals_metrics(timestamp DESC);
+          CREATE INDEX IF NOT EXISTS idx_web_vitals_metric_name ON web_vitals_metrics(metric_name);
+          CREATE INDEX IF NOT EXISTS idx_web_vitals_rating ON web_vitals_metrics(rating);
+        `);
+        console.log('[DB] Created indexes for web_vitals_metrics');
+      }
+    }
+    
+    console.log('[DB] Migrations complete');
+  } catch (error) {
+    console.error('[DB] Migration error:', error);
+  }
 }
 
 /**
@@ -384,5 +469,48 @@ function ensureQuotaSchemaAlignment(sqlite: Database.Database) {
     })();
   } catch (error) {
     console.error('[DB] Failed to align ai_quota_usage schema:', error);
+  }
+}
+
+/**
+ * Apply performance optimization indexes (Phase 1, Week 1)
+ *
+ * Adds missing indexes for:
+ * - Email lookups (auth): 50-100x speedup
+ * - Location analytics: Faster geo queries
+ * - Performance ratings: 9-box grid queries
+ */
+function applyPerformanceIndexes(sqlite: Database.Database) {
+  try {
+    console.log('[DB] Applying performance optimization indexes...');
+
+    sqlite.transaction(() => {
+      // Check if indexes already exist
+      const indexes = sqlite.prepare(`SELECT name FROM sqlite_master WHERE type='index'`).all() as Array<{
+        name: string;
+      }>;
+      const indexNames = new Set(indexes.map((idx) => idx.name));
+
+      // Add missing employee indexes
+      if (!indexNames.has('idx_employees_email')) {
+        sqlite.exec(`CREATE INDEX IF NOT EXISTS idx_employees_email ON employees(email);`);
+        console.log('[DB] Created index: idx_employees_email (auth lookups)');
+      }
+
+      if (!indexNames.has('idx_employees_location')) {
+        sqlite.exec(`CREATE INDEX IF NOT EXISTS idx_employees_location ON employees(location);`);
+        console.log('[DB] Created index: idx_employees_location (geo analytics)');
+      }
+
+      // Add missing metrics indexes
+      if (!indexNames.has('idx_metrics_performance_rating')) {
+        sqlite.exec(`CREATE INDEX IF NOT EXISTS idx_metrics_performance_rating ON employee_metrics(performance_rating);`);
+        console.log('[DB] Created index: idx_metrics_performance_rating (9-box grid)');
+      }
+
+      console.log('[DB] Performance indexes applied successfully');
+    })();
+  } catch (error) {
+    console.error('[DB] Failed to apply performance indexes:', error);
   }
 }

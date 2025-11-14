@@ -75,7 +75,7 @@ const initialMessages: Message[] = [
     id: 1,
     role: 'assistant',
     content:
-      "👋 Hi! I'm your HR Analytics Assistant. Ask me questions about your workforce data, and I'll generate insights and visualizations for you.\n\nTry asking:\n- What's our department distribution?\n- Show me attrition trends\n- Compare performance ratings by level",
+      "👋 Hi! I'm your HR Analytics Assistant. Ask me questions about your workforce data, and I'll generate insights and visualizations for you.\n\nTry asking:\n- What&apos;s our department distribution?\n- Show me attrition trends\n- Compare performance ratings by level",
     timestamp: new Date(Date.now() - 60000),
   },
 ];
@@ -488,7 +488,7 @@ export default function AnalyticsPage() {
                       <div className="flex flex-col items-center justify-center h-full text-gray-400">
                         <TrendingUp className="w-24 h-24 mb-4 opacity-30" aria-hidden="true" />
                         <p className="text-lg">Ask a question to see visualizations</p>
-                        <p className="text-sm mt-2">Try: "What's our department distribution?"</p>
+                        <p className="text-sm mt-2">Try: &ldquo;What&apos;s our department distribution?&rdquo;</p>
                       </div>
                     )}
                   </div>

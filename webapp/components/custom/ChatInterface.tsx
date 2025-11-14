@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, memo, useCallback } from 'react';
+import { useState, useRef, useEffect, memo, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Send,
@@ -18,14 +18,14 @@ import {
   FileUp,
   RotateCcw,
 } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { detectSensitivePII } from '@/lib/pii-detector';
 import { useAuth } from '@/lib/auth/auth-context';
 import { WorkflowProgress } from './WorkflowProgress';
 import { ActionButtons } from './ActionButtons';
 import { ContextPanelData } from './ContextPanel';
 import { detectContext } from '@/lib/workflows/context-detector';
+import ChatInput from './chat/ChatInput';
+import MessageMarkdown from './chat/MessageMarkdown';
 
 interface WorkflowState {
   currentStep: string | null;
@@ -284,9 +284,7 @@ const MessageItem = memo(function MessageItem({
                     </div>
                   </div>
                 )}
-              <div className="prose prose-invert prose-sm max-w-none">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
-              </div>
+              <MessageMarkdown content={message.content} />
               <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
                 <p className="text-xs text-secondary">
                   {message.timestamp.toLocaleTimeString('en-US', {
@@ -369,15 +367,15 @@ export function ChatInterface({
   const inputRef = useRef<HTMLInputElement>(null);
   const activePromptIdRef = useRef<number | null>(null);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, scrollToBottom]);
 
-  const handleSend = async (text?: string, bypassPII = false) => {
+  const handleSend = useCallback(async (text?: string, bypassPII = false) => {
     const messageText = text || input.trim();
     if (!messageText) return;
 
@@ -542,29 +540,29 @@ export function ChatInterface({
     } finally {
       setIsTyping(false);
     }
-  };
+  }, [input, messages, conversationId, getAuthHeaders, onContextPanelChange]);
 
-  const handleProceedWithPII = () => {
+  const handleProceedWithPII = useCallback(() => {
     setPiiWarning({ show: false, types: [], message: '', pendingText: '' });
     handleSend(piiWarning.pendingText, true); // Bypass PII check
-  };
+  }, [handleSend, piiWarning.pendingText]);
 
-  const handleEditMessage = () => {
+  const handleEditMessage = useCallback(() => {
     setInput(piiWarning.pendingText);
     setPiiWarning({ show: false, types: [], message: '', pendingText: '' });
     inputRef.current?.focus();
-  };
+  }, [piiWarning.pendingText]);
 
-  const handleSuggestionClick = (text: string) => {
+  const handleSuggestionClick = useCallback((text: string) => {
     handleSend(text);
-  };
+  }, [handleSend]);
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
-  };
+  }, [handleSend]);
 
   // Memoize callbacks to prevent MessageItem re-renders
   const toggleEdit = useCallback((messageId: number) => {
@@ -718,14 +716,22 @@ export function ChatInterface({
     })();
   }, [externalPrompt, handleSend, isTyping, onExternalPromptConsumed]);
 
-  const handleResetChat = () => {
+  const handleResetChat = useCallback(() => {
     setMessages(initialMessages);
     setInput('');
     setIsTyping(false);
     setConversationId(createConversationId());
     setPiiWarning({ show: false, types: [], message: '', pendingText: '' });
     onContextPanelChange?.(null);
-  };
+  }, [onContextPanelChange]);
+
+  // Memoize last message workflow to prevent re-computation on every render
+  const lastMessageWorkflow = useMemo(() => {
+    if (messages.length === 0) return null;
+    const lastMessage = messages[messages.length - 1];
+    const workflow = lastMessage.detectedWorkflow;
+    return workflow && workflow !== 'general' ? workflow : null;
+  }, [messages]);
 
   return (
     <motion.div
@@ -749,21 +755,19 @@ export function ChatInterface({
                   Chief People Officer
                   <Sparkles className="w-5 h-5 text-warning" />
                 </h2>
-                <p className="text-sm text-secondary font-medium">"More People, More Problems"</p>
+                <p className="text-sm text-secondary font-medium">&ldquo;More People, More Problems&rdquo;</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              {messages.length > 0 &&
-                messages[messages.length - 1].detectedWorkflow &&
-                messages[messages.length - 1].detectedWorkflow !== 'general' && (
-                  <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-violet/10 border border-violet/20 rounded-lg">
-                    <Sparkles className="w-3.5 h-3.5 text-violet" />
-                    <span className="text-xs font-medium text-violet capitalize">
-                      {messages[messages.length - 1].detectedWorkflow?.replace('_', ' ')} workflow
-                    </span>
-                  </div>
-                )}
+              {lastMessageWorkflow && (
+                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-violet/10 border border-violet/20 rounded-lg">
+                  <Sparkles className="w-3.5 h-3.5 text-violet" />
+                  <span className="text-xs font-medium text-violet capitalize">
+                    {lastMessageWorkflow.replace('_', ' ')} workflow
+                  </span>
+                </div>
+              )}
               <motion.button
                 onClick={handleResetChat}
                 whileHover={{ scale: 1.05 }}
@@ -862,40 +866,15 @@ export function ChatInterface({
           </motion.div>
         )}
 
-        {/* Input */}
-        <div className="p-6 border-t border-border bg-gradient-to-r from-violet/5 to-violet-light/5">
-          <label htmlFor="chat-input" className="sr-only">
-            Chat message input
-          </label>
-          <div className="flex gap-3">
-            <input
-              ref={inputRef}
-              id="chat-input"
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Ask me anything about HR..."
-              aria-label="Chat message input"
-              aria-describedby="chat-input-help"
-              className="flex-1 bg-card border border-border rounded-xl px-4 py-3 outline-none focus:border-violet focus:ring-2 focus:ring-violet/30 transition-premium placeholder-secondary font-medium"
-            />
-            <motion.button
-              onClick={() => handleSend()}
-              disabled={!input.trim()}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              aria-label="Send message"
-              className="px-6 py-3 bg-gradient-to-r from-violet to-violet-light border border-violet/50 rounded-xl hover:shadow-glow-accent transition-premium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium"
-            >
-              <Send className="w-5 h-5" aria-hidden="true" />
-              <span className="hidden sm:inline">Send</span>
-            </motion.button>
-          </div>
-          <p id="chat-input-help" className="text-xs text-secondary mt-2 text-center font-medium">
-            Press Enter to send • Shift + Enter for new line
-          </p>
-        </div>
+        {/* Input - Extracted to separate component for performance */}
+        <ChatInput
+          value={input}
+          onChange={setInput}
+          onSend={handleSend}
+          onKeyPress={handleKeyPress}
+          disabled={isTyping}
+          inputRef={inputRef}
+        />
       </div>
 
       {/* PII Warning Modal */}

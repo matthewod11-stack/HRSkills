@@ -280,7 +280,7 @@ function UploadAudioModal({ isOpen, onClose, onFileSelect }: UploadAudioModalPro
           <h3 className="text-xl font-bold mb-4">Voice Input Not Available</h3>
 
           <p className="text-gray-300 mb-6">
-            Your browser doesn't support real-time voice input. You can upload an audio file
+            Your browser doesn&apos;t support real-time voice input. You can upload an audio file
             instead.
           </p>
 
