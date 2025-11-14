@@ -141,6 +141,15 @@ export function useChatAPI(options: UseChatAPIOptions): UseChatAPIReturn {
         }),
       });
 
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage =
+          (errorData as { error?: { message?: string } }).error?.message ||
+          (errorData as { error?: string }).error ||
+          `Analytics API error: ${response.status} ${response.statusText}`;
+        throw new Error(errorMessage);
+      }
+
       const result: AnalyticsChatResponse = await response.json();
 
       if (!result.success) {
@@ -210,6 +219,15 @@ export function useChatAPI(options: UseChatAPIOptions): UseChatAPIReturn {
           history: historyPayload,
         }),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        // Handle error response format: { success: false, error: "...", ... }
+        const errorMessage =
+          (errorData as { error?: string }).error ||
+          `Chat API error: ${response.status} ${response.statusText}`;
+        throw new Error(errorMessage);
+      }
 
       const data: GeneralChatResponse = await response.json();
 

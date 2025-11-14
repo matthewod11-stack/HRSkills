@@ -61,8 +61,9 @@ const ChatInput = memo(function ChatInput({
     [onChange]
   );
 
-  // Check if send button should be disabled
-  const isSendDisabled = !value.trim() || disabled;
+  // Check if input/send button should be disabled
+  const isInputDisabled = disabled;
+  const isSendDisabled = !value.trim() || isInputDisabled;
 
   return (
     <div className="p-6 border-t border-border bg-gradient-to-r from-violet/5 to-violet-light/5">
@@ -80,7 +81,7 @@ const ChatInput = memo(function ChatInput({
           placeholder={placeholder}
           aria-label="Chat message input"
           aria-describedby="chat-input-help"
-          disabled={isDisabled}
+          disabled={isInputDisabled}
           className="flex-1 bg-card border border-border rounded-xl px-4 py-3 outline-none focus:border-violet focus:ring-2 focus:ring-violet/30 transition-premium placeholder-secondary font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         />
         <motion.button

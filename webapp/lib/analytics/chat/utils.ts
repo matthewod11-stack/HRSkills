@@ -19,6 +19,109 @@ export function buildSchemaContext(dataSources: string[]): string {
 }
 
 /**
+ * Normalize SQL column names - converts display names with spaces to actual column names with underscores
+ * Example: "survey comment" -> "survey_comment"
+ */
+export function normalizeSQLColumnNames(sql: string): string {
+  // Map of common display names to actual column names
+  const columnNameMap: Record<string, string> = {
+    'survey comment': 'survey_comment',
+    'survey Comment': 'survey_comment',
+    'Survey Comment': 'survey_comment',
+    'survey quarter': 'survey_quarter',
+    'survey Quarter': 'survey_quarter',
+    'Survey Quarter': 'survey_quarter',
+    'survey response date': 'survey_response_date',
+    'survey Response Date': 'survey_response_date',
+    'Survey Response Date': 'survey_response_date',
+    'survey category': 'survey_category',
+    'survey Category': 'survey_category',
+    'Survey Category': 'survey_category',
+    'enps score': 'enps_score',
+    'enps Score': 'enps_score',
+    'ENPS Score': 'enps_score',
+    'performance rating': 'performance_rating',
+    'performance Rating': 'performance_rating',
+    'Performance Rating': 'performance_rating',
+    'performance forecast': 'performance_forecast',
+    'performance Forecast': 'performance_forecast',
+    'Performance Forecast': 'performance_forecast',
+    'potential rating': 'potential_rating',
+    'potential Rating': 'potential_rating',
+    'Potential Rating': 'potential_rating',
+    'sentiment confidence': 'sentiment_confidence',
+    'sentiment Confidence': 'sentiment_confidence',
+    'Sentiment Confidence': 'sentiment_confidence',
+    'sentiment analyzed at': 'sentiment_analyzed_at',
+    'sentiment Analyzed At': 'sentiment_analyzed_at',
+    'Sentiment Analyzed At': 'sentiment_analyzed_at',
+    'metric date': 'metric_date',
+    'metric Date': 'metric_date',
+    'Metric Date': 'metric_date',
+    'employee id': 'employee_id',
+    'employee Id': 'employee_id',
+    'Employee Id': 'employee_id',
+    'first name': 'first_name',
+    'first Name': 'first_name',
+    'First Name': 'first_name',
+    'last name': 'last_name',
+    'last Name': 'last_name',
+    'Last Name': 'last_name',
+    'hire date': 'hire_date',
+    'hire Date': 'hire_date',
+    'Hire Date': 'hire_date',
+    'termination date': 'termination_date',
+    'termination Date': 'termination_date',
+    'Termination Date': 'termination_date',
+    'termination reason': 'termination_reason',
+    'termination Reason': 'termination_reason',
+    'Termination Reason': 'termination_reason',
+    'manager id': 'manager_id',
+    'manager Id': 'manager_id',
+    'Manager Id': 'manager_id',
+    'review date': 'review_date',
+    'review Date': 'review_date',
+    'Review Date': 'review_date',
+    'review type': 'review_type',
+    'review Type': 'review_type',
+    'Review Type': 'review_type',
+    'reviewer id': 'reviewer_id',
+    'reviewer Id': 'reviewer_id',
+    'Reviewer Id': 'reviewer_id',
+    'review text': 'review_text',
+    'review Text': 'review_text',
+    'Review Text': 'review_text',
+    'response date': 'response_date',
+    'response Date': 'response_date',
+    'Response Date': 'response_date',
+  };
+
+  let normalized = sql;
+
+  // Replace column names with spaces (case-insensitive)
+  for (const [displayName, columnName] of Object.entries(columnNameMap)) {
+    // Match column names in various SQL contexts: SELECT, WHERE, ORDER BY, GROUP BY, etc.
+    // Use word boundaries and handle quoted identifiers
+    const patterns = [
+      // Unquoted: "survey comment" or `survey comment` or [survey comment]
+      new RegExp(`\\b${displayName.replace(/\s+/g, '\\s+')}\\b`, 'gi'),
+      // Quoted with double quotes: "survey comment"
+      new RegExp(`"${displayName.replace(/\s+/g, '\\s+')}"`, 'gi'),
+      // Quoted with backticks: `survey comment`
+      new RegExp(`\`${displayName.replace(/\s+/g, '\\s+')}\``, 'gi'),
+      // Quoted with brackets: [survey comment]
+      new RegExp(`\\[${displayName.replace(/\s+/g, '\\s+')}\\]`, 'gi'),
+    ];
+
+    for (const pattern of patterns) {
+      normalized = normalized.replace(pattern, columnName);
+    }
+  }
+
+  return normalized;
+}
+
+/**
  * Validate SQL query for security
  * Ensures only SELECT queries are allowed and blocks dangerous operations
  */

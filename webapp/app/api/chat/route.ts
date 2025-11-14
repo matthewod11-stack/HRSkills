@@ -786,7 +786,7 @@ Your goal: Help this startup scale its people, culture, and leadership with the 
     return handleApiError(error, {
       endpoint: '/api/chat',
       method: 'POST',
-      userId: authResult.user.userId,
+      userId: authResult?.user?.userId || 'UNKNOWN',
       requestBody: {}, // Body parsing may have failed, so we can't safely access it here
     });
   }

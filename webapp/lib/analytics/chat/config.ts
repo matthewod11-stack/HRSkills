@@ -116,6 +116,26 @@ export const TABLE_SCHEMAS = {
       { name: 'department', type: 'TEXT', description: 'Employee department' },
     ],
   },
+  employee_metrics: {
+    name: 'employee_metrics',
+    description: 'Employee performance and engagement metrics over time',
+    columns: [
+      { name: 'id', type: 'INTEGER', description: 'Primary key' },
+      { name: 'employee_id', type: 'TEXT', description: 'Foreign key to employees.id' },
+      { name: 'metric_date', type: 'TEXT', description: 'Date of metrics (YYYY-MM-DD)' },
+      { name: 'enps_score', type: 'INTEGER', description: 'eNPS score (-100 to 100)' },
+      { name: 'survey_quarter', type: 'TEXT', description: 'Survey quarter (e.g., Q1 2025)' },
+      { name: 'survey_response_date', type: 'TEXT', description: 'Survey response date' },
+      { name: 'survey_category', type: 'TEXT', description: 'Promoter, Passive, or Detractor' },
+      { name: 'survey_comment', type: 'TEXT', description: 'Open-ended survey feedback (use survey_comment, NOT "survey comment")' },
+      { name: 'sentiment', type: 'TEXT', description: 'AI sentiment analysis: positive, neutral, negative' },
+      { name: 'sentiment_confidence', type: 'REAL', description: 'Sentiment confidence score (0-1)' },
+      { name: 'sentiment_analyzed_at', type: 'TEXT', description: 'Timestamp of sentiment analysis' },
+      { name: 'performance_rating', type: 'REAL', description: 'Performance rating (1-5 scale)' },
+      { name: 'performance_forecast', type: 'REAL', description: 'Performance forecast (1-5 scale)' },
+      { name: 'potential_rating', type: 'REAL', description: 'Potential rating (1-5 scale)' },
+    ],
+  },
 };
 
 /**

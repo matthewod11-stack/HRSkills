@@ -845,7 +845,7 @@ export async function GET(request: NextRequest) {
     return handleApiError(error, {
       endpoint: '/api/analytics',
       method: 'GET',
-      userId: authResult.user.userId,
+      userId: authResult?.user?.userId || 'UNKNOWN',
       requestBody: {
         metric: request.nextUrl.searchParams.get('metric'),
       },

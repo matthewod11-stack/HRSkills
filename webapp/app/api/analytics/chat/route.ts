@@ -5,6 +5,7 @@ import { handleApiError } from '@/lib/api-helpers';
 import { CACHE_TTL, responseCache } from '@/lib/analytics/chat/config';
 import {
   validateSQL,
+  normalizeSQLColumnNames,
   generateChartConfig,
   generateFollowUps,
   populateAnalysisTemplate,
@@ -97,7 +98,10 @@ export async function POST(req: NextRequest) {
       throw error;
     }
 
-    const { sql, intent, explanation, analysis_template } = sqlResult;
+    let { sql, intent, explanation, analysis_template } = sqlResult;
+
+    // Normalize SQL column names (fix display names with spaces to actual column names)
+    sql = normalizeSQLColumnNames(sql);
 
     // Validate SQL for security
     const validation = validateSQL(sql);
