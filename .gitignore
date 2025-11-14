@@ -103,3 +103,7 @@ coverage/
 # Test results
 test-results/
 playwright-report/
+
+# TypeScript incremental build artifacts
+*.tsbuildinfo
+tsconfig.tsbuildinfo

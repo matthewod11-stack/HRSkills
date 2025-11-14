@@ -4,13 +4,23 @@ import { memo, useCallback, KeyboardEvent, RefObject } from 'react';
 import { motion } from 'framer-motion';
 import { Send } from 'lucide-react';
 
-interface ChatInputProps {
+/**
+ * Props for the ChatInput component
+ */
+export interface ChatInputProps {
+  /** Current input value */
   value: string;
+  /** Callback when input value changes */
   onChange: (value: string) => void;
+  /** Callback when send button is clicked or Enter is pressed */
   onSend: () => void;
+  /** Callback for key press events */
   onKeyPress: (e: KeyboardEvent<HTMLInputElement>) => void;
+  /** Disabled state (from parent - typically based on isTyping) */
   disabled?: boolean;
+  /** Placeholder text */
   placeholder?: string;
+  /** Ref to the input element */
   inputRef?: RefObject<HTMLInputElement>;
 }
 
@@ -21,9 +31,18 @@ interface ChatInputProps {
  * Wrapped in memo() to only re-render when props change.
  *
  * Performance optimization: By extracting this component, typing in the input field
- * only re-renders this small component instead of the entire ChatInterface (966 lines).
+ * only re-renders this small component instead of the entire ChatInterface.
  *
- * Expected impact: 90-95% reduction in re-render scope during typing.
+ * @example
+ * ```tsx
+ * <ChatInput
+ *   value={input}
+ *   onChange={setInput}
+ *   onSend={handleSend}
+ *   onKeyPress={handleKeyPress}
+ *   disabled={isTyping}
+ * />
+ * ```
  */
 const ChatInput = memo(function ChatInput({
   value,
@@ -61,7 +80,7 @@ const ChatInput = memo(function ChatInput({
           placeholder={placeholder}
           aria-label="Chat message input"
           aria-describedby="chat-input-help"
-          disabled={disabled}
+          disabled={isDisabled}
           className="flex-1 bg-card border border-border rounded-xl px-4 py-3 outline-none focus:border-violet focus:ring-2 focus:ring-violet/30 transition-premium placeholder-secondary font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         />
         <motion.button

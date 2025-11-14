@@ -1,731 +1,196 @@
 'use client';
 
-import { useState, useRef, useEffect, memo, useCallback, useMemo } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Send,
-  Bot,
-  User,
-  Sparkles,
-  Zap,
-  FileText,
-  Users as UsersIcon,
-  Edit3,
-  Copy,
-  Check,
-  Shield,
-  AlertTriangle,
-  FileUp,
-  RotateCcw,
-} from 'lucide-react';
-import { detectSensitivePII } from '@/lib/pii-detector';
+import { Bot, Sparkles } from 'lucide-react';
 import { useAuth } from '@/lib/auth/auth-context';
-import { WorkflowProgress } from './WorkflowProgress';
-import { ActionButtons } from './ActionButtons';
 import { ContextPanelData } from './ContextPanel';
-import { detectContext } from '@/lib/workflows/context-detector';
+import { ChatProvider, Message, useChatContext } from './chat/ChatContext';
+import { ChatHeader } from './chat/ChatHeader';
+import { MessageList } from './chat/MessageList';
+import { SuggestionCards } from './chat/SuggestionCards';
 import ChatInput from './chat/ChatInput';
-import MessageMarkdown from './chat/MessageMarkdown';
-
-interface WorkflowState {
-  currentStep: string | null;
-  progress: number;
-  completedSteps: string[];
-  isComplete: boolean;
-  hasActions: boolean;
-  actionCount: number;
-}
-
-interface Message {
-  id: number;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-  isEditing?: boolean;
-  editedContent?: string;
-  detectedWorkflow?: string;
-  workflowConfidence?: number;
-  workflowState?: WorkflowState;
-  suggestedActions?: any[];
-  suggestedFollowUps?: string[];
-}
-
-const initialMessages: Message[] = [];
-
-const createConversationId = () => `conv_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-
-const suggestions = [
-  { icon: FileText, text: 'Generate an offer', gradient: 'from-blue-500 to-cyan-500' },
-  { icon: UsersIcon, text: 'Create a PIP', gradient: 'from-purple-500 to-pink-500' },
-  { icon: Zap, text: 'Write a JD', gradient: 'from-green-500 to-emerald-500' },
-];
-
-function sanitizePipContent(rawContent: string): string {
-  if (!rawContent) {
-    return '';
-  }
-
-  const normalized = rawContent.replace(/\r\n/g, '\n');
-  const lower = normalized.toLowerCase();
-  const markerIndex = lower.indexOf('performance improvement plan');
-
-  if (markerIndex === -1) {
-    return '';
-  }
-
-  let startIndex = markerIndex;
-
-  while (startIndex > 0 && normalized[startIndex - 1] !== '\n') {
-    startIndex--;
-  }
-
-  let pipBody = normalized.slice(startIndex).trimStart();
-
-  const closingPhrases = [
-    'give me those details',
-    'share those details',
-    'once you provide the details',
-  ];
-
-  for (const phrase of closingPhrases) {
-    const closingIndex = pipBody.toLowerCase().lastIndexOf(phrase);
-    if (closingIndex !== -1) {
-      pipBody = pipBody.slice(0, closingIndex).replace(/\s*$/, '');
-      break;
-    }
-  }
-
-  pipBody = pipBody.replace(/\n-{3,}\s*$/g, '').trim();
-
-  const requiredSections = [
-    '## performance issues',
-    '## improvement goals',
-    '## support & resources',
-    '## check-in schedule',
-  ];
-
-  const hasAllSections = requiredSections.every((section) =>
-    pipBody.toLowerCase().includes(section)
-  );
-
-  if (!hasAllSections) {
-    return '';
-  }
-
-  return pipBody;
-}
-
-function enhanceContextPanelData(panelData: ContextPanelData | null): ContextPanelData | null {
-  if (!panelData || panelData.type !== 'document') {
-    return panelData;
-  }
-
-  const documentType = panelData.config?.documentType;
-  const rawContent = panelData.data?.content ?? '';
-
-  if (documentType === 'pip') {
-    const sanitized = sanitizePipContent(rawContent);
-    if (!sanitized || sanitized.trim().split('\n').length < 10) {
-      return {
-        ...panelData,
-        data: {
-          ...panelData.data,
-          content: '',
-        },
-      };
-    }
-
-    return {
-      ...panelData,
-      data: {
-        ...panelData.data,
-        content: sanitized,
-      },
-    };
-  }
-
-  return panelData;
-}
-
-// Skills array removed - workflow detection is now automatic
+import { PIIWarningModal } from './chat/PIIWarningModal';
+import { usePIIDetection } from '@/lib/hooks/usePIIDetection';
+import { useExternalPrompt } from '@/lib/hooks/useExternalPrompt';
+import { useChatErrorHandler } from '@/lib/hooks/useChatErrorHandler';
+import { useContextPanelDetection } from '@/lib/hooks/useContextPanelDetection';
+import { useGoogleDocsExport } from '@/lib/hooks/useGoogleDocsExport';
+import { useChatAPI } from '@/lib/hooks/useChatAPI';
 
 /**
- * MessageItem Component
- *
- * Individual message bubble component, memoized to prevent re-renders
- * when other messages are added to the chat.
- *
- * @remarks
- * This component is expensive due to ReactMarkdown rendering and motion animations.
- * Memoization prevents re-rendering existing messages when new ones arrive.
+ * External prompt configuration
  */
-const MessageItem = memo(function MessageItem({
-  message,
-  conversationId,
-  onToggleEdit,
-  onUpdateEdit,
-  onSaveEdit,
-  onCopy,
-  onExportToGoogleDocs,
-  onFollowUp,
-}: {
-  message: Message;
-  conversationId: string;
-  onToggleEdit: (id: number) => void;
-  onUpdateEdit: (id: number, content: string) => void;
-  onSaveEdit: (id: number) => void;
-  onCopy: (content: string) => void;
-  onExportToGoogleDocs: (message: Message) => Promise<void>;
-  onFollowUp: (text: string) => void;
-}) {
-  const [isExporting, setIsExporting] = useState(false);
-
-  const handleExport = async () => {
-    setIsExporting(true);
-    try {
-      await onExportToGoogleDocs(message);
-    } finally {
-      setIsExporting(false);
-    }
-  };
-  return (
-    <motion.div
-      key={message.id}
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.3 }}
-      className={`flex gap-3 ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
-    >
-      <div
-        className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-glow-accent ${
-          message.role === 'user'
-            ? 'bg-gradient-to-br from-success to-success'
-            : 'bg-gradient-to-br from-violet to-violet-light'
-        }`}
-      >
-        {message.role === 'user' ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
-      </div>
-      <div className={`flex-1 ${message.role === 'user' ? 'flex justify-end' : ''}`}>
-        <div
-          className={`max-w-[80%] p-4 rounded-2xl transition-premium ${
-            message.role === 'user'
-              ? 'bg-gradient-to-br from-success/20 to-success/10 border border-success/50'
-              : 'bg-card border border-border shadow-soft'
-          }`}
-        >
-          {message.isEditing ? (
-            <div className="space-y-2">
-              <textarea
-                value={message.editedContent || message.content}
-                onChange={(e) => onUpdateEdit(message.id, e.target.value)}
-                className="w-full min-h-[200px] p-3 bg-card border border-border rounded-lg text-sm focus:outline-none focus:border-violet transition-premium resize-y"
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={() => onSaveEdit(message.id)}
-                  className="px-3 py-1 bg-violet hover:bg-violet-light rounded-lg text-sm transition-premium flex items-center gap-1 font-medium shadow-glow-accent"
-                >
-                  <Check className="w-4 h-4" />
-                  Save
-                </button>
-                <button
-                  onClick={() => onToggleEdit(message.id)}
-                  className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-sm transition-premium font-medium"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          ) : (
-            <>
-              {message.detectedWorkflow && message.detectedWorkflow !== 'general' && (
-                <div className="mb-2 pb-2 border-b border-border">
-                  <p className="text-xs text-violet-light flex items-center gap-1 font-medium">
-                    <Sparkles className="w-3 h-3" />
-                    Workflow: {message.detectedWorkflow.replace('_', ' ')}
-                    {message.workflowConfidence && ` (${message.workflowConfidence}% confidence)`}
-                  </p>
-                </div>
-              )}
-              {message.workflowState && message.role === 'assistant' && (
-                <div className="mb-3">
-                  <WorkflowProgress
-                    workflowId={message.detectedWorkflow || 'general'}
-                    state={message.workflowState}
-                  />
-                </div>
-              )}
-              {message.suggestedActions &&
-                message.suggestedActions.length > 0 &&
-                message.role === 'assistant' && (
-                  <div className="mb-3">
-                    <ActionButtons
-                      actions={message.suggestedActions}
-                      conversationId={conversationId}
-                      workflowId={message.detectedWorkflow || 'general'}
-                    />
-                  </div>
-                )}
-              {message.suggestedFollowUps &&
-                message.suggestedFollowUps.length > 0 &&
-                message.role === 'assistant' && (
-                  <div className="mb-3">
-                    <p className="text-xs text-secondary font-medium mb-2">Suggested follow-ups</p>
-                    <div className="flex flex-wrap gap-2">
-                      {message.suggestedFollowUps.map((followUp, index) => (
-                        <button
-                          key={index}
-                          onClick={() => onFollowUp(followUp)}
-                          className="px-3 py-1 bg-white/5 hover:bg-white/10 border border-white/20 rounded-lg text-xs transition-premium"
-                        >
-                          {followUp}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              <MessageMarkdown content={message.content} />
-              <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
-                <p className="text-xs text-secondary">
-                  {message.timestamp.toLocaleTimeString('en-US', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </p>
-                {message.role === 'assistant' && (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => onCopy(message.content)}
-                      className="p-1.5 hover:bg-white/10 rounded-lg transition-premium"
-                      title="Copy to clipboard"
-                    >
-                      <Copy className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => onToggleEdit(message.id)}
-                      className="p-1.5 hover:bg-white/10 rounded-lg transition-premium"
-                      title="Edit document"
-                    >
-                      <Edit3 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={handleExport}
-                      disabled={isExporting}
-                      className="p-1.5 hover:bg-white/10 rounded-lg transition-premium disabled:opacity-50 disabled:cursor-not-allowed"
-                      title="Export to Google Docs"
-                    >
-                      {isExporting ? (
-                        <div className="w-4 h-4 border-2 border-violet border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <FileUp className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    </motion.div>
-  );
-});
-
 type ExternalChatPrompt = {
   id: number;
   text: string;
 };
 
+/**
+ * Props for the ChatInterface component
+ */
 interface ChatInterfaceProps {
   onContextPanelChange?: (panelData: ContextPanelData | null) => void;
   externalPrompt?: ExternalChatPrompt | null;
   onExternalPromptConsumed?: (promptId: number) => void;
 }
 
-export function ChatInterface({
+/**
+ * ChatInterfaceInner - The actual implementation (needs context)
+ */
+function ChatInterfaceInner({
   onContextPanelChange,
   externalPrompt,
   onExternalPromptConsumed,
-}: ChatInterfaceProps = {}) {
+}: ChatInterfaceProps) {
   const { getAuthHeaders } = useAuth();
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const { messages, isTyping, conversationId, addMessage, setIsTyping, clearMessages, resetConversation } = useChatContext();
+
+  // Local state (not in context - orchestration-specific)
   const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const [conversationId, setConversationId] = useState<string>(() => createConversationId());
-  const [piiWarning, setPiiWarning] = useState<{
-    show: boolean;
-    types: string[];
-    message: string;
-    pendingText: string;
-  }>({
-    show: false,
-    types: [],
-    message: '',
-    pendingText: '',
-  });
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const activePromptIdRef = useRef<number | null>(null);
 
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, []);
+  // Phase 1 Hooks: Extract simple, isolated concerns
+  const { piiWarning, checkForPII, handleEditMessage, handleProceedWithPII, resetPIIWarning } = usePIIDetection({
+    inputRef,
+    onSendWithBypass: (text) => handleSend(text, true),
+    onEdit: (text) => setInput(text),
+  });
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, scrollToBottom]);
+  const { handleApiError } = useChatErrorHandler({
+    addMessage,
+    setIsTyping,
+    messages,
+  });
 
-  const handleSend = useCallback(async (text?: string, bypassPII = false) => {
-    const messageText = text || input.trim();
-    if (!messageText) return;
+  // Phase 2 Hooks: Extract medium complexity concerns
+  const { detectAndUpdatePanel } = useContextPanelDetection({
+    onPanelChange: onContextPanelChange,
+    confidenceThreshold: 70,
+  });
 
-    // Check for PII before sending (unless bypassing)
-    if (!bypassPII) {
-      const piiResult = detectSensitivePII(messageText);
-      if (piiResult.detected) {
-        setPiiWarning({
-          show: true,
-          types: piiResult.types,
-          message: piiResult.message,
-          pendingText: messageText,
-        });
-        return; // Don't send yet, wait for user decision
-      }
-    }
-
-    const userMessage: Message = {
-      id: messages.length + 1,
-      role: 'user',
-      content: messageText,
-      timestamp: new Date(),
-    };
-
-    const historyWithNewMessage = [...messages, userMessage];
-    setMessages(historyWithNewMessage);
-    setInput('');
-    setIsTyping(true);
-
-    const conversationHistoryPayload = historyWithNewMessage.slice(-4).map((m) => ({
-      role: m.role,
-      content: m.content,
-    }));
-
-    const contextDetection = detectContext(messageText);
-    if (contextDetection.panelData?.type === 'analytics') {
-      try {
-        const response = await fetch('/api/analytics/chat', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...getAuthHeaders(),
-          },
-          body: JSON.stringify({
-            message: messageText,
-            sessionId: conversationId,
-            conversationHistory: conversationHistoryPayload,
-          }),
-        });
-
-        const result = await response.json();
-
-        if (!result.success) {
-          throw new Error(result.error?.message || 'Analytics assistant error');
-        }
-
-        const assistantMessage: Message = {
-          id: messages.length + 2,
-          role: 'assistant',
-          content: result.data.content,
-          timestamp: new Date(),
-          detectedWorkflow: 'analytics',
-          workflowConfidence: 100,
-          suggestedFollowUps: result.data.suggestedFollowUps || [],
-        };
-
-        setMessages((prev) => [...prev, assistantMessage]);
-
-        if (onContextPanelChange) {
-          onContextPanelChange(
-            enhanceContextPanelData({
-              type: 'analytics',
-              title: 'Analytics Insight',
-              config: {
-                chartType:
-                  result.data.chartConfig?.type ||
-                  contextDetection.panelData.config?.chartType ||
-                  'bar',
-                filters: contextDetection.panelData.config?.filters,
-              },
-              data: {
-                metric: contextDetection.panelData.data?.metric || 'headcount',
-                chartConfig: result.data.chartConfig,
-                analysisSummary: result.data.content,
-                suggestedFollowUps: result.data.suggestedFollowUps || [],
-                metadata: result.data.metadata,
-              },
-            })
-          );
-        }
-      } catch (error: any) {
-        console.error('Analytics chat error:', error);
-        const errorMessage: Message = {
-          id: messages.length + 2,
-          role: 'assistant',
-          content: `Sorry, I couldn't run that analysis: ${error.message || 'Unknown error'}. Please try again later.`,
-          timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, errorMessage]);
-      } finally {
-        setIsTyping(false);
-      }
-      return;
-    }
-
-    try {
-      // Call chat API - workflow detection is automatic
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeaders(),
-        },
-        body: JSON.stringify({
-          message: messageText,
-          conversationId,
-          history: historyWithNewMessage.map((m) => ({ role: m.role, content: m.content })),
-        }),
+  const { exportToGoogleDocs } = useGoogleDocsExport({
+    getAuthHeaders,
+    onError: (error, userMessage) => {
+      handleApiError(error, {
+        apiType: 'export',
+        userMessage,
       });
-
-      const data = await response.json();
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      const assistantMessage: Message = {
-        id: messages.length + 2,
-        role: 'assistant',
-        content: data.reply,
-        timestamp: new Date(),
-        detectedWorkflow: data.detectedWorkflow,
-        workflowConfidence: data.workflowConfidence,
-        workflowState: data.workflowState,
-        suggestedActions: data.suggestedActions,
-      };
-
-      setMessages((prev) => [...prev, assistantMessage]);
-
-      // Detect context and update panel if callback provided
-      if (onContextPanelChange) {
-        // Check if API response includes contextPanel data
-        if (data.contextPanel) {
-          onContextPanelChange(enhanceContextPanelData(data.contextPanel));
-        } else {
-          // Fallback: client-side detection
-          const detection = detectContext(messageText, data.reply);
-          if (detection.panelData && detection.confidence >= 70) {
-            onContextPanelChange(enhanceContextPanelData(detection.panelData));
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Chat error:', error);
-      const errorMessage: Message = {
-        id: messages.length + 2,
-        role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.',
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
-      setIsTyping(false);
-    }
-  }, [input, messages, conversationId, getAuthHeaders, onContextPanelChange]);
-
-  const handleProceedWithPII = useCallback(() => {
-    setPiiWarning({ show: false, types: [], message: '', pendingText: '' });
-    handleSend(piiWarning.pendingText, true); // Bypass PII check
-  }, [handleSend, piiWarning.pendingText]);
-
-  const handleEditMessage = useCallback(() => {
-    setInput(piiWarning.pendingText);
-    setPiiWarning({ show: false, types: [], message: '', pendingText: '' });
-    inputRef.current?.focus();
-  }, [piiWarning.pendingText]);
-
-  const handleSuggestionClick = useCallback((text: string) => {
-    handleSend(text);
-  }, [handleSend]);
-
-  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  }, [handleSend]);
-
-  // Memoize callbacks to prevent MessageItem re-renders
-  const toggleEdit = useCallback((messageId: number) => {
-    setMessages((prev) =>
-      prev.map((msg) =>
-        msg.id === messageId
-          ? { ...msg, isEditing: !msg.isEditing, editedContent: msg.editedContent || msg.content }
-          : msg
-      )
-    );
-  }, []);
-
-  const updateEditedContent = useCallback((messageId: number, content: string) => {
-    setMessages((prev) =>
-      prev.map((msg) => (msg.id === messageId ? { ...msg, editedContent: content } : msg))
-    );
-  }, []);
-
-  const saveEdit = useCallback((messageId: number) => {
-    setMessages((prev) =>
-      prev.map((msg) =>
-        msg.id === messageId
-          ? { ...msg, content: msg.editedContent || msg.content, isEditing: false }
-          : msg
-      )
-    );
-  }, []);
-
-  const copyToClipboard = useCallback(async (content: string) => {
-    try {
-      await navigator.clipboard.writeText(content);
-      // Could add a toast notification here
-    } catch (err) {
-      console.error('Failed to copy:', err);
-    }
-  }, []);
-
-  const exportToGoogleDocs = useCallback(
-    async (message: Message) => {
-      try {
-        // Detect document type from the message content or detected workflow
-        let documentType = 'Document';
-
-        if (message.detectedWorkflow) {
-          const workflowMapping: { [key: string]: string } = {
-            hiring: 'Job Description',
-            performance: 'Performance Document',
-            onboarding: 'Onboarding Plan',
-            offboarding: 'Exit Document',
-            compliance: 'Policy Document',
-            employee_relations: 'ER Document',
-            compensation: 'Compensation Document',
-            analytics: 'Analytics Report',
-          };
-          documentType = workflowMapping[message.detectedWorkflow] || 'Document';
-        }
-
-        // Try to extract document type from content
-        const content = message.content.toLowerCase();
-        if (content.includes('offer letter') || content.includes('offer of employment')) {
-          documentType = 'Offer Letter';
-        } else if (content.includes('performance improvement plan') || content.includes('pip')) {
-          documentType = 'PIP';
-        } else if (content.includes('termination') || content.includes('separation')) {
-          documentType = 'Termination Letter';
-        } else if (content.includes('reference letter')) {
-          documentType = 'Reference Letter';
-        } else if (content.includes('promotion')) {
-          documentType = 'Promotion Letter';
-        } else if (content.includes('transfer')) {
-          documentType = 'Transfer Letter';
-        } else if (content.includes('job description') || content.includes('jd')) {
-          documentType = 'Job Description';
-        }
-
-        // Generate title from timestamp
-        const timestamp = message.timestamp || new Date();
-        const title = `${documentType}_${timestamp.toISOString().split('T')[0]}`;
-
-        // Call export API
-        const response = await fetch('/api/documents/export-to-google-docs', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...getAuthHeaders(),
-          },
-          body: JSON.stringify({
-            title,
-            content: message.content,
-            documentType,
-            metadata: {
-              date: timestamp.toISOString().split('T')[0],
-            },
-          }),
-        });
-
-        const data = await response.json();
-
-        // Handle authentication required
-        if (data.needsAuth) {
-          const shouldConnect = confirm(
-            'You need to connect your Google account to export documents. You will be redirected to Google. Connect now?'
-          );
-          if (shouldConnect) {
-            // Use same tab to avoid popup blockers
-            window.location.href = '/api/auth/google';
-          }
-          return;
-        }
-
-        if (!response.ok) {
-          throw new Error(data.error || data.message || 'Export failed');
-        }
-
-        // Open the document in a new tab
-        window.open(data.editLink, '_blank');
-
-        // Success!
-        console.log('Document exported successfully:', data.webViewLink);
-      } catch (error: any) {
-        console.error('Failed to export to Google Docs:', error);
-        alert(`Failed to export document: ${error.message}`);
-      }
     },
-    [getAuthHeaders]
+  });
+
+  // Phase 3 Hook: Extract dual routing API logic
+  const { sendMessage: sendChatMessage } = useChatAPI({
+    getAuthHeaders,
+    conversationId,
+    messages,
+    addMessage,
+    onError: handleApiError,
+    onPanelUpdate: detectAndUpdatePanel,
+  });
+
+  /**
+   * Main message send handler
+   * Now simplified - hooks handle PII, routing, and panel updates
+   */
+  const handleSend = useCallback(
+    async (messageText?: string, bypassPII: boolean = false) => {
+      const finalText = messageText || input.trim();
+      if (!finalText) return;
+
+      // PII detection (unless bypassed) - Phase 1 hook
+      if (!bypassPII && checkForPII(finalText)) {
+        return; // Blocked by PII detection
+      }
+
+      // Create and add user message
+      const userMessage: Message = {
+        id: messages.length + 1,
+        role: 'user',
+        content: finalText,
+        timestamp: new Date(),
+      };
+
+      addMessage(userMessage);
+      setInput('');
+      setIsTyping(true);
+
+      // Send message through API (handles routing, responses, and panels) - Phase 3 hook
+      // Pass userMessage object so hook can include it in conversation history
+      await sendChatMessage(finalText, userMessage);
+
+      // Reset typing indicator (will be set to false in hook's finally or error handler)
+      setIsTyping(false);
+    },
+    [input, messages, addMessage, setIsTyping, checkForPII, sendChatMessage]
   );
 
-  useEffect(() => {
-    if (!externalPrompt || isTyping) {
-      return;
-    }
+  /**
+   * Handle suggestion card clicks
+   */
+  const handleSuggestionClick = useCallback(
+    (text: string) => {
+      handleSend(text);
+    },
+    [handleSend]
+  );
 
-    if (activePromptIdRef.current === externalPrompt.id) {
-      return;
-    }
-
-    activePromptIdRef.current = externalPrompt.id;
-
-    const promptId = externalPrompt.id;
-    const promptText = externalPrompt.text;
-
-    void (async () => {
-      try {
-        await handleSend(promptText, true);
-      } finally {
-        onExternalPromptConsumed?.(promptId);
-        if (activePromptIdRef.current === promptId) {
-          activePromptIdRef.current = null;
-        }
+  /**
+   * Handle Enter key press in input
+   */
+  const handleKeyPress = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
       }
-    })();
-  }, [externalPrompt, handleSend, isTyping, onExternalPromptConsumed]);
+    },
+    [handleSend]
+  );
 
+  /**
+   * Handle copy to clipboard
+   */
+  const handleCopy = useCallback(async (content: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+    } catch (error) {
+      console.error('Failed to copy:', error);
+    }
+  }, []);
+
+  /**
+   * Handle suggested follow-up clicks
+   */
+  const handleFollowUp = useCallback(
+    (text: string) => {
+      handleSend(text);
+    },
+    [handleSend]
+  );
+
+  /**
+   * Handle chat reset - fully resets conversation state
+   */
   const handleResetChat = useCallback(() => {
-    setMessages(initialMessages);
+    resetConversation(); // Clears messages, resets typing, generates new ID
     setInput('');
-    setIsTyping(false);
-    setConversationId(createConversationId());
-    setPiiWarning({ show: false, types: [], message: '', pendingText: '' });
+    resetPIIWarning(); // Clear PII warning via hook
     onContextPanelChange?.(null);
-  }, [onContextPanelChange]);
+  }, [resetConversation, resetPIIWarning, onContextPanelChange]);
 
-  // Memoize last message workflow to prevent re-computation on every render
+  /**
+   * Process external prompts from other components - using hook
+   */
+  useExternalPrompt(externalPrompt || null, {
+    onPromptReceived: (text) => handleSend(text, true),
+    onPromptConsumed: onExternalPromptConsumed,
+    isProcessing: isTyping,
+  });
+
+  /**
+   * Memoize last message workflow to prevent re-computation
+   */
   const lastMessageWorkflow = useMemo(() => {
     if (messages.length === 0) return null;
     const lastMessage = messages[messages.length - 1];
@@ -740,10 +205,11 @@ export function ChatInterface({
       transition={{ duration: 0.5, delay: 0.2 }}
       className="relative group h-full flex flex-col"
     >
+      {/* Background glow effect */}
       <div className="absolute inset-0 bg-gradient-to-br from-violet/10 via-violet-light/10 to-violet/5 rounded-3xl blur-2xl group-hover:blur-3xl transition-premium opacity-60" />
 
       <div className="relative backdrop-blur-2xl bg-card border border-border rounded-3xl flex flex-col h-full overflow-hidden hover:border-violet/50 hover:shadow-panel-hover transition-premium">
-        {/* Header */}
+        {/* Header with branding and reset button */}
         <div className="p-6 border-b border-border bg-gradient-to-r from-violet/10 to-violet-light/10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -768,105 +234,61 @@ export function ChatInterface({
                   </span>
                 </div>
               )}
-              <motion.button
-                onClick={handleResetChat}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-sm font-medium transition-premium"
-                aria-label="Start a new chat"
-              >
-                <RotateCcw className="w-4 h-4" />
-                <span>Reset chat</span>
-              </motion.button>
+              <ChatHeader conversationId={conversationId} onReset={handleResetChat} />
             </div>
           </div>
         </div>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          <AnimatePresence initial={false}>
-            {messages.map((message) => (
-              <MessageItem
-                key={message.id}
-                message={message}
-                conversationId={conversationId}
-                onToggleEdit={toggleEdit}
-                onUpdateEdit={updateEditedContent}
-                onSaveEdit={saveEdit}
-                onCopy={copyToClipboard}
-                onExportToGoogleDocs={exportToGoogleDocs}
-                onFollowUp={handleSuggestionClick}
-              />
-            ))}
-          </AnimatePresence>
+        {/* Message List with typing indicator */}
+        <div className="flex-1 overflow-y-auto">
+          <MessageList
+            conversationId={conversationId}
+            onCopy={handleCopy}
+            onExportToGoogleDocs={exportToGoogleDocs}
+            onFollowUp={handleFollowUp}
+          />
 
+          {/* Typing indicator */}
           {isTyping && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex gap-3"
-            >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet to-violet-light flex items-center justify-center flex-shrink-0 shadow-glow-accent">
-                <Bot className="w-5 h-5" />
-              </div>
-              <div className="bg-card border border-border p-4 rounded-2xl shadow-soft">
-                <div className="flex gap-1">
-                  <motion.div
-                    className="w-2 h-2 bg-violet rounded-full"
-                    animate={{ y: [0, -8, 0] }}
-                    transition={{ duration: 0.6, repeat: Infinity, delay: 0 }}
-                  />
-                  <motion.div
-                    className="w-2 h-2 bg-violet-light rounded-full"
-                    animate={{ y: [0, -8, 0] }}
-                    transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }}
-                  />
-                  <motion.div
-                    className="w-2 h-2 bg-violet rounded-full"
-                    animate={{ y: [0, -8, 0] }}
-                    transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }}
-                  />
+            <div className="px-6 pb-4">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex gap-3"
+              >
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet to-violet-light flex items-center justify-center flex-shrink-0 shadow-glow-accent">
+                  <Bot className="w-5 h-5" />
                 </div>
-              </div>
-            </motion.div>
+                <div className="bg-card border border-border p-4 rounded-2xl shadow-soft">
+                  <div className="flex gap-1">
+                    <motion.div
+                      className="w-2 h-2 bg-violet rounded-full"
+                      animate={{ y: [0, -8, 0] }}
+                      transition={{ duration: 0.6, repeat: Infinity, delay: 0 }}
+                    />
+                    <motion.div
+                      className="w-2 h-2 bg-violet-light rounded-full"
+                      animate={{ y: [0, -8, 0] }}
+                      transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }}
+                    />
+                    <motion.div
+                      className="w-2 h-2 bg-violet rounded-full"
+                      animate={{ y: [0, -8, 0] }}
+                      transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }}
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            </div>
           )}
-
-          <div ref={messagesEndRef} />
         </div>
 
-        {/* Suggestions */}
+        {/* Suggestion Cards (shown when no messages) */}
         {messages.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="px-6 pb-4"
-          >
-            <p className="text-sm text-secondary mb-3 font-medium">Try asking me about:</p>
-            <div className="grid grid-cols-3 gap-2">
-              {suggestions.map((suggestion, index) => {
-                const Icon = suggestion.icon;
-                return (
-                  <motion.button
-                    key={index}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.6 + index * 0.1 }}
-                    onClick={() => handleSuggestionClick(suggestion.text)}
-                    className="flex items-center gap-3 p-3 bg-card hover:bg-white/10 border border-border rounded-xl transition-premium hover:border-violet/50 hover:shadow-glow-accent text-left group/btn"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet to-violet-light flex items-center justify-center flex-shrink-0 group-hover/btn:scale-110 transition-transform shadow-glow-accent">
-                      <Icon className="w-4 h-4" />
-                    </div>
-                    <span className="text-sm font-medium">{suggestion.text}</span>
-                  </motion.button>
-                );
-              })}
-            </div>
-          </motion.div>
+          <SuggestionCards onSuggestionClick={handleSuggestionClick} />
         )}
 
-        {/* Input - Extracted to separate component for performance */}
+        {/* Input */}
         <ChatInput
           value={input}
           onChange={setInput}
@@ -878,68 +300,48 @@ export function ChatInterface({
       </div>
 
       {/* PII Warning Modal */}
-      <AnimatePresence>
-        {piiWarning.show && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-            onClick={() => setPiiWarning({ show: false, types: [], message: '', pendingText: '' })}
-          >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-gradient-to-br from-error/20 to-error/10 border border-error/50 rounded-2xl p-6 max-w-lg w-full shadow-panel-hover"
-            >
-              <div className="flex items-start gap-4 mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-error to-error flex items-center justify-center flex-shrink-0 shadow-soft">
-                  <AlertTriangle className="w-6 h-6" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
-                    Sensitive Information Detected
-                    <Shield className="w-5 h-5 text-warning" />
-                  </h3>
-                  <p className="text-foreground text-sm mb-3 font-medium">
-                    Your message contains potentially sensitive information:
-                  </p>
-                  <div className="bg-card border border-error/30 rounded-lg p-3 mb-3">
-                    <p className="text-sm font-semibold text-error">
-                      Detected:{' '}
-                      <span className="text-foreground">{piiWarning.types.join(', ')}</span>
-                    </p>
-                  </div>
-                  <p className="text-sm text-secondary font-medium">{piiWarning.message}</p>
-                </div>
-              </div>
-
-              <div className="flex gap-3 mt-6">
-                <motion.button
-                  onClick={handleEditMessage}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="flex-1 px-4 py-3 bg-violet hover:bg-violet-light border border-violet/50 rounded-xl transition-premium flex items-center justify-center gap-2 font-semibold shadow-glow-accent"
-                >
-                  <Edit3 className="w-4 h-4" />
-                  Edit Message
-                </motion.button>
-                <motion.button
-                  onClick={handleProceedWithPII}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="flex-1 px-4 py-3 bg-white/10 hover:bg-white/20 border border-border rounded-xl transition-premium flex items-center justify-center gap-2 font-semibold"
-                >
-                  <Send className="w-4 h-4" />
-                  Send Anyway
-                </motion.button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <PIIWarningModal
+        isOpen={piiWarning.show}
+        detectedTypes={piiWarning.types}
+        message={piiWarning.message}
+        onEdit={handleEditMessage}
+        onSendAnyway={handleProceedWithPII}
+        onClose={resetPIIWarning}
+      />
     </motion.div>
+  );
+}
+
+/**
+ * ChatInterface - Main chat orchestrator component
+ *
+ * Orchestrates the entire chat experience by:
+ * - Managing API calls (dual routes: analytics vs general chat)
+ * - Handling PII detection and warnings
+ * - Processing external prompts from other components
+ * - Detecting and triggering context panels
+ * - Coordinating Google Docs export
+ * - Managing conversation state via ChatContext
+ *
+ * This component has been refactored from 945 lines to ~400 lines by
+ * extracting 10 sub-components while maintaining all functionality.
+ *
+ * Sub-components:
+ * - ChatContext: Shared state management
+ * - ChatHeader: Reset button and conversation metadata
+ * - MessageList: Scrollable message rendering
+ * - MessageItem: Individual message bubbles
+ * - MessageContent: Markdown rendering
+ * - MessageActions: Copy/Edit/Export buttons
+ * - WorkflowBadge: Workflow detection indicator
+ * - SuggestionCards: Quick action cards
+ * - ChatInput: Input field and send button
+ * - PIIWarningModal: PII detection warning dialog
+ */
+export function ChatInterface(props: ChatInterfaceProps) {
+  return (
+    <ChatProvider>
+      <ChatInterfaceInner {...props} />
+    </ChatProvider>
   );
 }
