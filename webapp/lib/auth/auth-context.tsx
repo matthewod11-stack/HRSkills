@@ -12,7 +12,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   login: (email?: string, role?: string) => Promise<void>;
   logout: () => void;
-  getAuthHeaders: () => HeadersInit;
+  getAuthHeaders: () => Record<string, string>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -134,6 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } else {
         // Auto-login with demo token in development
+        // Use process.env instead of T3 env (client-safe)
         if (process.env.NODE_ENV === 'development') {
           try {
             await login();
@@ -185,7 +186,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const getAuthHeaders = (): HeadersInit => {
+  const getAuthHeaders = (): Record<string, string> => {
     if (!token) {
       return {};
     }

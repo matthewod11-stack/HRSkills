@@ -1,29 +1,31 @@
+import { vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+import { vi } from 'vitest';
 import { useChatErrorHandler } from '@/lib/hooks/useChatErrorHandler';
 import type { Message } from '@/components/custom/chat/ChatContext';
 
 describe('useChatErrorHandler', () => {
-  let mockAddMessage: jest.Mock;
-  let mockSetIsTyping: jest.Mock;
+  let mockAddMessage: vi.Mock;
+  let mockSetIsTyping: vi.Mock;
   let mockMessages: Message[];
-  let consoleSpy: jest.SpyInstance;
-  let alertSpy: jest.SpyInstance;
+  let consoleSpy: vi.SpyInstance;
+  let alertSpy: vi.SpyInstance;
 
   beforeEach(() => {
-    mockAddMessage = jest.fn();
-    mockSetIsTyping = jest.fn();
+    mockAddMessage = vi.fn();
+    mockSetIsTyping = vi.fn();
     mockMessages = [
       { id: 1, role: 'user', content: 'Hello', timestamp: new Date() },
       { id: 2, role: 'assistant', content: 'Hi!', timestamp: new Date() },
     ];
 
     // Spy on console.error and alert
-    consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-    alertSpy = jest.spyOn(window, 'alert').mockImplementation();
+    consoleSpy = vi.spyOn(console, 'error').mockImplementation();
+    alertSpy = vi.spyOn(window, 'alert').mockImplementation();
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     consoleSpy.mockRestore();
     alertSpy.mockRestore();
   });

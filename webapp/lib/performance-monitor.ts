@@ -3,6 +3,8 @@
  * Tracks key metrics identified in the performance analysis report
  */
 
+import { env } from '@/env.mjs';
+
 export interface PerformanceMetrics {
   // API Performance
   apiLatency: number; // in milliseconds
@@ -63,7 +65,7 @@ export function trackMetric(metric: PerformanceMetrics): void {
   }
 
   // Log cache misses for debugging
-  if (!metric.cacheHit && process.env.NODE_ENV === 'development') {
+  if (!metric.cacheHit && env.NODE_ENV === 'development') {
     console.log(`[PERF] Cache miss on ${metric.endpoint}`);
   }
 }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { env } from '@/env.mjs';
 import { createDemoToken } from '@/lib/auth/middleware';
 import { handleApiError, validationError, notFoundError } from '@/lib/api-helpers';
 import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter';
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Only allow in development
-  if (process.env.NODE_ENV === 'production') {
+  if (env.NODE_ENV === 'production') {
     return NextResponse.json(
       { success: false, error: 'Demo tokens not available in production' },
       { status: 403 }
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Only allow in development
-  if (process.env.NODE_ENV === 'production') {
+  if (env.NODE_ENV === 'production') {
     return NextResponse.json(
       { success: false, error: 'Demo tokens not available in production' },
       { status: 403 }

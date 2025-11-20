@@ -13,6 +13,7 @@ import { checkFirstRun, getInitializationProgress } from '@/lib/first-run';
 import { handleApiError } from '@/lib/api-helpers';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { env } from '@/env.mjs';
 
 const execAsync = promisify(exec);
 
@@ -112,7 +113,7 @@ export async function POST(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   // Only allow in development
-  if (process.env.NODE_ENV === 'production') {
+  if (env.NODE_ENV === 'production') {
     return NextResponse.json(
       {
         success: false,

@@ -1,4 +1,6 @@
+import { vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { vi } from 'vitest';
 import { ChatInterface } from '@/components/custom/ChatInterface';
 
 /**
@@ -14,38 +16,48 @@ import { ChatInterface } from '@/components/custom/ChatInterface';
  */
 
 // Mock the auth context
-jest.mock('@/lib/auth/auth-context', () => ({
+vi.mock('@/lib/auth/auth-context', () => ({
   useAuth: () => ({
     getAuthHeaders: () => ({ Authorization: 'Bearer test-token' }),
   }),
 }));
 
-// Mock PII detector
-jest.mock('@/lib/pii-detector', () => ({
-  detectSensitivePII: jest.fn((text: string) => ({
-    detected: text.includes('SSN'),
-    types: text.includes('SSN') ? ['SSN'] : [],
-    message: 'Sensitive data detected',
-  })),
+// Mock PII detector - handle both string and message object inputs
+vi.mock('@/lib/pii-detector', () => ({
+  detectSensitivePII: vi.fn((textOrMessage: string | { content: string }) => {
+    // Extract text from string or object
+    const text = typeof textOrMessage === 'string' ? textOrMessage : textOrMessage.content || '';
+
+    return {
+      detected: text.includes('SSN'),
+      types: text.includes('SSN') ? ['SSN'] : [],
+      message: 'Sensitive data detected',
+    };
+  }),
 }));
 
-// Mock context detector
-jest.mock('@/lib/workflows/context-detector', () => ({
-  detectContext: jest.fn((text: string) => ({
-    panelData: text.includes('analytics')
-      ? {
-          type: 'analytics',
-          title: 'Analytics',
-          config: { chartType: 'bar' },
-          data: { metric: 'headcount' },
-        }
-      : null,
-    confidence: 80,
-  })),
+// Mock context detector - handle both string and message object inputs
+vi.mock('@/lib/workflows/context-detector', () => ({
+  detectContext: vi.fn((textOrMessage: string | { content: string }) => {
+    // Extract text from string or object
+    const text = typeof textOrMessage === 'string' ? textOrMessage : textOrMessage.content || '';
+
+    return {
+      panelData: text.includes('analytics')
+        ? {
+            type: 'analytics',
+            title: 'Analytics',
+            config: { chartType: 'bar' },
+            data: { metric: 'headcount' },
+          }
+        : null,
+      confidence: 80,
+    };
+  }),
 }));
 
 // Mock Framer Motion
-jest.mock('framer-motion', () => ({
+vi.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, ...props }: any) => (
       <div className={className} {...props}>
@@ -62,7 +74,7 @@ jest.mock('framer-motion', () => ({
 }));
 
 // Mock child components to simplify testing
-jest.mock('@/components/custom/chat/ChatHeader', () => ({
+vi.mock('@/components/custom/chat/ChatHeader', () => ({
   ChatHeader: ({ conversationId, onReset }: any) => (
     <div data-testid="chat-header">
       <span>{conversationId}</span>
@@ -73,13 +85,13 @@ jest.mock('@/components/custom/chat/ChatHeader', () => ({
   ),
 }));
 
-jest.mock('@/components/custom/chat/MessageList', () => ({
+vi.mock('@/components/custom/chat/MessageList', () => ({
   MessageList: ({ conversationId }: any) => (
     <div data-testid="message-list">Messages for {conversationId}</div>
   ),
 }));
 
-jest.mock('@/components/custom/chat/SuggestionCards', () => ({
+vi.mock('@/components/custom/chat/SuggestionCards', () => ({
   SuggestionCards: ({ onSuggestionClick }: any) => (
     <div data-testid="suggestion-cards">
       <button onClick={() => onSuggestionClick('Generate an offer')}>Generate an offer</button>
@@ -88,7 +100,7 @@ jest.mock('@/components/custom/chat/SuggestionCards', () => ({
   ),
 }));
 
-jest.mock('@/components/custom/chat/ChatInput', () => ({
+vi.mock('@/components/custom/chat/ChatInput', () => ({
   __esModule: true,
   default: ({ value, onChange, onSend, onKeyPress, disabled }: any) => (
     <div data-testid="chat-input">
@@ -106,7 +118,7 @@ jest.mock('@/components/custom/chat/ChatInput', () => ({
   ),
 }));
 
-jest.mock('@/components/custom/chat/PIIWarningModal', () => ({
+vi.mock('@/components/custom/chat/PIIWarningModal', () => ({
   PIIWarningModal: ({ isOpen, onEdit, onSendAnyway, onClose }: any) =>
     isOpen ? (
       <div data-testid="pii-warning-modal">
@@ -124,16 +136,16 @@ jest.mock('@/components/custom/chat/PIIWarningModal', () => ({
 }));
 
 describe('ChatInterface', () => {
-  const mockOnContextPanelChange = jest.fn();
-  const mockOnExternalPromptConsumed = jest.fn();
+  const mockOnContextPanelChange = vi.fn();
+  const mockOnExternalPromptConsumed = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    global.fetch = jest.fn();
+    vi.clearAllMocks();
+    global.fetch = vi.fn();
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('Component rendering', () => {
@@ -169,7 +181,7 @@ describe('ChatInterface', () => {
 
   describe('Message sending', () => {
     it('should send message when send button clicked', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           reply: 'Assistant response',
@@ -200,7 +212,7 @@ describe('ChatInterface', () => {
     });
 
     it('should send message when Enter key pressed', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           reply: 'Response',
@@ -221,7 +233,7 @@ describe('ChatInterface', () => {
     });
 
     it('should clear input after sending', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ reply: 'Response', detectedWorkflow: 'general' }),
       });
@@ -296,7 +308,7 @@ describe('ChatInterface', () => {
     });
 
     it('should send anyway when user confirms', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ reply: 'Response', detectedWorkflow: 'general' }),
       });
@@ -345,7 +357,7 @@ describe('ChatInterface', () => {
 
   describe('External prompts', () => {
     it('should process external prompt', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ reply: 'Response', detectedWorkflow: 'general' }),
       });
@@ -372,7 +384,7 @@ describe('ChatInterface', () => {
     });
 
     it('should not process same external prompt twice', async () => {
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as vi.Mock).mockResolvedValue({
         ok: true,
         json: async () => ({ reply: 'Response', detectedWorkflow: 'general' }),
       });
@@ -404,7 +416,7 @@ describe('ChatInterface', () => {
     });
 
     it('should bypass PII detection for external prompts', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ reply: 'Response', detectedWorkflow: 'general' }),
       });
@@ -429,7 +441,7 @@ describe('ChatInterface', () => {
 
   describe('Context panel integration', () => {
     it('should call onContextPanelChange when analytics detected', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           success: true,
@@ -455,7 +467,7 @@ describe('ChatInterface', () => {
     });
 
     it('should route analytics queries to analytics chat API', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           success: true,
@@ -483,7 +495,7 @@ describe('ChatInterface', () => {
     });
 
     it('should route non-analytics queries to general chat API', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ reply: 'Response', detectedWorkflow: 'general' }),
       });
@@ -533,7 +545,7 @@ describe('ChatInterface', () => {
 
   describe('Suggestion cards', () => {
     it('should send message when suggestion clicked', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ reply: 'Response', detectedWorkflow: 'general' }),
       });
@@ -554,7 +566,7 @@ describe('ChatInterface', () => {
     });
 
     it('should handle different suggestion clicks', async () => {
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as vi.Mock).mockResolvedValue({
         ok: true,
         json: async () => ({ reply: 'Response', detectedWorkflow: 'general' }),
       });
@@ -576,12 +588,12 @@ describe('ChatInterface', () => {
 
   describe('Error handling', () => {
     it('should handle API error gracefully', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ error: 'API error occurred' }),
       });
 
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation();
 
       render(<ChatInterface />);
 
@@ -599,9 +611,9 @@ describe('ChatInterface', () => {
     });
 
     it('should handle network error gracefully', async () => {
-      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
+      (global.fetch as vi.Mock).mockRejectedValueOnce(new Error('Network error'));
 
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation();
 
       render(<ChatInterface />);
 
@@ -626,7 +638,7 @@ describe('ChatInterface', () => {
         resolveResponse = resolve;
       });
 
-      (global.fetch as jest.Mock).mockReturnValueOnce(responsePromise);
+      (global.fetch as vi.Mock).mockReturnValueOnce(responsePromise);
 
       render(<ChatInterface />);
 

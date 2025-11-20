@@ -2,10 +2,10 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 /**
- * Next.js Middleware
+ * Next.js Proxy (renamed from Middleware in Next.js 16)
  * Handles CORS preflight requests and adds security headers for API routes
  */
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   // DEVELOPMENT: Bypass auth for all API routes
   if (process.env.NODE_ENV === 'development') {
     const response = NextResponse.next();

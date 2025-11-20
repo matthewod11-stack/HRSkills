@@ -1,11 +1,11 @@
 /**
- * Phase 2: AI Provider Abstraction - Type Definitions
+ * Phase 2 (Updated Phase 5): AI Provider Abstraction - Type Definitions
  *
- * Unified interface for multiple AI providers (Anthropic, OpenAI, etc.)
+ * Unified interface for multiple AI providers (Anthropic, OpenAI)
  * Allows seamless switching and failover between providers.
  */
 
-export type AIProviderType = 'anthropic' | 'openai' | 'gemini' | 'auto';
+export type AIProviderType = 'anthropic' | 'openai' | 'auto';
 
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';

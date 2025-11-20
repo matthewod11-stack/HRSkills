@@ -1,7 +1,7 @@
 /**
- * @jest-environment jsdom
  */
 
+import { vi } from 'vitest';
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -10,7 +10,7 @@ import { ErrorBoundary, useErrorHandler } from '@/components/ui/ErrorBoundary';
 // Suppress console.error during tests
 const originalError = console.error;
 beforeAll(() => {
-  console.error = jest.fn();
+  console.error = vi.fn();
 });
 
 afterAll(() => {
@@ -124,7 +124,7 @@ describe('ErrorBoundary', () => {
 
   describe('Error handler callback', () => {
     it('should call onError callback when error occurs', () => {
-      const onError = jest.fn();
+      const onError = vi.fn();
 
       render(
         <ErrorBoundary onError={onError}>
@@ -225,7 +225,7 @@ describe('useErrorHandler hook', () => {
   }
 
   it('should allow manual error triggering', () => {
-    const onError = jest.fn();
+    const onError = vi.fn();
 
     render(
       <ErrorBoundary onError={onError}>

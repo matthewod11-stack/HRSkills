@@ -11,8 +11,11 @@ import type {
   ActionContext,
   ActionResult,
   ActionValidationResult,
+  ActionValidationError,
+  ActionValidationWarning,
   CreateDocumentPayload,
 } from '../types';
+import { env } from '@/env.mjs';
 import { createDocument, type CreateDocumentInput } from '@/lib/services/document-service';
 import { getServiceAccountClient, getOAuthClient } from '@/lib/google/workspace-client';
 import { Readable } from 'stream';
@@ -115,7 +118,7 @@ async function exportToGoogleDrive(
 }> {
   // Get appropriate client based on available credentials
   let client;
-  const hasServiceAccount = process.env.GOOGLE_CREDENTIALS_PATH;
+  const hasServiceAccount = env.GOOGLE_CREDENTIALS_PATH;
 
   if (hasServiceAccount) {
     client = getServiceAccountClient();
@@ -202,8 +205,8 @@ export const documentHandler: ActionHandler<CreateDocumentPayload> = {
    * Validate document creation action
    */
   async validate(action: BaseAction, context: ActionContext): Promise<ActionValidationResult> {
-    const errors = [];
-    const warnings = [];
+    const errors: ActionValidationError[] = [];
+    const warnings: ActionValidationWarning[] = [];
     const payload = action.payload as CreateDocumentPayload;
 
     // Check required fields
@@ -262,8 +265,8 @@ export const documentHandler: ActionHandler<CreateDocumentPayload> = {
       }
 
       // Check for Google credentials
-      const hasServiceAccount = process.env.GOOGLE_CREDENTIALS_PATH;
-      const hasOAuth = process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET;
+      const hasServiceAccount = env.GOOGLE_CREDENTIALS_PATH;
+      const hasOAuth = env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET;
 
       if (!hasServiceAccount && !hasOAuth) {
         warnings.push({

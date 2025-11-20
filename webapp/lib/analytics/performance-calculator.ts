@@ -81,9 +81,18 @@ export function calculateEmployeeRating(
       performanceScore += 0.5;
       factors.push('Above-average compensation');
       confidence += 10;
+    } else if (compRatio >= 1.05) {
+      // More sensitive threshold for moderate differentiation (9% difference now matters)
+      performanceScore += 0.25;
+      factors.push('Slightly above-average compensation');
+      confidence += 5;
     } else if (compRatio <= 0.85) {
       performanceScore -= 0.5;
       factors.push('Below-average compensation');
+    } else if (compRatio <= 0.95) {
+      // More sensitive threshold for moderate differentiation
+      performanceScore -= 0.25;
+      factors.push('Slightly below-average compensation');
     }
   }
 
@@ -286,11 +295,11 @@ export function calculateDepartmentStats(employees: EmployeeDataForRating[]): {
       ? validTenure.reduce((sum, e) => sum + (e.tenure_years || 0), 0) / validTenure.length
       : 0;
 
-  const promotionRate =
-    validPromotions.length > 0
-      ? validPromotions.reduce((sum, e) => sum + (e.promotions || 0) / (e.tenure_years || 1), 0) /
-        validPromotions.length
-      : 0;
+  // Calculate aggregate promotion rate (total promotions / total tenure)
+  // This represents the department's overall promotion velocity
+  const totalPromotions = validPromotions.reduce((sum, e) => sum + (e.promotions || 0), 0);
+  const totalTenure = validPromotions.reduce((sum, e) => sum + (e.tenure_years || 0), 0);
+  const promotionRate = totalTenure > 0 ? totalPromotions / totalTenure : 0;
 
   return {
     avgCompensation,

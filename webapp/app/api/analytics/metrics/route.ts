@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { handleApiError } from '@/lib/api-helpers';
 import { storeMetric, getMetrics, getMetricCount, type MetricFilters } from '@/lib/services/web-vitals-service';
+import { env } from '@/env.mjs';
 
 /**
  * POST /api/analytics/metrics
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Log to console (in development)
-    if (process.env.NODE_ENV === 'development') {
+    if (env.NODE_ENV === 'development') {
       console.log('[Analytics - Metric]', {
         metric: metric.name,
         value: metric.value,

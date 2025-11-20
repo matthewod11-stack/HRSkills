@@ -2,22 +2,24 @@
  * Shared TypeScript types for AI Services
  */
 
-// Re-export NLP types for convenience
-export type {
-  SentimentResult,
-  EntityResult,
-  ClassificationResult,
-  BatchSentimentResult,
-  NlpConfig,
-} from '../ai-services/nlp-service';
+import { env } from '@/env.mjs';
 
-// Re-export Translation types for convenience
-export type {
-  TranslationResult,
-  BatchTranslationResult,
-  LanguageDetection,
-  TranslationConfig,
-} from '../ai-services/translation-service';
+// TODO: Re-export NLP types when nlp-service is implemented
+// export type {
+//   SentimentResult,
+//   EntityResult,
+//   ClassificationResult,
+//   BatchSentimentResult,
+//   NlpConfig,
+// } from '../ai-services/nlp-service';
+
+// TODO: Re-export Translation types when translation-service is implemented
+// export type {
+//   TranslationResult,
+//   BatchTranslationResult,
+//   LanguageDetection,
+//   TranslationConfig,
+// } from '../ai-services/translation-service';
 
 /**
  * Generic AI API response wrapper
@@ -51,11 +53,11 @@ export interface AIFeatureFlags {
  */
 export function getAIFeatureFlags(): AIFeatureFlags {
   return {
-    nlpEnabled: process.env.NEXT_PUBLIC_ENABLE_NLP === 'true',
-    translationEnabled: process.env.NEXT_PUBLIC_ENABLE_TRANSLATION === 'true',
-    speechEnabled: process.env.NEXT_PUBLIC_ENABLE_SPEECH === 'true',
-    documentAiEnabled: process.env.NEXT_PUBLIC_ENABLE_DOCUMENT_AI === 'true',
-    vertexAiEnabled: process.env.NEXT_PUBLIC_ENABLE_VERTEX_AI === 'true',
-    visionEnabled: process.env.NEXT_PUBLIC_ENABLE_VISION === 'true',
+    nlpEnabled: env.NEXT_PUBLIC_ENABLE_NLP,
+    translationEnabled: env.NEXT_PUBLIC_ENABLE_TRANSLATION,
+    speechEnabled: env.NEXT_PUBLIC_ENABLE_SPEECH,
+    documentAiEnabled: env.NEXT_PUBLIC_ENABLE_DOCUMENT_AI,
+    vertexAiEnabled: env.NEXT_PUBLIC_ENABLE_VERTEX_AI,
+    visionEnabled: env.NEXT_PUBLIC_ENABLE_VISION,
   };
 }

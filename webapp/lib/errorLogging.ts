@@ -43,6 +43,7 @@ class ErrorLoggingService {
   private logs: ErrorLog[] = [];
 
   constructor() {
+    // Use process.env instead of T3 env (client-safe)
     this.isProduction = process.env.NODE_ENV === 'production';
   }
 

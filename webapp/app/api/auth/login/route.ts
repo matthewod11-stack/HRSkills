@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { env } from '@/env.mjs';
 import { createDemoToken, generateToken } from '@/lib/auth/middleware';
 import { handleApiError } from '@/lib/api-helpers';
 import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter';
@@ -46,7 +47,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Development mode: accept any password (or no password) - completely unchanged
-    if (process.env.NODE_ENV !== 'production') {
+    if (env.NODE_ENV !== 'production') {
       // Generate JWT token (role is always 'admin' for single-user system)
       const token = await createDemoToken(email);
       
@@ -62,8 +63,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Production mode: validate credentials against environment variables
-    const adminEmail = process.env.ADMIN_EMAIL;
-    const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
+    const adminEmail = env.ADMIN_EMAIL;
+    const adminPasswordHash = env.ADMIN_PASSWORD_HASH;
 
     // If env vars are not set, allow any credentials (graceful fallback for initial setup)
     if (!adminEmail || !adminPasswordHash) {

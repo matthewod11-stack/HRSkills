@@ -1,17 +1,19 @@
+import { vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
+import { vi } from 'vitest';
 import { useExternalPrompt, ExternalPrompt } from '@/lib/hooks/useExternalPrompt';
 
 describe('useExternalPrompt', () => {
-  let mockOnPromptReceived: jest.Mock;
-  let mockOnPromptConsumed: jest.Mock;
+  let mockOnPromptReceived: vi.Mock;
+  let mockOnPromptConsumed: vi.Mock;
 
   beforeEach(() => {
-    mockOnPromptReceived = jest.fn().mockResolvedValue(undefined);
-    mockOnPromptConsumed = jest.fn();
+    mockOnPromptReceived = vi.fn().mockResolvedValue(undefined);
+    mockOnPromptConsumed = vi.fn();
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('prompt processing', () => {
@@ -170,7 +172,7 @@ describe('useExternalPrompt', () => {
   describe('error handling', () => {
     it('should call onPromptConsumed even when onPromptReceived throws', async () => {
       // Suppress console errors for this test
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation();
 
       const mockError = new Error('Processing failed');
       mockOnPromptReceived.mockRejectedValue(mockError);
@@ -197,7 +199,7 @@ describe('useExternalPrompt', () => {
 
     it('should reset active prompt after error', async () => {
       // Suppress console errors for this test
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation();
 
       const mockError = new Error('Processing failed');
       mockOnPromptReceived.mockRejectedValue(mockError);

@@ -33,13 +33,13 @@ export function verifyPassword(password: string, hash: string): boolean {
     // Convert hex strings to buffers for timing-safe comparison
     const inputBuffer = Buffer.from(inputHash, 'hex');
     const storedBuffer = Buffer.from(hash, 'hex');
-    
+
     // If lengths don't match after conversion, return false
     if (inputBuffer.length !== storedBuffer.length) {
       return false;
     }
-    
-    return timingSafeEqual(inputBuffer, storedBuffer);
+
+    return timingSafeEqual(new Uint8Array(inputBuffer), new Uint8Array(storedBuffer));
   } catch (error) {
     // If any error occurs during comparison, return false
     return false;

@@ -14,6 +14,8 @@ import type {
   ActionHandler,
   ActionRegistryEntry,
   ActionValidationResult,
+  ActionValidationError,
+  ActionValidationWarning,
   ActionExecutionOptions,
   BatchActionRequest,
   BatchActionResult,
@@ -160,8 +162,8 @@ export class ActionExecutor {
    * @returns Validation result
    */
   async validate(action: BaseAction, context: ActionContext): Promise<ActionValidationResult> {
-    const errors = [];
-    const warnings = [];
+    const errors: ActionValidationError[] = [];
+    const warnings: ActionValidationWarning[] = [];
 
     // Check if handler exists
     const handler = this.getHandler(action.type);
@@ -218,7 +220,7 @@ export class ActionExecutor {
 
     return {
       valid: handlerValidation.valid && errors.length === 0,
-      errors: [...errors, ...handlerValidation.errors],
+      errors: [...errors, ...handlerValidation.errors] as ActionValidationError[],
       warnings: [...warnings, ...(handlerValidation.warnings || [])],
     };
   }

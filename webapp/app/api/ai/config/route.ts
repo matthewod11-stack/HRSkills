@@ -1,8 +1,10 @@
 /**
- * Phase 2: AI Provider Configuration API
+ * Phase 2 (Updated Phase 5): AI Provider Configuration API
  *
  * Allows users to view and update AI provider settings,
  * check health status, and manage fallback preferences.
+ *
+ * Phase 5: Simplified to Anthropic + OpenAI only
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -59,7 +61,7 @@ export async function GET(request: NextRequest) {
       config,
       health,
       userPreferences: aiPreferences,
-      availableProviders: ['anthropic', 'openai', 'gemini'],
+      availableProviders: ['anthropic', 'openai'],
     });
   } catch (error) {
     return handleApiError(error, {
@@ -89,7 +91,7 @@ export async function PATCH(request: NextRequest) {
     const updates: Partial<AIProviderConfig> = {};
 
     if (body.primary) {
-      if (!['anthropic', 'openai', 'gemini'].includes(body.primary)) {
+      if (!['anthropic', 'openai'].includes(body.primary)) {
         return NextResponse.json(
           { success: false, error: 'Invalid primary provider' },
           { status: 400 }
@@ -99,7 +101,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     if (body.fallback !== undefined) {
-      if (body.fallback && !['anthropic', 'openai', 'gemini'].includes(body.fallback)) {
+      if (body.fallback && !['anthropic', 'openai'].includes(body.fallback)) {
         return NextResponse.json(
           { success: false, error: 'Invalid fallback provider' },
           { status: 400 }

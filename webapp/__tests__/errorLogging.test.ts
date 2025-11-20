@@ -1,7 +1,7 @@
 /**
- * @jest-environment jsdom
  */
 
+import { vi } from 'vitest';
 import {
   errorLogger,
   ErrorSeverity,
@@ -19,10 +19,10 @@ const originalConsole = {
 };
 
 beforeEach(() => {
-  console.log = jest.fn();
-  console.error = jest.fn();
-  console.group = jest.fn();
-  console.groupEnd = jest.fn();
+  console.log = vi.fn();
+  console.error = vi.fn();
+  console.group = vi.fn();
+  console.groupEnd = vi.fn();
   errorLogger.clearLogs();
 });
 

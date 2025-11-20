@@ -7,6 +7,7 @@
  * - Template caching for performance
  */
 
+import { env } from '@/env.mjs';
 import { getOAuthClient } from './google/workspace-client';
 import type { DriveTemplate, SkillTemplates } from './google/types';
 
@@ -390,9 +391,23 @@ function normalizeDocumentType(documentType: string): DocumentSourceType {
   return 'general';
 }
 
+/**
+ * Get template ID override from environment variables
+ * Refactored from dynamic access to explicit mapping for type safety
+ */
 function getEnvTemplateOverride(documentType: string): string | undefined {
-  const envKey = `GOOGLE_TEMPLATE_${documentType.toUpperCase()}_ID`;
-  return process.env[envKey];
+  const templateIdMap: Record<string, string | undefined> = {
+    offer_letter: env.GOOGLE_TEMPLATE_OFFER_LETTER_ID,
+    onboarding: env.GOOGLE_TEMPLATE_ONBOARDING_ID,
+    performance_review: env.GOOGLE_TEMPLATE_PERFORMANCE_REVIEW_ID,
+    termination: env.GOOGLE_TEMPLATE_TERMINATION_ID,
+    pip: env.GOOGLE_TEMPLATE_PIP_ID,
+    promotion: env.GOOGLE_TEMPLATE_PROMOTION_ID,
+    resignation: env.GOOGLE_TEMPLATE_RESIGNATION_ID,
+    exit_interview: env.GOOGLE_TEMPLATE_EXIT_INTERVIEW_ID,
+  };
+
+  return templateIdMap[documentType.toLowerCase()];
 }
 
 function scoreTemplateMatch(

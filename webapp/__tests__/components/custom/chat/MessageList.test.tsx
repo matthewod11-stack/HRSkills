@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { ReactNode } from 'react';
 import { MessageList } from '@/components/custom/chat/MessageList';
@@ -11,12 +12,12 @@ import { ChatProvider, Message } from '@/components/custom/chat/ChatContext';
  */
 
 // Mock Framer Motion
-jest.mock('framer-motion', () => ({
+vi.mock('framer-motion', () => ({
   AnimatePresence: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
 
 // Mock MessageItem
-jest.mock('@/components/custom/chat/MessageItem', () => ({
+vi.mock('@/components/custom/chat/MessageItem', () => ({
   MessageItem: ({ message }: any) => (
     <div data-testid={`message-item-${message.id}`}>
       {message.content}
@@ -25,9 +26,9 @@ jest.mock('@/components/custom/chat/MessageItem', () => ({
 }));
 
 describe('MessageList', () => {
-  const mockOnCopy = jest.fn();
-  const mockOnExportToGoogleDocs = jest.fn();
-  const mockOnFollowUp = jest.fn();
+  const mockOnCopy = vi.fn();
+  const mockOnExportToGoogleDocs = vi.fn();
+  const mockOnFollowUp = vi.fn();
   const conversationId = 'conv_test_123';
 
   const createMessage = (overrides?: Partial<Message>): Message => ({
@@ -45,10 +46,10 @@ describe('MessageList', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Mock scrollIntoView
-    Element.prototype.scrollIntoView = jest.fn();
+    Element.prototype.scrollIntoView = vi.fn();
   });
 
   describe('Rendering', () => {
@@ -163,7 +164,7 @@ describe('MessageList', () => {
 
   describe('Auto-scroll behavior', () => {
     it('should call scrollIntoView when messages are added', async () => {
-      const scrollIntoViewMock = jest.fn();
+      const scrollIntoViewMock = vi.fn();
       Element.prototype.scrollIntoView = scrollIntoViewMock;
 
       const initialMessages = [createMessage({ id: 1 })];
@@ -185,7 +186,7 @@ describe('MessageList', () => {
     });
 
     it('should scroll with smooth behavior', async () => {
-      const scrollIntoViewMock = jest.fn();
+      const scrollIntoViewMock = vi.fn();
       Element.prototype.scrollIntoView = scrollIntoViewMock;
 
       render(
@@ -441,7 +442,7 @@ describe('MessageList', () => {
         createMessage({ id: 1, content: 'Second with ID 1' }),
       ];
 
-      const consoleWarn = jest.spyOn(console, 'error').mockImplementation();
+      const consoleWarn = vi.spyOn(console, 'error').mockImplementation();
 
       render(
         <MessageList

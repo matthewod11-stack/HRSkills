@@ -1,8 +1,9 @@
 /**
  * Tests for /api/analytics/metrics route handlers
  */
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
-jest.mock(
+vi.mock(
   'next/server',
   () =>
     ({
@@ -19,29 +20,32 @@ jest.mock(
     }) as unknown
 );
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const routes = require('@/app/api/analytics/metrics/route');
-const { POST, GET } = routes;
+// Use dynamic import for ESM route handlers (Next.js App Router compatibility)
+const routesModule = await import('@/app/api/analytics/metrics/route');
+const { POST, GET } = routesModule;
 
-jest.mock('@/lib/services/web-vitals-service', () => ({
-  storeMetric: jest.fn(),
-  getMetrics: jest.fn(),
-  getMetricCount: jest.fn(),
+// Mock web-vitals-service before import
+vi.mock('@/lib/services/web-vitals-service', () => ({
+  storeMetric: vi.fn(),
+  getMetrics: vi.fn(),
+  getMetricCount: vi.fn(),
 }));
 
+// Import mocked service (must come after vi.mock for proper hoisting)
+const webVitalsService = await import('@/lib/services/web-vitals-service');
 const {
   storeMetric,
   getMetrics,
   getMetricCount,
-} = jest.requireMock('@/lib/services/web-vitals-service') as {
-  storeMetric: jest.Mock;
-  getMetrics: jest.Mock;
-  getMetricCount: jest.Mock;
+} = webVitalsService as {
+  storeMetric: vi.Mock;
+  getMetrics: vi.Mock;
+  getMetricCount: vi.Mock;
 };
 
 describe('API /api/analytics/metrics', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('persists incoming metrics on POST', async () => {

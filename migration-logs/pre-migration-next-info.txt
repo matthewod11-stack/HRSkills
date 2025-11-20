@@ -1,0 +1,26 @@
+npm error code ENOWORKSPACES
+npm error This command does not support workspaces.
+npm error A complete log of this run can be found in: /Users/mattod/.npm/_logs/2025-11-17T21_24_28_826Z-debug-0.log
+
+Operating System:
+  Platform: darwin
+  Arch: arm64
+  Version: Darwin Kernel Version 24.6.0: Mon Jul 14 11:30:40 PDT 2025; root:xnu-11417.140.69~1/RELEASE_ARM64_T8132
+  Available memory (MB): 32768
+  Available CPU cores: 10
+Binaries:
+  Node: 22.21.0
+  npm: 11.6.2
+  Yarn: N/A
+  pnpm: N/A
+Relevant Packages:
+  next: 14.2.33 // An outdated version detected (latest is 16.0.3), upgrade is highly recommended!
+  eslint-config-next: 14.2.33
+  react: 18.3.1
+  react-dom: 18.3.1
+  typescript: 5.9.3
+Next.js Config:
+  output: standalone
+ ⚠ An outdated version detected (latest is 16.0.3), upgrade is highly recommended!
+   Please try the latest canary version (`npm install next@canary`) to confirm the issue still exists before creating a new issue.
+   Read more - https://nextjs.org/docs/messages/opening-an-issue

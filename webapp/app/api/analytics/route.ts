@@ -330,114 +330,145 @@ async function calculateAttritionMetrics(params: AnalyticsQueryParams): Promise<
  * Calculate 9-box grid metrics
  */
 async function calculateNineBoxMetrics(params: AnalyticsQueryParams): Promise<any> {
-  // Import helpers for performance metrics and rating inflation
-  const { getEmployeesWithLatestMetrics, getPerformanceScore, getPotentialScore } = await import(
-    '@/lib/analytics/employee-metrics-helper'
-  );
-  const { calculateRatingInflationBatch, calculateAverageInflation } = await import(
-    '@/lib/analytics/rating-inflation-calculator'
-  );
+  try {
+    // Import helpers for performance metrics and rating inflation
+    let getEmployeesWithLatestMetrics, getPerformanceScore, getPotentialScore;
+    let calculateRatingInflationBatch, calculateAverageInflation;
+    
+    try {
+      const helperModule = await import('@/lib/analytics/employee-metrics-helper');
+      getEmployeesWithLatestMetrics = helperModule.getEmployeesWithLatestMetrics;
+      getPerformanceScore = helperModule.getPerformanceScore;
+      getPotentialScore = helperModule.getPotentialScore;
+    } catch (importError) {
+      console.error('Error importing employee-metrics-helper:', importError);
+      throw new Error(`Failed to import employee-metrics-helper: ${importError instanceof Error ? importError.message : String(importError)}`);
+    }
 
-  // Build where clause
-  const whereClause = params.department
-    ? and(eq(employees.status, 'active'), eq(employees.department, params.department))
-    : eq(employees.status, 'active');
+    try {
+      const inflationModule = await import('@/lib/analytics/rating-inflation-calculator');
+      calculateRatingInflationBatch = inflationModule.calculateRatingInflationBatch;
+      calculateAverageInflation = inflationModule.calculateAverageInflation;
+    } catch (importError) {
+      console.error('Error importing rating-inflation-calculator:', importError);
+      throw new Error(`Failed to import rating-inflation-calculator: ${importError instanceof Error ? importError.message : String(importError)}`);
+    }
 
-  // Fetch active employees with their latest performance metrics
-  const employeesWithMetrics = await getEmployeesWithLatestMetrics(whereClause);
+    // Build where clause
+    const whereClause = params.department
+      ? and(eq(employees.status, 'active'), eq(employees.department, params.department))
+      : eq(employees.status, 'active');
 
-  if (employeesWithMetrics.length === 0) {
+    // Fetch active employees with their latest performance metrics
+    let employeesWithMetrics;
+    try {
+      employeesWithMetrics = await getEmployeesWithLatestMetrics(whereClause);
+    } catch (queryError) {
+      console.error('Error fetching employees with metrics:', queryError);
+      throw new Error(`Failed to fetch employees: ${queryError instanceof Error ? queryError.message : String(queryError)}`);
+    }
+
+    if (employeesWithMetrics.length === 0) {
+      return {
+        grid: [],
+        summary: {
+          highPerformers: 0,
+          coreEmployees: 0,
+          developmentNeeded: 0,
+          totalAnalyzed: 0,
+          avgRatingInflation: 0,
+        },
+        message: 'No active employees found for analysis.',
+      };
+    }
+
+    // Calculate rating inflation for all employees (batch operation)
+    const employeeIds = employeesWithMetrics.map((e) => e.emp.id);
+    const inflationMap = await calculateRatingInflationBatch(employeeIds);
+
+    // Initialize 9-box grid
+    const cells = new Map<string, any>();
+    const performanceLevels: PerformanceLevel[] = ['High', 'Medium', 'Low'];
+    const potentialLevels: PotentialLevel[] = ['High', 'Medium', 'Low'];
+
+    for (const perf of performanceLevels) {
+      for (const pot of potentialLevels) {
+        cells.set(`${perf}-${pot}`, {
+          performance: perf,
+          potential: pot,
+          count: 0,
+          employees: [],
+          category: getCategoryName(perf, pot),
+        });
+      }
+    }
+
+    // Place employees into cells
+    for (const { emp, metrics } of employeesWithMetrics) {
+      // Get performance and potential scores (with fallback to defaults)
+      const perfScore = getPerformanceScore(metrics, 3);
+      const potScore = getPotentialScore(metrics, 2);
+
+      const perfLevel = getPerformanceLevel(perfScore);
+      const potLevel = getPotentialLevel(potScore);
+      const key = `${perfLevel}-${potLevel}`;
+
+      // Get rating inflation data for this employee
+      const inflation = inflationMap.get(emp.id);
+
+      const cell = cells.get(key);
+      if (cell) {
+        cell.count++;
+        cell.employees.push({
+          id: emp.id,
+          name: emp.fullName || `${emp.firstName || ''} ${emp.lastName || ''}`.trim(),
+          department: emp.department || 'Unknown',
+          aiPerformanceScore: perfScore,
+          aiPotentialScore: potScore,
+          managerRating: inflation?.managerRating || null,
+          ratingInflation: inflation?.inflation || null,
+        });
+      }
+    }
+
+    // Calculate average rating inflation across all employees
+    const avgRatingInflation = calculateAverageInflation(inflationMap);
+
+    // Calculate summary metrics
+    const highPerformers =
+      (cells.get('High-High')?.count || 0) +
+      (cells.get('High-Medium')?.count || 0) +
+      (cells.get('High-Low')?.count || 0);
+
+    const coreEmployees =
+      (cells.get('Medium-High')?.count || 0) +
+      (cells.get('Medium-Medium')?.count || 0) +
+      (cells.get('Medium-Low')?.count || 0);
+
+    const developmentNeeded =
+      (cells.get('Low-High')?.count || 0) +
+      (cells.get('Low-Medium')?.count || 0) +
+      (cells.get('Low-Low')?.count || 0);
+
     return {
-      grid: [],
+      grid: Array.from(cells.values()),
       summary: {
-        highPerformers: 0,
-        coreEmployees: 0,
-        developmentNeeded: 0,
-        totalAnalyzed: 0,
-        avgRatingInflation: 0,
+        highPerformers,
+        coreEmployees,
+        developmentNeeded,
+        totalAnalyzed: employeesWithMetrics.length,
+        avgRatingInflation: parseFloat(avgRatingInflation.toFixed(2)),
       },
-      message: 'No active employees found for analysis.',
     };
-  }
-
-  // Calculate rating inflation for all employees (batch operation)
-  const employeeIds = employeesWithMetrics.map((e) => e.emp.id);
-  const inflationMap = await calculateRatingInflationBatch(employeeIds);
-
-  // Initialize 9-box grid
-  const cells = new Map<string, any>();
-  const performanceLevels: PerformanceLevel[] = ['High', 'Medium', 'Low'];
-  const potentialLevels: PotentialLevel[] = ['High', 'Medium', 'Low'];
-
-  for (const perf of performanceLevels) {
-    for (const pot of potentialLevels) {
-      cells.set(`${perf}-${pot}`, {
-        performance: perf,
-        potential: pot,
-        count: 0,
-        employees: [],
-        category: getCategoryName(perf, pot),
-      });
+  } catch (error) {
+    // Log the error for debugging
+    console.error('Error in calculateNineBoxMetrics:', error);
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
     }
+    throw error;
   }
-
-  // Place employees into cells
-  for (const { emp, metrics } of employeesWithMetrics) {
-    // Get performance and potential scores (with fallback to defaults)
-    const perfScore = getPerformanceScore(metrics, 3);
-    const potScore = getPotentialScore(metrics, 2);
-
-    const perfLevel = getPerformanceLevel(perfScore);
-    const potLevel = getPotentialLevel(potScore);
-    const key = `${perfLevel}-${potLevel}`;
-
-    // Get rating inflation data for this employee
-    const inflation = inflationMap.get(emp.id);
-
-    const cell = cells.get(key);
-    if (cell) {
-      cell.count++;
-      cell.employees.push({
-        id: emp.id,
-        name: emp.fullName || `${emp.firstName || ''} ${emp.lastName || ''}`.trim(),
-        department: emp.department || 'Unknown',
-        aiPerformanceScore: perfScore,
-        aiPotentialScore: potScore,
-        managerRating: inflation?.managerRating || null,
-        ratingInflation: inflation?.inflation || null,
-      });
-    }
-  }
-
-  // Calculate average rating inflation across all employees
-  const avgRatingInflation = calculateAverageInflation(inflationMap);
-
-  // Calculate summary metrics
-  const highPerformers =
-    (cells.get('High-High')?.count || 0) +
-    (cells.get('High-Medium')?.count || 0) +
-    (cells.get('High-Low')?.count || 0);
-
-  const coreEmployees =
-    (cells.get('Medium-High')?.count || 0) +
-    (cells.get('Medium-Medium')?.count || 0) +
-    (cells.get('Medium-Low')?.count || 0);
-
-  const developmentNeeded =
-    (cells.get('Low-High')?.count || 0) +
-    (cells.get('Low-Medium')?.count || 0) +
-    (cells.get('Low-Low')?.count || 0);
-
-  return {
-    grid: Array.from(cells.values()),
-    summary: {
-      highPerformers,
-      coreEmployees,
-      developmentNeeded,
-      totalAnalyzed: employeesWithMetrics.length,
-      avgRatingInflation: parseFloat(avgRatingInflation.toFixed(2)),
-    },
-  };
 }
 
 /**
@@ -842,6 +873,13 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
+    // Log detailed error information for debugging
+    console.error('Error in /api/analytics:', error);
+    if (error instanceof Error) {
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
     return handleApiError(error, {
       endpoint: '/api/analytics',
       method: 'GET',

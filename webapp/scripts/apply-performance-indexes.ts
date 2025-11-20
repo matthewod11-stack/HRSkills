@@ -15,8 +15,9 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
+import { env } from '../env.mjs';
 
-const DB_DIR = process.env.DB_DIR || path.join(process.cwd(), '..', 'data');
+const DB_DIR = env.DB_DIR;
 const DB_PATH = path.join(DB_DIR, 'hrskills.db');
 
 if (!fs.existsSync(DB_PATH)) {

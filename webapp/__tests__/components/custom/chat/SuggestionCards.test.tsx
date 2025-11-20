@@ -1,4 +1,6 @@
+import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { vi } from 'vitest';
 import { SuggestionCards } from '@/components/custom/chat/SuggestionCards';
 
 /**
@@ -8,7 +10,7 @@ import { SuggestionCards } from '@/components/custom/chat/SuggestionCards';
  */
 
 // Mock Framer Motion
-jest.mock('framer-motion', () => ({
+vi.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, ...props }: any) => (
       <div className={className} {...props}>
@@ -24,10 +26,10 @@ jest.mock('framer-motion', () => ({
 }));
 
 describe('SuggestionCards', () => {
-  const mockOnSuggestionClick = jest.fn();
+  const mockOnSuggestionClick = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Rendering', () => {
@@ -379,7 +381,7 @@ describe('SuggestionCards', () => {
     });
 
     it('should maintain callback reference stability', () => {
-      const callback = jest.fn();
+      const callback = vi.fn();
 
       const { rerender } = render(<SuggestionCards onSuggestionClick={callback} />);
 

@@ -9,9 +9,9 @@ import { eq } from 'drizzle-orm';
  *
  * Get single employee by ID with metrics and reviews
  */
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const employeeId = params.id;
+    const employeeId = (await params).id;
 
     // Query employee with related data
     const [employee] = await db
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     });
   } catch (error: any) {
     return handleApiError(error, {
-      endpoint: `/api/employees/${params.id}`,
+      endpoint: `/api/employees/${(await params).id}`,
       method: 'GET',
     });
   }
@@ -63,9 +63,9 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
  *
  * Update single employee
  */
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const employeeId = params.id;
+    const employeeId = (await params).id;
     const updates = await request.json();
 
     // Check if employee exists
@@ -101,7 +101,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     });
   } catch (error: any) {
     return handleApiError(error, {
-      endpoint: `/api/employees/${params.id}`,
+      endpoint: `/api/employees/${(await params).id}`,
       method: 'PATCH',
     });
   }
@@ -112,9 +112,9 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
  *
  * Soft delete employee (set status to terminated)
  */
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const employeeId = params.id;
+    const employeeId = (await params).id;
 
     // Check if employee exists
     const [existingEmployee] = await db
@@ -151,7 +151,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     });
   } catch (error: any) {
     return handleApiError(error, {
-      endpoint: `/api/employees/${params.id}`,
+      endpoint: `/api/employees/${(await params).id}`,
       method: 'DELETE',
     });
   }

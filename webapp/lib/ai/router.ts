@@ -1,11 +1,13 @@
 /**
- * Phase 2: AI Provider Router
+ * Phase 2 (Updated Phase 5): AI Provider Router
  *
  * Intelligent routing between AI providers with:
- * - Automatic failover on errors/timeouts
+ * - Automatic failover on errors/timeouts (Anthropic → OpenAI)
  * - Health monitoring
  * - Cost optimization
  * - Usage tracking
+ *
+ * Phase 5 changes: Removed Gemini provider for simplified production operation
  */
 
 import {
@@ -21,7 +23,6 @@ import {
 } from './types';
 import { AnthropicAdapter } from './providers/anthropic-adapter';
 import { OpenAIAdapter } from './providers/openai-adapter';
-import { GeminiAdapter } from './providers/gemini-adapter';
 import { db } from '@/lib/db';
 import { aiUsage } from '@/db/schema';
 import { randomUUID } from 'crypto';
@@ -36,7 +37,7 @@ class AIProviderRouter {
     this.providers = new Map();
     this.healthCache = new Map();
 
-    // Initialize providers
+    // Initialize providers (Phase 5: Anthropic + OpenAI only)
     try {
       this.providers.set('anthropic', new AnthropicAdapter());
     } catch (error) {
@@ -49,12 +50,6 @@ class AIProviderRouter {
       console.warn('[AIRouter] OpenAI provider unavailable:', error);
     }
 
-    try {
-      this.providers.set('gemini', new GeminiAdapter());
-    } catch (error) {
-      console.warn('[AIRouter] Gemini provider unavailable:', error);
-    }
-
     // Default configuration
     this.config = {
       primary: 'anthropic',
@@ -65,8 +60,8 @@ class AIProviderRouter {
       timeout: 60000, // 60 seconds
     };
 
-    // Fallback chain: anthropic → openai → gemini
-    this.fallbackChain = ['anthropic', 'openai', 'gemini'];
+    // Fallback chain: anthropic → openai (simplified in Phase 5)
+    this.fallbackChain = ['anthropic', 'openai'];
   }
 
   /**
@@ -90,12 +85,10 @@ class AIProviderRouter {
     messages: ChatMessage[],
     options?: ChatOptions & { userId?: string; endpoint?: string }
   ): Promise<ChatResponse> {
-    // Determine starting provider
+    // Determine starting provider (Phase 5: Only Anthropic or OpenAI)
     let startProvider: AIProviderType = this.config.primary;
     if (options?.model?.startsWith('gpt')) {
       startProvider = 'openai';
-    } else if (options?.model?.startsWith('gemini')) {
-      startProvider = 'gemini';
     }
 
     // Build ordered list of providers to try

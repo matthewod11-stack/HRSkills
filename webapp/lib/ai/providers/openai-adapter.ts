@@ -6,6 +6,7 @@
  */
 
 import OpenAI from 'openai';
+import { env } from '@/env.mjs';
 import {
   AIProvider,
   AIProviderType,
@@ -32,7 +33,7 @@ export class OpenAIAdapter implements AIProvider {
   private isAvailable: boolean = true;
 
   constructor(apiKey?: string) {
-    const key = apiKey || process.env.OPENAI_API_KEY;
+    const key = apiKey || env.OPENAI_API_KEY;
 
     if (!key) {
       console.warn('[OpenAIAdapter] API key not configured - adapter unavailable');

@@ -1,4 +1,6 @@
+import { vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { vi } from 'vitest';
 import { MessageActions } from '@/components/custom/chat/MessageActions';
 import { Message } from '@/components/custom/chat/ChatContext';
 
@@ -10,9 +12,9 @@ import { Message } from '@/components/custom/chat/ChatContext';
  */
 
 describe('MessageActions', () => {
-  const mockOnCopy = jest.fn();
-  const mockOnToggleEdit = jest.fn();
-  const mockOnExportToGoogleDocs = jest.fn();
+  const mockOnCopy = vi.fn();
+  const mockOnToggleEdit = vi.fn();
+  const mockOnExportToGoogleDocs = vi.fn();
 
   const createMessage = (overrides?: Partial<Message>): Message => ({
     id: 1,
@@ -23,7 +25,7 @@ describe('MessageActions', () => {
   });
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Rendering behavior', () => {

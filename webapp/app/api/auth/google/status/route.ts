@@ -1,24 +1,27 @@
 import { NextResponse } from 'next/server';
-import { googleOAuthClient } from '../../../../../../integrations/google/oauth-client';
 
 export const runtime = 'nodejs';
 
 /**
  * GET /api/auth/google/status
  *
- * Check if user is authenticated with Google
+ * TEMPORARILY DISABLED: Google OAuth status check
+ *
+ * REASON: googleapis package has compatibility issues with Next.js 16 + Turbopack
+ * See app/api/templates/content/route.ts for details.
+ *
+ * TODO: Re-enable once googleapis is compatible with Next.js 16 + Turbopack
+ *
+ * Tracking issue: Phase 12 - Final Validation
  */
 export async function GET() {
-  try {
-    const isAuthenticated = googleOAuthClient.isAuthenticated();
-
-    return NextResponse.json({
-      authenticated: isAuthenticated,
-      message: isAuthenticated
-        ? 'Google Docs integration is connected'
-        : 'Please connect Google Docs to export documents',
-    });
-  } catch (error: any) {
-    return NextResponse.json({ authenticated: false, error: error.message }, { status: 500 });
-  }
+  return NextResponse.json(
+    {
+      authenticated: false,
+      error: 'Google OAuth integration temporarily disabled',
+      reason: 'googleapis compatibility issue with Next.js 16 + Turbopack',
+      status: 'pending_fix',
+    },
+    { status: 501 } // 501 Not Implemented
+  );
 }

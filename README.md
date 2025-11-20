@@ -44,7 +44,7 @@ This is a **chat-first HR automation platform** that eliminates traditional navi
 ### Core Infrastructure
 
 1. **25 Claude Skills** - Domain-specific HR expertise (job descriptions, performance reviews, onboarding, etc.)
-2. **Multi-Provider AI** - Automatic failover across Anthropic Claude, OpenAI GPT-4o, and Google Gemini (99.9% uptime)
+2. **Multi-Provider AI** - Automatic failover across Anthropic Claude and OpenAI GPT-4o (99.9% uptime)
 3. **SQLite + Drizzle ORM** - Production-ready persistence with sub-50ms analytics queries
 4. **Google Workspace Integration** - OAuth 2.0 for Drive, Docs, and Sheets
 5. **Intelligent Context Detection** - Server-side pattern matching with 70% confidence threshold
@@ -92,7 +92,7 @@ hrskills/
 │   ├── lib/           # Core libraries & business logic
 │   │   ├── ai/        # Multi-provider AI router (Phase 2)
 │   │   │   ├── router.ts              # Intelligent routing + failover
-│   │   │   └── providers/             # Anthropic, OpenAI, Gemini
+│   │   │   └── providers/             # Anthropic, OpenAI
 │   │   ├── db/        # SQLite database (Phase 2)
 │   │   │   └── index.ts               # Drizzle ORM client
 │   │   ├── analytics/ # SQL analytics + performance scoring
@@ -128,7 +128,7 @@ hrskills/
 
 - **Node.js** 20.x+ (check: `node --version`)
 - **npm** 10.x+ (check: `npm --version`)
-- **At least one AI provider API key** (Anthropic, OpenAI, or Gemini)
+- **At least one AI provider API key** (Anthropic or OpenAI)
 - **Google Cloud Console account** (optional, for Drive/Docs/Sheets integration)
 
 ### Installation (5 minutes)
@@ -145,7 +145,6 @@ hrskills/
    # Edit .env.local with at least one AI provider API key:
    # ANTHROPIC_API_KEY=sk-ant-... (primary)
    # OPENAI_API_KEY=sk-...       (fallback)
-   # GEMINI_API_KEY=...          (free tier)
    ```
 
 3. **Install dependencies**
@@ -208,8 +207,6 @@ Once running, test the chat-first experience with these examples:
      - Set `ANTHROPIC_API_KEY` in `.env.local`
    - **OpenAI** (Fallback): Get API key from https://platform.openai.com/
      - Set `OPENAI_API_KEY` in `.env.local`
-   - **Google Gemini** (Free tier): Get API key from https://ai.google.dev/
-     - Set `GEMINI_API_KEY` in `.env.local`
 
 2. **Google Workspace** (Required for Drive/Docs/Sheets integration)
    - Create OAuth 2.0 client at: https://console.cloud.google.com/
@@ -353,12 +350,11 @@ The platform was modernized with a focus on resilience, simplicity, and producti
 - **Cost:** $0 (embedded database)
 
 #### 2. Multi-Provider AI Abstraction ✅
-- **Automatic failover** across 3 providers: Anthropic Claude → OpenAI GPT-4o → Google Gemini 2.0 Flash
+- **Automatic failover** across 2 providers: Anthropic Claude → OpenAI GPT-4o
 - **Health monitoring** with 30-second cache and circuit breaker pattern
 - **Unified interface** for chat, analysis, and translation tasks
 - **Usage tracking** to database for cost monitoring
 - **Provider flexibility** configurable via Settings UI (admin only)
-- **Free tier option** with Gemini 2.0 Flash as fallback
 - **Cost:** Pay only for what you use with intelligent routing (99.9% uptime)
 
 #### 3. Google Workspace Integration ✅
@@ -455,7 +451,7 @@ npm run start    # Start production server
               ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                    Multi-Provider AI Router                 │
-│  Claude 3.5 Sonnet → GPT-4o → Gemini 2.0 Flash (99.9%)    │
+│  Claude 3.5 Sonnet → GPT-4o (99.9% uptime)                 │
 │  Health monitoring • Circuit breaker • Usage tracking       │
 └─────────────┬───────────────────────────────────────────────┘
               │
@@ -491,8 +487,7 @@ npm run start    # Start production server
 
 **AI Services (Multi-Provider):**
 - **Primary:** Anthropic Claude 3.5 Sonnet (best quality)
-- **Fallback 1:** OpenAI GPT-4o (reliable alternative)
-- **Fallback 2:** Google Gemini 2.0 Flash (free tier)
+- **Fallback:** OpenAI GPT-4o (reliable alternative)
 - Automatic failover with health monitoring
 - Usage tracking to database
 - Prompt caching for cost optimization
@@ -544,7 +539,7 @@ Want to contribute? Check out our comprehensive guides:
 
 **Phase 2 (November 2025)** - Platform Modernization
 - Migrated from JSON to SQLite with Drizzle ORM
-- Built multi-provider AI abstraction (Anthropic, OpenAI, Gemini)
+- Built multi-provider AI abstraction (Anthropic, OpenAI)
 - Removed Python dependencies (Node.js only)
 - Simplified from 5 Google AI packages to unified workspace client
 - Net -1,500 lines through architectural simplification

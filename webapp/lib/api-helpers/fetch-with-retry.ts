@@ -5,6 +5,8 @@
  * to handle transient network failures and improve reliability.
  */
 
+// NODE_ENV is available via process.env in both server and client contexts
+
 class NonRetryableError extends Error {}
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

@@ -24,7 +24,7 @@ export function useDebouncedCallback<T extends (...args: any[]) => void>(
   delay: number = 300
 ): ((...args: Parameters<T>) => void) & { cancel: () => void } {
   const callbackRef = useRef(callback);
-  const timerRef = useRef<number>();
+  const timerRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     callbackRef.current = callback;
@@ -40,7 +40,7 @@ export function useDebouncedCallback<T extends (...args: any[]) => void>(
       }, delay);
     },
     [delay]
-  );
+  ) as ((...args: Parameters<T>) => void) & { cancel: () => void };
 
   debouncedFn.cancel = () => {
     if (timerRef.current) {
@@ -56,7 +56,7 @@ export function useDebouncedCallback<T extends (...args: any[]) => void>(
  * Runs a side effect after the provided dependencies stop changing for the delay.
  */
 export function useDebounceEffect(effect: () => void | (() => void), deps: any[], delay = 300) {
-  const cleanupRef = useRef<void | (() => void)>();
+  const cleanupRef = useRef<void | (() => void) | undefined>(undefined);
 
   useEffect(() => {
     const handler = window.setTimeout(() => {

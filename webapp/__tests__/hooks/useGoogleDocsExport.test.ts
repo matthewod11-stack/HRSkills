@@ -1,35 +1,37 @@
+import { vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+import { vi } from 'vitest';
 import { useGoogleDocsExport } from '@/lib/hooks/useGoogleDocsExport';
 import type { Message } from '@/components/custom/chat/ChatContext';
 
 // Mock fetch
-global.fetch = jest.fn();
+global.fetch = vi.fn();
 
 // Mock window methods
-global.confirm = jest.fn();
-global.alert = jest.fn();
+global.confirm = vi.fn();
+global.alert = vi.fn();
 
 describe('useGoogleDocsExport', () => {
-  let mockGetAuthHeaders: jest.Mock;
-  let mockOnError: jest.Mock;
-  let consoleSpy: jest.SpyInstance;
+  let mockGetAuthHeaders: vi.Mock;
+  let mockOnError: vi.Mock;
+  let consoleSpy: vi.SpyInstance;
 
   beforeEach(() => {
-    mockGetAuthHeaders = jest.fn(() => ({ Authorization: 'Bearer test-token' }));
-    mockOnError = jest.fn();
-    consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+    mockGetAuthHeaders = vi.fn(() => ({ Authorization: 'Bearer test-token' }));
+    mockOnError = vi.fn();
+    consoleSpy = vi.spyOn(console, 'log').mockImplementation();
 
     // Reset fetch mock
-    (global.fetch as jest.Mock).mockClear();
-    (global.confirm as jest.Mock).mockClear();
-    (global.alert as jest.Mock).mockClear();
+    (global.fetch as vi.Mock).mockClear();
+    (global.confirm as vi.Mock).mockClear();
+    (global.alert as vi.Mock).mockClear();
 
     // Mock window.open
-    window.open = jest.fn();
+    window.open = vi.fn();
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     consoleSpy.mockRestore();
   });
 
@@ -245,7 +247,7 @@ describe('useGoogleDocsExport', () => {
         detectedWorkflow: 'hiring',
       };
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           editLink: 'https://docs.google.com/document/d/abc123/edit',
@@ -291,7 +293,7 @@ describe('useGoogleDocsExport', () => {
         timestamp: new Date('2025-11-14'),
       };
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           editLink: 'https://docs.google.com/document/d/abc123/edit',
@@ -303,7 +305,7 @@ describe('useGoogleDocsExport', () => {
         await result.current.exportToGoogleDocs(message);
       });
 
-      const fetchCall = (global.fetch as jest.Mock).mock.calls[0];
+      const fetchCall = (global.fetch as vi.Mock).mock.calls[0];
       const requestBody = JSON.parse(fetchCall[1].body);
 
       expect(requestBody).toMatchObject({
@@ -331,14 +333,14 @@ describe('useGoogleDocsExport', () => {
         timestamp: new Date(),
       };
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: false,
         json: async () => ({
           needsAuth: true,
         }),
       });
 
-      (global.confirm as jest.Mock).mockReturnValue(true);
+      (global.confirm as vi.Mock).mockReturnValue(true);
 
       await act(async () => {
         await result.current.exportToGoogleDocs(message);
@@ -367,14 +369,14 @@ describe('useGoogleDocsExport', () => {
         timestamp: new Date(),
       };
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: false,
         json: async () => ({
           needsAuth: true,
         }),
       });
 
-      (global.confirm as jest.Mock).mockReturnValue(false);
+      (global.confirm as vi.Mock).mockReturnValue(false);
 
       await act(async () => {
         await result.current.exportToGoogleDocs(message);
@@ -400,7 +402,7 @@ describe('useGoogleDocsExport', () => {
         timestamp: new Date(),
       };
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: false,
         json: async () => ({
           error: 'Permission denied',
@@ -418,7 +420,7 @@ describe('useGoogleDocsExport', () => {
     });
 
     it('should handle export errors without custom error handler', async () => {
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
 
       const { result } = renderHook(() =>
         useGoogleDocsExport({
@@ -433,7 +435,7 @@ describe('useGoogleDocsExport', () => {
         timestamp: new Date(),
       };
 
-      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
+      (global.fetch as vi.Mock).mockRejectedValueOnce(new Error('Network error'));
 
       await act(async () => {
         await result.current.exportToGoogleDocs(message);
@@ -463,7 +465,7 @@ describe('useGoogleDocsExport', () => {
         timestamp: new Date(),
       };
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: false,
         json: async () => ({
           message: 'Document creation failed',
@@ -497,7 +499,7 @@ describe('useGoogleDocsExport', () => {
         // No timestamp
       };
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           editLink: 'https://docs.google.com/document/d/abc123/edit',
@@ -509,7 +511,7 @@ describe('useGoogleDocsExport', () => {
         await result.current.exportToGoogleDocs(message);
       });
 
-      const fetchCall = (global.fetch as jest.Mock).mock.calls[0];
+      const fetchCall = (global.fetch as vi.Mock).mock.calls[0];
       const requestBody = JSON.parse(fetchCall[1].body);
 
       // Should have a title and metadata.date (using current date)
@@ -535,7 +537,7 @@ describe('useGoogleDocsExport', () => {
         detectedWorkflow: 'performance',
       };
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           editLink: 'https://docs.google.com/document/d/perf123/edit',
@@ -547,7 +549,7 @@ describe('useGoogleDocsExport', () => {
         await result.current.exportToGoogleDocs(message);
       });
 
-      const fetchCall = (global.fetch as jest.Mock).mock.calls[0];
+      const fetchCall = (global.fetch as vi.Mock).mock.calls[0];
       const requestBody = JSON.parse(fetchCall[1].body);
 
       expect(requestBody.documentType).toBe('Performance Document');
@@ -573,7 +575,7 @@ describe('useGoogleDocsExport', () => {
         timestamp: new Date('2025-11-14'),
       };
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           editLink: 'https://docs.google.com/document/d/ref123/edit',
@@ -585,7 +587,7 @@ describe('useGoogleDocsExport', () => {
         await result.current.exportToGoogleDocs(message);
       });
 
-      const fetchCall = (global.fetch as jest.Mock).mock.calls[0];
+      const fetchCall = (global.fetch as vi.Mock).mock.calls[0];
       const requestBody = JSON.parse(fetchCall[1].body);
 
       expect(requestBody.documentType).toBe('Reference Letter');

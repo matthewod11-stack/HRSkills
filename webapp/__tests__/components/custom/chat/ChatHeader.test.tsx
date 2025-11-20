@@ -1,4 +1,6 @@
+import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { vi } from 'vitest';
 import { ChatHeader } from '@/components/custom/chat/ChatHeader';
 
 /**
@@ -8,7 +10,7 @@ import { ChatHeader } from '@/components/custom/chat/ChatHeader';
  */
 
 // Mock Framer Motion
-jest.mock('framer-motion', () => ({
+vi.mock('framer-motion', () => ({
   motion: {
     button: ({ children, onClick, className, ...props }: any) => (
       <button onClick={onClick} className={className} {...props}>
@@ -19,10 +21,10 @@ jest.mock('framer-motion', () => ({
 }));
 
 describe('ChatHeader', () => {
-  const mockOnReset = jest.fn();
+  const mockOnReset = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Rendering', () => {
@@ -260,7 +262,8 @@ describe('ChatHeader', () => {
 
       render(<ChatHeader conversationId={idWithNewline} onReset={mockOnReset} />);
 
-      expect(screen.getByText(idWithNewline)).toBeInTheDocument();
+      // Newlines should be normalized to spaces for display
+      expect(screen.getByText('conv_123 abc')).toBeInTheDocument();
     });
   });
 

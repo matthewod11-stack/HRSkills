@@ -118,8 +118,7 @@ export async function detectFlightRisks(options: {
     LIMIT ${limit}
   `);
 
-  const result = await db.execute(query);
-  const rows = result.rows as any[];
+  const rows = (db as any).all(query) as any[];
 
   // Calculate tenure and format employees
   const employees: FlightRiskEmployee[] = rows.map((row) => {
@@ -170,10 +169,10 @@ export async function detectFlightRisks(options: {
   });
 
   // Get total active employees for context
-  const totalResult = await db.execute(
+  const totalResult = (db as any).all(
     sql.raw("SELECT COUNT(*) as count FROM employees WHERE status = 'active'")
   );
-  const totalEmployees = (totalResult.rows[0] as any).count;
+  const totalEmployees = totalResult[0].count;
 
   return {
     totalEmployees,

@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
-import useSWR from 'swr';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { MasterEmployeeRecord } from '@/lib/types/master-employee';
+import { queryKeys } from '@/lib/query-keys';
 
 type EmployeesResponse = {
   employees: MasterEmployeeRecord[];
@@ -27,20 +28,20 @@ async function fetchEmployees(url: string): Promise<EmployeesResponse> {
 }
 
 export function useEmployeesData(options?: UseEmployeesOptions) {
+  const queryClient = useQueryClient();
   const shouldFetch = options?.enabled ?? true;
 
-  const { data, error, isLoading, isValidating, mutate } = useSWR<EmployeesResponse>(
-    shouldFetch ? '/api/employees' : null,
-    fetchEmployees,
-    {
-      revalidateOnFocus: false,
-      keepPreviousData: true,
-    }
-  );
+  const { data, error, isLoading, isFetching, refetch } = useQuery({
+    queryKey: queryKeys.employees.all,
+    queryFn: () => fetchEmployees('/api/employees'),
+    enabled: shouldFetch,
+    refetchOnWindowFocus: false,
+    placeholderData: (previousData) => previousData, // keepPreviousData equivalent
+  });
 
   const refresh = useCallback(async () => {
-    await mutate();
-  }, [mutate]);
+    await refetch();
+  }, [refetch]);
 
   const addEmployee = useCallback(
     async (
@@ -65,7 +66,8 @@ export function useEmployeesData(options?: UseEmployeesOptions) {
           return { success: false, error: errorMessage };
         }
 
-        await mutate();
+        // Invalidate and refetch employees query
+        await queryClient.invalidateQueries({ queryKey: queryKeys.employees.all });
         return { success: true };
       } catch (error) {
         return {
@@ -74,7 +76,7 @@ export function useEmployeesData(options?: UseEmployeesOptions) {
         };
       }
     },
-    [mutate]
+    [queryClient]
   );
 
   const bulkUpdateEmployees = useCallback(
@@ -100,7 +102,8 @@ export function useEmployeesData(options?: UseEmployeesOptions) {
           return { success: false, updated: 0, error: errorMessage };
         }
 
-        await mutate();
+        // Invalidate and refetch employees query
+        await queryClient.invalidateQueries({ queryKey: queryKeys.employees.all });
         return {
           success: true,
           updated: (result as { updated?: number }).updated ?? updates.length,
@@ -113,7 +116,7 @@ export function useEmployeesData(options?: UseEmployeesOptions) {
         };
       }
     },
-    [mutate]
+    [queryClient]
   );
 
   const bulkDeleteEmployees = useCallback(
@@ -137,7 +140,8 @@ export function useEmployeesData(options?: UseEmployeesOptions) {
           return { success: false, deleted: 0, error: errorMessage };
         }
 
-        await mutate();
+        // Invalidate and refetch employees query
+        await queryClient.invalidateQueries({ queryKey: queryKeys.employees.all });
         return {
           success: true,
           deleted: (result as { deleted?: number }).deleted ?? ids.length,
@@ -150,13 +154,13 @@ export function useEmployeesData(options?: UseEmployeesOptions) {
         };
       }
     },
-    [mutate]
+    [queryClient]
   );
 
   return {
     employees: data?.employees ?? [],
     isLoading: shouldFetch ? Boolean(isLoading ?? (!data && !error)) : false,
-    isValidating,
+    isValidating: isFetching, // SWR's isValidating is React Query's isFetching
     error,
     refresh,
     addEmployee,

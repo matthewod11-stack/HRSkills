@@ -18,7 +18,7 @@ export interface UsePIIDetectionOptions {
   /**
    * Reference to input field (for auto-focus on edit)
    */
-  inputRef?: RefObject<HTMLInputElement>;
+  inputRef?: RefObject<HTMLInputElement | null>;
 
   /**
    * Callback when user chooses "Send Anyway" option

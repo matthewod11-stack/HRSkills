@@ -1,62 +1,18 @@
 /** @type {import('next').NextConfig} */
 
+/**
+ * NOTE: This file runs at BUILD TIME, before env validation.
+ * Keep direct process.env access here - env.mjs validates at RUNTIME.
+ * Build-time variables: NODE_ENV, CI, ANALYZE, npm_package_version
+ * Runtime validation happens when the app starts, not during build.
+ */
+
 // Sentry configuration (wraps Next.js config)
 const { withSentryConfig } = require('@sentry/nextjs');
 
 // Bundle analyzer (run with ANALYZE=true npm run build)
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
-});
-
-// PWA configuration (disabled in development for faster builds)
-const withPWA = require('next-pwa')({
-  dest: 'public',
-  register: true,
-  skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development',
-  runtimeCaching: [
-    {
-      // API calls - Network-first strategy with fallback
-      urlPattern: /^https:\/\/api\.anthropic\.com\/.*/i,
-      handler: 'NetworkFirst',
-      options: {
-        cacheName: 'api-cache',
-        networkTimeoutSeconds: 10,
-        expiration: {
-          maxEntries: 50,
-          maxAgeSeconds: 5 * 60, // 5 minutes
-        },
-        cacheableResponse: {
-          statuses: [0, 200],
-        },
-      },
-    },
-    {
-      // Static assets - Cache-first strategy
-      urlPattern: /^https?:\/\/.*\.(png|jpg|jpeg|svg|gif|webp|avif|ico|woff|woff2)$/i,
-      handler: 'CacheFirst',
-      options: {
-        cacheName: 'static-assets',
-        expiration: {
-          maxEntries: 100,
-          maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
-        },
-      },
-    },
-    {
-      // Pages - Network-first strategy
-      urlPattern: /^https?:\/\/.*/i,
-      handler: 'NetworkFirst',
-      options: {
-        cacheName: 'pages-cache',
-        networkTimeoutSeconds: 5,
-        expiration: {
-          maxEntries: 50,
-          maxAgeSeconds: 24 * 60 * 60, // 24 hours
-        },
-      },
-    },
-  ],
 });
 
 const nextConfig = {
@@ -94,8 +50,7 @@ const nextConfig = {
   // ============================================
   // Performance Optimization
   // ============================================
-  // Enable SWC minification (faster than Terser)
-  swcMinify: true,
+  // SWC minification is now enabled by default in Next.js 16 (removed swcMinify option)
 
   // Optimize images
   images: {
@@ -222,6 +177,13 @@ const nextConfig = {
     // Optimize package imports
     optimizePackageImports: ['@radix-ui/react-icons', 'lucide-react'],
   },
+
+  // ============================================
+  // Turbopack Configuration
+  // ============================================
+  // Turbopack is enabled by default in Next.js 16
+  // Empty config to silence webpack compatibility warning
+  turbopack: {},
 };
 
 // Sentry configuration options (merged with wizard settings)
@@ -257,7 +219,7 @@ const sentryWebpackPluginOptions = {
 };
 
 // Export with Sentry wrapper (only wraps if DSN is configured)
-const config = withBundleAnalyzer(withPWA(nextConfig));
+const config = withBundleAnalyzer(nextConfig);
 
 // Only wrap with Sentry if DSN is configured
 if (process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN) {

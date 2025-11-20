@@ -97,28 +97,19 @@ export async function calculateRatingInflationBatch(
   }
 
   // Get all self reviews for these employees
+  // Note: Drizzle doesn't have a great 'IN' clause helper for arrays
+  // We'll filter in memory for simplicity
   const selfReviews = await db
     .select()
     .from(performanceReviews)
-    .where(
-      and(
-        eq(performanceReviews.reviewType, 'self')
-        // Note: Drizzle doesn't have a great 'IN' clause helper for arrays
-        // We'll filter in memory for simplicity
-      )
-    )
+    .where(eq(performanceReviews.reviewType, 'self'))
     .orderBy(desc(performanceReviews.reviewDate));
 
   // Get all manager reviews for these employees
   const managerReviews = await db
     .select()
     .from(performanceReviews)
-    .where(
-      and(
-        eq(performanceReviews.reviewType, 'manager')
-        // Same note as above
-      )
-    )
+    .where(eq(performanceReviews.reviewType, 'manager'))
     .orderBy(desc(performanceReviews.reviewDate));
 
   // Build map of employeeId → latest self rating

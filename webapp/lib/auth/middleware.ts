@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify, SignJWT } from 'jose';
+import { env } from '@/env.mjs';
 import { AuthUser, AuthResult } from './types';
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'CHANGE_THIS_IN_PRODUCTION_MIN_32_CHARS'
-);
+const JWT_SECRET = new TextEncoder().encode(env.JWT_SECRET);
 
 const JWT_ALGORITHM = 'HS256';
 const TOKEN_EXPIRY = '8h';
@@ -48,7 +47,7 @@ export async function generateToken(user: Omit<AuthUser, 'iat' | 'exp'>): Promis
  */
 export async function requireAuth(request: NextRequest): Promise<AuthResult> {
   // DEVELOPMENT: Auto-authenticate as admin
-  if (process.env.NODE_ENV === 'development') {
+  if (env.NODE_ENV === 'development') {
     return {
       success: true,
       user: {

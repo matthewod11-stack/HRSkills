@@ -3,6 +3,7 @@ import Database from 'better-sqlite3';
 import * as schema from '../../db/schema';
 import path from 'path';
 import fs from 'fs';
+import { env } from '@/env.mjs';
 
 /**
  * Phase 2 Database Client
@@ -16,7 +17,7 @@ import fs from 'fs';
  */
 
 // Database file location
-const DB_DIR = process.env.DB_DIR || path.join(process.cwd(), '..', 'data');
+const DB_DIR = env.DB_DIR;
 const DB_PATH = path.join(DB_DIR, 'hrskills.db');
 
 // Ensure data directory exists
@@ -26,7 +27,7 @@ if (!fs.existsSync(DB_DIR)) {
 
 // Singleton connection
 let dbInstance: ReturnType<typeof drizzle> | null = null;
-let sqliteInstance: Database.Database | null = null;
+let sqliteInstance: InstanceType<typeof Database> | null = null;
 
 /**
  * Get database instance (singleton pattern)
@@ -60,7 +61,7 @@ export function getDatabase() {
 /**
  * Initialize database schema (create tables and indexes)
  */
-function initializeSchema(sqlite: Database.Database) {
+function initializeSchema(sqlite: InstanceType<typeof Database>) {
   // Check if tables exist
   const tables = sqlite
     .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='employees'")
@@ -316,7 +317,7 @@ export function closeDatabase() {
 /**
  * Run database migrations (for schema changes)
  */
-function runMigrations(sqlite: Database.Database) {
+function runMigrations(sqlite: InstanceType<typeof Database>) {
   try {
     console.log('[DB] Running migrations...');
     
@@ -424,7 +425,7 @@ export const db = getDatabase();
 /**
  * Ensure ai_quota_usage aligns with current schema (handles pre-existing databases).
  */
-function ensureQuotaSchemaAlignment(sqlite: Database.Database) {
+function ensureQuotaSchemaAlignment(sqlite: InstanceType<typeof Database>) {
   try {
     const pragma = sqlite.prepare(`PRAGMA table_info('ai_quota_usage')`).all() as Array<{
       name: string;
@@ -480,7 +481,7 @@ function ensureQuotaSchemaAlignment(sqlite: Database.Database) {
  * - Location analytics: Faster geo queries
  * - Performance ratings: 9-box grid queries
  */
-function applyPerformanceIndexes(sqlite: Database.Database) {
+function applyPerformanceIndexes(sqlite: InstanceType<typeof Database>) {
   try {
     console.log('[DB] Applying performance optimization indexes...');
 

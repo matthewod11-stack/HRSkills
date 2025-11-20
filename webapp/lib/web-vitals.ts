@@ -12,6 +12,7 @@
  */
 
 import { onCLS, onLCP, onINP, onTTFB, type Metric } from 'web-vitals';
+// NODE_ENV is available via process.env in both server and client contexts
 
 /**
  * Web Vitals metric thresholds
