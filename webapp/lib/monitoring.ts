@@ -12,6 +12,8 @@
  * - TTFB (Time to First Byte) - Server response time
  */
 
+// NODE_ENV is available via process.env in both server and client contexts
+
 export interface Metric {
   name: 'LCP' | 'FID' | 'CLS' | 'FCP' | 'TTFB';
   value: number;
@@ -110,7 +112,7 @@ async function sendError(error: ErrorLog): Promise<void> {
  * Measures loading performance
  */
 export function trackLCP(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined' || typeof PerformanceObserver === 'undefined') return;
 
   const observer = new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) {
@@ -139,7 +141,7 @@ export function trackLCP(): void {
  * Measures interactivity
  */
 export function trackFID(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined' || typeof PerformanceObserver === 'undefined') return;
 
   const observer = new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) {
@@ -166,7 +168,7 @@ export function trackFID(): void {
  * Measures visual stability
  */
 export function trackCLS(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined' || typeof PerformanceObserver === 'undefined') return;
 
   let clsValue = 0;
   const observer = new PerformanceObserver((list) => {
@@ -210,7 +212,7 @@ export function trackCLS(): void {
  * Measures initial rendering
  */
 export function trackFCP(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined' || typeof PerformanceObserver === 'undefined') return;
 
   const observer = new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) {
@@ -237,7 +239,7 @@ export function trackFCP(): void {
  * Measures server response time
  */
 export function trackTTFB(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined' || typeof PerformanceObserver === 'undefined') return;
 
   const observer = new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) {

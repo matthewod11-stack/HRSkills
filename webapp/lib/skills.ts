@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import { loadSkillTemplatesFromDrive } from './templates-drive';
+// TODO: Implement Drive templates integration
+// import { loadSkillTemplatesFromDrive } from './templates-drive';
 
 export interface SkillContext {
   name: string;
@@ -73,20 +74,27 @@ export async function loadSkillWithDriveTemplates(skillName: string): Promise<Sk
     const skillFilePath = path.join(skillPath, 'SKILL.md');
     const skillContent = fs.readFileSync(skillFilePath, 'utf-8');
 
-    // Load reference templates from Google Drive
-    const driveTemplates = await loadSkillTemplatesFromDrive(skillName);
+    // TODO: Load reference templates from Google Drive
+    // const driveTemplates = await loadSkillTemplatesFromDrive(skillName);
+    // if (!driveTemplates) {
+    //   console.warn(`No Drive templates found for ${skillName}, falling back to filesystem`);
+    //   return loadSkill(skillName);
+    // }
+    // return {
+    //   name: skillName,
+    //   description: extractDescription(skillContent),
+    //   skillContent,
+    //   references: driveTemplates.templates,
+    //   useDriveTemplates: true,
+    // };
 
-    if (!driveTemplates) {
-      console.warn(`No Drive templates found for ${skillName}, falling back to filesystem`);
-      return loadSkill(skillName);
-    }
-
+    // For now, use filesystem-based loading
     return {
       name: skillName,
       description: extractDescription(skillContent),
       skillContent,
-      references: driveTemplates.templates,
-      useDriveTemplates: true,
+      references: {},
+      useDriveTemplates: false,
     };
   } catch (error) {
     console.error(`Error loading skill ${skillName} with Drive templates:`, error);

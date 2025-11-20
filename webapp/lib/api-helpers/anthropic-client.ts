@@ -10,8 +10,9 @@
 import Anthropic from '@anthropic-ai/sdk';
 import pRetry, { AbortError } from 'p-retry';
 import CircuitBreaker from 'opossum';
+import { env } from '@/env.mjs';
 
-const apiKey = process.env.ANTHROPIC_API_KEY;
+const apiKey = env.ANTHROPIC_API_KEY;
 if (!apiKey) {
   throw new Error('ANTHROPIC_API_KEY environment variable is required');
 }
@@ -67,7 +68,7 @@ async function createMessageWithRetry(
       return response as Anthropic.Message;
     } catch (error: any) {
       // Log error for debugging
-      if (process.env.NODE_ENV === 'development') {
+      if (env.NODE_ENV === 'development') {
         console.error('Anthropic API error:', {
           status: error.status,
           message: error.message,
@@ -91,7 +92,7 @@ async function createMessageWithRetry(
     minTimeout: 1000,
     maxTimeout: 8000,
     onFailedAttempt: (error) => {
-      if (process.env.NODE_ENV === 'development') {
+      if (env.NODE_ENV === 'development') {
         console.warn(`Retry attempt ${error.attemptNumber}/3 for Anthropic API`);
       }
     },

@@ -4,39 +4,49 @@
  * Tests intelligent route prefetching functionality.
  */
 
+import { vi } from 'vitest';
 import { render } from '@testing-library/react';
-import { SmartPrefetch } from '@/components/custom/SmartPrefetch';
 
-// Mock usePathname hook
-jest.mock('next/navigation', () => ({
-  usePathname: jest.fn(() => '/'),
+// Use vi.hoisted() to create mocks that can be referenced in vi.mock()
+const { usePathnameMock } = vi.hoisted(() => ({
+  usePathnameMock: vi.fn(() => '/'),
 }));
 
-describe('SmartPrefetch Component', () => {
-  let usePathnameMock: jest.Mock;
+// Mock env module before importing component
+vi.mock('@/env.mjs', () => ({
+  env: {
+    NODE_ENV: 'production',
+  },
+}));
 
+// Mock usePathname hook
+vi.mock('next/navigation', () => ({
+  usePathname: usePathnameMock,
+}));
+
+import { SmartPrefetch } from '@/components/custom/SmartPrefetch';
+
+describe('SmartPrefetch Component', () => {
   beforeEach(() => {
-    // Get mocked usePathname
-    const { usePathname } = require('next/navigation');
-    usePathnameMock = usePathname as jest.Mock;
+    // Reset the mock before each test
+    usePathnameMock.mockReturnValue('/');
 
     // Mock requestIdleCallback
-    (global as any).requestIdleCallback = jest.fn((cb) => {
+    (global as any).requestIdleCallback = vi.fn((cb) => {
       cb();
       return 1;
     });
 
     // Mock setTimeout
-    jest.useFakeTimers();
+    vi.useFakeTimers();
 
-    // Set to production mode
-    process.env.NODE_ENV = 'production';
+    // env.NODE_ENV is already set to 'production' by the vi.mock above
   });
 
   afterEach(() => {
-    jest.clearAllTimers();
-    jest.useRealTimers();
-    jest.clearAllMocks();
+    vi.clearAllTimers();
+    vi.useRealTimers();
+    vi.clearAllMocks();
   });
 
   it('should render without crashing', () => {
@@ -55,26 +65,32 @@ describe('SmartPrefetch Component', () => {
     render(<SmartPrefetch />);
 
     // Fast-forward timers
-    jest.advanceTimersByTime(1000);
+    vi.advanceTimersByTime(1000);
 
     // Check if link elements would be created (in production)
     // In test environment, we just verify no errors occur
     expect(true).toBe(true);
   });
 
-  it('should not prefetch in development mode', () => {
-    process.env.NODE_ENV = 'development';
+  it('should not prefetch in development mode', async () => {
+    // Override env mock for this test
+    const { env } = await import('@/env.mjs');
+    vi.mocked(env).NODE_ENV = 'development' as any;
+
     usePathnameMock.mockReturnValue('/');
 
-    const querySelectorSpy = jest.spyOn(document, 'querySelector');
+    const querySelectorSpy = vi.spyOn(document, 'querySelector');
 
     render(<SmartPrefetch />);
-    jest.advanceTimersByTime(2000);
+    vi.advanceTimersByTime(2000);
 
     // Should not attempt to create prefetch links in development
     expect(querySelectorSpy).not.toHaveBeenCalled();
 
     querySelectorSpy.mockRestore();
+
+    // Reset for other tests
+    vi.mocked(env).NODE_ENV = 'production' as any;
   });
 
   it('should handle different pathnames', () => {
@@ -86,7 +102,7 @@ describe('SmartPrefetch Component', () => {
       const { unmount } = render(<SmartPrefetch />);
 
       expect(() => {
-        jest.advanceTimersByTime(2000);
+        vi.advanceTimersByTime(2000);
       }).not.toThrow();
 
       unmount();
@@ -96,7 +112,7 @@ describe('SmartPrefetch Component', () => {
   it('should cleanup timers on unmount', () => {
     const { unmount } = render(<SmartPrefetch />);
 
-    const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+    const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
 
     unmount();
 
@@ -110,7 +126,7 @@ describe('SmartPrefetch Component', () => {
 
     const { container } = render(<SmartPrefetch />);
 
-    jest.advanceTimersByTime(2000);
+    vi.advanceTimersByTime(2000);
 
     expect(container).toBeEmptyDOMElement();
   });

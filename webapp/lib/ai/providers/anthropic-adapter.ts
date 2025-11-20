@@ -7,7 +7,8 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import CircuitBreaker from 'opossum';
-import pRetry from 'p-retry';
+import pRetry, { AbortError } from 'p-retry';
+import { env } from '@/env.mjs';
 import {
   AIProvider,
   AIProviderType,
@@ -34,7 +35,7 @@ export class AnthropicAdapter implements AIProvider {
   private healthStatus: ProviderHealth | null = null;
 
   constructor(apiKey?: string) {
-    const key = apiKey || process.env.ANTHROPIC_API_KEY;
+    const key = apiKey || env.ANTHROPIC_API_KEY;
 
     if (!key) {
       throw new Error('Anthropic API key not configured');
@@ -90,7 +91,7 @@ export class AnthropicAdapter implements AIProvider {
         temperature,
         system: systemPrompt,
         messages: anthropicMessages,
-      });
+      }) as Anthropic.Messages.Message;
 
       const cost = this.calculateCost(
         model,
@@ -228,7 +229,7 @@ export class AnthropicAdapter implements AIProvider {
             throw error; // Will be retried by p-retry
           }
           // Don't retry on client errors
-          throw new pRetry.AbortError(error.message);
+          throw new AbortError(error.message);
         }
       },
       {

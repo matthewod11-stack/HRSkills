@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { handleApiError } from '@/lib/api-helpers';
+import { env } from '@/env.mjs';
 
 /**
  * Health Check Endpoint
@@ -55,8 +56,8 @@ export async function GET() {
       status: allHealthy ? 'healthy' : 'unhealthy',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
-      version: process.env.npm_package_version || '0.1.0',
-      environment: process.env.NODE_ENV || 'development',
+      version: process.env.npm_package_version || '0.1.0', // Build-time variable, keep direct access
+      environment: env.NODE_ENV,
       checks,
     };
 

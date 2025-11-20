@@ -195,7 +195,7 @@ test.describe('Performance Tests', () => {
       await page.goto('http://localhost:3000');
 
       // Check network requests for separate chunk files
-      const requests = [];
+      const requests: string[] = [];
       page.on('request', request => {
         if (request.url().includes('.js')) {
           requests.push(request.url());
@@ -214,7 +214,7 @@ test.describe('Performance Tests', () => {
 
   test.describe('Resource Loading', () => {
     test('should not block on heavy resources', async ({ page }) => {
-      const blockedTime = [];
+      const blockedTime: { url: string; time: number }[] = [];
       let navigationStart = 0;
 
       page.on('requestfinished', async request => {

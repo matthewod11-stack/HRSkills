@@ -122,9 +122,20 @@ export async function scanForPii(
     // Map findings to simplified format
     const simplifiedFindings = findings.map((finding: IFinding) => ({
       infoType: finding.infoType?.name || 'UNKNOWN',
-      likelihood: finding.likelihood || 'UNKNOWN',
-      location: finding.location,
-      quote: config.includeQuote ? finding.quote : undefined,
+      likelihood: String(finding.likelihood || 'UNKNOWN'),
+      location: finding.location?.byteRange
+        ? {
+            byteRange: {
+              start: finding.location.byteRange.start !== null && finding.location.byteRange.start !== undefined
+                ? Number(finding.location.byteRange.start)
+                : undefined,
+              end: finding.location.byteRange.end !== null && finding.location.byteRange.end !== undefined
+                ? Number(finding.location.byteRange.end)
+                : undefined,
+            },
+          }
+        : undefined,
+      quote: config.includeQuote && finding.quote ? String(finding.quote) : undefined,
     }));
 
     // Calculate risk level based on findings

@@ -20,8 +20,9 @@ import Link from 'next/link';
 import { DataFile, FilePreview, FILE_TYPE_LABELS } from '@/lib/types/data-sources';
 import { SmartFileUpload } from './SmartFileUpload';
 import { useAuth } from '@/lib/auth/auth-context';
-import useSWR from 'swr';
+import { useQuery } from '@tanstack/react-query';
 import { getDaysSinceFirstRun } from '@/lib/first-run-client';
+import { queryKeys } from '@/lib/query-keys';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -34,7 +35,10 @@ export function DataSourceManager() {
   const [hasUploadedData, setHasUploadedData] = useState(false);
 
   // Fetch first-run status
-  const { data: firstRunData } = useSWR('/api/setup/init', fetcher);
+  const { data: firstRunData } = useQuery({
+    queryKey: queryKeys.setup.init,
+    queryFn: () => fetcher('/api/setup/init'),
+  });
 
   useEffect(() => {
     loadFiles();

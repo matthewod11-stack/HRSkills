@@ -39,10 +39,11 @@ export async function getEmployeesWithLatestMetrics(
   whereClause?: SQL
 ): Promise<EmployeeWithMetrics[]> {
   // Step 1: Get all employees matching the where clause
-  const employeeList = await db
-    .select()
-    .from(employees)
-    .where(whereClause);
+  let query = db.select().from(employees);
+  if (whereClause) {
+    query = query.where(whereClause);
+  }
+  const employeeList = await query;
 
   if (employeeList.length === 0) {
     return [];

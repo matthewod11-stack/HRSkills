@@ -1,7 +1,7 @@
 /**
- * @jest-environment jsdom
  */
 
+import { vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MetricCard } from '@/components/custom/MetricCard';
 import { QuickActionCard } from '@/components/custom/QuickActionCard';
@@ -12,7 +12,7 @@ import { TrendingUp, Users } from 'lucide-react';
 describe('Component Memoization Tests', () => {
   describe('MetricCard Memoization', () => {
     it('should not re-render when unrelated props change', () => {
-      const renderSpy = jest.fn();
+      const renderSpy = vi.fn();
       const MetricCardWithSpy = () => {
         renderSpy();
         return (
@@ -180,7 +180,7 @@ describe('Component Memoization Tests', () => {
     });
 
     it('should handle onClick events', () => {
-      const handleClick = jest.fn();
+      const handleClick = vi.fn();
       render(<Button onClick={handleClick}>Click Me</Button>);
 
       const button = screen.getByRole('button');

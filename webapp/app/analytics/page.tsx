@@ -17,42 +17,12 @@ import {
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import dynamic from 'next/dynamic';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { logComponentError } from '@/lib/errorLogging';
 import { useAuth } from '@/lib/auth/auth-context';
-
-// Lazy load Chart.js components with configuration
-const Bar = dynamic(
-  () => import('@/lib/chartjs-config').then(() => import('react-chartjs-2').then((mod) => mod.Bar)),
-  {
-    ssr: false,
-    loading: () => <div className="w-full h-[400px] bg-white/5 rounded-lg animate-pulse" />,
-  }
-);
-const Line = dynamic(
-  () =>
-    import('@/lib/chartjs-config').then(() => import('react-chartjs-2').then((mod) => mod.Line)),
-  {
-    ssr: false,
-    loading: () => <div className="w-full h-[400px] bg-white/5 rounded-lg animate-pulse" />,
-  }
-);
-const Pie = dynamic(
-  () => import('@/lib/chartjs-config').then(() => import('react-chartjs-2').then((mod) => mod.Pie)),
-  {
-    ssr: false,
-    loading: () => <div className="w-full h-[400px] bg-white/5 rounded-lg animate-pulse" />,
-  }
-);
-const Scatter = dynamic(
-  () =>
-    import('@/lib/chartjs-config').then(() => import('react-chartjs-2').then((mod) => mod.Scatter)),
-  {
-    ssr: false,
-    loading: () => <div className="w-full h-[400px] bg-white/5 rounded-lg animate-pulse" />,
-  }
-);
+import { SimpleBarChart, SimpleLineChart, SimplePieChart } from '@/components/charts/RechartsWrappers';
+import { chartJsToRecharts } from '@/lib/charts/recharts-helpers';
+import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface Message {
   id: number;
@@ -189,18 +159,51 @@ export default function AnalyticsPage() {
   };
 
   const renderChart = (config: ChartConfig) => {
-    const ChartComponent = {
-      bar: Bar,
-      line: Line,
-      pie: Pie,
-      scatter: Scatter,
-    }[config.type];
-
-    if (!ChartComponent) return null;
+    // Transform Chart.js data to Recharts format
+    const rechartsData = chartJsToRecharts(config.data);
+    const dataKey = config.data?.datasets?.[0]?.label || 'value';
 
     return (
       <div className="w-full h-[400px]">
-        <ChartComponent data={config.data} options={config.options} />
+        {config.type === 'bar' && (
+          <SimpleBarChart data={rechartsData} dataKey={dataKey} height={400} />
+        )}
+        {config.type === 'line' && (
+          <SimpleLineChart data={rechartsData} dataKey={dataKey} height={400} />
+        )}
+        {config.type === 'pie' && (
+          <SimplePieChart data={rechartsData} dataKey={dataKey} height={400} />
+        )}
+        {config.type === 'scatter' && (
+          <ResponsiveContainer width="100%" height={400}>
+            <ScatterChart margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.5} />
+              <XAxis
+                type="number"
+                dataKey="x"
+                stroke="#9ca3af"
+                tick={{ fill: '#9ca3af', fontSize: 12 }}
+              />
+              <YAxis
+                type="number"
+                dataKey="y"
+                stroke="#9ca3af"
+                tick={{ fill: '#9ca3af', fontSize: 12 }}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#1f2937',
+                  border: '1px solid #374151',
+                  borderRadius: '8px',
+                }}
+                labelStyle={{ color: '#f3f4f6' }}
+                itemStyle={{ color: '#f3f4f6' }}
+              />
+              <Legend wrapperStyle={{ color: '#9ca3af' }} />
+              <Scatter name={dataKey} data={rechartsData} fill="#3b82f6" />
+            </ScatterChart>
+          </ResponsiveContainer>
+        )}
       </div>
     );
   };

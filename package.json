@@ -27,8 +27,5 @@
   "workspaces": [
     "webapp",
     "integrations"
-  ],
-  "dependencies": {
-    "swr": "^2.3.6"
-  }
+  ]
 }

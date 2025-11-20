@@ -1,13 +1,13 @@
-require('dotenv').config({ path: '/Users/mattod/Desktop/HRSkills/.env.local' });
-const { google } = require('googleapis');
-const { JWT } = require('google-auth-library');
-const fs = require('fs');
+import { google } from 'googleapis';
+import { JWT } from 'google-auth-library';
+import fs from 'fs';
+import { env } from '../../webapp/env.mjs';
 
 async function listAllAccessible() {
   console.log('Listing ALL files/folders accessible to service account...\n');
 
   try {
-    const credentialsPath = process.env.GOOGLE_CREDENTIALS_PATH;
+    const credentialsPath = env.GOOGLE_CREDENTIALS_PATH;
     const credentials = JSON.parse(fs.readFileSync(credentialsPath, 'utf-8'));
 
     const auth = new JWT({

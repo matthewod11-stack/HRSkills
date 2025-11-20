@@ -20,6 +20,7 @@
  * @see https://cloud.google.com/vertex-ai/docs
  */
 
+import { env } from '@/env.mjs';
 import { PredictionServiceClient, EndpointServiceClient } from '@google-cloud/aiplatform';
 
 // Singleton client instances
@@ -284,7 +285,7 @@ export async function predictAttrition(
     const features = extractEmployeeFeatures(employee);
 
     // Use Vertex AI endpoint if configured
-    const endpointId = config.endpointId || process.env.VERTEX_AI_ATTRITION_ENDPOINT_ID;
+    const endpointId = config.endpointId || env.VERTEX_AI_ATTRITION_ENDPOINT_ID;
 
     if (!endpointId) {
       // Fallback to rule-based prediction
@@ -293,17 +294,18 @@ export async function predictAttrition(
 
     // Call Vertex AI prediction endpoint
     const client = getPredictionClient();
-    const projectId = config.projectId || process.env.GOOGLE_CLOUD_PROJECT;
-    const location = config.location || process.env.VERTEX_AI_LOCATION || 'us-central1';
+    const projectId = config.projectId || env.GOOGLE_CLOUD_PROJECT;
+    const location = config.location || env.VERTEX_AI_LOCATION;
     const endpoint = `projects/${projectId}/locations/${location}/endpoints/${endpointId}`;
 
     const normalizedFeatures = normalizeFeatures(features);
     const instance = { features: normalizedFeatures };
 
-    const [response] = await client.predict({
+    const result = await client.predict({
       endpoint,
-      instances: [instance],
+      instances: [instance] as any,
     });
+    const [response] = result as any;
 
     const prediction = response.predictions?.[0];
     const probability = parseFloat(prediction?.probability || prediction?.value || '0');
@@ -473,7 +475,7 @@ export async function predictPerformance(
   try {
     const features = extractEmployeeFeatures(employee);
 
-    const endpointId = config.endpointId || process.env.VERTEX_AI_PERFORMANCE_ENDPOINT_ID;
+    const endpointId = config.endpointId || env.VERTEX_AI_PERFORMANCE_ENDPOINT_ID;
 
     if (!endpointId) {
       return predictPerformanceRuleBased(employee, features);
@@ -481,15 +483,16 @@ export async function predictPerformance(
 
     // Call Vertex AI endpoint
     const client = getPredictionClient();
-    const projectId = config.projectId || process.env.GOOGLE_CLOUD_PROJECT;
-    const location = config.location || process.env.VERTEX_AI_LOCATION || 'us-central1';
+    const projectId = config.projectId || env.GOOGLE_CLOUD_PROJECT;
+    const location = config.location || env.VERTEX_AI_LOCATION;
     const endpoint = `projects/${projectId}/locations/${location}/endpoints/${endpointId}`;
 
     const normalizedFeatures = normalizeFeatures(features);
-    const [response] = await client.predict({
+    const result2 = await client.predict({
       endpoint,
-      instances: [{ features: normalizedFeatures }],
+      instances: [{ features: normalizedFeatures }] as any,
     });
+    const [response] = result2 as any;
 
     const prediction = response.predictions?.[0];
     const predictedRating = parseFloat(prediction?.rating || prediction?.value || '3');
@@ -632,7 +635,7 @@ export async function predictPromotion(
   try {
     const features = extractEmployeeFeatures(employee);
 
-    const endpointId = config.endpointId || process.env.VERTEX_AI_PROMOTION_ENDPOINT_ID;
+    const endpointId = config.endpointId || env.VERTEX_AI_PROMOTION_ENDPOINT_ID;
 
     if (!endpointId) {
       return predictPromotionRuleBased(employee, features);
@@ -640,15 +643,16 @@ export async function predictPromotion(
 
     // Call Vertex AI endpoint
     const client = getPredictionClient();
-    const projectId = config.projectId || process.env.GOOGLE_CLOUD_PROJECT;
-    const location = config.location || process.env.VERTEX_AI_LOCATION || 'us-central1';
+    const projectId = config.projectId || env.GOOGLE_CLOUD_PROJECT;
+    const location = config.location || env.VERTEX_AI_LOCATION;
     const endpoint = `projects/${projectId}/locations/${location}/endpoints/${endpointId}`;
 
     const normalizedFeatures = normalizeFeatures(features);
-    const [response] = await client.predict({
+    const result3 = await client.predict({
       endpoint,
-      instances: [{ features: normalizedFeatures }],
+      instances: [{ features: normalizedFeatures }] as any,
     });
+    const [response] = result3 as any;
 
     const prediction = response.predictions?.[0];
     const probability = parseFloat(prediction?.probability || prediction?.value || '0');
@@ -792,8 +796,8 @@ export async function getEndpointStatus(
 ): Promise<any> {
   try {
     const client = getEndpointClient();
-    const projectId = config.projectId || process.env.GOOGLE_CLOUD_PROJECT;
-    const location = config.location || process.env.VERTEX_AI_LOCATION || 'us-central1';
+    const projectId = config.projectId || env.GOOGLE_CLOUD_PROJECT;
+    const location = config.location || env.VERTEX_AI_LOCATION;
     const name = `projects/${projectId}/locations/${location}/endpoints/${endpointId}`;
 
     const [endpoint] = await client.getEndpoint({ name });

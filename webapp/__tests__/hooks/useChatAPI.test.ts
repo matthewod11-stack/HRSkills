@@ -1,37 +1,39 @@
+import { vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+import { vi } from 'vitest';
 import { useChatAPI } from '@/lib/hooks/useChatAPI';
 import { detectContext } from '@/lib/workflows/context-detector';
 import type { Message } from '@/components/custom/chat/ChatContext';
 
 // Mock dependencies
-jest.mock('@/lib/workflows/context-detector');
-global.fetch = jest.fn();
+vi.mock('@/lib/workflows/context-detector');
+global.fetch = vi.fn();
 
-const mockDetectContext = detectContext as jest.MockedFunction<typeof detectContext>;
+const mockDetectContext = detectContext as vi.MockedFunction<typeof detectContext>;
 
 describe('useChatAPI', () => {
-  let mockGetAuthHeaders: jest.Mock;
-  let mockAddMessage: jest.Mock;
-  let mockOnError: jest.Mock;
-  let mockOnPanelUpdate: jest.Mock;
+  let mockGetAuthHeaders: vi.Mock;
+  let mockAddMessage: vi.Mock;
+  let mockOnError: vi.Mock;
+  let mockOnPanelUpdate: vi.Mock;
   let mockMessages: Message[];
 
   beforeEach(() => {
-    mockGetAuthHeaders = jest.fn(() => ({ Authorization: 'Bearer test-token' }));
-    mockAddMessage = jest.fn();
-    mockOnError = jest.fn();
-    mockOnPanelUpdate = jest.fn();
+    mockGetAuthHeaders = vi.fn(() => ({ Authorization: 'Bearer test-token' }));
+    mockAddMessage = vi.fn();
+    mockOnError = vi.fn();
+    mockOnPanelUpdate = vi.fn();
     mockMessages = [
       { id: 1, role: 'user', content: 'Hello', timestamp: new Date() },
       { id: 2, role: 'assistant', content: 'Hi!', timestamp: new Date() },
     ];
 
-    (global.fetch as jest.Mock).mockClear();
+    (global.fetch as vi.Mock).mockClear();
     mockDetectContext.mockClear();
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('sendMessage - Analytics Route', () => {
@@ -59,7 +61,7 @@ describe('useChatAPI', () => {
       });
 
       // Mock API response
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           success: true,
@@ -135,7 +137,7 @@ describe('useChatAPI', () => {
         confidence: 90,
       });
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           success: true,
@@ -154,7 +156,7 @@ describe('useChatAPI', () => {
         await result.current.sendMessage('Analytics query', userMessage);
       });
 
-      const fetchCall = (global.fetch as jest.Mock).mock.calls[0];
+      const fetchCall = (global.fetch as vi.Mock).mock.calls[0];
       const requestBody = JSON.parse(fetchCall[1].body);
 
       // Should include the 2 existing messages + the current user message
@@ -191,7 +193,7 @@ describe('useChatAPI', () => {
         confidence: 90,
       });
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: false,
         json: async () => ({
           success: false,
@@ -241,7 +243,7 @@ describe('useChatAPI', () => {
         confidence: 90,
       });
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           success: true,
@@ -303,7 +305,7 @@ describe('useChatAPI', () => {
       });
 
       // Mock API response
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           reply: 'I can help with that!',
@@ -392,7 +394,7 @@ describe('useChatAPI', () => {
         confidence: 0,
       });
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ reply: 'Response' }),
       });
@@ -408,7 +410,7 @@ describe('useChatAPI', () => {
         await result.current.sendMessage('New message', userMessage);
       });
 
-      const fetchCall = (global.fetch as jest.Mock).mock.calls[0];
+      const fetchCall = (global.fetch as vi.Mock).mock.calls[0];
       const requestBody = JSON.parse(fetchCall[1].body);
 
       // General chat includes ALL messages (5 existing + 1 current), not just last 4
@@ -433,7 +435,7 @@ describe('useChatAPI', () => {
         confidence: 0,
       });
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           error: 'Rate limit exceeded',
@@ -477,7 +479,7 @@ describe('useChatAPI', () => {
         confidence: 0,
       });
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           reply: 'Response without panel',
@@ -522,7 +524,7 @@ describe('useChatAPI', () => {
         confidence: 90,
       });
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           success: true,
@@ -565,7 +567,7 @@ describe('useChatAPI', () => {
         confidence: 80,
       });
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ reply: 'General response' }),
       });
@@ -608,7 +610,7 @@ describe('useChatAPI', () => {
         confidence: 95,
       });
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           success: true,
@@ -675,7 +677,7 @@ describe('useChatAPI', () => {
         confidence: 0,
       });
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           reply: 'Here is your offer letter draft...',

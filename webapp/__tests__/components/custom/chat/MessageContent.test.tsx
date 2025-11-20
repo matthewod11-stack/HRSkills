@@ -1,4 +1,6 @@
+import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { vi } from 'vitest';
 import { MessageContent } from '@/components/custom/chat/MessageContent';
 import { Message, WorkflowState } from '@/components/custom/chat/ChatContext';
 
@@ -10,7 +12,7 @@ import { Message, WorkflowState } from '@/components/custom/chat/ChatContext';
  */
 
 // Mock the child components
-jest.mock('@/components/custom/chat/WorkflowBadge', () => ({
+vi.mock('@/components/custom/chat/WorkflowBadge', () => ({
   WorkflowBadge: ({ workflowType, confidence }: any) => (
     <div data-testid="workflow-badge">
       {workflowType} - {confidence}%
@@ -18,7 +20,7 @@ jest.mock('@/components/custom/chat/WorkflowBadge', () => ({
   ),
 }));
 
-jest.mock('../WorkflowProgress', () => ({
+vi.mock('@/components/custom/WorkflowProgress', () => ({
   WorkflowProgress: ({ workflowId, state }: any) => (
     <div data-testid="workflow-progress">
       {workflowId} - {state.progress}%
@@ -26,7 +28,7 @@ jest.mock('../WorkflowProgress', () => ({
   ),
 }));
 
-jest.mock('../ActionButtons', () => ({
+vi.mock('@/components/custom/ActionButtons', () => ({
   ActionButtons: ({ actions, conversationId, workflowId }: any) => (
     <div data-testid="action-buttons">
       {actions.length} actions for {workflowId}
@@ -34,13 +36,13 @@ jest.mock('../ActionButtons', () => ({
   ),
 }));
 
-jest.mock('@/components/custom/chat/MessageMarkdown', () => ({
+vi.mock('@/components/custom/chat/MessageMarkdown', () => ({
   __esModule: true,
   default: ({ content }: any) => <div data-testid="markdown-content">{content}</div>,
 }));
 
 describe('MessageContent', () => {
-  const mockOnFollowUp = jest.fn();
+  const mockOnFollowUp = vi.fn();
   const conversationId = 'conv_test_123';
 
   const createMessage = (overrides?: Partial<Message>): Message => ({
@@ -52,7 +54,7 @@ describe('MessageContent', () => {
   });
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Basic rendering', () => {

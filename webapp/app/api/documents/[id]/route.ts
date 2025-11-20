@@ -52,7 +52,7 @@ const updateDocumentSchema = z.object({
 // GET /api/documents/[id] - Fetch Single Document
 // ============================================================================
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     // 1. Rate limiting
     const rateLimitResult = await applyRateLimit(request, RateLimitPresets.standard);
@@ -72,7 +72,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     // 3. Single-user model: authenticated = authorized
 
     // 4. Fetch document
-    const document = await getDocument(params.id);
+    const document = await getDocument((await params).id);
 
     if (!document) {
       return notFoundError('Document');
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     return createSuccessResponse({ document }, undefined, HttpStatus.OK);
   } catch (error) {
     return handleApiError(error, {
-      endpoint: `/api/documents/${params.id}`,
+      endpoint: `/api/documents/${(await params).id}`,
       method: 'GET',
       userId: 'unknown',
     });
@@ -92,7 +92,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 // PATCH /api/documents/[id] - Update Document
 // ============================================================================
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     // 1. Rate limiting
     const rateLimitResult = await applyRateLimit(request, RateLimitPresets.standard);
@@ -112,7 +112,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     // 3. Single-user model: authenticated = authorized
 
     // 4. Verify document exists
-    const existingDocument = await getDocument(params.id);
+    const existingDocument = await getDocument((await params).id);
     if (!existingDocument) {
       return notFoundError('Document');
     }
@@ -136,12 +136,12 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
     // 7. Update document
     const updateData: UpdateDocumentInput = validation.data;
-    const document = await updateDocument(params.id, updateData);
+    const document = await updateDocument((await params).id, updateData);
 
     return createSuccessResponse({ document }, 'Document updated successfully', HttpStatus.OK);
   } catch (error) {
     return handleApiError(error, {
-      endpoint: `/api/documents/${params.id}`,
+      endpoint: `/api/documents/${(await params).id}`,
       method: 'PATCH',
       userId: 'unknown',
     });
@@ -152,7 +152,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 // DELETE /api/documents/[id] - Delete Document
 // ============================================================================
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     // 1. Rate limiting
     const rateLimitResult = await applyRateLimit(request, RateLimitPresets.standard);
@@ -172,7 +172,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     // 3. Single-user model: authenticated = authorized
 
     // 4. Verify document exists
-    const existingDocument = await getDocument(params.id);
+    const existingDocument = await getDocument((await params).id);
     if (!existingDocument) {
       return notFoundError('Document');
     }
@@ -191,7 +191,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       success: true,
       message: `Document deleted: ${existingDocument.title}`,
       metadata: {
-        documentId: params.id,
+        documentId: (await params).id,
         documentType: existingDocument.type,
         documentTitle: existingDocument.title,
         employeeId: existingDocument.employeeId || null,
@@ -201,12 +201,12 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     });
 
     // 6. Delete document
-    await deleteDocument(params.id);
+    await deleteDocument((await params).id);
 
-    return createSuccessResponse({ id: params.id }, 'Document deleted successfully', HttpStatus.OK);
+    return createSuccessResponse({ id: (await params).id }, 'Document deleted successfully', HttpStatus.OK);
   } catch (error) {
     return handleApiError(error, {
-      endpoint: `/api/documents/${params.id}`,
+      endpoint: `/api/documents/${(await params).id}`,
       method: 'DELETE',
       userId: 'unknown',
     });

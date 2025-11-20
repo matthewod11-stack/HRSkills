@@ -157,19 +157,19 @@ export async function classifyComment(comment: string): Promise<SentimentResult>
     });
 
     // Parse the result
-    // aiRouter.analyze returns: { sentiment: string, confidence?: number }
+    // aiRouter.analyze returns: { result: { sentiment: string, confidence?: number }, ... }
     let sentiment: SentimentType = 'neutral';
     let confidence = 0.8;
 
-    if (result.sentiment) {
-      const sentimentLower = result.sentiment.toLowerCase();
+    if (result.result?.sentiment) {
+      const sentimentLower = result.result.sentiment.toLowerCase();
       if (sentimentLower.includes('positive')) sentiment = 'positive';
       else if (sentimentLower.includes('negative')) sentiment = 'negative';
       else sentiment = 'neutral';
     }
 
-    if (result.confidence !== undefined) {
-      confidence = result.confidence;
+    if (result.result?.confidence !== undefined) {
+      confidence = result.result.confidence;
     }
 
     return {

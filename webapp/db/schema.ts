@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, primaryKey, uniqueIndex } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 
 /**
@@ -88,10 +88,10 @@ export const employeeMetrics = sqliteTable(
     performanceForecast: real('performance_forecast'), // Predicted next rating
     promotionReadiness: real('promotion_readiness'), // 0-1 score
   },
-  (table) => ({
+  (table) => [
     // Composite primary key (employee_id + metric_date)
-    pk: sql`PRIMARY KEY (${table.employeeId}, ${table.metricDate})`,
-  })
+    primaryKey({ columns: [table.employeeId, table.metricDate] }),
+  ]
 );
 
 // ============================================================================
@@ -330,10 +330,10 @@ export const aiQuotaUsage = sqliteTable(
       .notNull()
       .default(sql`CURRENT_TIMESTAMP`),
   },
-  (table) => ({
+  (table) => [
     // Unique constraint on user_id + date
-    userDateIdx: sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_quota_user_date ON ai_quota_usage(user_id, date)`,
-  })
+    uniqueIndex('idx_quota_user_date').on(table.userId, table.date),
+  ]
 );
 
 // ============================================================================

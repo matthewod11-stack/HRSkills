@@ -83,7 +83,7 @@ const ENPSPanel = dynamic(
   }
 );
 
-type MetricType = 'headcount' | 'enps' | null;
+type MetricType = 'headcount' | 'attrition' | null;
 type MetricsState = {
   headcount: number;
   enpsScore: number;
@@ -209,7 +209,7 @@ export default function Home() {
       headcountCardRef.current,
       enpsCardRef.current,
       nineBoxCardRef.current,
-    ].filter((el): el is Element => Boolean(el));
+    ].filter((el): el is HTMLDivElement => Boolean(el));
 
     observedElements.forEach((el) => resizeObserver.observe(el));
     window.addEventListener('resize', handleResize);

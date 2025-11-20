@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MessageItem } from '@/components/custom/chat/MessageItem';
 import { Message } from '@/components/custom/chat/ChatContext';
@@ -10,7 +11,7 @@ import { Message } from '@/components/custom/chat/ChatContext';
  */
 
 // Mock Framer Motion to avoid animation issues in tests
-jest.mock('framer-motion', () => ({
+vi.mock('framer-motion', () => ({
   motion: {
     div: ({ children, className, ...props }: any) => (
       <div className={className} {...props}>
@@ -21,7 +22,7 @@ jest.mock('framer-motion', () => ({
 }));
 
 // Mock child components
-jest.mock('@/components/custom/chat/MessageContent', () => ({
+vi.mock('@/components/custom/chat/MessageContent', () => ({
   MessageContent: ({ message, onFollowUp }: any) => (
     <div data-testid="message-content">
       {message.content} - {message.role}
@@ -29,17 +30,17 @@ jest.mock('@/components/custom/chat/MessageContent', () => ({
   ),
 }));
 
-jest.mock('@/components/custom/chat/MessageActions', () => ({
+vi.mock('@/components/custom/chat/MessageActions', () => ({
   MessageActions: ({ message }: any) => <div data-testid="message-actions">Actions for {message.id}</div>,
 }));
 
 describe('MessageItem', () => {
-  const mockOnToggleEdit = jest.fn();
-  const mockOnUpdateEdit = jest.fn();
-  const mockOnSaveEdit = jest.fn();
-  const mockOnCopy = jest.fn();
-  const mockOnExportToGoogleDocs = jest.fn();
-  const mockOnFollowUp = jest.fn();
+  const mockOnToggleEdit = vi.fn();
+  const mockOnUpdateEdit = vi.fn();
+  const mockOnSaveEdit = vi.fn();
+  const mockOnCopy = vi.fn();
+  const mockOnExportToGoogleDocs = vi.fn();
+  const mockOnFollowUp = vi.fn();
   const conversationId = 'conv_test_123';
 
   const createMessage = (overrides?: Partial<Message>): Message => ({
@@ -61,7 +62,7 @@ describe('MessageItem', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Avatar rendering', () => {

@@ -1,4 +1,6 @@
+import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { vi } from 'vitest';
 import { PIIWarningModal } from '@/components/custom/chat/PIIWarningModal';
 
 /**
@@ -9,7 +11,7 @@ import { PIIWarningModal } from '@/components/custom/chat/PIIWarningModal';
  */
 
 // Mock Framer Motion
-jest.mock('framer-motion', () => ({
+vi.mock('framer-motion', () => ({
   motion: {
     div: ({ children, onClick, className, ...props }: any) => (
       <div onClick={onClick} className={className} {...props}>
@@ -26,9 +28,9 @@ jest.mock('framer-motion', () => ({
 }));
 
 describe('PIIWarningModal', () => {
-  const mockOnEdit = jest.fn();
-  const mockOnSendAnyway = jest.fn();
-  const mockOnClose = jest.fn();
+  const mockOnEdit = vi.fn();
+  const mockOnSendAnyway = vi.fn();
+  const mockOnClose = vi.fn();
 
   const defaultProps = {
     isOpen: true,
@@ -40,7 +42,7 @@ describe('PIIWarningModal', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Rendering behavior', () => {

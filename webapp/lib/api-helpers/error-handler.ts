@@ -6,6 +6,7 @@
  */
 
 import { NextResponse } from 'next/server';
+import { env } from '@/env.mjs';
 
 /**
  * Standard error response structure
@@ -154,7 +155,7 @@ export function handleApiError(
 
   if (error instanceof Error) {
     errorMessage = error.message;
-    details = process.env.NODE_ENV === 'development' ? error.stack : undefined;
+    details = env.NODE_ENV === 'development' ? error.stack : undefined;
 
     // Map common error patterns to appropriate status codes
     if (error.message.includes('not found') || error.message.includes('does not exist')) {

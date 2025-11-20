@@ -10,6 +10,7 @@ import { AuthUser } from '@/lib/auth/types';
 import { writeFile, appendFile, mkdir } from 'fs/promises';
 import path from 'path';
 import { validateNoPii, DLP_INFO_TYPE_PRESETS } from './dlp-service';
+import { env } from '@/env.mjs';
 
 export type AuditEventType =
   | 'auth.login.success'
@@ -156,7 +157,7 @@ export async function logAuditEvent(entry: Omit<AuditLogEntry, 'timestamp'>): Pr
     }
 
     // Log to console in development
-    if (process.env.NODE_ENV === 'development') {
+    if (env.NODE_ENV === 'development') {
       const emoji = entry.success ? '✅' : '❌';
       console.log(
         `${emoji} [AUDIT] ${entry.eventType}:`,
@@ -207,7 +208,7 @@ export async function logAuthEvent(
     severity: success ? 'info' : 'warning',
     userId: user?.userId,
     userEmail: user?.email,
-    userRoles: user?.roles.map((r) => r.name),
+    userRoles: user?.role ? [user.role] : undefined,
     sessionId: user?.sessionId,
     success,
     message,
@@ -234,7 +235,7 @@ export async function logDataAccess(
     severity: action === 'delete' ? 'warning' : 'info',
     userId: user.userId,
     userEmail: user.email,
-    userRoles: user.roles.map((r) => r.name),
+    userRoles: [user.role],
     sessionId: user.sessionId,
     resource,
     action,
@@ -261,7 +262,7 @@ export async function logSecurityEvent(
     severity: 'warning',
     userId: user?.userId,
     userEmail: user?.email,
-    userRoles: user?.roles.map((r) => r.name),
+    userRoles: user?.role ? [user.role] : undefined,
     sessionId: user?.sessionId,
     success: false,
     message,
@@ -286,7 +287,7 @@ export async function logApiRequest(
     severity: statusCode >= 500 ? 'error' : statusCode >= 400 ? 'warning' : 'info',
     userId: user?.userId,
     userEmail: user?.email,
-    userRoles: user?.roles.map((r) => r.name),
+    userRoles: user?.role ? [user.role] : undefined,
     sessionId: user?.sessionId,
     statusCode,
     success: statusCode < 400,
@@ -314,7 +315,7 @@ export async function logFileUpload(
     severity: success ? 'info' : 'warning',
     userId: user.userId,
     userEmail: user.email,
-    userRoles: user.roles.map((r) => r.name),
+    userRoles: [user.role],
     sessionId: user.sessionId,
     success,
     message,

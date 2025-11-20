@@ -38,7 +38,7 @@ export const ChatHeader = memo(function ChatHeader({
     <div className="flex items-center justify-between mb-4">
       {/* Conversation ID (optional - could be removed or made conditional) */}
       <div className="text-xs text-secondary/50 font-mono">
-        {conversationId}
+        {conversationId.replace(/\s+/g, ' ')}
       </div>
 
       {/* Reset Chat Button */}

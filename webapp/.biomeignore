@@ -1,0 +1,11 @@
+# Biome ignore file
+node_modules
+.next
+out
+build
+dist
+.turbo
+coverage
+*.config.js
+public/sw.js
+public/workbox-*.js

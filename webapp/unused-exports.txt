@@ -1,0 +1,597 @@
+instrumentation-client.ts:33 - onRouterTransitionStart
+instrumentation.ts:3 - register
+instrumentation.ts:13 - onRequestError
+playwright.config.ts:8 - default
+proxy.ts:8 - proxy
+proxy.ts:54 - config
+Users/mattod/Desktop/HRSkills/integrations/google/docs-oauth.ts:10 - GoogleDocsOAuthService (used in module)
+Users/mattod/Desktop/HRSkills/integrations/google/oauth-client.ts:17 - GoogleOAuthClient (used in module)
+Users/mattod/Desktop/HRSkills/integrations/google/types.ts:1 - CalendarEvent
+Users/mattod/Desktop/HRSkills/integrations/google/types.ts:10 - EmailParams
+Users/mattod/Desktop/HRSkills/integrations/google/types.ts:18 - GoogleUser
+Users/mattod/Desktop/HRSkills/integrations/google/types.ts:27 - DriveFolder
+Users/mattod/Desktop/HRSkills/integrations/google/types.ts:33 - DriveFile
+Users/mattod/Desktop/HRSkills/integrations/google/types.ts:42 - FileUploadOptions
+app/global-error.tsx:7 - default
+app/layout.tsx:39 - default
+app/layout.tsx:21 - metadata
+app/page.tsx:106 - default (used in module)
+lib/employee-context.ts:21 - needsEmployeeData (used in module)
+lib/employee-context.ts:43 - filterRelevantEmployees (used in module)
+lib/errorLogging.ts:237 - logApiError
+lib/errorLogging.ts:247 - logUserActionError
+lib/errorLogging.ts:8 - ErrorSeverity (used in module)
+lib/errorLogging.ts:18 - ErrorContext (used in module)
+lib/errorLogging.ts:31 - ErrorLog (used in module)
+lib/errorLogging.ts:218 - errorLogger (used in module)
+lib/first-run-client.ts:11 - markFirstRunComplete
+lib/first-run-client.ts:21 - hasCompletedFirstRun
+lib/first-run-client.ts:29 - resetFirstRunStatus
+lib/first-run.ts:78 - hasDemoData
+lib/first-run.ts:131 - markFirstRunComplete
+lib/first-run.ts:141 - hasCompletedFirstRun
+lib/first-run.ts:149 - resetFirstRunStatus
+lib/first-run.ts:160 - getDaysSinceFirstRun
+lib/first-run.ts:8 - FirstRunStatus (used in module)
+lib/image-utils.ts:62 - getResponsiveSizes
+lib/image-utils.ts:8 - IMAGE_SIZES (used in module)
+lib/image-utils.ts:17 - IMAGE_QUALITY
+lib/image-utils.ts:69 - IMAGE_BEST_PRACTICES
+lib/monitoring.ts:114 - trackLCP (used in module)
+lib/monitoring.ts:143 - trackFID (used in module)
+lib/monitoring.ts:170 - trackCLS (used in module)
+lib/monitoring.ts:214 - trackFCP (used in module)
+lib/monitoring.ts:241 - trackTTFB (used in module)
+lib/monitoring.ts:269 - trackErrors (used in module)
+lib/monitoring.ts:319 - reportCustomMetric
+lib/monitoring.ts:17 - Metric (used in module)
+lib/monitoring.ts:26 - ErrorLog (used in module)
+lib/performance-monitor.ts:8 - PerformanceMetrics (used in module)
+lib/performance-monitor.ts:25 - AggregatedMetrics (used in module)
+lib/pii-detector.ts:102 - maskPII
+lib/pii-detector.ts:10 - PIIDetectionResult (used in module)
+lib/query-keys.ts:49 - QueryKeys
+lib/skills.ts:117 - listSkills
+lib/skills.ts:6 - SkillContext (used in module)
+lib/templates-drive.ts:108 - fetchTemplateList (used in module)
+lib/templates-drive.ts:188 - fetchTemplateContent (used in module)
+lib/templates-drive.ts:218 - getTemplatesBySkill
+lib/templates-drive.ts:243 - clearTemplateCache
+lib/templates-drive.ts:94 - DriveTemplateMatch (used in module)
+lib/utils.ts:4 - cn
+lib/web-vitals.ts:164 - storeWebVital
+lib/web-vitals.ts:172 - getWebVitalsData (used in module)
+lib/web-vitals.ts:180 - useWebVitals
+lib/web-vitals.ts:21 - WEB_VITALS_THRESHOLDS (used in module)
+.next/types/routes.d.ts:71 - ParamsOf
+.next/types/routes.d.ts:78 - PageRoutes (used in module)
+.next/types/routes.d.ts:78 - RedirectRoutes (used in module)
+.next/types/routes.d.ts:78 - RewriteRoutes (used in module)
+app/accessibility/page.tsx:7 - default
+app/analytics/page.tsx:55 - default
+app/data-sources/page.tsx:3 - default
+app/documents/page.tsx:91 - default
+app/employees/page.tsx:7 - default
+app/nine-box/page.tsx:50 - default
+app/offline/page.tsx:18 - default
+app/settings/page.tsx:61 - default
+app/team-time/page.tsx:50 - default
+components/ai/VoiceInput.tsx:19 - VoiceInput
+components/ai/VoiceInput.tsx:322 - AudioRecorder
+components/auth/RoleGuard.tsx:36 - RequireAdmin
+components/auth/RoleGuard.tsx:49 - RequirePermission
+components/auth/RoleGuard.tsx:62 - ShowForRole
+components/auth/RoleGuard.tsx:75 - HideForRole
+components/auth/RoleGuard.tsx:88 - RoleSwitch
+components/auth/RoleGuard.tsx:117 - PermissionButton
+components/custom/ActionButtons.tsx:418 - ActionIndicator
+components/custom/ContextPanel.tsx:7 - ContextPanelType (used in module)
+components/custom/FileUpload.tsx:14 - FileUpload
+components/custom/LanguageSelector.tsx:25 - LanguageSelector
+components/custom/LanguageSelector.tsx:201 - TranslationPreview (used in module)
+components/custom/LanguageSelector.tsx:295 - TranslationButton
+components/custom/NotificationsPanel.tsx:99 - NotificationsPanel
+components/custom/QuickActionCard.tsx:27 - QuickActionCard (used in module)
+components/custom/QuotaBanner.tsx:201 - QuotaBadge
+components/custom/QuotaBanner.tsx:18 - QuotaStatus (used in module)
+components/custom/SmartPrefetch.tsx:167 - usePrefetch
+components/custom/UpcomingEvents.tsx:79 - UpcomingEvents
+components/custom/WelcomeDialog.tsx:86 - WelcomeDialog
+components/custom/WelcomeDialog.tsx:271 - useWelcomeDialog
+components/custom/WorkflowProgress.tsx:153 - WorkflowProgressCompact
+components/ui/avatar.tsx:41 - Avatar (used in module)
+components/ui/avatar.tsx:41 - AvatarImage (used in module)
+components/ui/avatar.tsx:41 - AvatarFallback (used in module)
+components/ui/badge.tsx:47 - Badge (used in module)
+components/ui/badge.tsx:47 - badgeVariants (used in module)
+components/ui/button.tsx:68 - buttonVariants (used in module)
+components/ui/card.tsx:71 - CardFooter (used in module)
+components/ui/card.tsx:71 - CardAction (used in module)
+components/ui/dialog.tsx:112 - DialogClose (used in module)
+components/ui/dialog.tsx:115 - DialogFooter (used in module)
+components/ui/dialog.tsx:117 - DialogOverlay (used in module)
+components/ui/dialog.tsx:118 - DialogPortal (used in module)
+components/ui/dialog.tsx:120 - DialogTrigger (used in module)
+components/ui/dropdown-menu.tsx:213 - DropdownMenu (used in module)
+components/ui/dropdown-menu.tsx:214 - DropdownMenuPortal (used in module)
+components/ui/dropdown-menu.tsx:215 - DropdownMenuTrigger (used in module)
+components/ui/dropdown-menu.tsx:216 - DropdownMenuContent (used in module)
+components/ui/dropdown-menu.tsx:217 - DropdownMenuGroup (used in module)
+components/ui/dropdown-menu.tsx:218 - DropdownMenuLabel (used in module)
+components/ui/dropdown-menu.tsx:219 - DropdownMenuItem (used in module)
+components/ui/dropdown-menu.tsx:220 - DropdownMenuCheckboxItem (used in module)
+components/ui/dropdown-menu.tsx:221 - DropdownMenuRadioGroup (used in module)
+components/ui/dropdown-menu.tsx:222 - DropdownMenuRadioItem (used in module)
+components/ui/dropdown-menu.tsx:223 - DropdownMenuSeparator (used in module)
+components/ui/dropdown-menu.tsx:224 - DropdownMenuShortcut (used in module)
+components/ui/dropdown-menu.tsx:225 - DropdownMenuSub (used in module)
+components/ui/dropdown-menu.tsx:226 - DropdownMenuSubTrigger (used in module)
+components/ui/dropdown-menu.tsx:227 - DropdownMenuSubContent (used in module)
+components/ui/ErrorBoundary.tsx:201 - useErrorHandler
+components/ui/ErrorFallbacks.tsx:20 - DataLoadingError
+components/ui/ErrorFallbacks.tsx:51 - ChartRenderError
+components/ui/ErrorFallbacks.tsx:95 - FormSubmissionError
+components/ui/ErrorFallbacks.tsx:130 - AuthenticationError
+components/ui/ErrorFallbacks.tsx:172 - NetworkError
+components/ui/ErrorFallbacks.tsx:215 - SectionError
+components/ui/ErrorFallbacks.tsx:248 - ContactSupport
+components/ui/form.tsx:144 - useFormField (used in module)
+components/ui/form.tsx:145 - Form (used in module)
+components/ui/form.tsx:146 - FormItem (used in module)
+components/ui/form.tsx:147 - FormLabel (used in module)
+components/ui/form.tsx:148 - FormControl (used in module)
+components/ui/form.tsx:149 - FormDescription (used in module)
+components/ui/form.tsx:150 - FormMessage (used in module)
+components/ui/form.tsx:151 - FormField (used in module)
+components/ui/input.tsx:21 - Input (used in module)
+components/ui/OptimizedImage.tsx:37 - OptimizedImage (used in module)
+components/ui/OptimizedImage.tsx:79 - OptimizedAvatar
+components/ui/OptimizedImage.tsx:104 - OptimizedHero
+components/ui/popover.tsx:42 - Popover (used in module)
+components/ui/popover.tsx:42 - PopoverTrigger (used in module)
+components/ui/popover.tsx:42 - PopoverContent (used in module)
+components/ui/popover.tsx:42 - PopoverAnchor (used in module)
+components/ui/select.tsx:160 - Select (used in module)
+components/ui/select.tsx:161 - SelectContent (used in module)
+components/ui/select.tsx:162 - SelectGroup (used in module)
+components/ui/select.tsx:163 - SelectItem (used in module)
+components/ui/select.tsx:164 - SelectLabel (used in module)
+components/ui/select.tsx:165 - SelectScrollDownButton (used in module)
+components/ui/select.tsx:166 - SelectScrollUpButton (used in module)
+components/ui/select.tsx:167 - SelectSeparator (used in module)
+components/ui/select.tsx:168 - SelectTrigger (used in module)
+components/ui/select.tsx:169 - SelectValue (used in module)
+components/ui/skeleton.tsx:13 - Skeleton (used in module)
+components/ui/table.tsx:92 - Table (used in module)
+components/ui/table.tsx:92 - TableHeader (used in module)
+components/ui/table.tsx:92 - TableBody (used in module)
+components/ui/table.tsx:92 - TableFooter (used in module)
+components/ui/table.tsx:92 - TableHead (used in module)
+components/ui/table.tsx:92 - TableRow (used in module)
+components/ui/table.tsx:92 - TableCell (used in module)
+components/ui/table.tsx:92 - TableCaption (used in module)
+components/ui/textarea.tsx:18 - Textarea (used in module)
+components/ui/use-mobile.ts:5 - useIsMobile
+lib/ai/enps-sentiment.ts:143 - classifyComment (used in module)
+lib/ai/enps-sentiment.ts:189 - batchClassifyComments (used in module)
+lib/ai/enps-sentiment.ts:23 - SentimentType (used in module)
+lib/ai/enps-sentiment.ts:25 - SentimentResult (used in module)
+lib/ai/enps-sentiment.ts:31 - SentimentAnalysisProgress (used in module)
+lib/ai/enps-sentiment.ts:38 - CommentWithSentiment (used in module)
+lib/ai/shared-key-manager.ts:181 - getQuotaStatus (used in module)
+lib/ai/shared-key-manager.ts:193 - shouldShowUpgradePrompt
+lib/ai/shared-key-manager.ts:207 - resetQuota
+lib/ai/shared-key-manager.ts:20 - QuotaStatus (used in module)
+lib/ai/shared-key-manager.ts:30 - QuotaCheckResult (used in module)
+lib/ai-services/vertex-ai-service.ts:63 - isVertexAIAvailable
+lib/ai-services/vertex-ai-service.ts:188 - extractEmployeeFeatures (used in module)
+lib/ai-services/vertex-ai-service.ts:259 - normalizeFeatures (used in module)
+lib/ai-services/vertex-ai-service.ts:280 - predictAttrition (used in module)
+lib/ai-services/vertex-ai-service.ts:454 - batchPredictAttrition
+lib/ai-services/vertex-ai-service.ts:471 - predictPerformance
+lib/ai-services/vertex-ai-service.ts:631 - predictPromotion
+lib/ai-services/vertex-ai-service.ts:785 - calculatePredictionCost
+lib/ai-services/vertex-ai-service.ts:793 - getEndpointStatus
+lib/ai-services/vertex-ai-service.ts:77 - EmployeeFeatures (used in module)
+lib/ai-services/vertex-ai-service.ts:115 - AttritionPrediction (used in module)
+lib/ai-services/vertex-ai-service.ts:126 - RiskFactor (used in module)
+lib/ai-services/vertex-ai-service.ts:133 - PerformancePrediction (used in module)
+lib/ai-services/vertex-ai-service.ts:144 - Factor (used in module)
+lib/ai-services/vertex-ai-service.ts:151 - PromotionPrediction (used in module)
+lib/ai-services/vertex-ai-service.ts:162 - PredictionConfig (used in module)
+lib/ai-services/vertex-ai-service.ts:169 - BatchPredictionRequest
+lib/ai-services/vertex-ai-service.ts:174 - BatchPredictionResult
+lib/analytics/attrition-sql.ts:371 - calculateTimeToFill
+lib/analytics/attrition-sql.ts:12 - AttritionResult (used in module)
+lib/analytics/attrition.ts:46 - calculateAttrition
+lib/analytics/attrition.ts:249 - calculateTimeToFill
+lib/analytics/attrition.ts:322 - calculateRetention
+lib/analytics/attrition.ts:3 - AttritionResult (used in module)
+lib/analytics/attrition.ts:243 - TimeToFillResult (used in module)
+lib/analytics/attrition.ts:306 - RetentionResult (used in module)
+lib/analytics/column-mapper.ts:123 - splitFullName (used in module)
+lib/analytics/enps-sql.ts:110 - getScoreInterpretation
+lib/analytics/enps-sql.ts:362 - calculateENPSTrends
+lib/analytics/enps-sql.ts:383 - getENPSDistribution
+lib/analytics/enps-sql.ts:433 - getENPSByDepartment
+lib/analytics/enps-sql.ts:31 - ENPSScore (used in module)
+lib/analytics/enps-sql.ts:43 - ENPSTrend (used in module)
+lib/analytics/enps-sql.ts:53 - ENPSByDepartment (used in module)
+lib/analytics/enps-sql.ts:65 - ENPSDistribution (used in module)
+lib/analytics/enps-sql.ts:75 - ENPSAnalytics (used in module)
+lib/analytics/headcount-sql.ts:342 - getHeadcountByDepartment
+lib/analytics/headcount-sql.ts:354 - getHeadcountByLocation
+lib/analytics/headcount-sql.ts:12 - HeadcountResult (used in module)
+lib/analytics/headcount.ts:18 - calculateHeadcount
+lib/analytics/headcount.ts:50 - calculateHeadcountByDeptAndLevel
+lib/analytics/headcount.ts:70 - calculateHeadcountTrends
+lib/analytics/headcount.ts:123 - calculateSpanOfControl
+lib/analytics/headcount.ts:3 - HeadcountResult (used in module)
+lib/analytics/parser.ts:5 - ParseResult (used in module)
+lib/analytics/performance-calculator.ts:55 - calculateEmployeeRating (used in module)
+lib/analytics/performance-calculator.ts:268 - calculateDepartmentStats (used in module)
+lib/analytics/performance-calculator.ts:305 - calculateBatchRatings
+lib/analytics/performance-calculator.ts:348 - identifyRatingInflation
+lib/analytics/performance-calculator.ts:13 - EmployeeDataForRating (used in module)
+lib/analytics/performance-calculator.ts:43 - PerformanceRatings (used in module)
+lib/analytics/track-events.ts:118 - trackEvent (used in module)
+lib/analytics/track-events.ts:136 - trackChatMessage
+lib/analytics/track-events.ts:146 - trackSkillTrigger
+lib/analytics/track-events.ts:156 - trackContextPanel
+lib/analytics/track-events.ts:166 - trackAnalyticsQuery
+lib/analytics/track-events.ts:181 - trackEmployeeSearch
+lib/analytics/track-events.ts:191 - trackDocumentUpload
+lib/analytics/track-events.ts:198 - trackDocumentDownload
+lib/analytics/track-events.ts:204 - trackTemplateGeneration
+lib/analytics/track-events.ts:214 - trackChatError
+lib/analytics/track-events.ts:224 - trackRateLimit
+lib/analytics/track-events.ts:234 - trackLogin
+lib/analytics/track-events.ts:240 - trackLogout
+lib/analytics/track-events.ts:23 - CustomEventName (used in module)
+lib/analytics/track-events.ts:54 - EventProperties (used in module)
+lib/analytics/utils.ts:45 - loadDataFile (used in module)
+lib/analytics/utils.ts:132 - joinData
+lib/analytics/utils.ts:205 - getDateRange
+lib/api-helpers/anthropic-client.ts:155 - getCircuitBreakerStats
+lib/api-helpers/anthropic-client.ts:167 - resetCircuitBreaker
+lib/api-helpers/anthropic-client.ts:185 - estimateTokens
+lib/api-helpers/anthropic-client.ts:192 - validateMessageParams
+lib/api-helpers/anthropic-client.ts:216 - anthropic (used in module)
+lib/api-helpers/fetch-with-retry.ts:148 - post
+lib/api-helpers/fetch-with-retry.ts:163 - put
+lib/api-helpers/fetch-with-retry.ts:178 - del
+lib/api-helpers/fetch-with-retry.ts:28 - RetryOptions (used in module)
+lib/api-helpers/index.ts:10 - createErrorResponse
+lib/api-helpers/index.ts:11 - createSuccessResponse
+lib/api-helpers/index.ts:12 - handleApiError
+lib/api-helpers/index.ts:13 - logError
+lib/api-helpers/index.ts:14 - validationError
+lib/api-helpers/index.ts:15 - notFoundError
+lib/api-helpers/index.ts:16 - unauthorizedError
+lib/api-helpers/index.ts:17 - forbiddenError
+lib/api-helpers/index.ts:18 - conflictError
+lib/api-helpers/index.ts:19 - internalError
+lib/api-helpers/index.ts:20 - HttpStatus
+lib/api-helpers/index.ts:21 - ErrorType
+lib/api-helpers/index.ts:22 - ErrorResponse
+lib/api-helpers/index.ts:23 - SuccessResponse
+lib/api-helpers/index.ts:28 - validateRequiredFields
+lib/api-helpers/index.ts:29 - isValidEmail
+lib/api-helpers/index.ts:30 - isPositiveNumber
+lib/api-helpers/index.ts:31 - isNonNegativeNumber
+lib/api-helpers/index.ts:32 - isValidArray
+lib/api-helpers/index.ts:33 - isValidDate
+lib/api-helpers/index.ts:34 - isOneOf
+lib/api-helpers/index.ts:35 - parseRequestBody
+lib/api-helpers/index.ts:36 - getQueryParam
+lib/api-helpers/index.ts:37 - isValidEmployeeId
+lib/api-helpers/index.ts:38 - sanitizeString
+lib/api-helpers/index.ts:39 - validatePaginationParams
+lib/api-helpers/index.ts:40 - validateSortParams
+lib/api-helpers/schemas.ts:272 - validate
+lib/api-helpers/schemas.ts:290 - formatZodError (used in module)
+lib/api-helpers/schemas.ts:313 - validateRequestBody
+lib/api-helpers/schemas.ts:14 - paginationSchema
+lib/api-helpers/schemas.ts:19 - sortSchema
+lib/api-helpers/schemas.ts:24 - dateRangeSchema (used in module)
+lib/api-helpers/schemas.ts:33 - employeeSchema (used in module)
+lib/api-helpers/schemas.ts:48 - createEmployeeSchema (used in module)
+lib/api-helpers/schemas.ts:50 - updateEmployeeSchema
+lib/api-helpers/schemas.ts:52 - bulkEmployeeSchema
+lib/api-helpers/schemas.ts:60 - chatMessageSchema (used in module)
+lib/api-helpers/schemas.ts:66 - chatRequestSchema
+lib/api-helpers/schemas.ts:79 - chatResponseSchema
+lib/api-helpers/schemas.ts:103 - analyticsQuerySchema
+lib/api-helpers/schemas.ts:109 - analyticsResponseSchema
+lib/api-helpers/schemas.ts:127 - performanceReviewSchema (used in module)
+lib/api-helpers/schemas.ts:140 - analyzePerformanceSchema
+lib/api-helpers/schemas.ts:150 - dataSourceSchema
+lib/api-helpers/schemas.ts:160 - uploadDataSchema
+lib/api-helpers/schemas.ts:171 - metricsResponseSchema
+lib/api-helpers/schemas.ts:193 - aiCostMetricsSchema
+lib/api-helpers/schemas.ts:210 - loginSchema
+lib/api-helpers/schemas.ts:215 - demoTokenSchema
+lib/api-helpers/schemas.ts:220 - authResponseSchema
+lib/api-helpers/schemas.ts:236 - anthropicTextBlockSchema (used in module)
+lib/api-helpers/schemas.ts:241 - anthropicMessageSchema
+lib/api-helpers/schemas.ts:258 - errorResponseSchema
+lib/auth/AuthContext.tsx:25 - AuthProvider
+lib/auth/AuthContext.tsx:99 - useAuth
+lib/auth/middleware-v2.ts:30 - verifyToken (used in module)
+lib/auth/middleware-v2.ts:72 - generateToken (used in module)
+lib/auth/middleware-v2.ts:83 - requireAuth
+lib/auth/middleware-v2.ts:117 - authErrorResponse
+lib/auth/middleware-v2.ts:140 - createDemoToken
+lib/auth/middleware-v2.ts:156 - hasPermission (used in module)
+lib/auth/middleware-v2.ts:156 - hasRole (used in module)
+lib/auth/middleware-v2.ts:156 - requireAdmin (used in module)
+lib/auth/middleware.ts:14 - verifyToken (used in module)
+lib/auth/password.ts:13 - hashPassword (used in module)
+lib/auth/roles-v2.ts:79 - can (used in module)
+lib/auth/roles-v2.ts:86 - isAdmin (used in module)
+lib/auth/roles-v2.ts:93 - isUser
+lib/auth/roles-v2.ts:68 - ROLE_MIGRATION_MAP (used in module)
+lib/charts/recharts-helpers.ts:9 - ChartJsDataset (used in module)
+lib/charts/recharts-helpers.ts:16 - ChartJsData (used in module)
+lib/db/index.ts:35 - getDatabase (used in module)
+lib/db/index.ts:308 - closeDatabase
+lib/db/index.ts:388 - getDbStats
+lib/db/index.ts:422 - schema (used in module)
+lib/db/index.ts:423 - db
+lib/google/types.ts:13 - CalendarEvent
+lib/google/types.ts:23 - EmailParams
+lib/google/types.ts:32 - DriveFolder
+lib/google/types.ts:38 - DriveFile
+lib/google/types.ts:47 - FileUploadOptions
+lib/google/types.ts:55 - GoogleDocRequest
+lib/google/types.ts:61 - GoogleDocResponse
+lib/google/workspace-client.ts:37 - AuthMethod (used in module)
+lib/google/workspace-client.ts:39 - WorkspaceClientConfig (used in module)
+lib/google/workspace-client.ts:59 - GoogleWorkspaceClient (used in module)
+lib/hooks/index.ts:10 - useDebounce
+lib/hooks/index.ts:10 - useDebouncedCallback
+lib/hooks/index.ts:10 - useDebounceEffect
+lib/hooks/index.ts:11 - useLocalStorage
+lib/hooks/index.ts:11 - useSessionStorage
+lib/hooks/index.ts:11 - useLocalStorageWithExpiry
+lib/hooks/index.ts:13 - usePagination
+lib/hooks/index.ts:14 - useInfinitePagination
+lib/hooks/index.ts:15 - PaginationOptions
+lib/hooks/index.ts:16 - PaginationResult
+lib/hooks/index.ts:18 - useToggle
+lib/hooks/index.ts:18 - useBoolean
+lib/hooks/index.ts:18 - useCounter
+lib/hooks/index.ts:18 - useArray
+lib/hooks/index.ts:18 - useSet
+lib/hooks/index.ts:21 - useState
+lib/hooks/index.ts:21 - useEffect
+lib/hooks/index.ts:21 - useCallback
+lib/hooks/index.ts:21 - useMemo
+lib/hooks/index.ts:21 - useRef
+lib/hooks/useChatAPI.ts:9 - UseChatAPIOptions (used in module)
+lib/hooks/useChatAPI.ts:44 - UseChatAPIReturn (used in module)
+lib/hooks/useChatErrorHandler.ts:7 - ErrorContext (used in module)
+lib/hooks/useChatErrorHandler.ts:33 - UseChatErrorHandlerOptions (used in module)
+lib/hooks/useChatErrorHandler.ts:53 - UseChatErrorHandlerReturn (used in module)
+lib/hooks/useContextPanelDetection.ts:8 - UseContextPanelDetectionOptions (used in module)
+lib/hooks/useContextPanelDetection.ts:25 - UseContextPanelDetectionReturn (used in module)
+lib/hooks/useExternalPrompt.ts:6 - ExternalPrompt (used in module)
+lib/hooks/useExternalPrompt.ts:22 - UseExternalPromptOptions (used in module)
+lib/hooks/useExternalPrompt.ts:48 - UseExternalPromptReturn (used in module)
+lib/hooks/useGoogleDocsExport.ts:7 - UseGoogleDocsExportOptions (used in module)
+lib/hooks/useGoogleDocsExport.ts:22 - UseGoogleDocsExportReturn (used in module)
+lib/hooks/usePIIDetection.ts:7 - PIIWarning (used in module)
+lib/hooks/usePIIDetection.ts:17 - UsePIIDetectionOptions (used in module)
+lib/hooks/usePIIDetection.ts:39 - UsePIIDetectionReturn (used in module)
+lib/security/audit-logger.ts:197 - logAuthEvent
+lib/security/audit-logger.ts:222 - logDataAccess
+lib/security/audit-logger.ts:251 - logSecurityEvent
+lib/security/audit-logger.ts:277 - logApiRequest
+lib/security/audit-logger.ts:302 - logFileUpload
+lib/security/audit-logger.ts:362 - queryAuditLogs
+lib/security/audit-logger.ts:15 - AuditEventType (used in module)
+lib/security/audit-logger.ts:34 - AuditSeverity (used in module)
+lib/security/audit-logger.ts:36 - AuditLogEntry (used in module)
+lib/security/dlp-service.ts:230 - redactPii
+lib/security/dlp-service.ts:334 - isDlpAvailable
+lib/security/dlp-service.ts:31 - DlpScanConfig (used in module)
+lib/security/dlp-service.ts:43 - DlpScanResult (used in module)
+lib/security/rate-limiter.ts:63 - rateLimit
+lib/security/rate-limiter.ts:167 - applyInMemoryRateLimit (used in module)
+lib/security/rate-limiter.ts:232 - addRateLimitHeaders
+lib/services/document-service.ts:162 - finalizeDocument
+lib/services/document-service.ts:195 - getDocumentCountByType
+lib/services/document-service.ts:216 - getEmployeeDocuments
+lib/services/document-service.ts:42 - DocumentListResult (used in module)
+lib/services/web-vitals-service.ts:112 - getAggregatedMetrics
+lib/services/web-vitals-service.ts:13 - WebVitalsMetricInput (used in module)
+lib/services/web-vitals-service.ts:32 - AggregatedMetrics (used in module)
+lib/types/ai-services.ts:54 - getAIFeatureFlags
+lib/types/ai-services.ts:27 - AIServiceResponse
+lib/types/ai-services.ts:42 - AIFeatureFlags (used in module)
+lib/types/master-employee.ts:786 - FieldConflict (used in module)
+lib/validation/input-validator.ts:11 - sanitizeString (used in module)
+lib/validation/input-validator.ts:26 - isValidEmail
+lib/validation/input-validator.ts:34 - isValidEmployeeId
+lib/validation/input-validator.ts:43 - isValidDate (used in module)
+lib/validation/input-validator.ts:51 - isValidNumber (used in module)
+lib/validation/input-validator.ts:62 - isValidEnum (used in module)
+lib/validation/input-validator.ts:72 - sanitizeObject
+lib/validation/input-validator.ts:126 - validateQueryParams
+lib/validation/input-validator.ts:222 - escapeSqlString
+lib/validation/input-validator.ts:235 - validateFile
+lib/validation/input-validator.ts:106 - QueryValidationRule (used in module)
+lib/validation/input-validator.ts:116 - QueryValidationRules (used in module)
+lib/validation/input-validator.ts:120 - ValidationResult (used in module)
+lib/validation/input-validator.ts:229 - FileValidationOptions (used in module)
+lib/workflows/context-detector.ts:271 - detectContextFromResponse
+lib/workflows/context-detector.ts:10 - DetectionResult (used in module)
+lib/workflows/detection.ts:145 - detectDocumentType
+lib/workflows/detection.ts:243 - detectEmployeeMention
+lib/workflows/detection.ts:258 - detectDepartmentMention
+lib/workflows/detection.ts:291 - isActionIntent
+lib/workflows/detection.ts:315 - isAnalysisIntent
+lib/workflows/detection.ts:357 - getWorkflowScores
+lib/workflows/detection.ts:380 - validateDetection
+lib/workflows/loader.ts:29 - buildWorkflowContext
+lib/workflows/loader.ts:187 - getWorkflowRequirements (used in module)
+lib/workflows/loader.ts:209 - canAccessWorkflow
+lib/workflows/loader.ts:221 - getWorkflowByCapability
+lib/workflows/loader.ts:239 - getWorkflowsByRequirement
+lib/workflows/loader.ts:262 - getWorkflowSummary (used in module)
+lib/workflows/loader.ts:288 - getAllWorkflowSummaries (used in module)
+lib/workflows/loader.ts:350 - loadSkillById
+lib/workflows/skill-mapping.ts:252 - getWorkflowForSkill
+lib/workflows/skill-mapping.ts:263 - getSkillsForWorkflow
+lib/workflows/skill-mapping.ts:275 - getCapabilityForSkill
+lib/workflows/skill-mapping.ts:286 - isValidSkillId
+lib/workflows/skill-mapping.ts:295 - getAllSkillIds
+lib/workflows/skill-mapping.ts:305 - getSkillMigrationInfo
+lib/workflows/skill-mapping.ts:314 - getWorkflowMappingStats
+lib/workflows/skill-mapping.ts:14 - SKILL_TO_WORKFLOW_MAP (used in module)
+lib/workflows/types.ts:42 - WorkflowCapability (used in module)
+lib/workflows/types.ts:59 - WorkflowActionDefinition (used in module)
+lib/workflows/types.ts:124 - ActionType (used in module)
+lib/workflows/types.ts:134 - Action
+lib/workflows/types.ts:145 - DocumentAction (used in module)
+lib/workflows/types.ts:156 - DocumentType (used in module)
+lib/workflows/types.ts:168 - DocumentMetadata (used in module)
+lib/workflows/types.ts:177 - EmailAction (used in module)
+lib/workflows/types.ts:190 - EmailAttachment (used in module)
+lib/workflows/types.ts:197 - EmailMetadata (used in module)
+lib/workflows/types.ts:204 - SlackAction (used in module)
+lib/workflows/types.ts:218 - SlackMetadata (used in module)
+lib/workflows/types.ts:224 - CalendarAction (used in module)
+lib/workflows/types.ts:237 - CalendarMetadata (used in module)
+lib/workflows/types.ts:244 - DataUpdateAction (used in module)
+lib/workflows/types.ts:253 - EmployeeData (used in module)
+lib/workflows/types.ts:265 - DataUpdateMetadata (used in module)
+lib/workflows/types.ts:272 - DriveFolderAction (used in module)
+lib/workflows/types.ts:281 - AnalyzeDataAction (used in module)
+lib/workflows/types.ts:289 - ExportSheetsAction (used in module)
+lib/workflows/types.ts:302 - ActionResult
+lib/workflows/types.ts:310 - ActionResultMetadata (used in module)
+lib/workflows/workflows.config.ts:1768 - getAllWorkflowIds
+lib/workflows/workflows.config.ts:1775 - getWorkflowName
+app/accessibility/keyboard-shortcuts/page.tsx:68 - default
+app/api/actions/route.ts:28 - POST
+app/api/actions/route.ts:87 - PUT
+app/api/actions/route.ts:156 - GET
+app/api/analytics/route.ts:696 - GET
+app/api/chat/route.ts:182 - POST
+app/api/documents/route.ts:59 - GET
+app/api/documents/route.ts:115 - POST
+app/api/employees/route.ts:26 - GET
+app/api/employees/route.ts:127 - POST
+app/api/employees/route.ts:241 - PATCH
+app/api/employees/route.ts:321 - DELETE
+app/api/health/route.ts:38 - GET
+app/api/health/route.ts:19 - dynamic
+app/api/health/route.ts:20 - runtime
+app/api/metrics/route.ts:25 - GET
+app/api/monitoring/route.ts:24 - GET
+app/api/monitoring/route.ts:82 - POST
+app/api/templates/route.ts:13 - GET
+app/api/templates/route.ts:5 - runtime
+components/custom/chat/ChatContext.tsx:37 - ChatContextValue (used in module)
+components/custom/chat/ChatContext.tsx:55 - ChatProviderProps (used in module)
+components/custom/chat/ChatHeader.tsx:10 - ChatHeaderProps (used in module)
+components/custom/chat/ChatInput.tsx:10 - ChatInputProps (used in module)
+components/custom/chat/MessageActions.tsx:10 - MessageActionsProps (used in module)
+components/custom/chat/MessageContent.tsx:13 - MessageContentProps (used in module)
+components/custom/chat/MessageItem.tsx:13 - MessageItemProps (used in module)
+components/custom/chat/MessageList.tsx:11 - MessageListProps (used in module)
+components/custom/chat/PIIWarningModal.tsx:10 - PIIWarningModalProps (used in module)
+components/custom/chat/SuggestionCards.tsx:19 - SuggestionCardsProps (used in module)
+components/custom/chat/WorkflowBadge.tsx:9 - WorkflowBadgeProps (used in module)
+components/ui/skeletons/index.ts:8 - MetricCardSkeleton
+components/ui/skeletons/index.ts:9 - ChatMessageSkeleton
+components/ui/skeletons/index.ts:10 - DialogSkeleton
+components/ui/skeletons/index.ts:11 - ChartSkeleton
+components/ui/skeletons/index.ts:12 - TableSkeleton
+components/ui/skeletons/index.ts:13 - DocumentEditorSkeleton
+components/ui/skeletons/index.ts:14 - PerformanceGridSkeleton
+components/ui/skeletons/index.ts:15 - ENPSSkeleton
+lib/analytics/chat/claude-client.ts:8 - buildSystemPrompt (used in module)
+lib/analytics/chat/utils.ts:163 - selectChartType (used in module)
+lib/workflows/actions/executor.ts:54 - ActionExecutor (used in module)
+lib/workflows/actions/suggestions.ts:628 - generateContextualSuggestions
+lib/workflows/actions/types.ts:379 - isCreateDocumentAction
+lib/workflows/actions/types.ts:385 - isSendEmailAction
+lib/workflows/actions/types.ts:391 - isSendSlackMessageAction
+lib/workflows/actions/types.ts:397 - isCreateCalendarEventAction
+lib/workflows/actions/types.ts:403 - isUpdateDatabaseAction
+lib/workflows/actions/types.ts:28 - ActionStatus (used in module)
+lib/workflows/actions/types.ts:39 - ActionPriority (used in module)
+lib/workflows/actions/types.ts:169 - CreateCalendarEventPayload (used in module)
+lib/workflows/actions/types.ts:193 - UpdateDatabasePayload (used in module)
+lib/workflows/actions/types.ts:204 - ApiCallPayload
+lib/workflows/actions/types.ts:216 - WebhookPayload
+lib/workflows/state-machine/persistence.ts:126 - loadStateSnapshot
+lib/workflows/state-machine/persistence.ts:161 - queryStateSnapshots (used in module)
+lib/workflows/state-machine/persistence.ts:331 - clearConversationState
+lib/workflows/state-machine/persistence.ts:354 - deleteConversationSnapshots
+lib/workflows/state-machine/persistence.ts:377 - hasActiveState
+lib/workflows/state-machine/persistence.ts:388 - getStateStatistics
+lib/workflows/state-machine/types.ts:108 - StateValidationWarning (used in module)
+lib/workflows/state-machine/types.ts:155 - ValidationRule (used in module)
+lib/workflows/state-machine/types.ts:179 - StateMode (used in module)
+lib/workflows/state-machine/types.ts:195 - StateDiff (used in module)
+lib/workflows/state-machine/types.ts:205 - StateHistoryEntry (used in module)
+lib/workflows/state-machine/types.ts:215 - StateExport
+app/api/ai/analyze/route.ts:22 - POST
+app/api/ai/analyze/route.ts:167 - GET
+app/api/ai/config/route.ts:24 - GET
+app/api/ai/config/route.ts:80 - PATCH
+app/api/ai/config/route.ts:138 - POST
+app/api/ai/extract-form/route.ts:17 - POST
+app/api/ai/ocr-image/route.ts:17 - POST
+app/api/ai/parse-resume/route.ts:17 - POST
+app/api/ai/quota/route.ts:15 - GET
+app/api/ai/transcribe/route.ts:16 - POST
+app/api/ai/transform/route.ts:22 - POST
+app/api/ai/transform/route.ts:191 - GET
+app/api/analytics/attrition/route.ts:13 - GET
+app/api/analytics/chat/route.ts:23 - POST
+app/api/analytics/enps-sentiment/route.ts:29 - GET
+app/api/analytics/enps-sentiment/route.ts:179 - POST
+app/api/analytics/errors/route.ts:19 - POST
+app/api/analytics/errors/route.ts:106 - GET
+app/api/analytics/headcount/route.ts:13 - GET
+app/api/analytics/metrics/route.ts:18 - POST
+app/api/analytics/metrics/route.ts:72 - GET
+app/api/analytics/nine-box/route.ts:13 - GET
+app/api/auth/demo-token/route.ts:13 - POST
+app/api/auth/demo-token/route.ts:61 - GET
+app/api/auth/google/route.ts:11 - GET
+app/api/auth/google/route.ts:4 - runtime
+app/api/auth/login/route.ts:27 - POST
+app/api/cron/metrics-sync/route.ts:13 - GET
+app/api/cron/onboarding/route.ts:13 - GET
+app/api/data/import/route.ts:48 - POST
+app/api/data/list/route.ts:16 - GET
+app/api/data/preview-upload/route.ts:36 - POST
+app/api/data/upload/route.ts:29 - POST
+app/api/documents/[id]/route.ts:55 - GET
+app/api/documents/[id]/route.ts:95 - PATCH
+app/api/documents/[id]/route.ts:155 - DELETE
+app/api/documents/export-to-google-docs/route.ts:13 - POST
+app/api/documents/export-to-google-docs/route.ts:6 - runtime
+app/api/employees/[id]/route.ts:12 - GET
+app/api/employees/[id]/route.ts:66 - PATCH
+app/api/employees/[id]/route.ts:115 - DELETE
+app/api/setup/init/route.ts:23 - GET
+app/api/setup/init/route.ts:44 - POST
+app/api/setup/init/route.ts:114 - DELETE
+app/api/surveys/analyze/route.ts:59 - POST
+app/api/surveys/analyze/route.ts:342 - GET
+app/api/templates/content/route.ts:13 - GET
+app/api/templates/content/route.ts:5 - runtime
+lib/workflows/actions/handlers/index.ts:14 - registerAllHandlers (used in module)
+lib/workflows/actions/handlers/index.ts:26 - documentHandler (used in module)
+app/api/auth/google/callback/route.ts:11 - GET
+app/api/auth/google/callback/route.ts:4 - runtime
+app/api/auth/google/status/route.ts:11 - GET
+app/api/auth/google/status/route.ts:4 - runtime
+app/api/data/delete/[fileId]/route.ts:35 - DELETE
+app/api/data/preview/[id]/route.ts:16 - GET

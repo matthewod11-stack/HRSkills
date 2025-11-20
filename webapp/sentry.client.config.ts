@@ -1,8 +1,14 @@
 /**
  * Sentry Client Configuration
- * 
+ *
  * Configures Sentry for client-side (browser) error tracking.
  * This file is automatically loaded by Next.js when @sentry/nextjs is installed.
+ *
+ * NOTE: This file is loaded at BUILD TIME and RUNTIME.
+ * - Build-time: Sentry.init() configuration is evaluated during build
+ * - Runtime: Some variables (NODE_ENV) are checked at runtime
+ * We keep direct process.env access here since Sentry needs to initialize
+ * before env.mjs validation runs.
  */
 
 import * as Sentry from '@sentry/nextjs';

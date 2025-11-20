@@ -21,7 +21,7 @@ export interface ChatInputProps {
   /** Placeholder text */
   placeholder?: string;
   /** Ref to the input element */
-  inputRef?: RefObject<HTMLInputElement>;
+  inputRef?: RefObject<HTMLInputElement | null>;
 }
 
 /**

@@ -106,8 +106,8 @@ export async function analyzeHiringBottlenecks(options: {
       LIMIT 100
     `);
 
-    const result = await db.execute(query);
-    const rows = result.rows as any[];
+    const result = (db as any).all(query);
+    const rows = result as any[];
 
     // Get hiring manager names
     const managerQuery = sql.raw(`
@@ -115,7 +115,7 @@ export async function analyzeHiringBottlenecks(options: {
       FROM employees
       WHERE employee_id IN (${rows.map(r => `'${r.hiring_manager_id}'`).join(',')})
     `);
-    const managerResult = await db.execute(managerQuery);
+    const managerResult = (db as any).all(managerQuery);
     const managerMap = new Map(
       (managerResult.rows as any[]).map(m => [m.employee_id, m.full_name])
     );
@@ -287,14 +287,14 @@ async function calculateTimeToFillTrends(): Promise<{
 }> {
   try {
     // Compare average days open for reqs opened in last 30 days vs previous 30 days
-    const recent = await db.execute(sql.raw(`
+    const recent = (db as any).all(sql.raw(`
       SELECT AVG(julianday('now') - julianday(opened_date)) as avg_days
       FROM job_requisitions
       WHERE status = 'open'
         AND julianday('now') - julianday(opened_date) <= 30
     `));
 
-    const previous = await db.execute(sql.raw(`
+    const previous = (db as any).all(sql.raw(`
       SELECT AVG(julianday('now') - julianday(opened_date)) as avg_days
       FROM job_requisitions
       WHERE status = 'open'

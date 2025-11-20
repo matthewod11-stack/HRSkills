@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 
 /**
  * Pagination configuration options
@@ -300,6 +300,7 @@ export function usePagination({
 export function useInfinitePagination(totalItems: number, itemsPerPage: number = 20) {
   const [loadedPages, setLoadedPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const loadingRef = useRef(false);
 
   const loadedItems = useMemo(
     () => Math.min(loadedPages * itemsPerPage, totalItems),
@@ -309,8 +310,9 @@ export function useInfinitePagination(totalItems: number, itemsPerPage: number =
   const hasMore = useMemo(() => loadedItems < totalItems, [loadedItems, totalItems]);
 
   const loadMore = useCallback(async () => {
-    if (!hasMore || isLoading) return;
+    if (!hasMore || loadingRef.current) return;
 
+    loadingRef.current = true;
     setIsLoading(true);
 
     // Simulate async loading (remove in production)
@@ -318,11 +320,13 @@ export function useInfinitePagination(totalItems: number, itemsPerPage: number =
 
     setLoadedPages((prev) => prev + 1);
     setIsLoading(false);
-  }, [hasMore, isLoading]);
+    loadingRef.current = false;
+  }, [hasMore]);
 
   const reset = useCallback(() => {
     setLoadedPages(1);
     setIsLoading(false);
+    loadingRef.current = false;
   }, []);
 
   return {

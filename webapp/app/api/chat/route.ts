@@ -38,6 +38,7 @@ import type { SuggestionContext } from '@/lib/workflows/actions/suggestions';
 import { detectContext } from '@/lib/workflows/context-detector';
 import type { ContextPanelData } from '@/components/custom/ContextPanel';
 import { fetchBestTemplateForDocumentType } from '@/lib/templates-drive';
+import { env } from '@/env.mjs';
 
 // In-memory response cache (OPTIMIZATION: saves $1,350/month on repeated queries)
 interface CachedResponse {
@@ -491,7 +492,7 @@ Your goal: Help this startup scale its people, culture, and leadership with the 
         // DLP: Optionally de-identify PII before sending to Claude API
         // This protects sensitive data but may reduce Claude's accuracy
         // Enable via NEXT_PUBLIC_DLP_DEIDENTIFY_CHAT=true
-        const enableDlpDeidentification = process.env.NEXT_PUBLIC_DLP_DEIDENTIFY_CHAT === 'true';
+        const enableDlpDeidentification = env.NEXT_PUBLIC_DLP_DEIDENTIFY_CHAT;
 
         if (enableDlpDeidentification) {
           try {

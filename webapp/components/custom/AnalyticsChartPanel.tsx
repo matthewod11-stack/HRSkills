@@ -3,36 +3,13 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { BarChart3, LineChart, PieChart, Download, RefreshCw, Filter } from 'lucide-react';
-import dynamic from 'next/dynamic';
 import { useAuth } from '@/lib/auth/auth-context';
-
-// Lazy load Chart.js components
-const Bar = dynamic(
-  () => import('@/lib/chartjs-config').then(() => import('react-chartjs-2').then((mod) => mod.Bar)),
-  {
-    ssr: false,
-    loading: () => <div className="w-full h-[300px] bg-white/5 rounded-lg animate-pulse" />,
-  }
-);
-const Line = dynamic(
-  () =>
-    import('@/lib/chartjs-config').then(() => import('react-chartjs-2').then((mod) => mod.Line)),
-  {
-    ssr: false,
-    loading: () => <div className="w-full h-[300px] bg-white/5 rounded-lg animate-pulse" />,
-  }
-);
-const Pie = dynamic(
-  () => import('@/lib/chartjs-config').then(() => import('react-chartjs-2').then((mod) => mod.Pie)),
-  {
-    ssr: false,
-    loading: () => <div className="w-full h-[300px] bg-white/5 rounded-lg animate-pulse" />,
-  }
-);
+import { SimpleBarChart, SimpleLineChart, SimplePieChart } from '@/components/charts/RechartsWrappers';
+import { chartJsToRecharts, formatChartValue } from '@/lib/charts/recharts-helpers';
 
 interface AnalyticsChartPanelProps {
   metric: string;
-  chartType?: 'bar' | 'line' | 'pie';
+  chartType?: 'bar' | 'line' | 'pie' | 'scatter';
   department?: string;
   dateRange?: string;
   chartConfig?: any;
@@ -208,40 +185,10 @@ export function AnalyticsChartPanel({
     return null;
   };
 
-  const getChartOptions = () => {
-    return {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: chartType === 'pie',
-          position: 'bottom' as const,
-          labels: {
-            color: 'rgba(255, 255, 255, 0.7)',
-          },
-        },
-        tooltip: {
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          titleColor: 'white',
-          bodyColor: 'white',
-          borderColor: 'rgba(255, 255, 255, 0.2)',
-          borderWidth: 1,
-        },
-      },
-      scales:
-        chartType !== 'pie'
-          ? {
-              x: {
-                grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                ticks: { color: 'rgba(255, 255, 255, 0.7)' },
-              },
-              y: {
-                grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                ticks: { color: 'rgba(255, 255, 255, 0.7)' },
-              },
-            }
-          : undefined,
-    };
+  // Transform Chart.js data to Recharts format
+  const transformDataForRecharts = (chartJsData: any) => {
+    if (!chartJsData) return [];
+    return chartJsToRecharts(chartJsData);
   };
 
   const getChartIcon = () => {
@@ -266,11 +213,12 @@ export function AnalyticsChartPanel({
     return titles[metric] || 'Analytics';
   };
 
-  const chartData = chartConfigState ? chartConfigState.data : getChartData();
+  const chartJsData = chartConfigState ? chartConfigState.data : getChartData();
+  const rechartsData = transformDataForRecharts(chartJsData);
   const resolvedChartType = chartConfigState?.type || chartType;
-  const ChartComponent =
-    resolvedChartType === 'line' ? Line : resolvedChartType === 'pie' ? Pie : Bar;
-  const chartOptions = chartConfigState?.options || getChartOptions();
+
+  // Get the dataKey for Recharts (first dataset label or default)
+  const dataKey = chartJsData?.datasets?.[0]?.label || 'value';
 
   return (
     <div className="flex flex-col h-full min-h-[620px]">
@@ -323,13 +271,36 @@ export function AnalyticsChartPanel({
           <div className="flex items-center justify-center h-full text-red-400">
             <p>Error: {error}</p>
           </div>
-        ) : chartData ? (
+        ) : rechartsData.length > 0 ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="h-full"
           >
-            <ChartComponent data={chartData} options={chartOptions} />
+            {resolvedChartType === 'line' && (
+              <SimpleLineChart
+                data={rechartsData}
+                dataKey={dataKey}
+                color="#3b82f6"
+              />
+            )}
+            {resolvedChartType === 'pie' && (
+              <SimplePieChart
+                data={rechartsData}
+                dataKey={dataKey}
+              />
+            )}
+            {(resolvedChartType === 'bar' || !resolvedChartType) && (
+              <SimpleBarChart
+                data={rechartsData}
+                dataKey={dataKey}
+                color={
+                  metric === 'attrition' ? '#ef4444' :
+                  metric === 'performance' ? '#22c55e' :
+                  '#3b82f6'
+                }
+              />
+            )}
           </motion.div>
         ) : (
           <div className="flex items-center justify-center h-full text-gray-400">

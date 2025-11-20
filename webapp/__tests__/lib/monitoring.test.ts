@@ -4,29 +4,40 @@
  * Tests the Core Web Vitals tracking and error logging functionality.
  */
 
+import { vi } from 'vitest';
+
+// Mock env module before importing monitoring
+vi.mock('@/env.mjs', () => ({
+  env: {
+    NODE_ENV: 'development',
+  },
+}));
+
 import { initMonitoring, reportCustomMetric } from '@/lib/monitoring';
 
 describe('Performance Monitoring System', () => {
-  let fetchSpy: jest.SpyInstance;
-  let consoleLogSpy: jest.SpyInstance;
-  let consoleErrorSpy: jest.SpyInstance;
+  let fetchSpy: vi.SpyInstance;
+  let consoleLogSpy: vi.SpyInstance;
+  let consoleErrorSpy: vi.SpyInstance;
 
   beforeEach(() => {
     // Mock fetch
-    fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue({
+    fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
       ok: true,
       json: async () => ({ success: true }),
     } as Response);
 
     // Mock console methods
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
 
     // Mock PerformanceObserver
-    global.PerformanceObserver = jest.fn().mockImplementation(() => ({
-      observe: jest.fn(),
-      disconnect: jest.fn(),
-    })) as any;
+    global.PerformanceObserver = vi.fn().mockImplementation(function() {
+      return {
+        observe: vi.fn(),
+        disconnect: vi.fn(),
+      };
+    }) as any;
 
     // Set NODE_ENV to development for testing
     process.env.NODE_ENV = 'development';
@@ -36,7 +47,7 @@ describe('Performance Monitoring System', () => {
     fetchSpy.mockRestore();
     consoleLogSpy.mockRestore();
     consoleErrorSpy.mockRestore();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('initMonitoring', () => {
@@ -50,7 +61,7 @@ describe('Performance Monitoring System', () => {
     });
 
     it('should setup error event listeners', () => {
-      const addEventListenerSpy = jest.spyOn(window, 'addEventListener');
+      const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
       initMonitoring();
 
       expect(addEventListenerSpy).toHaveBeenCalledWith('error', expect.any(Function));
@@ -69,7 +80,9 @@ describe('Performance Monitoring System', () => {
     });
 
     it('should send metrics to API in production mode', async () => {
-      process.env.NODE_ENV = 'production';
+      // Dynamically import and override env for this test
+      const { env } = await import('@/env.mjs');
+      vi.mocked(env).NODE_ENV = 'production' as any;
 
       reportCustomMetric('custom_metric', 456);
 
@@ -84,10 +97,16 @@ describe('Performance Monitoring System', () => {
           keepalive: true,
         })
       );
+
+      // Reset for other tests
+      vi.mocked(env).NODE_ENV = 'development' as any;
     });
 
     it('should handle fetch errors silently', async () => {
-      process.env.NODE_ENV = 'production';
+      // Dynamically import and override env for this test
+      const { env } = await import('@/env.mjs');
+      vi.mocked(env).NODE_ENV = 'production' as any;
+
       fetchSpy.mockRejectedValueOnce(new Error('Network error'));
 
       reportCustomMetric('failing_metric', 789);
@@ -96,12 +115,15 @@ describe('Performance Monitoring System', () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(consoleErrorSpy).toHaveBeenCalled();
+
+      // Reset for other tests
+      vi.mocked(env).NODE_ENV = 'development' as any;
     });
   });
 
   describe('Error Tracking', () => {
     it('should capture unhandled errors', () => {
-      const addEventListenerSpy = jest.spyOn(window, 'addEventListener');
+      const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
       initMonitoring();
 
       const errorHandler = addEventListenerSpy.mock.calls.find(
@@ -118,13 +140,13 @@ describe('Performance Monitoring System', () => {
 
       errorHandler(mockErrorEvent);
 
-      expect(consoleLogSpy).toHaveBeenCalled();
+      expect(consoleErrorSpy).toHaveBeenCalled();
 
       addEventListenerSpy.mockRestore();
     });
 
     it('should capture unhandled promise rejections', () => {
-      const addEventListenerSpy = jest.spyOn(window, 'addEventListener');
+      const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
       initMonitoring();
 
       const rejectionHandler = addEventListenerSpy.mock.calls.find(
@@ -140,7 +162,7 @@ describe('Performance Monitoring System', () => {
 
       rejectionHandler(mockRejectionEvent);
 
-      expect(consoleLogSpy).toHaveBeenCalled();
+      expect(consoleErrorSpy).toHaveBeenCalled();
 
       addEventListenerSpy.mockRestore();
     });

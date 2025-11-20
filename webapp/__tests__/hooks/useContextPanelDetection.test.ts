@@ -1,18 +1,20 @@
+import { vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+import { vi } from 'vitest';
 import { useContextPanelDetection } from '@/lib/hooks/useContextPanelDetection';
 import { detectContext } from '@/lib/workflows/context-detector';
 import type { ContextPanelData } from '@/components/custom/ContextPanel';
 
 // Mock the context detector
-jest.mock('@/lib/workflows/context-detector', () => ({
-  detectContext: jest.fn(),
+vi.mock('@/lib/workflows/context-detector', () => ({
+  detectContext: vi.fn(),
 }));
 
-const mockDetectContext = detectContext as jest.MockedFunction<typeof detectContext>;
+const mockDetectContext = detectContext as vi.MockedFunction<typeof detectContext>;
 
 describe('useContextPanelDetection', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('enhancePanelData', () => {
@@ -189,7 +191,7 @@ Once you provide the details, I can help you further.`;
 
   describe('detectAndUpdatePanel', () => {
     it('should use server-side detection when provided', () => {
-      const mockOnPanelChange = jest.fn();
+      const mockOnPanelChange = vi.fn();
       const { result } = renderHook(() =>
         useContextPanelDetection({
           onPanelChange: mockOnPanelChange,
@@ -217,7 +219,7 @@ Once you provide the details, I can help you further.`;
     });
 
     it('should fall back to client-side detection when no server panel', () => {
-      const mockOnPanelChange = jest.fn();
+      const mockOnPanelChange = vi.fn();
 
       mockDetectContext.mockReturnValue({
         panelData: {
@@ -244,7 +246,7 @@ Once you provide the details, I can help you further.`;
     });
 
     it('should not show panel if client detection confidence is below threshold', () => {
-      const mockOnPanelChange = jest.fn();
+      const mockOnPanelChange = vi.fn();
 
       mockDetectContext.mockReturnValue({
         panelData: {
@@ -271,7 +273,7 @@ Once you provide the details, I can help you further.`;
     });
 
     it('should respect custom confidence threshold', () => {
-      const mockOnPanelChange = jest.fn();
+      const mockOnPanelChange = vi.fn();
 
       mockDetectContext.mockReturnValue({
         panelData: {
@@ -319,7 +321,7 @@ Once you provide the details, I can help you further.`;
     });
 
     it('should enhance panel data before notifying parent', () => {
-      const mockOnPanelChange = jest.fn();
+      const mockOnPanelChange = vi.fn();
 
       const serverPanel: ContextPanelData = {
         type: 'document',
@@ -422,7 +424,7 @@ Once you provide the details, I can help you further.`;
 
   describe('integration scenarios', () => {
     it('should handle analytics panel from server', () => {
-      const mockOnPanelChange = jest.fn();
+      const mockOnPanelChange = vi.fn();
 
       const { result } = renderHook(() =>
         useContextPanelDetection({
@@ -455,7 +457,7 @@ Once you provide the details, I can help you further.`;
     });
 
     it('should handle document panel with PIP sanitization', () => {
-      const mockOnPanelChange = jest.fn();
+      const mockOnPanelChange = vi.fn();
 
       const { result } = renderHook(() =>
         useContextPanelDetection({

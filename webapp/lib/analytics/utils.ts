@@ -3,9 +3,10 @@ import { existsSync } from 'fs';
 import path from 'path';
 import { parseCSV, parseExcel, getFileExtension } from './parser';
 import { DataFile, DataMetadata } from '@/lib/types/data-sources';
+import { env } from '@/env.mjs';
 
 const DEFAULT_DATA_DIRECTORIES = [
-  process.env.ANALYTICS_DATA_DIR,
+  env.ANALYTICS_DATA_DIR,
   path.join(process.cwd(), 'data'),
   path.join(process.cwd(), '..', 'data'),
   path.join(process.cwd(), '..', '..', 'data'),

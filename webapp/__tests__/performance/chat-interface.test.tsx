@@ -1,5 +1,4 @@
 /**
- * @jest-environment jsdom
  */
 
 /**
@@ -12,6 +11,7 @@
  * - Phase 4: ActionButtons useReducer optimization
  */
 
+import { vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ChatInput from '@/components/custom/chat/ChatInput';
@@ -19,7 +19,7 @@ import { ActionButtons } from '@/components/custom/ActionButtons';
 import type { BaseAction } from '@/lib/workflows/actions/types';
 
 // Mock next/dynamic for MessageMarkdown lazy loading
-jest.mock('next/dynamic', () => ({
+vi.mock('next/dynamic', () => ({
   __esModule: true,
   default: (fn: any, options?: any) => {
     const Component = ({ content }: { content: string }) => {
@@ -37,14 +37,14 @@ jest.mock('next/dynamic', () => ({
 import MessageMarkdown from '@/components/custom/chat/MessageMarkdown';
 
 // Provide auth context mock for ActionButtons
-jest.mock('@/lib/auth/auth-context', () => ({
+vi.mock('@/lib/auth/auth-context', () => ({
   useAuth: () => ({
     getAuthHeaders: () => ({ Authorization: 'Bearer test-token' }),
   }),
 }));
 
 // Mock fetch for ActionButtons tests
-global.fetch = jest.fn();
+global.fetch = vi.fn();
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -69,15 +69,15 @@ Object.defineProperty(window, 'localStorage', {
 
 describe('ChatInterface Performance Optimizations', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     localStorageMock.clear();
   });
 
   describe('Phase 2: ChatInput Component Extraction', () => {
     it('should render ChatInput component', () => {
-      const mockOnChange = jest.fn();
-      const mockOnSend = jest.fn();
-      const mockOnKeyPress = jest.fn();
+      const mockOnChange = vi.fn();
+      const mockOnSend = vi.fn();
+      const mockOnKeyPress = vi.fn();
 
       render(
         <ChatInput
@@ -93,9 +93,9 @@ describe('ChatInterface Performance Optimizations', () => {
     });
 
     it('should call onChange when typing', async () => {
-      const mockOnChange = jest.fn();
-      const mockOnSend = jest.fn();
-      const mockOnKeyPress = jest.fn();
+      const mockOnChange = vi.fn();
+      const mockOnSend = vi.fn();
+      const mockOnKeyPress = vi.fn();
 
       render(
         <ChatInput
@@ -113,9 +113,9 @@ describe('ChatInterface Performance Optimizations', () => {
     });
 
     it('should disable send button when input is empty', () => {
-      const mockOnChange = jest.fn();
-      const mockOnSend = jest.fn();
-      const mockOnKeyPress = jest.fn();
+      const mockOnChange = vi.fn();
+      const mockOnSend = vi.fn();
+      const mockOnKeyPress = vi.fn();
 
       render(
         <ChatInput
@@ -131,9 +131,9 @@ describe('ChatInterface Performance Optimizations', () => {
     });
 
     it('should enable send button when input has value', () => {
-      const mockOnChange = jest.fn();
-      const mockOnSend = jest.fn();
-      const mockOnKeyPress = jest.fn();
+      const mockOnChange = vi.fn();
+      const mockOnSend = vi.fn();
+      const mockOnKeyPress = vi.fn();
 
       render(
         <ChatInput
@@ -149,9 +149,9 @@ describe('ChatInterface Performance Optimizations', () => {
     });
 
     it('should call onSend when send button clicked', async () => {
-      const mockOnChange = jest.fn();
-      const mockOnSend = jest.fn();
-      const mockOnKeyPress = jest.fn();
+      const mockOnChange = vi.fn();
+      const mockOnSend = vi.fn();
+      const mockOnKeyPress = vi.fn();
 
       render(
         <ChatInput
@@ -169,10 +169,10 @@ describe('ChatInterface Performance Optimizations', () => {
     });
 
     it('should not re-render when parent re-renders with same props', () => {
-      const mockOnChange = jest.fn();
-      const mockOnSend = jest.fn();
-      const mockOnKeyPress = jest.fn();
-      const renderSpy = jest.fn();
+      const mockOnChange = vi.fn();
+      const mockOnSend = vi.fn();
+      const mockOnKeyPress = vi.fn();
+      const renderSpy = vi.fn();
 
       function TestWrapper({ value }: { value: string }) {
         renderSpy();
@@ -232,7 +232,7 @@ describe('ChatInterface Performance Optimizations', () => {
     });
 
     it('should be memoized and not re-render with same content', () => {
-      const renderSpy = jest.fn();
+      const renderSpy = vi.fn();
 
       function TestWrapper({ content }: { content: string }) {
         renderSpy();
@@ -301,7 +301,7 @@ describe('ChatInterface Performance Optimizations', () => {
     });
 
     it('should execute action when button clicked', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           success: true,
@@ -337,7 +337,7 @@ describe('ChatInterface Performance Optimizations', () => {
     });
 
     it('should show loading state while executing', async () => {
-      (global.fetch as jest.Mock).mockImplementation(
+      (global.fetch as vi.Mock).mockImplementation(
         () =>
           new Promise((resolve) =>
             setTimeout(
@@ -377,7 +377,7 @@ describe('ChatInterface Performance Optimizations', () => {
     });
 
     it('should show success state after completion', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           success: true,
@@ -409,7 +409,7 @@ describe('ChatInterface Performance Optimizations', () => {
     });
 
     it('should handle execution errors', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           success: false,
@@ -446,9 +446,9 @@ describe('ChatInterface Performance Optimizations', () => {
     });
 
     it('should call onActionComplete callback', async () => {
-      const mockOnActionComplete = jest.fn();
+      const mockOnActionComplete = vi.fn();
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           success: true,
@@ -497,7 +497,7 @@ describe('ChatInterface Performance Optimizations', () => {
     });
 
     it('should show completion summary', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           success: true,
@@ -530,9 +530,9 @@ describe('ChatInterface Performance Optimizations', () => {
 
   describe('Performance Regression Tests', () => {
     it('ChatInput should have stable onChange handler', () => {
-      const mockOnChange = jest.fn();
-      const mockOnSend = jest.fn();
-      const mockOnKeyPress = jest.fn();
+      const mockOnChange = vi.fn();
+      const mockOnSend = vi.fn();
+      const mockOnKeyPress = vi.fn();
 
       const { rerender } = render(
         <ChatInput
@@ -578,11 +578,11 @@ describe('ChatInterface Performance Optimizations', () => {
 
   describe('Integration Tests', () => {
     it('ChatInput + ActionButtons should work together', async () => {
-      const mockOnChange = jest.fn();
-      const mockOnSend = jest.fn();
-      const mockOnKeyPress = jest.fn();
+      const mockOnChange = vi.fn();
+      const mockOnSend = vi.fn();
+      const mockOnKeyPress = vi.fn();
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as vi.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           success: true,

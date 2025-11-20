@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { detectContext } from '@/lib/workflows/context-detector';
-import type { Message } from '@/components/custom/chat/ChatContext';
+import type { Message, WorkflowState } from '@/components/custom/chat/ChatContext';
 import type { ContextPanelData } from '@/components/custom/ContextPanel';
 
 /**
@@ -175,7 +175,7 @@ export function useChatAPI(options: UseChatAPIOptions): UseChatAPIReturn {
         title: 'Analytics Insight',
         config: {
           chartType:
-            result.data.chartConfig?.type ||
+            (result.data.chartConfig?.type as 'line' | 'bar' | 'pie' | 'scatter' | undefined) ||
             contextDetection.panelData?.config?.chartType ||
             'bar',
           filters: contextDetection.panelData?.config?.filters,
@@ -243,7 +243,7 @@ export function useChatAPI(options: UseChatAPIOptions): UseChatAPIReturn {
         timestamp: new Date(),
         detectedWorkflow: data.detectedWorkflow,
         workflowConfidence: data.workflowConfidence,
-        workflowState: data.workflowState,
+        workflowState: data.workflowState as WorkflowState | undefined,
         suggestedActions: data.suggestedActions,
       };
 

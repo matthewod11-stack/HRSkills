@@ -3,9 +3,15 @@
  *
  * Implements token bucket algorithm for rate limiting API requests
  * Prevents abuse and DoS attacks
+ *
+ * Feature Flag: ENABLE_UPSTASH_RATE_LIMIT
+ * - true: Use Upstash Redis (distributed, survives restarts)
+ * - false: Use in-memory (default, recommended for local dev)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { env } from '@/env.mjs';
+import { applyUpstashRateLimit } from './upstash-rate-limiter';
 
 interface RateLimitConfig {
   windowMs: number; // Time window in milliseconds
@@ -155,9 +161,10 @@ export const RateLimitPresets = {
 };
 
 /**
- * Apply rate limit and add headers to response
+ * Apply rate limit using in-memory store
+ * (Renamed from applyRateLimit to applyInMemoryRateLimit)
  */
-export async function applyRateLimit(
+export async function applyInMemoryRateLimit(
   request: NextRequest,
   config: RateLimitConfig
 ): Promise<{
@@ -232,4 +239,33 @@ export function addRateLimitHeaders(
   response.headers.set('X-RateLimit-Remaining', remaining.toString());
   response.headers.set('X-RateLimit-Reset', resetTime.toString());
   return response;
+}
+
+/**
+ * Apply rate limit with feature flag support
+ *
+ * Feature Flag: ENABLE_UPSTASH_RATE_LIMIT
+ * - true: Use Upstash Redis (distributed, production-ready)
+ * - false: Use in-memory (default, local development)
+ *
+ * Rollback: Set ENABLE_UPSTASH_RATE_LIMIT=false in Vercel dashboard
+ * (no code deployment needed)
+ */
+export async function applyRateLimit(
+  request: NextRequest,
+  config: RateLimitConfig
+): Promise<{
+  allowed: boolean;
+  response?: NextResponse;
+  remaining: number;
+  resetTime: number;
+}> {
+  // Check feature flag
+  if (env.ENABLE_UPSTASH_RATE_LIMIT) {
+    // Use Upstash Redis (distributed)
+    return await applyUpstashRateLimit(request, config);
+  } else {
+    // Use in-memory (default)
+    return await applyInMemoryRateLimit(request, config);
+  }
 }

@@ -29,6 +29,7 @@ export interface Workflow {
   systemPrompt: string;
   actions: Record<string, WorkflowActionDefinition>;
   steps?: WorkflowStep[];
+  keywords?: string[]; // Additional keywords for detection boosting
 }
 
 export interface WorkflowTrigger {
@@ -50,6 +51,9 @@ export interface WorkflowStep {
   name: string;
   description: string;
   nextSteps: string[]; // Possible next steps from here
+  requiredData?: string[]; // Required data fields for this step
+  optionalData?: string[]; // Optional data fields for this step
+  isTerminal?: boolean; // Whether this is a final step (workflow completion)
 }
 
 export interface WorkflowActionDefinition {

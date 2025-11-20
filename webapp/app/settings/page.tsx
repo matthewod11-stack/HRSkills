@@ -28,7 +28,8 @@ import { useRouter } from 'next/navigation';
 import { AIMetricsDashboard } from '@/components/custom/AIMetricsDashboard';
 import { QuotaBanner } from '@/components/custom/QuotaBanner';
 import { getDaysSinceFirstRun } from '@/lib/first-run-client';
-import useSWR from 'swr';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query-keys';
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -59,6 +60,7 @@ interface AIHealth {
 
 export default function SettingsPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
@@ -67,17 +69,24 @@ export default function SettingsPage() {
   const [hasUploadedData, setHasUploadedData] = useState(false);
 
   // Fetch AI configuration from API
-  const { data: aiConfigData, mutate: mutateAIConfig } = useSWR('/api/ai/config', fetcher, {
-    refreshInterval: 30000, // Refresh every 30 seconds
+  const { data: aiConfigData } = useQuery({
+    queryKey: queryKeys.ai.config,
+    queryFn: () => fetcher('/api/ai/config'),
+    refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   // Fetch quota status for quota banner
-  const { data: quotaData } = useSWR('/api/ai/quota', fetcher, {
-    refreshInterval: 60000, // Refresh every minute
+  const { data: quotaData } = useQuery({
+    queryKey: queryKeys.ai.quota,
+    queryFn: () => fetcher('/api/ai/quota'),
+    refetchInterval: 60000, // Refresh every minute
   });
 
   // Fetch first-run status
-  const { data: firstRunData } = useSWR('/api/setup/init', fetcher);
+  const { data: firstRunData } = useQuery({
+    queryKey: queryKeys.setup.init,
+    queryFn: () => fetcher('/api/setup/init'),
+  });
 
   // Initialize progressive disclosure state
   useEffect(() => {
@@ -298,7 +307,8 @@ export default function SettingsPage() {
       });
 
       if (response.ok) {
-        mutateAIConfig(); // Refresh the data
+        // Invalidate and refetch the AI config query
+        queryClient.invalidateQueries({ queryKey: queryKeys.ai.config });
       }
     } catch (error) {
       console.error('Error updating AI config:', error);
@@ -498,9 +508,6 @@ export default function SettingsPage() {
                       <option value="openai" className="bg-gray-900">
                         GPT (OpenAI)
                       </option>
-                      <option value="gemini" className="bg-gray-900">
-                        Gemini (Google)
-                      </option>
                     </select>
                     <p className="text-xs text-gray-400 mt-1">
                       Default provider for all AI requests
@@ -522,9 +529,6 @@ export default function SettingsPage() {
                       </option>
                       <option value="openai" className="bg-gray-900">
                         GPT (OpenAI)
-                      </option>
-                      <option value="gemini" className="bg-gray-900">
-                        Gemini (Google)
                       </option>
                     </select>
                     <p className="text-xs text-gray-400 mt-1">Used if primary provider fails</p>
@@ -561,8 +565,8 @@ export default function SettingsPage() {
                 {/* Provider Health Status */}
                 <div>
                   <h3 className="text-sm font-medium mb-3">Provider Health Status</h3>
-                  <div className="grid md:grid-cols-3 gap-3">
-                    {['anthropic', 'openai', 'gemini'].map((provider) => {
+                  <div className="grid md:grid-cols-2 gap-3">
+                    {['anthropic', 'openai'].map((provider) => {
                       const health = aiConfigData.health?.[provider];
                       return (
                         <div
@@ -608,16 +612,6 @@ export default function SettingsPage() {
                       <input
                         type="password"
                         placeholder="sk-..."
-                        className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-sm focus:outline-none focus:border-purple-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium mb-1">
-                        Google Gemini API Key
-                      </label>
-                      <input
-                        type="password"
-                        placeholder="AIza..."
                         className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-sm focus:outline-none focus:border-purple-500"
                       />
                     </div>

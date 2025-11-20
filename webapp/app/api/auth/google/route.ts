@@ -1,22 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { googleOAuthClient } from '../../../../../integrations/google/oauth-client';
 
 export const runtime = 'nodejs';
 
 /**
  * GET /api/auth/google
  *
- * Initiate OAuth flow - redirects user to Google consent screen
+ * TEMPORARILY DISABLED: Google OAuth flow initiation
+ *
+ * REASON: googleapis package has compatibility issues with Next.js 16 + Turbopack
+ * See app/api/templates/content/route.ts for details.
+ *
+ * TODO: Re-enable once googleapis is compatible with Next.js 16 + Turbopack
+ *
+ * Tracking issue: Phase 12 - Final Validation
  */
 export async function GET(request: NextRequest) {
-  try {
-    const authUrl = googleOAuthClient.getAuthUrl();
-    return NextResponse.redirect(authUrl);
-  } catch (error: any) {
-    console.error('Error generating auth URL:', error);
-    return NextResponse.json(
-      { error: 'Failed to initiate authentication', details: error.message },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json(
+    {
+      error: 'Google OAuth integration temporarily disabled',
+      reason: 'googleapis compatibility issue with Next.js 16 + Turbopack',
+      status: 'pending_fix',
+    },
+    { status: 501 } // 501 Not Implemented
+  );
 }

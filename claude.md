@@ -1,148 +1,47 @@
-# CLAUDE.md
+# HRSkills Platform - Claude Code Configuration
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+> **Note:** This is the project-specific configuration for HRSkills Platform. For comprehensive guides, see `~/claude-docs/`:
+> - [agents.md](~/claude-docs/agents.md) - All available agents and their uses
+> - [plugins.md](~/claude-docs/plugins.md) - Plugin commands and workflows
+> - [rules.md](~/claude-docs/rules.md) - Coding standards and best practices
+> - [workflows.md](~/claude-docs/workflows.md) - Complete workflow guides
+> - [mcp.md](~/claude-docs/mcp.md) - MCP server configuration and usage
 
-**Last Updated:** 2025-11-11
+---
+
+## Project Overview
+
+**Project Name:** HRSkills Platform
+
+**Description:** Chat-first HR automation platform powered by Claude AI with multi-provider failover and dynamic context panels.
+
+**Tech Stack:**
+- Framework: Next.js 14 with App Router
+- Language: TypeScript 5.3
+- Database: SQLite with Drizzle ORM
+- Styling: Tailwind CSS + shadcn/ui
+- Testing: Jest, Playwright, jest-axe
+- Deployment: Vercel (production-ready)
+- AI: Multi-provider (Anthropic → OpenAI)
+
+**Repository:** https://github.com/matthewod11-stack/HRSkills
+
 **Platform Version:** 0.2.0
-**Status:** Production-Ready (Phase 3.2 Complete + Cleanup)
+**Status:** Production-Ready (Phase 3.2 Complete)
 
 ---
 
-## 🎯 What You're Working With
+## Project-Specific Rules
 
-This is a **chat-first HR automation platform** powered by Claude AI with:
-- **25 Claude Skills** - Domain-specific HR capabilities (in `/skills/`) - optimized Nov 2025
-- **Multi-Provider AI** - Automatic failover: Anthropic → OpenAI → Gemini (99.9% uptime)
-- **SQLite + Drizzle ORM** - Type-safe database with sub-50ms analytics queries
-- **Next.js 14** - Full-stack TypeScript with App Router
-- **Dynamic Context Panels** - Chat-driven UI (no sidebar navigation)
+> **Default Standards:** See `~/claude-docs/rules.md` for comprehensive coding standards.
+> Only document project-specific deviations or additions here.
 
-**Core Architecture:**
-```
-Chat Interface → AI Router → SQLite Database → Google Workspace
-     ↓              ↓             ↓                ↓
-Context Panels  Failover   Type-safe ORM    Drive/Docs/Sheets
-```
+### Code Style Exceptions
+- None (following standard rules.md conventions)
 
----
+### Project-Specific Conventions
 
-## 🤖 Custom Agents (Use These When Appropriate)
-
-You have access to specialized agents that should be invoked proactively for specific tasks:
-
-### When to Use Built-in Agents
-
-**Code Quality & Security:**
-- **code-review-quality** - Use after implementing features, before commits, when user asks to "review", "check", or "audit" code
-- **security-auditor** - Use when handling PII/HR data, implementing auth, before production deploys, integrating third-party services
-- **performance-profiler** - Use when optimizing queries, implementing new features with database access, investigating slow performance
-
-**Documentation & Testing:**
-- **docs-sync-checker** - Use after adding new API endpoints, modifying features, before merging PRs
-- **test-generator** - Use after writing new utilities/functions, creating new API routes, refactoring components
-- **accessibility-auditor** - Use after creating/modifying React components, implementing new UI features, before releases
-
-**React & Architecture:**
-- **react-component-refactor** - Use when code reviews reveal duplication, prop drilling >3 levels, components >300 lines
-- **state-refactor-architect** - Use when implementing features with shared state, performance issues from re-renders, considering Zustand migration
-
-**Infrastructure:**
-- **dockerfile-cicd-engineer** - Use when setting up deployment, optimizing Docker builds, implementing CI/CD pipelines
-- **dependency-audit** - Use monthly, after security advisories, before major releases, when adding new dependencies
-
-### Example Usage Triggers
-
-```
-User: "I just added a new employee export feature"
-→ Invoke: code-review-quality, security-auditor (PII handling), test-generator
-
-User: "Review this authentication middleware I wrote"
-→ Invoke: security-auditor, code-review-quality
-
-User: "The analytics dashboard is slow"
-→ Invoke: performance-profiler
-
-User: "I refactored the chat components"
-→ Invoke: react-component-refactor, accessibility-auditor, test-generator
-
-User: "Added new /api/payroll endpoint"
-→ Invoke: docs-sync-checker, security-auditor (sensitive data), test-generator
-```
-
-### Agent Invocation Best Practices
-
-1. **Be Proactive** - Don't wait for user to ask, invoke when patterns match
-2. **Combine Agents** - Run multiple in parallel when relevant (e.g., security + code review)
-3. **Context Matters** - This is an HR platform with PII, so security-auditor should be frequently used
-4. **Before Commits** - Always consider code-review-quality before git commits
-
----
-
-## ⚡ Quick Commands Reference
-
-```bash
-# Development (run from /webapp)
-npm run dev              # Start dev server → http://localhost:3000
-npm run build            # Production build
-npm run type-check       # TypeScript validation
-npm run lint             # ESLint check
-npm run lint:fix         # Auto-fix linting issues
-npm run validate         # All checks (type + lint + test)
-
-# Database (run from /webapp)
-npm run migrate:json-to-sqlite        # Migrate JSON → SQLite
-npm run migrate:json-to-sqlite -- --demo   # Generate 100 demo employees
-npm run db:stats                      # Database statistics
-
-# Testing (run from /webapp)
-npm test                 # Unit tests (Jest)
-npm run test:watch       # Watch mode
-npm run test:coverage    # Coverage report
-npm run test:e2e         # E2E tests (Playwright)
-npm run test:a11y        # Accessibility tests
-npm run test:all         # All tests
-
-# Code Quality (run from /webapp)
-npm run format           # Prettier formatting
-npm run clean            # Clean build artifacts
-```
-
----
-
-## 🏗️ Critical Architecture Patterns
-
-### 1. Chat & Skill System
-
-**Skill Detection:** `/webapp/app/api/chat/route.ts:60-150`
-
-Skills are auto-detected via keyword matching. To add a new skill:
-
-1. Create skill directory:
-   ```bash
-   mkdir -p skills/my-skill/references
-   ```
-
-2. Create `skills/my-skill/SKILL.md`:
-   ```markdown
-   ---
-   name: my-skill
-   description: What this skill does
-   ---
-   # Instructions for Claude
-   You are an expert in...
-   ```
-
-3. Add detection pattern in `/webapp/app/api/chat/route.ts`:
-   ```typescript
-   if (/relevant|keywords/.test(messageLower)) {
-     return 'my-skill'
-   }
-   ```
-
-### 2. Database Queries (Drizzle ORM)
-
-**ALWAYS use Drizzle ORM, NEVER raw SQL:**
-
+**1. ALWAYS use Drizzle ORM (NEVER raw SQL):**
 ```typescript
 // ✅ CORRECT: Type-safe Drizzle query
 import { db } from '@/lib/db'
@@ -154,682 +53,753 @@ const employees = await db.select()
   .where(eq(employeesTable.status, 'active'))
 
 // ❌ WRONG: Raw SQL
-const employees = await db.run('SELECT * FROM employees WHERE status = "active"')
+const employees = await db.run('SELECT * FROM employees')
 ```
 
-**Key Files:**
-- Schema: `/webapp/db/schema.ts` (10 tables)
-- Client: `/webapp/lib/db/index.ts` (singleton instance)
-- Analytics: `/webapp/lib/analytics/headcount-sql.ts`, `attrition-sql.ts`
-
-### 3. Multi-Provider AI Router
-
-**ALWAYS use aiRouter, NEVER direct provider calls:**
-
+**2. ALWAYS use aiRouter (NEVER direct provider calls):**
 ```typescript
 // ✅ CORRECT: Multi-provider with failover
 import { aiRouter } from '@/lib/ai/router'
-
-const response = await aiRouter.chat(messages, {
-  temperature: 0.7,
-  max_tokens: 2048
-})
-// Automatically tries: Anthropic → OpenAI → Gemini
+const response = await aiRouter.chat(messages, { temperature: 0.7 })
 
 // ❌ WRONG: Direct provider call (no failover)
 import Anthropic from '@anthropic-ai/sdk'
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-const response = await anthropic.messages.create(...)
 ```
 
-**Implementation:** `/webapp/lib/ai/router.ts` (352 lines)
-
-### 4. API Route Pattern
-
-**ALWAYS follow this structure for new API routes:**
-
+**3. ALWAYS use centralized error handling:**
 ```typescript
-// /webapp/app/api/my-endpoint/route.ts
-import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth, hasPermission } from '@/lib/auth/middleware'
+// ✅ CORRECT
 import { handleApiError, createSuccessResponse } from '@/lib/api-helpers'
-import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter'
-
-export async function GET(request: NextRequest) {
-  // 1. Rate limiting
-  const rateLimitResult = await applyRateLimit(request, RateLimitPresets.STANDARD)
-  if (!rateLimitResult.success) {
-    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
-  }
-
-  // 2. Authentication
-  const authResult = await requireAuth(request)
-  if (!authResult.success) {
-    return NextResponse.json({ error: authResult.error }, { status: authResult.statusCode })
-  }
-
-  // 3. Authorization (if needed)
-  if (!hasPermission(authResult.user, 'resource', 'action')) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
-
-  // 4. Business logic with error handling
-  try {
-    const result = await doSomething()
-    return createSuccessResponse(result)
-  } catch (error) {
-    return handleApiError(error, 'Operation failed')
-  }
-}
-```
-
-### 5. Error Handling
-
-**ALWAYS use centralized error handling:**
-
-```typescript
-// ✅ CORRECT: Use helpers
-import { handleApiError, createSuccessResponse } from '@/lib/api-helpers'
-
 try {
   const result = await operation()
   return createSuccessResponse(result)
 } catch (error) {
   return handleApiError(error, 'Operation failed')
 }
+```
 
-// ❌ WRONG: Manual error handling
-try {
-  const result = await operation()
-  return NextResponse.json({ data: result })
-} catch (error) {
-  console.error(error)
-  return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
+**4. API routes must follow this pattern:**
+```typescript
+// /webapp/app/api/my-endpoint/route.ts
+export async function GET(request: NextRequest) {
+  // 1. Rate limiting (applyRateLimit)
+  // 2. Authentication (requireAuth)
+  // 3. Authorization (hasPermission)
+  // 4. Business logic with error handling
 }
 ```
 
-### 6. Form Validation with Zod
+### Testing Requirements (Beyond Standard 80%)
 
-**ALWAYS validate inputs with Zod schemas:**
+- **Authentication flows:** 100% coverage required (JWT + RBAC critical)
+- **AI provider failover:** Integration tests required for Anthropic → OpenAI chain
+- **PII/HR data operations:** Security audit + test coverage mandatory
+- **Context panel detection:** E2E tests required for pattern matching
+- **Accessibility:** WCAG 2.1 AA compliance with jest-axe validation
 
-```typescript
-import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
+---
 
-const schema = z.object({
-  email: z.string().email('Invalid email'),
-  name: z.string().min(2, 'Name too short'),
-  department: z.enum(['Engineering', 'Sales', 'Marketing'])
-})
+## Project Architecture
 
-const form = useForm({
-  resolver: zodResolver(schema)
-})
+### Directory Structure
+```
+HRSkills/
+  webapp/
+    app/
+      api/                 # Next.js API routes (chat, analytics, employees)
+      page.tsx             # Chat-first dashboard (50/50 layout)
+    components/custom/     # Project-specific components (ChatInterface, ContextPanel)
+    lib/
+      ai/router.ts         # Multi-provider AI routing with failover
+      db/index.ts          # Database singleton client
+      auth/middleware.ts   # JWT + RBAC
+      analytics/           # SQL-based analytics queries
+      workflows/           # Context detection pattern matching
+    db/schema.ts           # 10 normalized tables (Drizzle)
+  skills/                  # 25 Claude Skills for HR automation
+  docs/                    # Architecture decisions and guides
+  data/hrskills.db         # SQLite database
+```
+
+### Key Architectural Decisions
+
+1. **Chat-First UX** - Zero navigation clicks, context panels appear dynamically based on server-side pattern matching (70% confidence threshold)
+
+2. **Multi-Provider AI Resilience** - Automatic failover chain (Anthropic → OpenAI) for 99.9% uptime, circuit breaker pattern, health monitoring
+
+3. **Type Safety Everywhere** - TypeScript + Zod validation + Drizzle ORM, no `any` types allowed
+
+4. **SQLite + Drizzle ORM** - Migrated from JSON to normalized database with sub-50ms analytics queries, WAL mode for concurrent access
+
+5. **Security by Default** - JWT auth on all protected endpoints, RBAC checks for every operation, rate limiting on all public routes, audit logging for data modifications
+
+6. **25 Claude Skills** - Domain-specific HR capabilities auto-detected via keyword matching in `/webapp/app/api/chat/route.ts:60-150`
+
+---
+
+## Project-Specific Agents
+
+> **All Available Agents:** See `~/claude-docs/agents.md`
+> List only the agents most relevant to THIS project's workflow.
+
+### Primary Agents for This Project
+
+1. **security-auditor** - Critical for HR platform with PII handling. Use when implementing auth, handling employee data, before production deploys, integrating third-party services.
+
+2. **code-review-quality** - Use after implementing features, before commits, when user asks to "review", "check", or "audit" code.
+
+3. **performance-profiler** - Important for analytics queries. Use when optimizing database queries, implementing new features with database access, investigating slow performance.
+
+4. **test-generator** - Use after writing new utilities/functions, creating new API routes, refactoring components.
+
+5. **react-component-refactor** - Use when code reviews reveal duplication, prop drilling >3 levels, components >300 lines.
+
+6. **accessibility-auditor** - WCAG 2.1 AA compliance required. Use after creating/modifying React components, implementing new UI features, before releases.
+
+7. **docs-sync-checker** - Use after adding new API endpoints, modifying features, before merging PRs.
+
+### Example Usage in This Project
+
+```bash
+# Example 1: Adding new employee export feature
+"I just added a new employee export feature with CSV download"
+# Uses: security-auditor (PII handling), code-review-quality, test-generator
+
+# Example 2: Analytics dashboard slow
+"The analytics dashboard is taking 500ms to load"
+# Uses: performance-profiler
+
+# Example 3: Refactored chat components
+"I refactored the ChatInterface into smaller components"
+# Uses: react-component-refactor, accessibility-auditor, test-generator
+
+# Example 4: New payroll endpoint
+"Added new /api/payroll endpoint for salary calculations"
+# Uses: docs-sync-checker, security-auditor (sensitive data), test-generator
 ```
 
 ---
 
-## 🚨 Critical "Don't Do" Rules
+## Project-Specific Workflows
 
-### Security & Data
+> **Complete Workflow Guides:** See `~/claude-docs/workflows.md`
+> Document only project-specific workflow variations here.
 
-1. **NEVER commit API keys or secrets**
-   - Use `.env.local` (gitignored)
-   - Never hardcode credentials
-
-2. **NEVER bypass authentication**
-   - Always use `requireAuth()` middleware
-   - Always check `hasPermission()` for protected operations
-
-3. **NEVER skip input validation**
-   - Always validate with Zod schemas
-   - Never trust user input
-
-4. **NEVER use SQL injection-prone patterns**
-   - Use Drizzle ORM exclusively
-   - Never concatenate user input into queries
-
-### Code Quality
-
-5. **NEVER use `any` types**
-   - Use proper TypeScript types
-   - Use Zod for runtime validation when needed
-
-6. **NEVER skip error handling**
-   - Always use try/catch
-   - Always use `handleApiError()` in API routes
-
-7. **NEVER modify these core files without understanding full impact:**
-   - `/webapp/lib/ai/router.ts` - Multi-provider routing logic
-   - `/webapp/db/schema.ts` - Database schema (requires migration)
-   - `/webapp/lib/auth/middleware.ts` - Authentication/authorization
-   - `/webapp/app/api/chat/route.ts` - Core chat routing
-
-### Architecture
-
-8. **NEVER create direct AI provider calls**
-   - Always use `aiRouter` for automatic failover
-   - Never import `@anthropic-ai/sdk`, `openai`, or `@google/generative-ai` directly
-
-9. **NEVER use JSON file storage for new features**
-   - Use SQLite database with Drizzle ORM
-   - `/data/master-employees.json` is legacy (deprecated)
-
-10. **NEVER skip testing**
-    - Write unit tests for utilities
-    - Write integration tests for API routes
-    - Write E2E tests for user flows
-
----
-
-## 📂 Critical File Locations
-
-### Core Files (Read First)
+### Feature Development (This Project)
 
 ```
-/webapp/
-├── app/
-│   ├── api/chat/route.ts              # Main chat endpoint + skill routing
-│   ├── api/analytics/route.ts         # Unified analytics API
-│   └── page.tsx                       # Chat-first dashboard UI
-│
-├── components/custom/
-│   ├── ChatInterface.tsx              # Main chat UI
-│   ├── ContextPanel.tsx               # Dynamic panel container
-│   ├── DocumentEditorPanel.tsx        # Document editing
-│   ├── AnalyticsChartPanel.tsx        # Chart visualizations
-│   └── PerformanceGridPanel.tsx       # 9-box performance grid
-│
-├── lib/
-│   ├── ai/router.ts                   # Multi-provider AI routing
-│   ├── db/index.ts                    # Database client (singleton)
-│   ├── auth/middleware.ts             # JWT + RBAC
-│   ├── analytics/                     # SQL-based analytics
-│   │   ├── headcount-sql.ts
-│   │   ├── attrition-sql.ts
-│   │   └── performance-calculator.ts
-│   └── workflows/
-│       └── context-detector.ts        # Pattern matching for panels
-│
-└── db/schema.ts                       # 10 database tables (Drizzle)
+Standard workflow (see workflows.md) with these additions:
+1. Check if feature needs a new Claude Skill (create in /skills/ if so)
+2. Update context detection patterns in /webapp/lib/workflows/context-detector.ts
+3. Run security-auditor proactively (PII/HR data considerations)
+4. Update /docs/api/API_REFERENCE.md for new endpoints
+5. Test with demo JWT token: POST /api/auth/demo-token
 ```
 
-### Skills (25 Total - Optimized Nov 2025)
+### Deployment Workflow (This Project)
 
 ```
-/skills/
-├── hr-document-generator/             # Offer letters, PIPs, termination
-├── job-description-writer/            # JD generation
-├── interview-guide-creator/           # Interview scorecards
-├── performance-insights-analyst/      # Review synthesis
-├── hr-metrics-analyst/                # Analytics & dashboards
-├── survey-analyzer-action-planner/    # Surveys (consolidated: 4→2 files)
-├── recognition-rewards-manager/       # Recognition (consolidated: 4→1 file)
-├── benefits-leave-coordinator/        # Benefits/leave (consolidated: 4→2 files)
-└── ... (17 more skills)
+Environment: Local → Vercel Preview → Vercel Production
 
-See /skills/SKILLS_INDEX.md for complete list with workflow mappings
+Steps:
+1. Run full validation: npm run validate (type-check + lint + test)
+2. Test with production database: npm run migrate:json-to-sqlite
+3. Verify AI provider failover works (test all 3 providers)
+4. Check rate limiting and auth middleware
+5. Deploy to Vercel preview branch
+6. E2E tests in preview environment
+7. Promote to production
+
+See workflows.md for general deployment best practices.
 ```
 
-### Documentation
+### Adding a New Claude Skill
 
 ```
-/docs/
-├── guides/
-│   ├── DEVELOPMENT_SETUP.md           # Complete setup guide
-│   ├── TESTING_GUIDE.md               # Testing strategy
-│   └── CONTRIBUTING.md                # Development workflow
-│
-├── api/API_REFERENCE.md               # All 25+ endpoints
-├── architecture/ARCHITECTURE_DECISIONS.md  # Technical decisions
-└── phases/PHASE_2_COMPLETE.md         # Phase 2 implementation details
+1. Create directory: mkdir -p skills/my-skill/references
+2. Create skills/my-skill/SKILL.md with frontmatter:
+   ---
+   name: my-skill
+   description: What this skill does
+   ---
+3. Add detection pattern in /webapp/app/api/chat/route.ts:
+   if (/relevant|keywords/.test(messageLower)) {
+     return 'my-skill'
+   }
+4. Test skill detection in chat interface
+5. Update /skills/SKILLS_INDEX.md
 ```
 
 ---
 
-## 🔍 Common Development Tasks
+## Environment Setup
 
-### Adding a New API Endpoint
+### Required Environment Variables
 
-1. Create route file: `/webapp/app/api/my-endpoint/route.ts`
-2. Follow the API route pattern (see section above)
-3. Add to `/docs/api/API_REFERENCE.md`
-4. Write tests in `/__tests__/api/my-endpoint.test.ts`
+```bash
+# AI Providers (at least ONE required)
+ANTHROPIC_API_KEY=sk-ant-...           # Primary AI provider (recommended)
+OPENAI_API_KEY=sk-...                  # Fallback (optional)
 
-### Modifying Employee Data Schema
+# Authentication
+JWT_SECRET=your-secret-key-32chars     # JWT signing (32+ characters required)
+NEXT_PUBLIC_API_URL=http://localhost:3000
 
-1. Update `/webapp/db/schema.ts` (Drizzle schema)
-2. Run migration: `npm run migrate:json-to-sqlite`
-3. Update TypeScript types in `/webapp/lib/types/master-employee.ts`
-4. Update UI components (EmployeeTable, etc.)
-5. Update documentation (CLAUDE.md, API_REFERENCE.md)
+# Database
+DATABASE_URL=file:../data/hrskills.db  # SQLite path (relative to /webapp)
 
-### Adding a New Context Panel
+# Google Workspace (optional)
+GOOGLE_CLIENT_ID=...                   # OAuth 2.0 client
+GOOGLE_CLIENT_SECRET=...               # OAuth 2.0 secret
+GOOGLE_DRIVE_FOLDER_ID=...            # Template storage folder
+NEXT_PUBLIC_GOOGLE_TEMPLATES_ENABLED=true
+```
 
-1. Create component in `/webapp/components/custom/`
-2. Add detection pattern in `/webapp/lib/workflows/context-detector.ts`
-3. Update panel routing in `/webapp/components/custom/ContextPanel.tsx`
-4. Test chat queries trigger the panel correctly
+### Observability & Rate-Limiting Variables (Optional)
+
+```bash
+# Observability (Optional - Recommended for Production)
+SENTRY_DSN=your-sentry-dsn            # Error tracking and performance monitoring
+SENTRY_ORG=your-org                   # Sentry organization
+SENTRY_PROJECT=your-project           # Sentry project name
+SENTRY_AUTH_TOKEN=your-token          # For source map uploads (CI/CD only)
+
+# Rate Limiting (Optional - Required for Multi-Instance)
+ENABLE_UPSTASH_RATE_LIMIT=false       # Feature flag (true on production)
+UPSTASH_REDIS_REST_URL=your-redis-url
+UPSTASH_REDIS_REST_TOKEN=your-token
+
+# Analytics Toggles
+NEXT_PUBLIC_VERCEL_ANALYTICS_ENABLED=false  # Renders <Analytics /> component when true
+NEXT_PUBLIC_SPEED_INSIGHTS_ENABLED=false    # Renders <SpeedInsights /> component when true
+```
+
+**Setup Instructions:**
+
+1. **Sentry** (optional but recommended):
+   - Sign up at https://sentry.io
+   - Create a Next.js project
+   - Copy DSN from Settings → Client Keys
+   - Add all `SENTRY_*` values to `.env.local`
+   - Source maps upload automatically in CI/CD when `SENTRY_AUTH_TOKEN` is set
+
+2. **Upstash Redis** (optional - only needed for multi-instance deployments):
+   - Sign up at https://console.upstash.com
+   - Create a Redis database
+   - Copy REST URL and token
+   - Set `ENABLE_UPSTASH_RATE_LIMIT=true` in production environments
+
+3. **Analytics toggles**:
+   - These are false by default for local development
+   - Set to true on Vercel deployments to enable real-user monitoring
+
+**Note:** MCP server credentials (GITHUB_PERSONAL_ACCESS_TOKEN, BRAVE_API_KEY) are configured separately via `claude mcp add` commands and stored in `~/.claude.json`, not in your project's `.env.local` file.
+
+### Local Development Setup
+
+```bash
+# 1. Clone and install
+git clone https://github.com/matthewod11-stack/HRSkills
+cd HRSkills/webapp
+npm install
+
+# 2. Environment setup
+cp .env.example .env.local
+# Edit .env.local with your values (minimum: ANTHROPIC_API_KEY + JWT_SECRET)
+
+# 3. Database setup
+npm run migrate:json-to-sqlite -- --demo  # Creates SQLite DB with 100 demo employees
+
+# 4. Run development server
+npm run dev  # → http://localhost:3000
+
+# 5. Get demo JWT token (for testing)
+curl -X POST http://localhost:3000/api/auth/demo-token
+```
+
+---
+
+## MCP Configuration
+
+> **Complete Guide:** See `~/claude-docs/mcp.md` for detailed documentation on all MCP servers.
+
+### Understanding MCP Servers (Global, Not Project-Specific)
+
+**IMPORTANT:** MCP servers are **global** - they're configured once via `claude mcp add` and stored in `~/.claude.json`. They automatically connect across ALL your projects whenever you launch Claude Code. **You do NOT need project-specific MCP configuration files.**
+
+This section documents which **global MCP servers** are particularly useful for THIS project.
+
+### Recommended Global MCP Servers
+
+If you haven't already, configure these MCP servers globally (see `~/claude-docs/mcp.md` for full setup instructions):
+
+1. **Filesystem Server** - Local file access and operations
+   - Access project files across your machine
+   - Cross-project code search and analysis
+   - Database file inspection (SQLite hrskills.db)
+   - Compare HRSkills with other HR projects
+   - Setup: `claude mcp add --transport stdio filesystem -- npx -y @modelcontextprotocol/server-filesystem /Users/yourusername`
+
+2. **GitHub Server** - Repository operations and collaboration
+   - Create/manage PRs and issues
+   - Search code across repositories
+   - Branch management and commits
+   - Review PR history and code patterns
+   - Setup: `claude mcp add --transport stdio github --env GITHUB_PERSONAL_ACCESS_TOKEN=your_token -- npx -y @modelcontextprotocol/server-github`
+   - Get token at: https://github.com/settings/tokens (scopes: repo, read:org, read:user)
+
+3. **Brave Search Server** - Web search for research
+   - Find latest Next.js and Drizzle ORM documentation
+   - Research AI provider API updates (Anthropic, OpenAI)
+   - Look up HR compliance regulations and best practices
+   - Find solutions for performance optimization
+   - Setup: `claude mcp add --transport stdio brave-search --env BRAVE_API_KEY=your_key -- npx -y @modelcontextprotocol/server-brave-search`
+   - Get key at: https://brave.com/search/api/
+
+### Optional Global Servers (Project-Dependent)
+
+Depending on your needs, you may also want:
+
+```bash
+# PostgreSQL database access (if migrating from SQLite)
+claude mcp add --transport stdio postgres --env DATABASE_URL=your_db_url -- npx -y @modelcontextprotocol/server-postgres
+
+# Figma design integration (if working with design system)
+# Run /mcp in Claude Code and authenticate via browser
+```
+
+### Verify Your Global MCP Servers
+
+**Check which MCP servers are currently connected:**
+```bash
+claude mcp list
+# or run in Claude Code:
+/mcp
+```
+
+You should see your configured servers with "✓ Connected" status. If any are missing, see `~/claude-docs/mcp.md` for troubleshooting.
+
+### How to Use MCP Servers in This Project
+
+**Example prompts that utilize your global MCP servers:**
+- "Analyze the SQLite database schema and suggest performance improvements" (filesystem)
+- "Compare employee_metrics table structure with what's in the GitHub repo" (filesystem + github)
+- "Create a PR for the new multi-provider AI failover feature" (github)
+- "Search for latest Drizzle ORM best practices for SQLite WAL mode" (brave-search)
+- "Find all TODO comments in HRSkills and create GitHub issues for them" (filesystem + github)
+- "Compare HRSkills architecture with other projects in ~/Desktop" (filesystem)
+
+**Project-Specific MCP Usage Notes:**
+- **Most useful for this project:** filesystem + github for codebase navigation and SQLite database inspection
+- **Design integration:** Not currently using Figma
+- **Database queries:** Consider PostgreSQL MCP if migrating from SQLite to PostgreSQL in the future
+
+**See `~/claude-docs/mcp.md` for:**
+- Complete setup guide for all MCP servers
+- Authentication and troubleshooting
+- Real-world usage examples
+- Security best practices
+
+---
+
+## Critical Code Paths
+
+> **Security Note:** These paths require 100% test coverage and security-auditor review.
+
+### Authentication & Authorization
+- **Files:** `webapp/lib/auth/middleware.ts`, `webapp/app/api/auth/*/route.ts`
+- **Critical:** JWT token generation, session management, RBAC permission checks
+- **Tests:** `__tests__/auth/` (100% coverage required)
+
+### Multi-Provider AI Router
+- **Files:** `webapp/lib/ai/router.ts` (352 lines)
+- **Critical:** Failover chain logic, circuit breaker, health monitoring, usage tracking
+- **Tests:** `__tests__/lib/ai/router.test.ts` (failover scenarios required)
+
+### Database Queries (Employee Data & Analytics)
+- **Files:** `webapp/lib/db/index.ts`, `webapp/db/schema.ts`, `webapp/lib/analytics/*-sql.ts`
+- **Critical:** PII handling, type-safe queries, performance (<50ms target)
+- **Tests:** `__tests__/lib/analytics/` (query performance + accuracy)
+
+### Chat Routing & Skill Detection
+- **Files:** `webapp/app/api/chat/route.ts:60-150`
+- **Critical:** Pattern matching accuracy, skill routing, context detection
+- **Tests:** E2E tests for all 25 skills (`e2e/chat.spec.ts`)
+
+### API Rate Limiting
+- **Files:** `webapp/lib/security/rate-limiter.ts`
+- **Critical:** DoS protection, fair usage enforcement
+- **Tests:** `__tests__/security/rate-limiter.test.ts` (load testing)
+
+---
+
+## Common Tasks & Quick Reference
+
+### Code Review Before PR
+
+```bash
+# Standard review process (see workflows.md #3)
+/review-pr
+
+# Project-specific: Also check
+# - PII handling with security-auditor
+# - Drizzle ORM usage (no raw SQL)
+# - aiRouter usage (no direct provider calls)
+# - Error handling with handleApiError()
+```
+
+### Adding New Features
+
+```bash
+# Standard feature workflow (see workflows.md #1)
+/feature-dev [feature description]
+
+# Project-specific considerations:
+# - Does this need a new Claude Skill? (skills/ directory)
+# - Does this need a new context panel? (context-detector.ts)
+# - Does this handle PII? (run security-auditor)
+# - Does this need RBAC? (check hasPermission() usage)
+```
+
+### Running Tests
+
+```bash
+# Unit tests
+npm test
+
+# Integration tests (API routes)
+npm run test:integration
+
+# E2E tests (Playwright)
+npm run test:e2e
+
+# Accessibility tests
+npm run test:a11y
+
+# All tests + coverage (80% minimum, see rules.md)
+npm run test:all
+npm run test:coverage
+```
+
+### Database Changes
+
+```bash
+# 1. Update Drizzle schema
+# Edit: webapp/db/schema.ts
+
+# 2. Run migration
+cd webapp
+npm run migrate:json-to-sqlite
+
+# 3. Update TypeScript types
+# Edit: webapp/lib/types/master-employee.ts
+
+# 4. Test queries
+npm run db:stats  # Verify migration success
+```
 
 ### Debugging Common Issues
 
 **"Skill not detected"**
-- Check keyword patterns in `/webapp/app/api/chat/route.ts:60-150`
-- Verify SKILL.md exists in `/skills/{skill-name}/`
-- Skill names are case-sensitive
+```bash
+# Check keyword patterns in:
+webapp/app/api/chat/route.ts:60-150
+
+# Verify SKILL.md exists:
+ls skills/my-skill/SKILL.md
+
+# Note: Skill names are case-sensitive
+```
 
 **"Rate limit exceeded"**
-- Check rate limit preset in API route
-- Adjust in `/webapp/lib/security/rate-limiter.ts`
-- Restart server to clear cache
+```bash
+# Adjust preset in API route or:
+# webapp/lib/security/rate-limiter.ts
+
+# Restart server to clear cache
+npm run dev
+```
 
 **"Authentication failed"**
-- Check JWT token expiry (8 hours)
-- Verify `JWT_SECRET` in `.env.local`
-- Use demo token: POST `/api/auth/demo-token`
+```bash
+# Get new demo token (expires in 8 hours):
+curl -X POST http://localhost:3000/api/auth/demo-token
+
+# Verify JWT_SECRET in .env.local (32+ characters)
+```
 
 **"Database query slow"**
-- Check indexes in `/webapp/db/schema.ts`
-- Use `.explain()` with Drizzle to analyze query plan
-- Target <50ms for analytics queries
+```bash
+# Check indexes in:
+webapp/db/schema.ts
+
+# Target: <50ms for analytics queries
+# Use Drizzle .explain() to analyze query plan
+```
 
 **"AI provider errors"**
-- Check provider health at `/settings`
-- Verify API keys in `.env.local`
-- Check failover chain works (Anthropic → OpenAI → Gemini)
-- Review `/webapp/lib/ai/router.ts` for routing logic
+```bash
+# 1. Check provider health at: http://localhost:3000/settings
+# 2. Verify API keys in .env.local
+# 3. Test failover chain manually
+# 4. Review routing logic: webapp/lib/ai/router.ts
+```
 
 ---
 
-## 🎓 Architecture Principles (Must Follow)
+## Project-Specific Security Considerations
 
-1. **Type Safety Everywhere**
-   - TypeScript + Zod validation + Drizzle ORM
-   - No `any` types
+> **Standard Security Guidelines:** See `~/claude-docs/rules.md` - Security Standards
 
-2. **Multi-Provider Resilience**
-   - Always use `aiRouter`
-   - Automatic failover for 99.9% uptime
+### This Project's Sensitive Data
 
-3. **Database First**
-   - SQLite with Drizzle ORM for all persistence
-   - Indexed queries for <50ms performance
-   - WAL mode for concurrent access
+- **PII:** Employee names, emails, phone numbers, addresses, SSNs (I-9 forms), salary data, performance reviews, health benefits, disciplinary records
+- **Compliance:** GDPR (EU employee data), EEOC (US employment law), SOC2 (security controls)
+- **Encryption:** PII encrypted at rest in SQLite database, OAuth tokens encrypted in user_preferences table, JWT tokens signed with HS256
 
-4. **Security by Default**
-   - JWT auth on all protected endpoints
-   - RBAC checks for every operation
-   - Rate limiting on all public routes
-   - Audit logging for data modifications
+### Critical Security Checks
 
-5. **Chat-First UX**
-   - Zero navigation clicks
-   - Context panels appear dynamically
-   - Server-side pattern matching (70% confidence)
-
-6. **Accessibility Mandatory**
-   - WCAG 2.1 AA compliance
-   - Test with jest-axe + Playwright
-   - Keyboard navigation for all features
-
-7. **Testing Required**
-   - Unit tests for utilities
-   - Integration tests for API routes
-   - E2E tests for user flows
-   - Accessibility tests for UI changes
+- [x] No API keys in code (use .env.local, gitignored)
+- [x] All user input validated with Zod schemas (schema-validator pattern)
+- [x] PII encrypted at rest (SQLite with WAL mode)
+- [x] JWT auth on all protected endpoints (requireAuth middleware)
+- [x] RBAC enforcement (hasPermission checks)
+- [x] Rate limiting on all public routes (RateLimitPresets)
+- [x] Audit logging for data modifications (audit_logs table)
+- [x] Security-auditor agent run before production deploys
+- [x] SQL injection prevention (Drizzle ORM exclusively, no raw SQL)
+- [x] XSS prevention (React escaping + Content Security Policy)
 
 ---
 
-## 📡 Consolidated API Endpoints (Phase 3.5)
+## Dependencies & Integrations
 
-**Last Updated:** November 11, 2025
+### Key Dependencies
 
-### Key Consolidations
+| Package | Version | Purpose | Update Frequency |
+|---------|---------|---------|------------------|
+| Next.js | 14.x | Full-stack framework | Quarterly |
+| Drizzle ORM | Latest | Type-safe database queries | Monthly |
+| @anthropic-ai/sdk | Latest | Primary AI provider | Monthly |
+| openai | Latest | Fallback AI provider | Monthly |
+| @google/generative-ai | Latest | Free tier AI fallback | Monthly |
+| zod | Latest | Runtime validation | Quarterly |
+| jose | Latest | JWT token handling | Monthly (security) |
 
-Phase 3.5 simplified the API surface from 47 endpoints to ~38 by consolidating related operations:
+### Third-Party Integrations
 
-#### 1. AI Services (9 endpoints → 3)
+1. **Anthropic Claude API** (https://docs.anthropic.com)
+   - Purpose: Primary AI provider for chat, skills, analysis
+   - Critical: Yes (with OpenAI fallback)
+   - Monitoring: Health checks in /webapp/lib/ai/router.ts, usage tracking in ai_usage table
 
-**Use `/api/ai/analyze` for all analysis operations:**
-```typescript
-// ✅ CORRECT: Unified endpoint
-const sentiment = await fetch('/api/ai/analyze', {
-  method: 'POST',
-  body: JSON.stringify({
-    type: 'sentiment',
-    text: 'Great employee feedback!'
-  })
-})
+2. **OpenAI API** (https://platform.openai.com/docs)
+   - Purpose: Fallback AI provider (second in chain)
+   - Critical: No (failover only)
+   - Monitoring: Circuit breaker pattern, automatic retry logic
 
-const entities = await fetch('/api/ai/analyze', {
-  method: 'POST',
-  body: JSON.stringify({
-    type: 'entities',
-    text: 'Sarah from Engineering in NYC'
-  })
-})
+3. **Google Workspace APIs** (https://developers.google.com/workspace)
+   - Purpose: OAuth 2.0 for Drive/Docs/Sheets integration
+   - Critical: No (optional feature)
+   - Monitoring: Refresh token validation, OAuth flow error handling
 
-// ❌ WRONG: Old individual endpoints (deleted)
-// await fetch('/api/ai/analyze-sentiment', ...)
-// await fetch('/api/ai/extract-entities', ...)
-```
-
-**Use `/api/ai/transform` for transformations:**
-```typescript
-// ✅ CORRECT: Unified transformation endpoint
-const translation = await fetch('/api/ai/transform', {
-  method: 'POST',
-  body: JSON.stringify({
-    type: 'translate',
-    text: 'Hello',
-    targetLanguage: 'Spanish'
-  })
-})
-
-// ❌ WRONG: Old endpoint (deleted)
-// await fetch('/api/ai/translate', ...)
-```
-
-**Supported Analysis Types:**
-- `sentiment` - Sentiment analysis
-- `entities` - Entity extraction
-- `language` - Language detection
-- `classification` - Text classification
-- `summarization` - Text summarization
-
-**Supported Transform Types:**
-- `translate` - Translation (implemented)
-- `transcribe` - Audio transcription (planned)
-- `ocr` - OCR processing (planned)
-
-#### 2. Metrics (4 endpoints → 1)
-
-**Use `/api/metrics` with query parameters:**
-```typescript
-// ✅ CORRECT: Unified metrics endpoint
-const dashboard = await fetch('/api/metrics') // Default: dashboard
-const headcount = await fetch('/api/metrics?type=headcount')
-const details = await fetch('/api/metrics?type=headcount&details=true')
-const aiCosts = await fetch('/api/metrics?type=ai-costs')
-
-// ❌ WRONG: Old individual endpoints (deleted)
-// await fetch('/api/metrics/details?metric=headcount')
-// await fetch('/api/metrics/ai-costs')
-```
-
-**Supported Metric Types:**
-- `dashboard` - Summary metrics (default)
-- `headcount` - Headcount data
-- `attrition` - Attrition data
-- `openPositions` - Open positions
-- `ai-costs` - AI cost tracking
-- `performance` - System performance
-
-**Query Parameters:**
-- `type` - Metric type (default: 'dashboard')
-- `details` - Include drill-down data (default: false)
-
-#### 3. Monitoring (Renamed from Performance)
-
-**Use `/api/monitoring` for system metrics:**
-```typescript
-// ✅ CORRECT: New monitoring endpoint
-const systemMetrics = await fetch('/api/monitoring?period=60')
-
-// ❌ WRONG: Old endpoint name (deleted)
-// await fetch('/api/performance', ...)
-```
-
-**Note:** HR performance analysis stays at `/api/performance/analyze`
-
-#### Quick Reference Table
-
-| Old Endpoint | New Endpoint | Notes |
-|-------------|--------------|-------|
-| `/api/ai/analyze-sentiment` | `/api/ai/analyze?type=sentiment` | Unified |
-| `/api/ai/extract-entities` | `/api/ai/analyze?type=entities` | Unified |
-| `/api/ai/detect-language` | `/api/ai/analyze?type=language` | Unified |
-| `/api/ai/translate` | `/api/ai/transform?type=translate` | Unified |
-| `/api/metrics/details` | `/api/metrics?type=X&details=true` | Unified |
-| `/api/metrics/ai-costs` | `/api/metrics?type=ai-costs` | Unified |
-| `/api/performance` (system) | `/api/monitoring` | Renamed |
-| `/api/performance/analyze` (HR) | `/api/performance/analyze` | Unchanged |
-
-### Frontend Component Updates
-
-**Components using old endpoints were updated:**
-- `MetricDetailsDialog.tsx` → Now uses `/api/metrics?type=X&details=true`
-- `AIMetricsDashboard.tsx` → Now uses `/api/metrics?type=ai-costs`
-
----
-
-## 🔑 Environment Variables
-
-**Minimum Required (set in .env.local):**
+### Dependency Audit Schedule
 
 ```bash
-# At least ONE AI provider (Anthropic recommended)
-ANTHROPIC_API_KEY=sk-ant-...           # Primary AI provider
-OPENAI_API_KEY=sk-...                  # Fallback (optional)
-GEMINI_API_KEY=...                     # Free tier fallback (optional)
+# Monthly security audit (see workflows.md #7)
+"Check if dependencies are up to date and secure"
+# Uses: dependency-audit agent
 
-# Authentication
-JWT_SECRET=your-secret-key-32chars     # JWT signing (32+ chars)
-NEXT_PUBLIC_API_URL=http://localhost:3000
+# Before major releases
+"Analyze security vulnerabilities and breaking changes"
+# Uses: dependency-audit agent
 
-# Database
-DATABASE_URL=file:../data/hrskills.db  # SQLite path
-```
-
-**Optional (Google Workspace):**
-
-```bash
-GOOGLE_CLIENT_ID=...                   # OAuth 2.0 client
-GOOGLE_CLIENT_SECRET=...               # OAuth 2.0 secret
-GOOGLE_DRIVE_FOLDER_ID=...            # Template storage
-NEXT_PUBLIC_GOOGLE_TEMPLATES_ENABLED=true
+# After security advisories
+"Audit npm packages for known CVEs"
+# Uses: dependency-audit agent
 ```
 
 ---
 
-## 📊 Database Schema Overview
+## Performance Targets (This Project)
 
-**10 Normalized Tables:**
+> **Standard Performance Guidelines:** See `~/claude-docs/rules.md` - Performance Standards
 
-1. **employees** - Core employee data (employee_id, name, department, status)
-2. **employee_metrics** - Performance tracking (flight_risk, engagement_score)
-3. **performance_reviews** - Review history with ratings
-4. **ai_usage** - AI provider usage tracking + costs
-5. **audit_logs** - Security and compliance logs
-6. **user_sessions** - JWT session tracking
-7. **user_preferences** - User settings + OAuth tokens (encrypted)
-8. **data_sources** - CSV upload metadata
-9. **email_queue** - Async email sending
-10. **dlp_scans** - PII detection logs
+### Project-Specific Targets
 
-**Schema Definition:** `/webapp/db/schema.ts` (546 lines)
-**Client:** `/webapp/lib/db/index.ts` (singleton with connection pooling)
+- **Chat Response (AI):** <3.0s (p95) - includes multi-provider failover time
+- **Analytics Queries:** <50ms (p95) - SQLite with indexed queries
+- **Context Panel Detection:** <100ms - server-side pattern matching
+- **API Response (non-AI):** <200ms (p95)
+- **Database Writes:** <20ms (p95)
+- **Bundle Size:** <100KB initial JS (standard Next.js target)
 
----
+### Performance Monitoring
 
-## 🧪 Testing Guidelines
-
-### Unit Tests (Jest)
-
-```typescript
-// Example: /webapp/__tests__/lib/analytics/performance-calculator.test.ts
-import { calculatePerformanceScore } from '@/lib/analytics/performance-calculator'
-
-describe('Performance Calculator', () => {
-  it('should calculate performance score', () => {
-    const employee = { /* test data */ }
-    const score = calculatePerformanceScore(employee)
-    expect(score).toBeGreaterThanOrEqual(1)
-    expect(score).toBeLessThanOrEqual(5)
-  })
-})
-```
-
-### E2E Tests (Playwright)
-
-```typescript
-// Example: /webapp/e2e/chat.spec.ts
-import { test, expect } from '@playwright/test'
-
-test('should display analytics panel', async ({ page }) => {
-  await page.goto('http://localhost:3000')
-  await page.fill('[data-testid="chat-input"]', 'Show me headcount')
-  await page.click('[data-testid="send-button"]')
-  await expect(page.locator('[data-testid="analytics-panel"]')).toBeVisible()
-})
-```
-
-### Accessibility Tests
-
-```typescript
-// Example: /webapp/__tests__/accessibility/chat-interface.test.tsx
-import { render } from '@testing-library/react'
-import { axe } from 'jest-axe'
-import ChatInterface from '@/components/custom/ChatInterface'
-
-test('ChatInterface has no a11y violations', async () => {
-  const { container } = render(<ChatInterface />)
-  const results = await axe(container)
-  expect(results).toHaveNoViolations()
-})
-```
+- Tool: Custom trackMetric in /webapp/lib/performance-monitor.ts
+- Alerts: Console warnings for >50ms database queries, >3s AI responses
+- Review: Weekly review of ai_usage table for cost optimization
+- Database: SQLite WAL mode for concurrent read performance
 
 ---
 
-## 🚀 Recent Changes (Context for New Tasks)
+## Known Issues & Technical Debt
 
-### Phase 3.2 (Nov 2025) - Chat-First Dashboard ✅
+### Current Known Issues
 
-**What Changed:**
-- Removed sidebar navigation completely
-- Built 3 dynamic context panels (document, analytics, performance)
-- Server-side pattern matching with 70% confidence threshold
-- AI-powered performance scoring algorithm
-- ~2,000 lines of new code
+1. **Legacy JSON file** - `/data/master-employees.json` still exists but deprecated
+   - Tracking: Phase 2 migration complete, file kept for backup only
+   - Priority: Low
+   - Plan: Delete after 6 months of SQLite stability (May 2026)
 
-**Key Files:**
-- `/webapp/app/page.tsx` - New 50/50 layout
-- `/webapp/components/custom/ContextPanel.tsx` - Panel container
-- `/webapp/lib/workflows/context-detector.ts` - Pattern matching
-- `/webapp/lib/analytics/performance-calculator.ts` - AI scoring
+2. **Some skills need reference docs** - Not all 25 skills have comprehensive /references/ subdirectories
+   - Tracking: Skills work functionally, documentation enhancement needed
+   - Priority: Medium
+   - Plan: Add skill reference docs in Phase 4 (Q1 2026)
 
-### Phase 2 (Nov 2025) - Platform Modernization ✅
+### Technical Debt
 
-**What Changed:**
-- Migrated from JSON to SQLite with Drizzle ORM
-- Built multi-provider AI router (Anthropic → OpenAI → Gemini)
-- Removed Python dependencies (Node.js only)
-- Simplified Google integration to OAuth 2.0 only
-- Net -1,500 lines through architectural cleanup
+1. **AI router could use Redis for caching** - Currently in-memory circuit breaker state
+   - Impact: Low (single-instance deployment only)
+   - Plan: Add Redis layer if scaling to multi-instance (Phase 5)
 
-**Key Files:**
-- `/webapp/lib/ai/router.ts` - Multi-provider routing (352 lines)
-- `/webapp/lib/db/index.ts` - Database client (247 lines)
-- `/webapp/db/schema.ts` - Complete schema (546 lines)
-
-### Codebase Cleanup (Nov 11, 2025) ✅
-
-**What Changed:**
-- Removed 5 disabled/deprecated files (517 lines of dead hooks code)
-- Deleted `deprecated-routes/` directory (800 lines of old Vertex AI endpoints)
-- Deleted backup files and test endpoints
-- Configured ESLint with Next.js core-web-vitals standards
-- Applied Prettier formatting across 215 files
-- Cleaned webpack cache artifacts
-
-**Impact:**
-- Removed ~1,700 lines of unused code
-- Established code quality standards with ESLint
-- Consistent code formatting with Prettier
-- Cleaner repository structure
-
-**Files Removed:**
-- `webapp/lib/hooks/useDebounce.ts.disabled`
-- `webapp/lib/hooks/useAsync.ts.disabled`
-- `webapp/deprecated-routes/` (entire directory)
-- `webapp/components/custom/EmployeeTableEditor.original.tsx`
-- `webapp/app/api/test-env/` (test endpoint)
-
-**Configuration Added:**
-- `/webapp/.eslintrc.json` - ESLint configuration with Next.js standards
+2. **E2E test coverage at 60%** - Need more comprehensive Playwright tests for all 25 skills
+   - Impact: Medium (manual testing required)
+   - Plan: Incremental addition of E2E tests, target 80% by Q2 2026
 
 ---
 
-## 📝 Notes for Claude Instances
+## Team & Contacts
 
-### When You're Asked to Add Features
+### Key Contacts
 
-1. **Check existing patterns first** - Search similar features before implementing
-2. **Follow the architecture principles** above - No exceptions
-3. **Update types in `/webapp/lib/types/`** - Keep TypeScript happy
-4. **Write tests** - Unit + E2E coverage required
-5. **Update documentation** - Keep CLAUDE.md and API_REFERENCE.md current
-6. **Consider RBAC** - What permissions does this need?
-7. **Test accessibility** - Run `npm run test:a11y`
+- **Project Lead:** Matt O'Donnell (solo developer)
+- **Tech Lead:** Matt O'Donnell
+- **DevOps:** Matt O'Donnell
 
-### When You're Debugging
+### Communication Channels
 
-1. **Check authentication first** - 80% of API issues are auth-related
-2. **Verify environment variables** - Check `.env.local` exists and is complete
-3. **Review git history** - `git log --oneline -10` for recent context
-4. **Check provider health** - Visit `/settings` for AI provider status
-5. **Use performance monitoring** - Import `trackMetric` from `@/lib/performance-monitor`
-
-### When You're Refactoring
-
-1. **Run tests in watch mode** - `npm run test:watch` during refactor
-2. **Make small commits** - Easier to debug and rollback
-3. **Update docs inline** - Don't leave for later
-4. **Check dependencies** - Update imports across codebase
-5. **Measure performance** - Before/after metrics for major changes
+- **Repository:** GitHub Issues for bug tracking
+- **Documentation:** /docs/ directory in repository
+- **Updates:** Git commit messages (using conventional commits)
 
 ---
 
-## 🆘 Emergency Reference
+## Project-Specific AI Agent Configuration
 
-**App not starting?**
-```bash
-cd webapp
-npm install      # Reinstall dependencies
-npm run clean    # Clean build cache
-npm run dev      # Start fresh
-```
+### Model Preferences for This Project
 
-**Database corrupted?**
-```bash
-cd webapp
-npm run migrate:json-to-sqlite -- --demo  # Recreate with demo data
-```
+> **Default:** Follow `~/claude-docs/rules.md` model selection guidelines
+> Override only for project-specific needs.
 
-**All tests failing?**
-```bash
-cd webapp
-npm run clean
-npm install
-npm run type-check  # Fix TypeScript errors first
-npm run lint:fix    # Auto-fix linting
-npm test           # Run tests again
-```
+- **Standard tasks:** Sonnet (default) - chat, skill routing, document generation
+- **Complex multi-step workflows:** Opus - architecture decisions, skill creation, complex refactors
+- **Simple utilities:** Haiku - quick tests, formatting, simple API routes
 
-**AI providers down?**
-- Check `/settings` for health status
-- Verify API keys in `.env.local`
-- Check Anthropic console: https://console.anthropic.com/
-- Check OpenAI dashboard: https://platform.openai.com/
-- Failover should be automatic (check `/webapp/lib/ai/router.ts`)
+### Custom Agents (If Any)
+
+> If this project has custom agents beyond those in `~/claude-docs/agents.md`
+
+No custom agents at this time.
 
 ---
 
-**For comprehensive details, see:**
-- **README.md** - Project overview and quick start
-- **/docs/** directory - 60+ documentation files
-- **API_REFERENCE.md** - Complete API documentation
-- **ARCHITECTURE_DECISIONS.md** - Technical decisions and rationale
+## Quick Links
 
-**Last updated by:** Phase 3.2 completion | **Date:** 2025-11-10
+### Documentation
+
+- **Comprehensive Guides:** `~/claude-docs/` (agents, plugins, rules, workflows)
+- **API Documentation:** `/docs/api/API_REFERENCE.md` (all 38 endpoints)
+- **Architecture Decisions:** `/docs/architecture/ARCHITECTURE_DECISIONS.md`
+- **Skills Index:** `/skills/SKILLS_INDEX.md` (all 25 skills)
+- **Development Setup:** `/docs/guides/DEVELOPMENT_SETUP.md`
+
+### Monitoring & Operations
+
+- **Production:** (Vercel deployment - production-ready)
+- **Staging:** Vercel preview deployments (automatic on PRs)
+- **Provider Health:** http://localhost:3000/settings (AI provider status)
+- **Database Stats:** `npm run db:stats`
+
+### Repository & CI/CD
+
+- **GitHub:** https://github.com/matthewod11-stack/HRSkills
+- **CI/CD:** Vercel automatic deployments (main branch → production)
+- **Deployment Status:** Vercel dashboard
+
+---
+
+## Onboarding Checklist
+
+**New developers should:**
+
+- [ ] Read this project-level document completely
+- [ ] Read `~/claude-docs/rules.md` for coding standards
+- [ ] Review `~/claude-docs/workflows.md` for development processes
+- [ ] Review `~/claude-docs/agents.md` for available specialized agents
+- [ ] Review `~/claude-docs/mcp.md` for MCP capabilities
+- [ ] Verify global MCP servers are configured (see "MCP Configuration" above):
+  - [ ] Run `claude mcp list` to check connected servers
+  - [ ] Filesystem server (if not configured, see ~/claude-docs/mcp.md)
+  - [ ] GitHub server (if not configured, see ~/claude-docs/mcp.md)
+  - [ ] Brave Search server (if not configured, see ~/claude-docs/mcp.md)
+- [ ] Set up local environment (see "Environment Setup" above)
+- [ ] Run test suite and verify all tests pass: `npm run test:all`
+- [ ] Review critical code paths (see "Critical Code Paths" above)
+- [ ] Understand the 25 Claude Skills: `/skills/SKILLS_INDEX.md`
+- [ ] Test chat interface with various queries to trigger different skills
+- [ ] Review recent commits: `git log --oneline -20`
+- [ ] Get demo JWT token and test API with Postman/curl
+- [ ] Review Phase 2 and Phase 3.2 completion docs in `/docs/phases/`
+
+---
+
+## Notes for Claude Code
+
+> Instructions for Claude Code when working on this project.
+
+### Project Context
+
+This is a **production-ready** HR automation platform serving as an MVP for chat-first enterprise workflows. The codebase prioritizes **type safety, security, and resilience** over rapid prototyping. It serves demo/pilot users and is designed for eventual multi-tenant SaaS deployment.
+
+### Special Considerations
+
+- **PII Handling Critical:** This platform processes sensitive employee data (SSNs, salaries, health info). ALWAYS run security-auditor when touching employee data paths.
+
+- **Multi-Provider AI is Core Architecture:** Never bypass aiRouter. The failover chain (Anthropic → OpenAI) is not optional—it's the primary reliability mechanism.
+
+- **Chat-First UX Philosophy:** All features must be accessible via chat queries. Avoid building traditional CRUD UIs. Context panels should appear automatically based on chat patterns.
+
+- **Database Performance Matters:** Target <50ms for analytics queries. Always add indexes for new query patterns. Use Drizzle's `.explain()` to verify query plans.
+
+- **25 Skills are the Product:** The Claude Skills are the primary value proposition. When adding features, consider if a new skill is needed vs. enhancing existing ones.
+
+### When Making Changes
+
+1. **Always** reference this document for project-specific context
+2. **Always** follow standards in `~/claude-docs/rules.md` unless explicitly overridden here
+3. **Always** use appropriate agents from `~/claude-docs/agents.md` (especially security-auditor for PII)
+4. **Always** follow workflows from `~/claude-docs/workflows.md`
+5. **Critical paths** (listed above) require extra scrutiny and 100% test coverage
+6. **Never** modify these files without deep understanding:
+   - `/webapp/lib/ai/router.ts` (multi-provider logic)
+   - `/webapp/db/schema.ts` (database schema, requires migration)
+   - `/webapp/lib/auth/middleware.ts` (security critical)
+   - `/webapp/app/api/chat/route.ts` (core chat routing)
+
+### Prohibited Actions
+
+- ❌ **Never commit API keys or secrets** (use .env.local, check .gitignore)
+- ❌ **Never use raw SQL** (Drizzle ORM only, prevents SQL injection)
+- ❌ **Never bypass authentication** (requireAuth + hasPermission on all protected routes)
+- ❌ **Never skip input validation** (Zod schemas for all user input)
+- ❌ **Never use `any` types** (TypeScript strict mode enabled)
+- ❌ **Never create direct AI provider calls** (aiRouter only, for failover)
+- ❌ **Never skip testing** (especially for PII handling and auth)
+- ❌ **Never modify database schema without migration** (data loss risk)
+
+---
+
+**Last Updated:** November 17, 2024
+**Updated By:** Updated to align with ~/claude-docs/ template standards (MCP clarifications, placeholder cleanup)
+**Version:** 2.1.0

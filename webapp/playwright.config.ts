@@ -1,3 +1,8 @@
+/**
+ * NOTE: Playwright config is loaded at BUILD TIME and TEST TIME.
+ * Keep direct process.env access - env.mjs validates at RUNTIME.
+ * Build/test-time variable: CI
+ */
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({

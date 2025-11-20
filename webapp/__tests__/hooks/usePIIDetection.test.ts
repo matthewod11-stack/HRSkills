@@ -1,17 +1,19 @@
+import { vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+import { vi } from 'vitest';
 import { usePIIDetection } from '@/lib/hooks/usePIIDetection';
 import { detectSensitivePII } from '@/lib/pii-detector';
 
 // Mock the PII detector
-jest.mock('@/lib/pii-detector', () => ({
-  detectSensitivePII: jest.fn(),
+vi.mock('@/lib/pii-detector', () => ({
+  detectSensitivePII: vi.fn(),
 }));
 
-const mockDetectSensitivePII = detectSensitivePII as jest.MockedFunction<typeof detectSensitivePII>;
+const mockDetectSensitivePII = detectSensitivePII as vi.MockedFunction<typeof detectSensitivePII>;
 
 describe('usePIIDetection', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('checkForPII', () => {
@@ -106,7 +108,7 @@ describe('usePIIDetection', () => {
         message: 'SSN detected',
       });
 
-      const mockOnEdit = jest.fn();
+      const mockOnEdit = vi.fn();
       const { result } = renderHook(() => usePIIDetection({ onEdit: mockOnEdit }));
 
       // Detect PII first
@@ -136,7 +138,7 @@ describe('usePIIDetection', () => {
 
       const mockInputRef = {
         current: {
-          focus: jest.fn(),
+          focus: vi.fn(),
         },
       };
 
@@ -187,7 +189,7 @@ describe('usePIIDetection', () => {
         message: 'SSN detected',
       });
 
-      const mockOnSendWithBypass = jest.fn();
+      const mockOnSendWithBypass = vi.fn();
       const { result } = renderHook(() => usePIIDetection({ onSendWithBypass: mockOnSendWithBypass }));
 
       // Detect PII
@@ -239,8 +241,8 @@ describe('usePIIDetection', () => {
         message: 'SSN detected',
       });
 
-      const mockOnEdit = jest.fn();
-      const mockOnSendWithBypass = jest.fn();
+      const mockOnEdit = vi.fn();
+      const mockOnSendWithBypass = vi.fn();
 
       const { result } = renderHook(() =>
         usePIIDetection({
@@ -400,8 +402,8 @@ describe('usePIIDetection', () => {
     });
 
     it('should handle edit and proceed calls without prior detection', () => {
-      const mockOnEdit = jest.fn();
-      const mockOnSendWithBypass = jest.fn();
+      const mockOnEdit = vi.fn();
+      const mockOnSendWithBypass = vi.fn();
 
       const { result } = renderHook(() =>
         usePIIDetection({
