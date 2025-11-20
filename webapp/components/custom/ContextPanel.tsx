@@ -51,53 +51,53 @@ export function ContextPanel({
     switch (type) {
       case 'document':
         return {
-          glow: 'from-emerald-500/20 via-emerald-400/10 to-teal-500/10',
-          containerBg: 'bg-emerald-950/60',
-          containerBorder: 'border-emerald-500/40 hover:border-emerald-400/70',
-          headerGradient: 'from-emerald-500/15 to-teal-500/10',
-          iconBg: 'from-emerald-500 to-teal-500',
-          closeButtonBorder: 'border-emerald-500/40 hover:border-emerald-400/70',
-          closeButtonBg: 'bg-emerald-500/10 hover:bg-emerald-500/20',
+          glow: 'from-sage/20 via-sage-light/15 to-sage/10',
+          containerBg: 'bg-cream-white/95',
+          containerBorder: 'border-sage/30 hover:border-sage/50',
+          headerGradient: 'from-sage/10 to-sage-light/8',
+          iconBg: 'from-sage to-sage-light',
+          closeButtonBorder: 'border-sage/30 hover:border-sage/50',
+          closeButtonBg: 'bg-sage/10 hover:bg-sage/20',
         };
       case 'analytics':
         return {
-          glow: 'from-blue-500/10 via-purple-500/10 to-pink-500/10',
-          containerBg: 'bg-black/45',
-          containerBorder: 'border-blue-400/40 hover:border-blue-300/60',
-          headerGradient: 'from-blue-500/15 to-purple-500/10',
-          iconBg: 'from-blue-500 to-purple-600',
-          closeButtonBorder: 'border-blue-400/40 hover:border-blue-300/60',
-          closeButtonBg: 'bg-white/5 hover:bg-white/10',
+          glow: 'from-terracotta/15 via-amber/12 to-terracotta/8',
+          containerBg: 'bg-cream-white/95',
+          containerBorder: 'border-terracotta/30 hover:border-terracotta/50',
+          headerGradient: 'from-terracotta/10 to-amber/8',
+          iconBg: 'from-terracotta to-amber',
+          closeButtonBorder: 'border-terracotta/30 hover:border-terracotta/50',
+          closeButtonBg: 'bg-terracotta/10 hover:bg-terracotta/20',
         };
       case 'performance':
         return {
-          glow: 'from-orange-500/15 via-amber-400/10 to-rose-500/10',
-          containerBg: 'bg-black/45',
-          containerBorder: 'border-orange-400/40 hover:border-orange-300/60',
-          headerGradient: 'from-orange-500/15 to-rose-500/10',
-          iconBg: 'from-orange-500 to-rose-500',
-          closeButtonBorder: 'border-orange-400/40 hover:border-orange-300/60',
-          closeButtonBg: 'bg-white/5 hover:bg-white/10',
+          glow: 'from-amber/18 via-terracotta/15 to-amber/10',
+          containerBg: 'bg-cream-white/95',
+          containerBorder: 'border-amber/30 hover:border-amber/50',
+          headerGradient: 'from-amber/10 to-terracotta/8',
+          iconBg: 'from-amber to-terracotta-dark',
+          closeButtonBorder: 'border-amber/30 hover:border-amber/50',
+          closeButtonBg: 'bg-amber/10 hover:bg-amber/20',
         };
       case 'enps':
         return {
-          glow: 'from-blue-500/15 via-purple-400/10 to-indigo-500/10',
-          containerBg: 'bg-black/45',
-          containerBorder: 'border-blue-400/40 hover:border-blue-300/60',
-          headerGradient: 'from-blue-500/15 to-purple-500/10',
-          iconBg: 'from-blue-500 to-purple-600',
-          closeButtonBorder: 'border-blue-400/40 hover:border-blue-300/60',
-          closeButtonBg: 'bg-white/5 hover:bg-white/10',
+          glow: 'from-sage/18 via-terracotta/12 to-sage/10',
+          containerBg: 'bg-cream-white/95',
+          containerBorder: 'border-sage/30 hover:border-sage/50',
+          headerGradient: 'from-sage/10 to-terracotta/8',
+          iconBg: 'from-sage to-terracotta',
+          closeButtonBorder: 'border-sage/30 hover:border-sage/50',
+          closeButtonBg: 'bg-sage/10 hover:bg-sage/20',
         };
       default:
         return {
-          glow: 'from-blue-500/10 via-purple-500/10 to-pink-500/10',
-          containerBg: 'bg-black/40',
-          containerBorder: 'border-white/30 hover:border-white/40',
-          headerGradient: 'from-blue-500/10 to-purple-500/10',
-          iconBg: 'from-blue-500 to-purple-600',
-          closeButtonBorder: 'border-white/20 hover:border-white/40',
-          closeButtonBg: 'bg-white/5 hover:bg-white/10',
+          glow: 'from-terracotta/12 via-amber/10 to-sage/8',
+          containerBg: 'bg-cream-white/95',
+          containerBorder: 'border-warm hover:border-terracotta/40',
+          headerGradient: 'from-terracotta/8 to-amber/6',
+          iconBg: 'from-terracotta to-amber',
+          closeButtonBorder: 'border-warm hover:border-terracotta/40',
+          closeButtonBg: 'bg-terracotta/10 hover:bg-terracotta/20',
         };
     }
   };
@@ -156,24 +156,24 @@ export function ContextPanel({
             />
 
             <div
-              className={`relative backdrop-blur-2xl rounded-3xl overflow-hidden border-2 transition-all duration-300 ${accent.containerBg} ${accent.containerBorder} flex h-full flex-col`}
+              className={`relative backdrop-blur-2xl rounded-3xl overflow-hidden border-2 transition-all duration-300 shadow-warm ${accent.containerBg} ${accent.containerBorder} flex h-full flex-col`}
             >
               {/* Header */}
               <div
-                className={`flex items-center justify-between px-6 py-4 border-b-2 border-white/10 bg-gradient-to-r ${accent.headerGradient}`}
+                className={`flex items-center justify-between px-6 py-4 border-b-2 border-warm bg-gradient-to-r ${accent.headerGradient}`}
               >
                 <div className="flex items-center gap-3">
                   <div
-                    className={`w-10 h-10 rounded-xl bg-gradient-to-br ${accent.iconBg} flex items-center justify-center`}
+                    className={`w-10 h-10 rounded-2xl bg-gradient-to-br ${accent.iconBg} flex items-center justify-center shadow-warm text-cream-white`}
                   >
                     {getPanelIcon(panelData.type)}
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold">
+                    <h3 className="text-lg font-bold text-charcoal">
                       {getPanelTitle(panelData.type, panelData.title)}
                     </h3>
                     {panelData.config?.filters && (
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-charcoal-light font-medium">
                         {panelData.config.filters.department &&
                           `${panelData.config.filters.department} • `}
                         {panelData.config.filters.dateRange || 'All time'}
@@ -184,7 +184,7 @@ export function ContextPanel({
 
                 <button
                   onClick={handleClose}
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${accent.closeButtonBg} ${accent.closeButtonBorder}`}
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all border-2 hover-lift ${accent.closeButtonBg} ${accent.closeButtonBorder} text-charcoal hover:text-charcoal`}
                   aria-label="Close context panel"
                 >
                   <X className="w-5 h-5" />
@@ -194,7 +194,7 @@ export function ContextPanel({
               {/* Content */}
               <div className="p-6 flex-1 overflow-y-auto">
                 {children || (
-                  <div className="flex items-center justify-center h-full text-gray-400">
+                  <div className="flex items-center justify-center h-full text-charcoal-light">
                     <p>Panel content will appear here</p>
                   </div>
                 )}
@@ -202,8 +202,8 @@ export function ContextPanel({
 
               {/* Footer with context info */}
               {panelData.config?.highlights && panelData.config.highlights.length > 0 && (
-                <div className="px-6 py-3 border-t border-white/20 bg-gradient-to-r from-blue-500/5 to-purple-500/5">
-                  <p className="text-xs text-gray-400">
+                <div className="px-6 py-3 border-t border-warm bg-gradient-to-r from-terracotta/5 to-amber/5">
+                  <p className="text-xs text-charcoal-light font-medium">
                     Highlighting: {panelData.config.highlights.join(', ')}
                   </p>
                 </div>

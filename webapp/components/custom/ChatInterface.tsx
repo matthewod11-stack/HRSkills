@@ -206,30 +206,30 @@ function ChatInterfaceInner({
       className="relative group h-full flex flex-col"
     >
       {/* Background glow effect */}
-      <div className="absolute inset-0 bg-gradient-to-br from-violet/10 via-violet-light/10 to-violet/5 rounded-3xl blur-2xl group-hover:blur-3xl transition-premium opacity-60" />
+      <div className="absolute inset-0 bg-gradient-to-br from-terracotta/8 via-amber/8 to-sage/8 rounded-3xl blur-2xl group-hover:blur-3xl transition-premium opacity-60" />
 
-      <div className="relative backdrop-blur-2xl bg-card border border-border rounded-3xl flex flex-col h-full overflow-hidden hover:border-violet/50 hover:shadow-panel-hover transition-premium">
+      <div className="relative backdrop-blur-2xl bg-cream-white border-2 border-cream-light rounded-3xl flex flex-col h-full overflow-hidden hover:border-terracotta/30 hover:shadow-warm transition-premium">
         {/* Header with branding and reset button */}
-        <div className="p-6 border-b border-border bg-gradient-to-r from-violet/10 to-violet-light/10">
+        <div className="p-6 border-b border-warm bg-gradient-to-r from-terracotta/8 to-amber/8 rounded-t-3xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet to-violet-light flex items-center justify-center shadow-glow-accent">
-                <Bot className="w-7 h-7" />
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-terracotta to-amber flex items-center justify-center shadow-warm">
+                <Bot className="w-7 h-7 text-cream-white" />
               </div>
               <div>
-                <h2 className="text-xl flex items-center gap-2 font-semibold">
+                <h2 className="text-xl flex items-center gap-2 font-bold text-charcoal">
                   Chief People Officer
-                  <Sparkles className="w-5 h-5 text-warning" />
+                  <Sparkles className="w-5 h-5 text-amber" />
                 </h2>
-                <p className="text-sm text-secondary font-medium">&ldquo;More People, More Problems&rdquo;</p>
+                <p className="text-sm text-charcoal-light font-medium">&ldquo;More People, More Problems&rdquo;</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
               {lastMessageWorkflow && (
-                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-violet/10 border border-violet/20 rounded-lg">
-                  <Sparkles className="w-3.5 h-3.5 text-violet" />
-                  <span className="text-xs font-medium text-violet capitalize">
+                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-terracotta/10 border border-terracotta/20 rounded-xl">
+                  <Sparkles className="w-3.5 h-3.5 text-terracotta" />
+                  <span className="text-xs font-medium text-terracotta capitalize">
                     {lastMessageWorkflow.replace('_', ' ')} workflow
                   </span>
                 </div>

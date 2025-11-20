@@ -241,7 +241,7 @@ export function AnalyticsChartPanel({
             <button
               onClick={fetchAnalyticsData}
               disabled={loading}
-              className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/20 hover:border-white/30 rounded-lg text-xs transition-all flex items-center gap-1 disabled:opacity-50"
+              className="px-3 py-1.5 bg-terracotta/10 hover:bg-terracotta hover:text-cream-white border border-warm hover:border-terracotta rounded-xl text-xs transition-all flex items-center gap-1 disabled:opacity-50 font-medium shadow-soft hover:shadow-warm"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
               Refresh
@@ -252,7 +252,7 @@ export function AnalyticsChartPanel({
           {!chartConfigState && (
             <button
               onClick={handleExportCSV}
-              className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/20 hover:border-white/30 rounded-lg text-xs transition-all flex items-center gap-1"
+              className="px-3 py-1.5 bg-sage/10 hover:bg-sage hover:text-cream-white border border-warm hover:border-sage rounded-xl text-xs transition-all flex items-center gap-1 font-medium shadow-soft hover:shadow-warm"
             >
               <Download className="w-3.5 h-3.5" />
               Export CSV
@@ -265,7 +265,7 @@ export function AnalyticsChartPanel({
       <div className="flex-1 min-h-[300px]">
         {loading ? (
           <div className="flex items-center justify-center h-full">
-            <RefreshCw className="w-8 h-8 animate-spin text-blue-400" />
+            <RefreshCw className="w-8 h-8 animate-spin text-terracotta" />
           </div>
         ) : error ? (
           <div className="flex items-center justify-center h-full text-red-400">

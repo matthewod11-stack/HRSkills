@@ -37,7 +37,7 @@ export const ChatHeader = memo(function ChatHeader({
   return (
     <div className="flex items-center justify-between mb-4">
       {/* Conversation ID (optional - could be removed or made conditional) */}
-      <div className="text-xs text-secondary/50 font-mono">
+      <div className="text-xs text-charcoal-soft/70 font-mono">
         {conversationId.replace(/\s+/g, ' ')}
       </div>
 
@@ -46,7 +46,7 @@ export const ChatHeader = memo(function ChatHeader({
         onClick={onReset}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-sm font-medium transition-premium"
+        className="flex items-center gap-2 px-3 py-1.5 bg-terracotta/10 hover:bg-terracotta hover:text-cream-white border border-warm hover:border-terracotta rounded-xl text-sm font-medium transition-premium shadow-soft hover:shadow-warm"
         aria-label="Start a new chat"
       >
         <RotateCcw className="w-4 h-4" />

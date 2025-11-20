@@ -5,12 +5,13 @@ import { motion } from 'framer-motion';
 export function FloatingOrbs() {
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none">
+      {/* Terracotta orb */}
       <motion.div
-        className="absolute w-96 h-96 rounded-full opacity-20"
+        className="absolute w-96 h-96 rounded-full opacity-15"
         style={{
           background:
-            'radial-gradient(circle, rgba(139, 92, 246, 0.6) 0%, rgba(139, 92, 246, 0) 70%)',
-          filter: 'blur(60px)',
+            'radial-gradient(circle, rgba(224, 120, 86, 0.4) 0%, rgba(224, 120, 86, 0) 70%)',
+          filter: 'blur(80px)',
         }}
         animate={{
           x: [0, 100, 0],
@@ -23,12 +24,13 @@ export function FloatingOrbs() {
         }}
         initial={{ top: '10%', left: '10%' }}
       />
+      {/* Amber orb */}
       <motion.div
-        className="absolute w-[30rem] h-[30rem] rounded-full opacity-20"
+        className="absolute w-[30rem] h-[30rem] rounded-full opacity-12"
         style={{
           background:
-            'radial-gradient(circle, rgba(167, 139, 250, 0.5) 0%, rgba(167, 139, 250, 0) 70%)',
-          filter: 'blur(60px)',
+            'radial-gradient(circle, rgba(230, 168, 82, 0.35) 0%, rgba(230, 168, 82, 0) 70%)',
+          filter: 'blur(80px)',
         }}
         animate={{
           x: [0, -150, 0],
@@ -41,12 +43,13 @@ export function FloatingOrbs() {
         }}
         initial={{ top: '50%', right: '10%' }}
       />
+      {/* Sage orb */}
       <motion.div
-        className="absolute w-80 h-80 rounded-full opacity-15"
+        className="absolute w-80 h-80 rounded-full opacity-10"
         style={{
           background:
-            'radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, rgba(139, 92, 246, 0) 70%)',
-          filter: 'blur(60px)',
+            'radial-gradient(circle, rgba(139, 157, 131, 0.3) 0%, rgba(139, 157, 131, 0) 70%)',
+          filter: 'blur(80px)',
         }}
         animate={{
           x: [0, 80, 0],

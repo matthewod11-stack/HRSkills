@@ -570,7 +570,7 @@ export default function Home() {
       : undefined;
 
   return (
-    <div className="min-h-screen bg-radial-dark text-white overflow-hidden">
+    <div className="min-h-screen bg-radial-cream text-charcoal overflow-hidden">
       <FloatingOrbs />
 
       <div className="relative z-10">
@@ -578,29 +578,29 @@ export default function Home() {
         <motion.header
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="backdrop-blur-xl bg-card/80 border-b border-border sticky top-0 z-30 shadow-soft transition-premium"
+          className="backdrop-blur-xl bg-cream-white/90 border-b border-warm sticky top-0 z-30 shadow-soft transition-premium"
         >
           <div className="max-w-[1600px] mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-violet to-violet-light rounded-xl flex items-center justify-center shadow-glow-accent">
-                  <span className="text-xl font-bold">HR</span>
+                <div className="w-12 h-12 bg-gradient-to-br from-terracotta to-amber rounded-2xl flex items-center justify-center shadow-warm">
+                  <span className="text-xl font-bold text-cream-white">HR</span>
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold">HR Command Center</h1>
-                  <p className="text-sm text-secondary">Powered by Claude AI</p>
+                  <h1 className="text-xl font-bold text-charcoal">HR Command Center</h1>
+                  <p className="text-sm text-charcoal-light">Powered by Claude AI</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-6">
                 <button
                   onClick={() => (window.location.href = '/team-time')}
-                  className="text-right hidden md:block hover:bg-white/5 px-4 py-2 rounded-lg transition-premium cursor-pointer"
+                  className="text-right hidden md:block hover:bg-terracotta/5 px-4 py-2 rounded-xl transition-premium cursor-pointer hover-lift"
                 >
-                  <p className="text-sm text-secondary" suppressHydrationWarning>
+                  <p className="text-sm text-charcoal-light" suppressHydrationWarning>
                     {formatDate(currentTime)}
                   </p>
-                  <p className="text-2xl font-mono" suppressHydrationWarning>
+                  <p className="text-2xl font-mono text-terracotta" suppressHydrationWarning>
                     {formatTime(currentTime)}
                   </p>
                 </button>
@@ -609,17 +609,17 @@ export default function Home() {
                   onClick={() => (window.location.href = '/data-sources')}
                   aria-label="Upload Data & Documents"
                   title="Upload Data & Documents"
-                  className="w-10 h-10 bg-white/5 hover:bg-white/10 border border-border hover:border-violet/50 rounded-lg flex items-center justify-center transition-premium"
+                  className="w-10 h-10 bg-cream hover:bg-terracotta/10 border border-warm hover:border-terracotta/40 rounded-xl flex items-center justify-center transition-premium hover-lift"
                 >
-                  <Database className="w-5 h-5" aria-hidden="true" />
+                  <Database className="w-5 h-5 text-terracotta" aria-hidden="true" />
                 </button>
 
                 <button
                   onClick={() => (window.location.href = '/settings')}
                   aria-label="Open settings"
-                  className="w-10 h-10 bg-white/5 hover:bg-white/10 border border-border hover:border-violet/50 rounded-lg flex items-center justify-center transition-premium"
+                  className="w-10 h-10 bg-cream hover:bg-terracotta/10 border border-warm hover:border-terracotta/40 rounded-xl flex items-center justify-center transition-premium hover-lift"
                 >
-                  <Settings className="w-5 h-5" aria-hidden="true" />
+                  <Settings className="w-5 h-5 text-terracotta" aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -631,11 +631,11 @@ export default function Home() {
           {/* Metrics Grid - Top Row - 3 Cards */}
           <section aria-label="Key metrics">
             <div className="flex items-center justify-between mb-4 gap-2">
-              <h2 className="text-lg font-semibold text-foreground">Key Metrics</h2>
+              <h2 className="text-lg font-semibold text-charcoal">Key Metrics</h2>
               <button
                 onClick={fetchMetrics}
                 disabled={metricsLoading}
-                className="px-3 py-2 text-sm font-medium rounded-lg border border-border bg-white/5 hover:bg-white/10 transition-premium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-2 text-sm font-medium rounded-xl border border-warm bg-cream hover:bg-terracotta hover:text-cream-white transition-premium disabled:opacity-50 disabled:cursor-not-allowed shadow-soft hover:shadow-warm"
                 aria-live="polite"
               >
                 {metricsLoading ? 'Refreshing…' : 'Refresh'}

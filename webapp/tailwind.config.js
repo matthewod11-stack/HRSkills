@@ -9,13 +9,41 @@ module.exports = {
         roboto: ['var(--font-roboto)', 'sans-serif'],
       },
       colors: {
-        violet: {
-          DEFAULT: '#8B5CF6',
-          light: '#A78BFA',
+        // Warm earth-tone color system
+        terracotta: {
+          DEFAULT: '#E07856',
+          dark: '#D4704A',
+          light: '#F0A58F',
         },
-        success: '#10B981',
-        warning: '#FACC15',
-        error: '#EF4444',
+        sage: {
+          DEFAULT: '#8B9D83',
+          light: '#A8B89B',
+          soft: '#C5D4BC',
+        },
+        amber: {
+          DEFAULT: '#E6A852',
+          dark: '#D4A855',
+          light: '#F5C98E',
+        },
+        charcoal: {
+          DEFAULT: '#2C2C2C',
+          light: '#6B6B6B',
+          soft: '#9A9A9A',
+        },
+        cream: {
+          DEFAULT: '#F5F1E8',
+          light: '#EDE7DC',
+          white: '#FEFDFB',
+        },
+        // Functional colors with warm alternatives
+        success: '#6B8E6F',
+        warning: '#E6A852',
+        error: '#C87F5D',
+        // Legacy violet kept for gradual migration
+        violet: {
+          DEFAULT: '#E07856', // Map to terracotta
+          light: '#F0A58F',
+        },
         background: 'var(--color-background)',
         foreground: 'var(--color-foreground)',
         card: {
@@ -77,6 +105,14 @@ module.exports = {
         md: 'var(--radius-md)',
         lg: 'var(--radius-lg)',
         xl: 'var(--radius-xl)',
+        '2xl': '1rem',
+        '3xl': '1.5rem',
+      },
+      boxShadow: {
+        'warm': '0 4px 20px rgba(224, 120, 86, 0.12)',
+        'warm-lg': '0 8px 32px rgba(224, 120, 86, 0.18)',
+        'sage': '0 4px 20px rgba(139, 157, 131, 0.12)',
+        'soft': '0 2px 12px rgba(140, 157, 131, 0.08)',
       },
       scale: {
         102: '1.02',

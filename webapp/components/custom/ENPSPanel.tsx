@@ -190,8 +190,8 @@ export default function ENPSPanel({ data: _initialData }: ENPSPanelProps) {
 
   if (loading) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-3 text-secondary">
-        <Loader2 className="h-6 w-6 animate-spin text-sky-400" />
+      <div className="flex h-full flex-col items-center justify-center gap-3 text-charcoal-light">
+        <Loader2 className="h-6 w-6 animate-spin text-terracotta" />
         Loading eNPS insights…
       </div>
     );
@@ -200,18 +200,18 @@ export default function ENPSPanel({ data: _initialData }: ENPSPanelProps) {
   if (error) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
-        <AlertCircle className="h-8 w-8 text-rose-400" />
-        <p className="text-sm font-medium text-white">Unable to load eNPS analytics</p>
-        <p className="max-w-sm text-xs text-secondary">{error}</p>
+        <AlertCircle className="h-8 w-8 text-error" />
+        <p className="text-sm font-medium text-charcoal">Unable to load eNPS analytics</p>
+        <p className="max-w-sm text-xs text-charcoal-light">{error}</p>
       </div>
     );
   }
 
   if (!enpsData) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-secondary">
-        <Users className="h-8 w-8" />
-        <p className="text-sm font-medium text-white">No eNPS data yet</p>
+      <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-charcoal-light">
+        <Users className="h-8 w-8 text-terracotta" />
+        <p className="text-sm font-medium text-charcoal">No eNPS data yet</p>
         <p className="max-w-xs text-xs">
           Import the latest engagement survey to unlock satisfaction insights.
         </p>
@@ -233,20 +233,20 @@ export default function ENPSPanel({ data: _initialData }: ENPSPanelProps) {
         className="flex h-full flex-col gap-4"
       >
         <div className="flex items-center justify-between gap-3">
-          <TabsList className="border border-white/10 bg-white/5 p-1">
-            <TabsTrigger value="overview" className="px-3 py-1.5 text-xs">
+          <TabsList className="border border-warm bg-cream/50 p-1">
+            <TabsTrigger value="overview" className="px-3 py-1.5 text-xs data-[state=active]:bg-terracotta data-[state=active]:text-cream-white">
               Overview
             </TabsTrigger>
-            <TabsTrigger value="sentiment" className="px-3 py-1.5 text-xs">
+            <TabsTrigger value="sentiment" className="px-3 py-1.5 text-xs data-[state=active]:bg-terracotta data-[state=active]:text-cream-white">
               Sentiment
             </TabsTrigger>
-            <TabsTrigger value="departments" className="px-3 py-1.5 text-xs">
+            <TabsTrigger value="departments" className="px-3 py-1.5 text-xs data-[state=active]:bg-terracotta data-[state=active]:text-cream-white">
               Departments
             </TabsTrigger>
           </TabsList>
           <button
             onClick={handleExport}
-            className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white transition hover:border-white/20 hover:bg-white/10"
+            className="inline-flex items-center gap-2 rounded-xl border border-warm bg-sage/10 hover:bg-sage hover:text-cream-white px-3 py-2 text-xs font-medium text-charcoal transition shadow-soft hover:shadow-warm"
           >
             <Download className="h-4 w-4" />
             Export CSV

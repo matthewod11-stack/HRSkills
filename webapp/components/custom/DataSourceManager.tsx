@@ -127,20 +127,20 @@ export function DataSourceManager() {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="flex items-center gap-2 px-4 py-2 mb-4 bg-white/10 hover:bg-white/20 border-2 border-white/20 rounded-xl transition-colors"
+            className="flex items-center gap-2 px-4 py-2 mb-4 bg-cream hover:bg-terracotta/10 border-2 border-warm hover:border-terracotta/40 rounded-xl transition-all shadow-soft hover-lift text-terracotta"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-medium">Back to Command Center</span>
+            <span className="text-sm font-bold">Back to Command Center</span>
           </motion.button>
         </Link>
 
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-            <Database className="w-6 h-6" />
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-sage to-sage-light flex items-center justify-center shadow-warm">
+            <Database className="w-7 h-7 text-cream-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Data Input Hub</h1>
-            <p className="text-gray-400">Upload employee data and manage your document library</p>
+            <h1 className="text-3xl font-bold text-charcoal">Data Input Hub</h1>
+            <p className="text-charcoal-light">Upload employee data and manage your document library</p>
           </div>
         </div>
       </div>
@@ -149,41 +149,41 @@ export function DataSourceManager() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-8 p-6 bg-white/5 border border-white/10 rounded-2xl"
+        className="mb-8 p-6 bg-cream-white border-2 border-sage/30 rounded-3xl shadow-soft hover:border-sage/50 transition-all"
       >
         <div className="mb-4">
-          <h2 className="text-lg font-bold">Your Data</h2>
-          <p className="text-xs text-gray-400">Employee data and analytics status</p>
+          <h2 className="text-lg font-bold text-charcoal">Your Data</h2>
+          <p className="text-xs text-charcoal-light">Employee data and analytics status</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-4">
-          <div className="p-4 bg-white/5 rounded-lg">
+          <div className="p-4 bg-sage/5 border border-warm rounded-2xl shadow-soft">
             <div className="flex items-center gap-2 mb-2">
-              <Users className="w-4 h-4 text-blue-400" />
-              <span className="text-xs text-gray-400">Employees</span>
+              <Users className="w-4 h-4 text-sage" />
+              <span className="text-xs text-charcoal-light font-medium">Employees</span>
             </div>
-            <p className="text-2xl font-bold">{firstRunData?.employeeCount || 0}</p>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-2xl font-bold text-charcoal">{firstRunData?.employeeCount || 0}</p>
+            <p className="text-xs text-charcoal-soft mt-1">
               {hasUploadedData ? 'Your data' : 'Demo data'}
             </p>
           </div>
 
-          <div className="p-4 bg-white/5 rounded-lg">
+          <div className="p-4 bg-amber/5 border border-warm rounded-2xl shadow-soft">
             <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="w-4 h-4 text-green-400" />
-              <span className="text-xs text-gray-400">Analytics</span>
+              <TrendingUp className="w-4 h-4 text-amber" />
+              <span className="text-xs text-charcoal-light font-medium">Analytics</span>
             </div>
-            <p className="text-2xl font-bold">{firstRunData?.progress?.percentage || 0}%</p>
-            <p className="text-xs text-gray-500 mt-1">Setup complete</p>
+            <p className="text-2xl font-bold text-charcoal">{firstRunData?.progress?.percentage || 0}%</p>
+            <p className="text-xs text-charcoal-soft mt-1">Setup complete</p>
           </div>
 
-          <div className="p-4 bg-white/5 rounded-lg">
+          <div className="p-4 bg-terracotta/5 border border-warm rounded-2xl shadow-soft">
             <div className="flex items-center gap-2 mb-2">
-              <CheckCircle2 className="w-4 h-4 text-purple-400" />
-              <span className="text-xs text-gray-400">Status</span>
+              <CheckCircle2 className="w-4 h-4 text-terracotta" />
+              <span className="text-xs text-charcoal-light font-medium">Status</span>
             </div>
-            <p className="text-2xl font-bold">Active</p>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-2xl font-bold text-charcoal">Active</p>
+            <p className="text-xs text-charcoal-soft mt-1">
               {daysSinceFirstRun > 0 ? `${daysSinceFirstRun} days ago` : 'Just started'}
             </p>
           </div>
@@ -201,21 +201,21 @@ export function DataSourceManager() {
           <motion.div
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="p-6 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border-2 border-purple-500/30 rounded-2xl cursor-pointer hover:border-purple-500/50 transition-all"
+            className="p-6 bg-gradient-to-r from-amber/10 to-terracotta/10 border-2 border-amber/30 rounded-3xl cursor-pointer hover:border-amber/50 transition-all shadow-soft hover:shadow-warm hover-lift"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
-                  <Users className="w-7 h-7" />
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber to-terracotta flex items-center justify-center shadow-warm">
+                  <Users className="w-7 h-7 text-cream-white" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold mb-1">View & Edit Master Employee Data</h3>
-                  <p className="text-gray-400">
+                  <h3 className="text-xl font-bold mb-1 text-charcoal">View & Edit Master Employee Data</h3>
+                  <p className="text-charcoal-light">
                     Inline table editor with sorting, filtering, and bulk operations
                   </p>
                 </div>
               </div>
-              <div className="text-purple-300">
+              <div className="text-amber">
                 <Table2 className="w-8 h-8" />
               </div>
             </div>
@@ -225,15 +225,15 @@ export function DataSourceManager() {
 
       {/* Files List */}
       <div>
-        <h2 className="text-lg font-semibold mb-4">Uploaded Files ({files.length})</h2>
+        <h2 className="text-lg font-bold mb-4 text-charcoal">Uploaded Files ({files.length})</h2>
 
         {loading ? (
-          <div className="text-center py-12 text-gray-400">Loading...</div>
+          <div className="text-center py-12 text-charcoal-light">Loading...</div>
         ) : files.length === 0 ? (
           <div className="text-center py-12">
-            <FileText className="w-16 h-16 mx-auto mb-4 text-gray-600" />
-            <p className="text-gray-400">No files uploaded yet</p>
-            <p className="text-sm text-gray-500 mt-1">
+            <FileText className="w-16 h-16 mx-auto mb-4 text-charcoal-soft" />
+            <p className="text-charcoal-light font-medium">No files uploaded yet</p>
+            <p className="text-sm text-charcoal-soft mt-1">
               Upload your first file to get started with analytics
             </p>
           </div>
@@ -244,19 +244,19 @@ export function DataSourceManager() {
                 key={file.fileId}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-4 bg-white/5 border-2 border-white/10 rounded-xl hover:border-blue-500/30 transition-colors"
+                className="p-4 bg-cream-white border-2 border-warm rounded-2xl hover:border-terracotta/30 transition-all shadow-soft hover:shadow-warm"
               >
                 <div className="flex items-start gap-4">
                   {/* Icon */}
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-                    <BarChart3 className="w-6 h-6" />
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-terracotta to-amber flex items-center justify-center flex-shrink-0 shadow-warm">
+                    <BarChart3 className="w-6 h-6 text-cream-white" />
                   </div>
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-lg mb-1">{file.fileName}</h3>
-                    <p className="text-sm text-gray-400 mb-2">{FILE_TYPE_LABELS[file.fileType]}</p>
-                    <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                    <h3 className="font-bold text-lg mb-1 text-charcoal">{file.fileName}</h3>
+                    <p className="text-sm text-charcoal-light mb-2">{FILE_TYPE_LABELS[file.fileType]}</p>
+                    <div className="flex flex-wrap gap-4 text-sm text-charcoal-soft">
                       <span className="flex items-center gap-1">
                         <BarChart3 className="w-4 h-4" />
                         {file.rowCount} rows
@@ -274,19 +274,19 @@ export function DataSourceManager() {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handlePreview(file)}
-                      className="p-2 bg-blue-500/20 hover:bg-blue-500/30 border-2 border-blue-500/30 rounded-lg transition-colors"
+                      className="p-2 bg-sage/10 hover:bg-sage border-2 border-sage/30 hover:border-sage rounded-xl transition-all shadow-soft hover:shadow-warm group"
                       title="Preview"
                     >
-                      <Eye className="w-5 h-5 text-blue-300" />
+                      <Eye className="w-5 h-5 text-sage group-hover:text-cream-white" />
                     </motion.button>
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handleDelete(file.fileId)}
-                      className="p-2 bg-red-500/20 hover:bg-red-500/30 border-2 border-red-500/30 rounded-lg transition-colors"
+                      className="p-2 bg-error/10 hover:bg-error border-2 border-error/30 hover:border-error rounded-xl transition-all shadow-soft hover:shadow-warm group"
                       title="Delete"
                     >
-                      <Trash2 className="w-5 h-5 text-red-300" />
+                      <Trash2 className="w-5 h-5 text-error group-hover:text-cream-white" />
                     </motion.button>
                   </div>
                 </div>
@@ -303,7 +303,7 @@ export function DataSourceManager() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-charcoal/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
             onClick={() => setPreview(null)}
           >
             <motion.div
@@ -311,19 +311,19 @@ export function DataSourceManager() {
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-gray-900 border-2 border-white/20 rounded-2xl p-6 max-w-6xl w-full max-h-[80vh] overflow-hidden flex flex-col"
+              className="bg-cream-white border-2 border-warm rounded-3xl p-6 max-w-6xl w-full max-h-[80vh] overflow-hidden flex flex-col shadow-warm-lg"
             >
               {/* Header */}
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h3 className="text-xl font-bold mb-1">{preview.file.fileName}</h3>
-                  <p className="text-sm text-gray-400">
+                  <h3 className="text-xl font-bold mb-1 text-charcoal">{preview.file.fileName}</h3>
+                  <p className="text-sm text-charcoal-light">
                     Showing first 10 rows of {preview.data.totalRows} (PII masked)
                   </p>
                 </div>
                 <button
                   onClick={() => setPreview(null)}
-                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                  className="p-2 hover:bg-terracotta/10 rounded-xl transition-colors text-terracotta hover-lift"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -332,12 +332,12 @@ export function DataSourceManager() {
               {/* Table */}
               <div className="overflow-auto flex-1">
                 <table className="w-full text-sm">
-                  <thead className="sticky top-0 bg-gray-800">
+                  <thead className="sticky top-0 bg-cream">
                     <tr>
                       {preview.data.columns.map((col) => (
                         <th
                           key={col}
-                          className="px-3 py-2 text-left font-semibold border-b-2 border-white/20 whitespace-nowrap"
+                          className="px-3 py-2 text-left font-bold border-b-2 border-warm whitespace-nowrap text-charcoal"
                         >
                           {col}
                         </th>
@@ -346,9 +346,9 @@ export function DataSourceManager() {
                   </thead>
                   <tbody>
                     {preview.data.rows.map((row, idx) => (
-                      <tr key={idx} className="border-b border-white/10 hover:bg-white/5">
+                      <tr key={idx} className="border-b border-warm hover:bg-cream transition-colors">
                         {preview.data.columns.map((col) => (
-                          <td key={col} className="px-3 py-2 whitespace-nowrap">
+                          <td key={col} className="px-3 py-2 whitespace-nowrap text-charcoal">
                             {row[col] !== null && row[col] !== undefined ? String(row[col]) : '—'}
                           </td>
                         ))}

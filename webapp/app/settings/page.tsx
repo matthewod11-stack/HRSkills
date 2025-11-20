@@ -316,46 +316,46 @@ export default function SettingsPage() {
   };
 
   const getHealthIcon = (health: AIHealth | undefined) => {
-    if (!health) return <AlertCircle className="w-4 h-4 text-gray-400" />;
-    if (health.healthy) return <CheckCircle2 className="w-4 h-4 text-green-500" />;
-    return <XCircle className="w-4 h-4 text-red-500" />;
+    if (!health) return <AlertCircle className="w-4 h-4 text-charcoal-soft" />;
+    if (health.healthy) return <CheckCircle2 className="w-4 h-4 text-sage" />;
+    return <XCircle className="w-4 h-4 text-error" />;
   };
 
   const getHealthColor = (health: AIHealth | undefined) => {
-    if (!health) return 'border-gray-600';
-    if (health.healthy) return 'border-green-500/50';
-    return 'border-red-500/50';
+    if (!health) return 'border-warm';
+    if (health.healthy) return 'border-sage/50';
+    return 'border-error/50';
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-black text-white">
+    <div className="min-h-screen bg-radial-cream text-charcoal">
       {/* Header */}
       <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="backdrop-blur-xl bg-black/40 border-b border-white/20 sticky top-0 z-30"
+        className="backdrop-blur-xl bg-cream-white/90 border-b-2 border-warm sticky top-0 z-30 shadow-soft"
       >
         <div className="max-w-[1600px] mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => router.push('/')}
-                className="w-10 h-10 bg-white/5 hover:bg-white/10 border-2 border-white/30 hover:border-white/50 rounded-lg flex items-center justify-center transition-all"
+                className="w-10 h-10 bg-cream hover:bg-terracotta/10 border-2 border-warm hover:border-terracotta/40 rounded-xl flex items-center justify-center transition-all hover-lift shadow-soft"
               >
-                <ArrowLeft className="w-5 h-5" />
+                <ArrowLeft className="w-5 h-5 text-terracotta" />
               </button>
               <div>
-                <h1 className="text-xl font-bold">Settings</h1>
-                <p className="text-sm text-gray-400">Manage your HR Command Center preferences</p>
+                <h1 className="text-xl font-bold text-charcoal">Settings</h1>
+                <p className="text-sm text-charcoal-light">Manage your HR Command Center preferences</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              {saveMessage && <span className="text-sm text-green-400">{saveMessage}</span>}
+              {saveMessage && <span className="text-sm text-sage font-medium">{saveMessage}</span>}
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg transition-all"
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-terracotta to-amber hover:shadow-warm disabled:opacity-50 rounded-xl transition-all text-cream-white font-medium hover-lift"
               >
                 {isSaving ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -379,48 +379,48 @@ export default function SettingsPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="backdrop-blur-xl bg-black/40 border-2 border-blue-500/30 rounded-2xl p-6"
+            className="backdrop-blur-xl bg-cream-white border-2 border-sage/30 rounded-3xl p-6 shadow-soft hover:border-sage/50 transition-all"
           >
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center">
-                <Database className="w-5 h-5" />
+              <div className="w-12 h-12 bg-gradient-to-br from-sage to-sage-light rounded-2xl flex items-center justify-center shadow-warm">
+                <Database className="w-6 h-6 text-cream-white" />
               </div>
               <div>
-                <h2 className="text-lg font-bold">Your Data</h2>
-                <p className="text-xs text-gray-400">Employee data and analytics status</p>
+                <h2 className="text-lg font-bold text-charcoal">Your Data</h2>
+                <p className="text-xs text-charcoal-light">Employee data and analytics status</p>
               </div>
             </div>
 
             <div className="space-y-4">
               {/* Data Status */}
               <div className="grid md:grid-cols-3 gap-4">
-                <div className="p-4 bg-white/5 rounded-lg">
+                <div className="p-4 bg-sage/5 border border-warm rounded-2xl shadow-soft">
                   <div className="flex items-center gap-2 mb-2">
-                    <Database className="w-4 h-4 text-blue-400" />
-                    <span className="text-xs text-gray-400">Employees</span>
+                    <Database className="w-4 h-4 text-sage" />
+                    <span className="text-xs text-charcoal-light font-medium">Employees</span>
                   </div>
-                  <p className="text-2xl font-bold">{firstRunData?.employeeCount || 0}</p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-2xl font-bold text-charcoal">{firstRunData?.employeeCount || 0}</p>
+                  <p className="text-xs text-charcoal-soft mt-1">
                     {hasUploadedData ? 'Your data' : 'Demo data'}
                   </p>
                 </div>
 
-                <div className="p-4 bg-white/5 rounded-lg">
+                <div className="p-4 bg-amber/5 border border-warm rounded-2xl shadow-soft">
                   <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp className="w-4 h-4 text-green-400" />
-                    <span className="text-xs text-gray-400">Analytics</span>
+                    <TrendingUp className="w-4 h-4 text-amber" />
+                    <span className="text-xs text-charcoal-light font-medium">Analytics</span>
                   </div>
-                  <p className="text-2xl font-bold">{firstRunData?.progress?.percentage || 0}%</p>
-                  <p className="text-xs text-gray-500 mt-1">Setup complete</p>
+                  <p className="text-2xl font-bold text-charcoal">{firstRunData?.progress?.percentage || 0}%</p>
+                  <p className="text-xs text-charcoal-soft mt-1">Setup complete</p>
                 </div>
 
-                <div className="p-4 bg-white/5 rounded-lg">
+                <div className="p-4 bg-terracotta/5 border border-warm rounded-2xl shadow-soft">
                   <div className="flex items-center gap-2 mb-2">
-                    <CheckCircle2 className="w-4 h-4 text-purple-400" />
-                    <span className="text-xs text-gray-400">Status</span>
+                    <CheckCircle2 className="w-4 h-4 text-terracotta" />
+                    <span className="text-xs text-charcoal-light font-medium">Status</span>
                   </div>
-                  <p className="text-2xl font-bold">Active</p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-2xl font-bold text-charcoal">Active</p>
+                  <p className="text-xs text-charcoal-soft mt-1">
                     {daysSinceFirstRun > 0 ? `${daysSinceFirstRun} days ago` : 'Just started'}
                   </p>
                 </div>
@@ -428,18 +428,18 @@ export default function SettingsPage() {
 
               {/* Upload Data CTA - Only show if using demo data */}
               {!hasUploadedData && (
-                <div className="p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-lg">
+                <div className="p-4 bg-gradient-to-br from-sage/10 to-amber/10 border-2 border-sage/30 rounded-2xl shadow-soft">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
-                      <h3 className="text-sm font-medium mb-1">Data Input Hub</h3>
-                      <p className="text-xs text-gray-400">
+                      <h3 className="text-sm font-bold text-charcoal mb-1">Data Input Hub</h3>
+                      <p className="text-xs text-charcoal-light">
                         Currently using demo data (200 employees). Upload your CSV and manage your
                         document library to unlock personalized analytics and insights.
                       </p>
                     </div>
                     <button
                       onClick={() => router.push('/data-sources')}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm transition-all whitespace-nowrap"
+                      className="flex items-center gap-2 px-4 py-2 bg-sage hover:bg-sage-light text-cream-white rounded-xl text-sm transition-all whitespace-nowrap font-medium hover-lift shadow-soft hover:shadow-warm"
                     >
                       <Database className="w-4 h-4" />
                       Go to Data Input Hub →
@@ -455,16 +455,16 @@ export default function SettingsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="backdrop-blur-xl bg-black/40 border-2 border-purple-500/30 rounded-2xl p-6"
+            className="backdrop-blur-xl bg-cream-white border-2 border-amber/30 rounded-3xl p-6 shadow-soft hover:border-amber/50 transition-all"
           >
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
-                  <Zap className="w-5 h-5" />
+                <div className="w-12 h-12 bg-gradient-to-br from-amber to-terracotta rounded-2xl flex items-center justify-center shadow-warm">
+                  <Zap className="w-6 h-6 text-cream-white" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold">AI Configuration</h2>
-                  <p className="text-xs text-gray-400">
+                  <h2 className="text-lg font-bold text-charcoal">AI Configuration</h2>
+                  <p className="text-xs text-charcoal-light">
                     {hasPersonalApiKey
                       ? 'Using your personal API key - unlimited usage'
                       : 'Using shared key - add yours for unlimited usage'}
@@ -475,16 +475,16 @@ export default function SettingsPage() {
               <button
                 onClick={handleTestProviders}
                 disabled={isTesting}
-                className="flex items-center gap-2 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 rounded-lg text-sm transition-all"
+                className="flex items-center gap-2 px-3 py-2 bg-amber hover:bg-amber-dark disabled:opacity-50 rounded-xl text-sm transition-all text-cream-white font-medium hover-lift shadow-soft hover:shadow-warm"
               >
                 {isTesting ? (
                   <>
-                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     Testing...
                   </>
                 ) : (
                   <>
-                    <Activity className="w-3 h-3" />
+                    <Activity className="w-3.5 h-3.5" />
                     Test Connectivity
                   </>
                 )}
@@ -496,50 +496,50 @@ export default function SettingsPage() {
                 {/* Provider Selection */}
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Primary AI Provider</label>
+                    <label className="block text-sm font-bold mb-2 text-charcoal">Primary AI Provider</label>
                     <select
                       value={aiConfigData.config.primary}
                       onChange={(e) => handleUpdateAIProvider('primary', e.target.value)}
-                      className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-sm focus:outline-none focus:border-purple-500 transition-colors"
+                      className="w-full px-3 py-2 bg-cream border-2 border-warm rounded-xl text-sm focus:outline-none focus:border-amber focus:ring-2 focus:ring-amber/20 transition-all text-charcoal font-medium"
                     >
-                      <option value="anthropic" className="bg-gray-900">
+                      <option value="anthropic" className="bg-cream-white">
                         Claude (Anthropic)
                       </option>
-                      <option value="openai" className="bg-gray-900">
+                      <option value="openai" className="bg-cream-white">
                         GPT (OpenAI)
                       </option>
                     </select>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-charcoal-light mt-1">
                       Default provider for all AI requests
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Fallback Provider</label>
+                    <label className="block text-sm font-bold mb-2 text-charcoal">Fallback Provider</label>
                     <select
                       value={aiConfigData.config.fallback || ''}
                       onChange={(e) => handleUpdateAIProvider('fallback', e.target.value || null)}
-                      className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-sm focus:outline-none focus:border-purple-500 transition-colors"
+                      className="w-full px-3 py-2 bg-cream border-2 border-warm rounded-xl text-sm focus:outline-none focus:border-amber focus:ring-2 focus:ring-amber/20 transition-all text-charcoal font-medium"
                     >
-                      <option value="" className="bg-gray-900">
+                      <option value="" className="bg-cream-white">
                         None
                       </option>
-                      <option value="anthropic" className="bg-gray-900">
+                      <option value="anthropic" className="bg-cream-white">
                         Claude (Anthropic)
                       </option>
-                      <option value="openai" className="bg-gray-900">
+                      <option value="openai" className="bg-cream-white">
                         GPT (OpenAI)
                       </option>
                     </select>
-                    <p className="text-xs text-gray-400 mt-1">Used if primary provider fails</p>
+                    <p className="text-xs text-charcoal-light mt-1">Used if primary provider fails</p>
                   </div>
                 </div>
 
                 {/* Auto Failover Toggle */}
-                <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-amber/5 border border-warm rounded-2xl">
                   <div>
-                    <p className="text-sm font-medium">Automatic Failover</p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-sm font-bold text-charcoal">Automatic Failover</p>
+                    <p className="text-xs text-charcoal-light">
                       Automatically switch to fallback provider on errors
                     </p>
                   </div>
@@ -551,11 +551,11 @@ export default function SettingsPage() {
                       )
                     }
                     className={`relative w-12 h-6 rounded-full transition-colors ${
-                      aiConfigData.config.enableAutoFallback ? 'bg-purple-600' : 'bg-gray-600'
+                      aiConfigData.config.enableAutoFallback ? 'bg-amber' : 'bg-charcoal-soft'
                     }`}
                   >
                     <div
-                      className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                      className={`absolute top-0.5 left-0.5 w-5 h-5 bg-cream-white rounded-full transition-transform shadow-soft ${
                         aiConfigData.config.enableAutoFallback ? 'translate-x-6' : 'translate-x-0'
                       }`}
                     />
@@ -564,23 +564,23 @@ export default function SettingsPage() {
 
                 {/* Provider Health Status */}
                 <div>
-                  <h3 className="text-sm font-medium mb-3">Provider Health Status</h3>
+                  <h3 className="text-sm font-bold mb-3 text-charcoal">Provider Health Status</h3>
                   <div className="grid md:grid-cols-2 gap-3">
                     {['anthropic', 'openai'].map((provider) => {
                       const health = aiConfigData.health?.[provider];
                       return (
                         <div
                           key={provider}
-                          className={`p-3 bg-white/5 border-2 ${getHealthColor(health)} rounded-lg`}
+                          className={`p-3 bg-cream border-2 ${getHealthColor(health)} rounded-2xl shadow-soft`}
                         >
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium capitalize">{provider}</span>
+                            <span className="text-sm font-bold capitalize text-charcoal">{provider}</span>
                             {getHealthIcon(health)}
                           </div>
                           {health && (
                             <>
-                              <p className="text-xs text-gray-400">Latency: {health.latency}ms</p>
-                              <p className="text-xs text-gray-400">
+                              <p className="text-xs text-charcoal-light">Latency: {health.latency}ms</p>
+                              <p className="text-xs text-charcoal-light">
                                 Status: {health.healthy ? 'Operational' : 'Unavailable'}
                               </p>
                             </>
@@ -592,27 +592,27 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Optional API Keys */}
-                <div className="border-t border-white/10 pt-6">
-                  <h3 className="text-sm font-medium mb-3">Custom API Keys (Optional)</h3>
-                  <p className="text-xs text-gray-400 mb-4">
+                <div className="border-t-2 border-warm pt-6">
+                  <h3 className="text-sm font-bold mb-3 text-charcoal">Custom API Keys (Optional)</h3>
+                  <p className="text-xs text-charcoal-light mb-4">
                     Add your own API keys to bypass shared limits. Your keys are encrypted and
                     stored securely.
                   </p>
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-xs font-medium mb-1">Anthropic API Key</label>
+                      <label className="block text-xs font-bold mb-1 text-charcoal">Anthropic API Key</label>
                       <input
                         type="password"
                         placeholder="sk-ant-..."
-                        className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-sm focus:outline-none focus:border-purple-500"
+                        className="w-full px-3 py-2 bg-cream border-2 border-warm rounded-xl text-sm focus:outline-none focus:border-amber focus:ring-2 focus:ring-amber/20 text-charcoal placeholder-charcoal-soft"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium mb-1">OpenAI API Key</label>
+                      <label className="block text-xs font-bold mb-1 text-charcoal">OpenAI API Key</label>
                       <input
                         type="password"
                         placeholder="sk-..."
-                        className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-sm focus:outline-none focus:border-purple-500"
+                        className="w-full px-3 py-2 bg-cream border-2 border-warm rounded-xl text-sm focus:outline-none focus:border-amber focus:ring-2 focus:ring-amber/20 text-charcoal placeholder-charcoal-soft"
                       />
                     </div>
                   </div>
@@ -620,7 +620,7 @@ export default function SettingsPage() {
               </div>
             ) : (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 animate-spin text-purple-400" />
+                <Loader2 className="w-6 h-6 animate-spin text-terracotta" />
               </div>
             )}
           </motion.div>
@@ -630,63 +630,63 @@ export default function SettingsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="backdrop-blur-xl bg-black/40 border-2 border-white/20 rounded-2xl p-6"
+            className="backdrop-blur-xl bg-cream-white border-2 border-terracotta/30 rounded-3xl p-6 shadow-soft hover:border-terracotta/50 transition-all"
           >
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <Activity className="w-5 h-5" />
+              <div className="w-12 h-12 bg-gradient-to-br from-terracotta to-terracotta-dark rounded-2xl flex items-center justify-center shadow-warm">
+                <Activity className="w-6 h-6 text-cream-white" />
               </div>
-              <h2 className="text-lg font-bold">AI Cost Monitoring</h2>
+              <h2 className="text-lg font-bold text-charcoal">AI Cost Monitoring</h2>
             </div>
 
             <div className="space-y-4 mb-6">
-              <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-4">
+              <div className="flex items-start justify-between gap-4 border-b-2 border-warm pb-4">
                 <div className="flex-1">
-                  <label className="block text-sm font-medium mb-1">Prompt Caching</label>
-                  <p className="text-xs text-gray-400">
+                  <label className="block text-sm font-bold mb-1 text-charcoal">Prompt Caching</label>
+                  <p className="text-xs text-charcoal-light">
                     Cache static prompts to reduce token costs by 90%
                   </p>
                 </div>
                 <button
                   onClick={() => updateSetting('ai-monitoring', 'promptCaching', true)}
-                  className="relative w-12 h-6 rounded-full bg-blue-600"
+                  className="relative w-12 h-6 rounded-full bg-terracotta"
                 >
-                  <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full translate-x-6" />
+                  <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-cream-white rounded-full translate-x-6 shadow-soft" />
                 </button>
               </div>
 
-              <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-4">
+              <div className="flex items-start justify-between gap-4 border-b-2 border-warm pb-4">
                 <div className="flex-1">
-                  <label className="block text-sm font-medium mb-1">Smart Data Filtering</label>
-                  <p className="text-xs text-gray-400">
+                  <label className="block text-sm font-bold mb-1 text-charcoal">Smart Data Filtering</label>
+                  <p className="text-xs text-charcoal-light">
                     Use semantic analysis to include only relevant employee fields
                   </p>
                 </div>
                 <button
                   onClick={() => updateSetting('ai-monitoring', 'semanticFiltering', true)}
-                  className="relative w-12 h-6 rounded-full bg-blue-600"
+                  className="relative w-12 h-6 rounded-full bg-terracotta"
                 >
-                  <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full translate-x-6" />
+                  <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-cream-white rounded-full translate-x-6 shadow-soft" />
                 </button>
               </div>
 
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
-                  <label className="block text-sm font-medium mb-1">Dynamic Token Limits</label>
-                  <p className="text-xs text-gray-400">
+                  <label className="block text-sm font-bold mb-1 text-charcoal">Dynamic Token Limits</label>
+                  <p className="text-xs text-charcoal-light">
                     Automatically adjust max_tokens based on query type
                   </p>
                 </div>
                 <button
                   onClick={() => updateSetting('ai-monitoring', 'dynamicTokens', true)}
-                  className="relative w-12 h-6 rounded-full bg-blue-600"
+                  className="relative w-12 h-6 rounded-full bg-terracotta"
                 >
-                  <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full translate-x-6" />
+                  <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-cream-white rounded-full translate-x-6 shadow-soft" />
                 </button>
               </div>
             </div>
 
-            <div className="mt-8 pt-6 border-t border-white/10">
+            <div className="mt-8 pt-6 border-t-2 border-warm">
               <AIMetricsDashboard />
             </div>
           </motion.div>
@@ -706,16 +706,16 @@ export default function SettingsPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: (sectionIndex + 3) * 0.1 }}
-                className="backdrop-blur-xl bg-black/40 border-2 border-white/20 rounded-2xl p-6"
+                className="backdrop-blur-xl bg-cream-white border-2 border-sage/20 rounded-3xl p-6 shadow-soft hover:border-sage/40 transition-all"
               >
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                    <section.icon className="w-5 h-5" />
+                  <div className="w-12 h-12 bg-gradient-to-br from-sage to-sage-light rounded-2xl flex items-center justify-center shadow-warm">
+                    <section.icon className="w-6 h-6 text-cream-white" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-bold">{section.title}</h2>
+                    <h2 className="text-lg font-bold text-charcoal">{section.title}</h2>
                     {section.id === 'integrations' && (
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-charcoal-light">
                         Connect external services to enhance your workflow
                       </p>
                     )}
@@ -726,13 +726,13 @@ export default function SettingsPage() {
                   {section.settings.map((setting) => (
                     <div
                       key={setting.id}
-                      className="border-b border-white/10 last:border-0 pb-4 last:pb-0"
+                      className="border-b-2 border-warm last:border-0 pb-4 last:pb-0"
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                          <label className="block text-sm font-medium mb-1">{setting.label}</label>
+                          <label className="block text-sm font-bold mb-1 text-charcoal">{setting.label}</label>
                           {setting.description && (
-                            <p className="text-xs text-gray-400 mb-2">{setting.description}</p>
+                            <p className="text-xs text-charcoal-light mb-2">{setting.description}</p>
                           )}
                         </div>
 
@@ -745,7 +745,7 @@ export default function SettingsPage() {
                                 updateSetting(section.id, setting.id, e.target.value)
                               }
                               placeholder={setting.placeholder}
-                              className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                              className="w-full px-3 py-2 bg-cream border-2 border-warm rounded-xl text-sm focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-all text-charcoal placeholder-charcoal-soft font-medium"
                             />
                           )}
 
@@ -755,10 +755,10 @@ export default function SettingsPage() {
                               onChange={(e) =>
                                 updateSetting(section.id, setting.id, e.target.value)
                               }
-                              className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                              className="w-full px-3 py-2 bg-cream border-2 border-warm rounded-xl text-sm focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-all text-charcoal font-medium"
                             >
                               {setting.options?.map((option) => (
-                                <option key={option} value={option} className="bg-gray-900">
+                                <option key={option} value={option} className="bg-cream-white">
                                   {option.charAt(0).toUpperCase() +
                                     option.slice(1).replace('-', ' ')}
                                 </option>
@@ -770,11 +770,11 @@ export default function SettingsPage() {
                             <button
                               onClick={() => updateSetting(section.id, setting.id, !setting.value)}
                               className={`relative w-12 h-6 rounded-full transition-colors ${
-                                setting.value ? 'bg-blue-600' : 'bg-gray-600'
+                                setting.value ? 'bg-sage' : 'bg-charcoal-soft'
                               }`}
                             >
                               <div
-                                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-cream-white rounded-full transition-transform shadow-soft ${
                                   setting.value ? 'translate-x-6' : 'translate-x-0'
                                 }`}
                               />

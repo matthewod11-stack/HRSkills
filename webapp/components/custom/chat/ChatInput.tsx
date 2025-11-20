@@ -66,7 +66,7 @@ const ChatInput = memo(function ChatInput({
   const isSendDisabled = !value.trim() || isInputDisabled;
 
   return (
-    <div className="p-6 border-t border-border bg-gradient-to-r from-violet/5 to-violet-light/5">
+    <div className="p-6 border-t border-warm bg-gradient-to-r from-terracotta/5 to-amber/5 rounded-b-2xl">
       <label htmlFor="chat-input" className="sr-only">
         Chat message input
       </label>
@@ -82,7 +82,7 @@ const ChatInput = memo(function ChatInput({
           aria-label="Chat message input"
           aria-describedby="chat-input-help"
           disabled={isInputDisabled}
-          className="flex-1 bg-card border border-border rounded-xl px-4 py-3 outline-none focus:border-violet focus:ring-2 focus:ring-violet/30 transition-premium placeholder-secondary font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 bg-cream-white border-2 border-cream-light rounded-xl px-4 py-3 outline-none focus:border-terracotta focus:ring-2 focus:ring-terracotta/20 transition-premium placeholder-charcoal-soft text-charcoal font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         />
         <motion.button
           onClick={onSend}
@@ -90,13 +90,13 @@ const ChatInput = memo(function ChatInput({
           whileHover={!isSendDisabled ? { scale: 1.05 } : undefined}
           whileTap={!isSendDisabled ? { scale: 0.95 } : undefined}
           aria-label="Send message"
-          className="px-6 py-3 bg-gradient-to-r from-violet to-violet-light border border-violet/50 rounded-xl hover:shadow-glow-accent transition-premium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium"
+          className="px-6 py-3 bg-gradient-to-r from-terracotta to-amber border border-terracotta/30 rounded-xl hover:shadow-warm text-cream-white transition-premium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-semibold"
         >
           <Send className="w-5 h-5" aria-hidden="true" />
           <span className="hidden sm:inline">Send</span>
         </motion.button>
       </div>
-      <p id="chat-input-help" className="text-xs text-secondary mt-2 text-center font-medium">
+      <p id="chat-input-help" className="text-xs text-charcoal-light mt-2 text-center font-medium">
         Press Enter to send • Shift + Enter for new line
       </p>
     </div>
