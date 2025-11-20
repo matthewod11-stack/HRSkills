@@ -699,7 +699,7 @@ export default function Home() {
               }`}
               style={chatAlignmentStyle}
             >
-              <div className="h-full max-h-[calc(100vh-360px)] min-h-[500px]">
+              <div className="h-full max-h-[calc(100vh-280px)] min-h-[650px]">
                 <ErrorBoundary
                   level="section"
                   onError={(error, errorInfo) => {

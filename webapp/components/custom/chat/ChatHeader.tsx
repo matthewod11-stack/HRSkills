@@ -35,12 +35,7 @@ export const ChatHeader = memo(function ChatHeader({
   onReset
 }: ChatHeaderProps) {
   return (
-    <div className="flex items-center justify-between mb-4">
-      {/* Conversation ID (optional - could be removed or made conditional) */}
-      <div className="text-xs text-charcoal-soft/70 font-mono">
-        {conversationId.replace(/\s+/g, ' ')}
-      </div>
-
+    <div className="flex items-center justify-end mb-4">
       {/* Reset Chat Button */}
       <motion.button
         onClick={onReset}
