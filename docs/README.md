@@ -12,8 +12,8 @@ Start here if you're new to the project:
 - [Getting Started Guide](./guides/GETTING_STARTED.md) - Detailed setup and onboarding
 - [Contributing Guidelines](./guides/CONTRIBUTING.md) - How to contribute to the project
 - [Development Setup](./guides/DEVELOPMENT_SETUP.md) - Complete development environment setup
-- [Quick Reference Card](../quick-reference-card.md) - Essential commands and features
-- [Claude HR Capabilities](../claude-hr-capabilities-master.md) - Complete feature documentation
+- [Quick Reference Card](./guides/quick-reference-card.md) - Essential commands and features
+- [Claude HR Capabilities](./overview/claude-hr-capabilities-master.md) - Complete feature documentation
 - [Changelog](./releases/CHANGELOG.md) - Version history and recent changes
 
 ---
@@ -28,6 +28,12 @@ Technical architecture, roadmaps, and design decisions:
 - [UI Migration Plan](./architecture/UI_MIGRATION_PLAN.md) - UI modernization plan
 - [Executive Summary](./architecture/EXECUTIVE_SUMMARY.md) - High-level project overview
 - [Future Features](./architecture/FUTURE_FEATURES.md) - Planned enhancements
+- [Remediation Plan](./architecture/REMEDIATION_PLAN.md) - Technical remediation strategy
+- [Unified Command Center Design](./architecture/UNIFIED_COMMAND_CENTER_DESIGN.md) - Command center architecture
+- [Tech Stack Remediation Plan](./architecture/TECH_STACK_REMEDIATION_PLAN.md) - Technology stack improvements
+- [Dependencies Guide](./architecture/dependencies.md) - Dependency management
+- [Warm Redesign Summary](./architecture/WARM_REDESIGN_SUMMARY.md) - UI redesign documentation
+- [Before/After Comparison](./architecture/BEFORE_AFTER_COMPARISON.md) - Design comparison
 
 ---
 
@@ -49,6 +55,10 @@ How-to guides for development, deployment, and operations:
 ### Security
 - [Security Implementation Plan](./guides/SECURITY_IMPLEMENTATION_PLAN.md) - Security architecture
 - [Security Implementation Summary](./guides/SECURITY_IMPLEMENTATION_SUMMARY.md) - Security features overview
+
+### UI & Design
+- [Quick Start Warm Theme](./guides/QUICK_START_WARM_THEME.md) - Warm theme setup guide
+- [Context Panels Update](./guides/CONTEXT_PANELS_UPDATE.md) - Context panel improvements
 
 ---
 
@@ -72,10 +82,22 @@ Detailed documentation for specific features:
 
 Phase-by-phase implementation summaries:
 
+### Main Phase Summaries
 - [Phase 1 Implementation Summary](./phases/PHASE_1_IMPLEMENTATION_SUMMARY.md) - Foundation phase
 - [Phase 2 Implementation Summary](./phases/PHASE_2_IMPLEMENTATION_SUMMARY.md) - Core features
 - [Phase 3 Implementation Summary](./phases/PHASE_3_IMPLEMENTATION_SUMMARY.md) - Advanced features
 - [Phase 4 Validation & Deployment Complete](./phases/PHASE_4_VALIDATION_DEPLOYMENT_COMPLETE.md) - Production readiness
+
+### Phase Completion Reports
+- [Phase 1 Week 1 Complete](./phases/PHASE1_WEEK1_COMPLETE.md) - Week 1 progress
+- [Phase 1 Week 2 Complete](./phases/PHASE1_WEEK2_COMPLETE.md) - Week 2 progress
+- [Phase 1 Week 2 Progress](./phases/PHASE1_WEEK2_PROGRESS.md) - Week 2 status
+- [Phase 1 Week 3 Progress](./phases/PHASE1_WEEK3_PROGRESS.md) - Week 3 status
+- [Phase 1 Week 3-4 Complete](./phases/PHASE1_WEEK3-4_COMPLETE.md) - Weeks 3-4 completion
+- [Phase 1 Week 3-4](./phases/phase1week34.md) - Weeks 3-4 summary
+- [Phase 2 Week 5 Actual Status](./phases/PHASE2_WEEK5_ACTUAL_STATUS.md) - Week 5 status
+
+### Phase Features
 - [Phase 1 Prompt Caching Complete](./phases/PHASE_1_PROMPT_CACHING_COMPLETE.md) - Caching optimization
 - [Phase 2 Semantic Filtering Complete](./phases/PHASE_2_SEMANTIC_FILTERING_COMPLETE.md) - Smart filtering
 - [Phase 2 Complete Testing Guide](./phases/PHASE_2_COMPLETE_TESTING_GUIDE.md) - Testing documentation
@@ -163,23 +185,46 @@ Want to contribute? Check out our comprehensive guides:
 ```
 /HRSkills/
 ├── README.md                    # Project overview
+├── CLAUDE.md                    # Claude AI assistant context
 ├── docs/                       # All documentation (you are here!)
-│   ├── overview/               # Documentation index & roadmaps
-│   │   └── DOCUMENTATION_SUMMARY.md
-│   ├── guides/                 # How-to guides (includes GETTING_STARTED.md, CONTRIBUTING.md)
+│   ├── README.md               # Documentation index (this file)
+│   ├── desktop-app-electron-plan.md  # Desktop app implementation plan
+│   ├── overview/               # Documentation summaries & templates
+│   │   ├── DOCUMENTATION_SUMMARY.md
+│   │   ├── claude-hr-capabilities-master.md
+│   │   └── projectlevel-template.md
+│   ├── guides/                 # How-to guides
+│   │   ├── GETTING_STARTED.md
+│   │   ├── CONTRIBUTING.md
+│   │   ├── quick-reference-card.md
+│   │   ├── QUICK_START_WARM_THEME.md
+│   │   └── CONTEXT_PANELS_UPDATE.md
+│   │   └── ... (other guides)
+│   ├── architecture/           # Architecture & design docs
+│   │   ├── ARCHITECTURE_DECISIONS.md
+│   │   ├── REMEDIATION_PLAN.md
+│   │   ├── UNIFIED_COMMAND_CENTER_DESIGN.md
+│   │   ├── TECH_STACK_REMEDIATION_PLAN.md
+│   │   ├── dependencies.md
+│   │   ├── WARM_REDESIGN_SUMMARY.md
+│   │   └── BEFORE_AFTER_COMPARISON.md
+│   │   └── ... (other architecture docs)
+│   ├── phases/                 # Implementation phases
+│   │   ├── PHASE_1_IMPLEMENTATION_SUMMARY.md
+│   │   ├── PHASE1_WEEK1_COMPLETE.md
+│   │   ├── PHASE1_WEEK2_COMPLETE.md
+│   │   └── ... (other phase docs)
 │   ├── releases/               # Release notes & changelog
 │   │   └── CHANGELOG.md
 │   ├── context/                # AI assistant context files
-│   │   ├── claude.md
 │   │   └── cursor.md
-│   ├── integrations/           # Integration plans (e.g., Google AI plan)
+│   ├── integrations/           # Integration plans
 │   │   └── google/
-│   │       └── googleaiplan.md
-│   ├── features/               # Feature documentation (includes dlp/)
-│   ├── phases/                 # Implementation phases (includes google-ai/)
+│   ├── features/               # Feature documentation
 │   ├── audits/                 # Audit reports
 │   ├── api/                    # API reference
-│   └── components/             # Component library
+│   ├── components/             # Component library
+│   └── workflows/              # Workflow documentation
 ├── webapp/                     # Next.js web application
 ├── skills/                     # 27 Claude skills
 ├── agents/                     # Python automation agents
@@ -194,12 +239,23 @@ Want to contribute? Check out our comprehensive guides:
 
 When adding new documentation:
 
-1. **Location**: Place docs in the appropriate subfolder
+1. **Location**: Place docs in the appropriate subfolder:
+   - **Architecture & Design**: `architecture/` - Technical decisions, roadmaps, remediation plans
+   - **Implementation Phases**: `phases/` - Phase summaries, week-by-week progress
+   - **Guides**: `guides/` - How-to guides, setup instructions, quick references
+   - **Features**: `features/` - Feature-specific documentation
+   - **Overview**: `overview/` - High-level summaries, templates, master docs
+   - **Root**: Only `desktop-app-electron-plan.md` and `README.md` stay in docs root
 2. **Naming**: Use clear, descriptive names with SCREAMING_SNAKE_CASE for markdown files
 3. **Format**: Include a title, date, and clear sections
 4. **Links**: Use relative links for internal documentation
 5. **Index**: Update this README.md when adding new major documentation
 
+### Special Files
+- `desktop-app-electron-plan.md` - Stays in `docs/` root (desktop app planning)
+- `CLAUDE.md` - Stays in repository root (Claude AI context)
+- `README.md` - Stays in repository root (project overview)
+
 ---
 
-**Last Updated:** November 6, 2025
+**Last Updated:** January 2025
