@@ -1,20 +1,75 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { BarChart3, LineChart, PieChart, Download, RefreshCw, Filter } from 'lucide-react';
+import { BarChart3, Download, LineChart, PieChart, RefreshCw } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  SimpleBarChart,
+  SimpleLineChart,
+  SimplePieChart,
+} from '@/components/charts/RechartsWrappers';
 import { useAuth } from '@/lib/auth/auth-context';
-import { SimpleBarChart, SimpleLineChart, SimplePieChart } from '@/components/charts/RechartsWrappers';
-import { chartJsToRecharts, formatChartValue } from '@/lib/charts/recharts-helpers';
+import { chartJsToRecharts } from '@/lib/charts/recharts-helpers';
+
+/** Chart.js dataset configuration */
+interface ChartDataset {
+  label?: string;
+  data: number[];
+  backgroundColor?: string | string[];
+  borderColor?: string;
+  borderWidth?: number;
+  tension?: number;
+}
+
+/** Chart.js data format */
+interface ChartJsData {
+  labels: string[];
+  datasets: ChartDataset[];
+}
+
+/** Chart configuration from AI responses */
+interface ChartConfig {
+  type?: 'bar' | 'line' | 'pie' | 'scatter';
+  data?: ChartJsData;
+  options?: Record<string, unknown>;
+}
+
+/** Trend data point */
+interface TrendPoint {
+  date: string;
+  count: number;
+}
+
+/** Department attrition data */
+interface DepartmentAttrition {
+  attritionRate: number;
+  terminations?: number;
+}
+
+/** Analytics API response data */
+interface AnalyticsApiData {
+  total?: number;
+  byDepartment?: Record<string, number | DepartmentAttrition>;
+  trends?: TrendPoint[];
+  spanOfControl?: { average?: number };
+  overall?: { attritionRate: number; voluntaryRate: number; involuntaryRate: number };
+  distribution?: Record<string, number>;
+}
+
+/** Chart panel metadata */
+interface ChartMetadata {
+  rowsReturned?: number;
+  metadata?: { rowsReturned?: number };
+}
 
 interface AnalyticsChartPanelProps {
   metric: string;
   chartType?: 'bar' | 'line' | 'pie' | 'scatter';
   department?: string;
   dateRange?: string;
-  chartConfig?: any;
+  chartConfig?: ChartConfig;
   analysisSummary?: string;
-  metadata?: any;
+  metadata?: ChartMetadata;
 }
 
 export function AnalyticsChartPanel({
@@ -28,26 +83,12 @@ export function AnalyticsChartPanel({
 }: AnalyticsChartPanelProps) {
   const { getAuthHeaders } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<AnalyticsApiData | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [chartConfigState, setChartConfigState] = useState<any | null>(chartConfig || null);
+  const [chartConfigState, setChartConfigState] = useState<ChartConfig | null>(chartConfig || null);
   const [analysis, setAnalysis] = useState<string>(analysisSummary || '');
 
-  useEffect(() => {
-    if (chartConfig) {
-      setChartConfigState(chartConfig);
-      setAnalysis(analysisSummary || '');
-      setLoading(false);
-      setError(null);
-      return;
-    }
-    setChartConfigState(null);
-    setAnalysis('');
-    fetchAnalyticsData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [metric, department, dateRange, chartConfig, analysisSummary]);
-
-  const fetchAnalyticsData = async () => {
+  const fetchAnalyticsData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -67,12 +108,25 @@ export function AnalyticsChartPanel({
       }
 
       setData(result.data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
-  };
+  }, [metric, department, dateRange, getAuthHeaders]);
+
+  useEffect(() => {
+    if (chartConfig) {
+      setChartConfigState(chartConfig);
+      setAnalysis(analysisSummary || '');
+      setLoading(false);
+      setError(null);
+      return;
+    }
+    setChartConfigState(null);
+    setAnalysis('');
+    fetchAnalyticsData();
+  }, [chartConfig, analysisSummary, fetchAnalyticsData]);
 
   const handleExportCSV = async () => {
     const params = new URLSearchParams({ metric, format: 'csv' });
@@ -101,11 +155,11 @@ export function AnalyticsChartPanel({
       case 'headcount':
         if (chartType === 'line' && data.trends) {
           return {
-            labels: data.trends.map((t: any) => t.date),
+            labels: data.trends.map((t: TrendPoint) => t.date),
             datasets: [
               {
                 label: 'Headcount',
-                data: data.trends.map((t: any) => t.count),
+                data: data.trends.map((t: TrendPoint) => t.count),
                 borderColor: 'rgb(59, 130, 246)',
                 backgroundColor: 'rgba(59, 130, 246, 0.1)',
                 tension: 0.4,
@@ -154,7 +208,9 @@ export function AnalyticsChartPanel({
             datasets: [
               {
                 label: 'Attrition Rate (%)',
-                data: Object.values(data.byDepartment).map((d: any) => d.attritionRate),
+                data: Object.values(data.byDepartment).map((d) =>
+                  typeof d === 'object' && 'attritionRate' in d ? d.attritionRate : 0
+                ),
                 backgroundColor: 'rgba(239, 68, 68, 0.6)',
                 borderColor: 'rgb(239, 68, 68)',
                 borderWidth: 2,
@@ -186,7 +242,7 @@ export function AnalyticsChartPanel({
   };
 
   // Transform Chart.js data to Recharts format
-  const transformDataForRecharts = (chartJsData: any) => {
+  const transformDataForRecharts = (chartJsData: ChartJsData | null) => {
     if (!chartJsData) return [];
     return chartJsToRecharts(chartJsData);
   };
@@ -221,9 +277,9 @@ export function AnalyticsChartPanel({
   const dataKey = chartJsData?.datasets?.[0]?.label || 'value';
 
   return (
-    <div className="flex flex-col h-full min-h-[620px]">
+    <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4 pb-4 border-b border-white/10">
+      <div className="flex-shrink-0 flex items-center justify-between mb-4 pb-4 border-b border-white/10">
         <div className="flex items-center gap-2">
           {getChartIcon()}
           <div>
@@ -262,7 +318,7 @@ export function AnalyticsChartPanel({
       </div>
 
       {/* Chart Area */}
-      <div className="flex-1 min-h-[300px]">
+      <div className="flex-1 overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <RefreshCw className="w-8 h-8 animate-spin text-terracotta" />
@@ -278,26 +334,21 @@ export function AnalyticsChartPanel({
             className="h-full"
           >
             {resolvedChartType === 'line' && (
-              <SimpleLineChart
-                data={rechartsData}
-                dataKey={dataKey}
-                color="#3b82f6"
-              />
+              <SimpleLineChart data={rechartsData} dataKey={dataKey} color="#3b82f6" />
             )}
             {resolvedChartType === 'pie' && (
-              <SimplePieChart
-                data={rechartsData}
-                dataKey={dataKey}
-              />
+              <SimplePieChart data={rechartsData} dataKey={dataKey} />
             )}
             {(resolvedChartType === 'bar' || !resolvedChartType) && (
               <SimpleBarChart
                 data={rechartsData}
                 dataKey={dataKey}
                 color={
-                  metric === 'attrition' ? '#ef4444' :
-                  metric === 'performance' ? '#22c55e' :
-                  '#3b82f6'
+                  metric === 'attrition'
+                    ? '#ef4444'
+                    : metric === 'performance'
+                      ? '#22c55e'
+                      : '#3b82f6'
                 }
               />
             )}
@@ -311,7 +362,7 @@ export function AnalyticsChartPanel({
 
       {/* Summary Stats */}
       {!loading && !chartConfigState && data && (
-        <div className="mt-4 pt-4 border-t border-white/10">
+        <div className="flex-shrink-0 mt-4 pt-4 border-t border-white/10">
           <div className="grid grid-cols-3 gap-4 text-center">
             {metric === 'headcount' && (
               <>

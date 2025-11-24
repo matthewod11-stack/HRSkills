@@ -1,15 +1,15 @@
 'use client';
 
-import { useState, useEffect, type CSSProperties } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, FileText, BarChart3, Grid3x3, Smile } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { BarChart3, FileText, Grid3x3, Smile, X } from 'lucide-react';
+import { type CSSProperties, useEffect, useState } from 'react';
 
 export type ContextPanelType = 'document' | 'analytics' | 'performance' | 'enps' | null;
 
 export interface ContextPanelData {
   type: ContextPanelType;
   title?: string;
-  data?: any;
+  data?: Record<string, unknown>;
   config?: {
     filters?: {
       department?: string;
@@ -29,12 +29,7 @@ interface ContextPanelProps {
   alignmentStyle?: CSSProperties;
 }
 
-export function ContextPanel({
-  panelData,
-  onClose,
-  children,
-  alignmentStyle,
-}: ContextPanelProps) {
+export function ContextPanel({ panelData, onClose, children, alignmentStyle }: ContextPanelProps) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -146,21 +141,21 @@ export function ContextPanel({
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: 40, opacity: 0 }}
           transition={{ duration: 0.3, ease: 'easeInOut' }}
-          className="relative flex h-full w-full"
+          className="relative flex h-full min-h-full max-h-full w-full"
           style={{ minWidth: 0, ...alignmentStyle }}
         >
-          <div className="relative group flex h-full w-full">
+          <div className="relative group flex h-full min-h-full max-h-full w-full">
             {/* Glassmorphic background with gradient */}
             <div
               className={`absolute inset-0 bg-gradient-to-br ${accent.glow} rounded-3xl blur-2xl group-hover:blur-3xl transition-all duration-500 opacity-70`}
             />
 
             <div
-              className={`relative backdrop-blur-2xl rounded-3xl overflow-hidden border-2 transition-all duration-300 shadow-warm ${accent.containerBg} ${accent.containerBorder} flex h-full flex-col`}
+              className={`relative backdrop-blur-2xl rounded-3xl overflow-hidden border-2 transition-all duration-300 shadow-warm ${accent.containerBg} ${accent.containerBorder} flex h-full min-h-full max-h-full w-full flex-col`}
             >
               {/* Header */}
               <div
-                className={`flex items-center justify-between px-6 py-4 border-b-2 border-warm bg-gradient-to-r ${accent.headerGradient}`}
+                className={`flex-shrink-0 flex items-center justify-between px-6 py-4 border-b-2 border-warm bg-gradient-to-r ${accent.headerGradient}`}
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -183,6 +178,7 @@ export function ContextPanel({
                 </div>
 
                 <button
+                  type="button"
                   onClick={handleClose}
                   className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all border-2 hover-lift ${accent.closeButtonBg} ${accent.closeButtonBorder} text-charcoal hover:text-charcoal`}
                   aria-label="Close context panel"
@@ -192,7 +188,7 @@ export function ContextPanel({
               </div>
 
               {/* Content */}
-              <div className="p-6 flex-1 overflow-y-auto">
+              <div className="flex-1 overflow-y-auto">
                 {children || (
                   <div className="flex items-center justify-center h-full text-charcoal-light">
                     <p>Panel content will appear here</p>
@@ -202,7 +198,7 @@ export function ContextPanel({
 
               {/* Footer with context info */}
               {panelData.config?.highlights && panelData.config.highlights.length > 0 && (
-                <div className="px-6 py-3 border-t border-warm bg-gradient-to-r from-terracotta/5 to-amber/5">
+                <div className="flex-shrink-0 px-6 py-3 border-t border-warm bg-gradient-to-r from-terracotta/5 to-amber/5">
                   <p className="text-xs text-charcoal-light font-medium">
                     Highlighting: {panelData.config.highlights.join(', ')}
                   </p>

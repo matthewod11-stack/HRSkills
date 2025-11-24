@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Grid3x3, Users, TrendingUp, TrendingDown, RefreshCw, Filter } from 'lucide-react';
+import { Grid3x3, RefreshCw, TrendingDown, TrendingUp, Users } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth/auth-context';
 
 interface Employee {
@@ -40,11 +40,7 @@ export function PerformanceGridPanel({
   const [summary, setSummary] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchGridData();
-  }, [department]);
-
-  const fetchGridData = async () => {
+  const fetchGridData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -69,7 +65,11 @@ export function PerformanceGridPanel({
     } finally {
       setLoading(false);
     }
-  };
+  }, [department, getAuthHeaders]);
+
+  useEffect(() => {
+    fetchGridData();
+  }, [fetchGridData]);
 
   const getCellData = (performance: string, potential: string): NineBoxCell | null => {
     return (
@@ -124,7 +124,7 @@ export function PerformanceGridPanel({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4 pb-4 border-b border-white/10">
+      <div className="flex-shrink-0 flex items-center justify-between mb-4 pb-4 border-b border-white/10">
         <div className="flex items-center gap-2">
           <Grid3x3 className="w-4 h-4" />
           <div>
@@ -134,11 +134,10 @@ export function PerformanceGridPanel({
             </p>
           </div>
         </div>
-
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-3 gap-3 mb-4">
+      <div className="flex-shrink-0 grid grid-cols-3 gap-3 mb-4">
         <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3">
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp className="w-4 h-4 text-green-400" />
@@ -165,7 +164,7 @@ export function PerformanceGridPanel({
       </div>
 
       {/* 9-Box Grid */}
-      <div className="flex-1">
+      <div className="flex-1 overflow-hidden">
         <div className="grid grid-cols-4 gap-2 text-xs">
           {/* Header Row */}
           <div></div>
@@ -214,7 +213,7 @@ export function PerformanceGridPanel({
       </div>
 
       {/* Footer */}
-      <div className="mt-4 pt-4 border-t border-white/10">
+      <div className="flex-shrink-0 mt-4 pt-4 border-t border-white/10">
         <div className="text-xs text-gray-400">
           <p className="mb-1">Performance based on AI analysis + manager ratings</p>
           {highlights.length > 0 && (

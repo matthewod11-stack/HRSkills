@@ -1,9 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import {
   AlertCircle,
-  Building2,
   Download,
   Loader2,
   MessageSquare,
@@ -12,15 +10,9 @@ import {
   TrendingUp,
   Users,
 } from 'lucide-react';
-
+import { useEffect, useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 
 interface ENPSData {
   score: number;
@@ -226,21 +218,29 @@ export default function ENPSPanel({ data: _initialData }: ENPSPanelProps) {
   const trendChange = topTrends[0]?.change ?? 0;
 
   return (
-    <div className="flex h-full flex-col gap-4">
-      <Tabs
-        value={activeTab}
-        onValueChange={(value) => setActiveTab(value as TabKey)}
-        className="flex h-full flex-col gap-4"
-      >
-        <div className="flex items-center justify-between gap-3">
+    <Tabs
+      value={activeTab}
+      onValueChange={(value) => setActiveTab(value as TabKey)}
+      className="flex h-full flex-col"
+    >
+        <div className="flex-shrink-0 flex items-center justify-between gap-3 mb-4 pb-4 border-b border-white/10">
           <TabsList className="border border-warm bg-cream/50 p-1">
-            <TabsTrigger value="overview" className="px-3 py-1.5 text-xs data-[state=active]:bg-terracotta data-[state=active]:text-cream-white">
+            <TabsTrigger
+              value="overview"
+              className="px-3 py-1.5 text-xs data-[state=active]:bg-terracotta data-[state=active]:text-cream-white"
+            >
               Overview
             </TabsTrigger>
-            <TabsTrigger value="sentiment" className="px-3 py-1.5 text-xs data-[state=active]:bg-terracotta data-[state=active]:text-cream-white">
+            <TabsTrigger
+              value="sentiment"
+              className="px-3 py-1.5 text-xs data-[state=active]:bg-terracotta data-[state=active]:text-cream-white"
+            >
               Sentiment
             </TabsTrigger>
-            <TabsTrigger value="departments" className="px-3 py-1.5 text-xs data-[state=active]:bg-terracotta data-[state=active]:text-cream-white">
+            <TabsTrigger
+              value="departments"
+              className="px-3 py-1.5 text-xs data-[state=active]:bg-terracotta data-[state=active]:text-cream-white"
+            >
               Departments
             </TabsTrigger>
           </TabsList>
@@ -253,7 +253,7 @@ export default function ENPSPanel({ data: _initialData }: ENPSPanelProps) {
           </button>
         </div>
 
-        <TabsContent value="overview" className="flex-1 outline-none">
+        <TabsContent value="overview" className="flex-1 overflow-y-auto outline-none">
           <div className="grid gap-4">
             <Card className="border-white/10 bg-white/5">
               <CardContent className="flex items-start justify-between gap-4 px-5 py-4">
@@ -332,7 +332,9 @@ export default function ENPSPanel({ data: _initialData }: ENPSPanelProps) {
                     <div className="h-2 rounded-full bg-white/10">
                       <div
                         className={`h-full rounded-full ${item.tone}`}
-                        style={{ width: `${Math.min(100, Math.max(0, Math.round(item.percent)))}%` }}
+                        style={{
+                          width: `${Math.min(100, Math.max(0, Math.round(item.percent)))}%`,
+                        }}
                       />
                     </div>
                   </div>
@@ -420,7 +422,7 @@ export default function ENPSPanel({ data: _initialData }: ENPSPanelProps) {
           </div>
         </TabsContent>
 
-        <TabsContent value="sentiment" className="flex-1 outline-none">
+        <TabsContent value="sentiment" className="flex-1 overflow-y-auto outline-none">
           {sentimentData ? (
             <div className="grid gap-4">
               <Card className="border-white/10 bg-white/5">
@@ -534,13 +536,11 @@ export default function ENPSPanel({ data: _initialData }: ENPSPanelProps) {
           )}
         </TabsContent>
 
-        <TabsContent value="departments" className="flex-1 outline-none">
+        <TabsContent value="departments" className="flex-1 overflow-y-auto outline-none">
           <div className="grid gap-4">
             <Card className="border-white/10 bg-white/5">
               <CardHeader className="px-5 pt-5">
-                <CardTitle className="text-sm font-semibold text-white">
-                  Department Pulse
-                </CardTitle>
+                <CardTitle className="text-sm font-semibold text-white">Department Pulse</CardTitle>
                 <CardDescription>Top 5 segments by response volume</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3 px-5 pb-5 text-xs">
@@ -602,7 +602,6 @@ export default function ENPSPanel({ data: _initialData }: ENPSPanelProps) {
             )}
           </div>
         </TabsContent>
-      </Tabs>
-    </div>
+    </Tabs>
   );
 }

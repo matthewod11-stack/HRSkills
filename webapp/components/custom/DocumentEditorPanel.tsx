@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Download, Copy, Check, FileUp, ExternalLink, AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Check, Copy, Download, ExternalLink, FileText, FileUp } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -240,15 +240,13 @@ export function DocumentEditorPanel({
   );
 
   const sourceBaselines = useMemo(() => {
-    const templateContent =
-      driveTemplate?.content ??
-      (driveTemplate ? normalizedContent : '');
+    const templateContent = driveTemplate?.content ?? (driveTemplate ? normalizedContent : '');
     const generatedBaseline =
       generatedContent && generatedContent.trim().length > 0
         ? generatedContent
         : !templateContent
-        ? normalizedContent
-        : '';
+          ? normalizedContent
+          : '';
 
     return {
       template: templateContent,
@@ -293,9 +291,7 @@ export function DocumentEditorPanel({
     generated: false,
     default: false,
   });
-  const [editedContent, setEditedContent] = useState<string>(
-    sourceBaselines[initialSource] ?? ''
-  );
+  const [editedContent, setEditedContent] = useState<string>(sourceBaselines[initialSource] ?? '');
 
   const activeSourceRef = useRef<EditorContentSource>(initialSource);
 
@@ -313,7 +309,7 @@ export function DocumentEditorPanel({
     const preferredSource = activeSourceRef.current;
     const nextSource = availableSources.includes(preferredSource)
       ? preferredSource
-      : availableSources[0] ?? 'default';
+      : (availableSources[0] ?? 'default');
 
     activeSourceRef.current = nextSource;
     setActiveSource(nextSource);
@@ -354,8 +350,7 @@ export function DocumentEditorPanel({
       ...sourceDrafts,
       [activeSource]: editedContent,
     };
-    const nextContent =
-      updatedDrafts[nextSource] ?? sourceBaselines[nextSource] ?? '';
+    const nextContent = updatedDrafts[nextSource] ?? sourceBaselines[nextSource] ?? '';
 
     setSourceDrafts(updatedDrafts);
     setActiveSource(nextSource);
@@ -363,10 +358,8 @@ export function DocumentEditorPanel({
     setEditedContent(nextContent);
     setDirtySources((prev) => ({
       ...prev,
-      [activeSource]:
-        editedContent.trim() !== (sourceBaselines[activeSource]?.trim() ?? ''),
-      [nextSource]:
-        nextContent.trim() !== (sourceBaselines[nextSource]?.trim() ?? ''),
+      [activeSource]: editedContent.trim() !== (sourceBaselines[activeSource]?.trim() ?? ''),
+      [nextSource]: nextContent.trim() !== (sourceBaselines[nextSource]?.trim() ?? ''),
     }));
   };
 
@@ -436,16 +429,14 @@ export function DocumentEditorPanel({
   return (
     <div className="flex flex-col h-full">
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-4 border-b border-emerald-500/20">
+      <div className="flex-shrink-0 flex flex-wrap items-center justify-between gap-3 mb-4 pb-4 border-b border-emerald-500/20">
         <div className="flex items-center gap-2">
           <FileText className="w-5 h-5 text-emerald-400" />
           <div>
             <h4 className="font-medium text-emerald-100">
               {getDocumentTitle(normalizedDocumentType)}
             </h4>
-            {employeeName && (
-              <p className="text-xs text-emerald-200/70">For: {employeeName}</p>
-            )}
+            {employeeName && <p className="text-xs text-emerald-200/70">For: {employeeName}</p>}
           </div>
         </div>
 
@@ -456,6 +447,7 @@ export function DocumentEditorPanel({
               <div className="flex bg-white/5 border border-white/10 rounded-lg p-0.5">
                 {sourceOptions.map((option) => (
                   <button
+                    type="button"
                     key={option.key}
                     onClick={() => handleSourceChange(option.key)}
                     className={`px-2.5 py-1 text-xs rounded-md transition-all ${
@@ -472,6 +464,7 @@ export function DocumentEditorPanel({
           )}
 
           <button
+            type="button"
             onClick={() => setEditMode(!editMode)}
             className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/20 hover:border-white/30 rounded-lg text-xs transition-all"
           >
@@ -479,6 +472,7 @@ export function DocumentEditorPanel({
           </button>
 
           <button
+            type="button"
             onClick={handleCopy}
             className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/20 hover:border-white/30 rounded-lg text-xs transition-all flex items-center gap-1"
           >
@@ -496,6 +490,7 @@ export function DocumentEditorPanel({
           </button>
 
           <button
+            type="button"
             onClick={handleDownload}
             className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/20 hover:border-white/30 rounded-lg text-xs transition-all flex items-center gap-1"
           >
@@ -505,6 +500,7 @@ export function DocumentEditorPanel({
 
           {onExport && (
             <button
+              type="button"
               onClick={handleExport}
               disabled={isExporting}
               className="px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/50 hover:border-emerald-500/70 rounded-lg text-xs transition-all flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -517,15 +513,13 @@ export function DocumentEditorPanel({
       </div>
 
       {driveTemplate && (
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs text-emerald-100/80">
+        <div className="flex-shrink-0 mb-3 flex flex-wrap items-center justify-between gap-2 text-xs text-emerald-100/80">
           <div className="flex items-center gap-2">
             <span className="font-medium text-emerald-200">
               Google Drive template: {driveTemplate.name}
             </span>
             {driveTemplate.matchReason && (
-              <span className="text-emerald-200/60">
-                ({driveTemplate.matchReason})
-              </span>
+              <span className="text-emerald-200/60">({driveTemplate.matchReason})</span>
             )}
           </div>
           {driveTemplate.webViewLink && (
@@ -543,7 +537,7 @@ export function DocumentEditorPanel({
       )}
 
       {driveTemplateError && (
-        <div className="mb-3 flex items-start gap-2 rounded-lg border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
+        <div className="flex-shrink-0 mb-3 flex items-start gap-2 rounded-lg border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
           <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
           <div>
             <p className="font-medium">
@@ -581,14 +575,12 @@ export function DocumentEditorPanel({
       </div>
 
       {/* Footer Info */}
-      <div className="mt-4 pt-4 border-t border-emerald-500/20">
+      <div className="flex-shrink-0 mt-4 pt-4 border-t border-emerald-500/20">
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-emerald-100/80">
           <div className="flex items-center gap-2">
             <span>{editMode ? 'Edit mode - Changes are local' : 'Preview mode'}</span>
             {isDirty && <span className="text-amber-200">Unsaved edits</span>}
-            <span className="text-emerald-200/70">
-              Source: {sourceLabels[activeSource]}
-            </span>
+            <span className="text-emerald-200/70">Source: {sourceLabels[activeSource]}</span>
           </div>
           <div>
             {editedContent.split('\n').length} lines • {editedContent.length} characters
