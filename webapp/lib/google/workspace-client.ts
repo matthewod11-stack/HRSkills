@@ -19,16 +19,11 @@
  * Tracking issue: Phase 12 - Final Validation
  */
 
-// DISABLED: import { google } from 'googleapis';
-// DISABLED: import { JWT, OAuth2Client } from 'google-auth-library';
-import fs from 'fs';
-import { env } from '@/env.mjs';
-import { db } from '@/lib/db';
-import { eq } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
+import { db } from '@/lib/db';
 
 // Define scopes for each authentication method
-const SERVICE_ACCOUNT_SCOPES = [
+const _SERVICE_ACCOUNT_SCOPES = [
   'https://www.googleapis.com/auth/calendar',
   'https://www.googleapis.com/auth/gmail.send',
   'https://www.googleapis.com/auth/drive',
@@ -48,6 +43,22 @@ export interface WorkspaceClientConfig {
   userId?: string; // Required for OAuth
 }
 
+/** OAuth token structure */
+interface OAuthToken {
+  access_token?: string;
+  refresh_token?: string;
+  expiry_date?: number;
+}
+
+/** User preferences with OAuth token */
+interface UserPreferences {
+  googleOAuthToken?: OAuthToken;
+  [key: string]: unknown;
+}
+
+/** Placeholder type for Google API clients (disabled) */
+type GoogleApiClient = never;
+
 /**
  * Unified Google Workspace Client
  *
@@ -66,8 +77,14 @@ export interface WorkspaceClientConfig {
 export class GoogleWorkspaceClient {
   private authMethod: AuthMethod;
   private userId?: string;
-  private jwtAuth?: any; // DISABLED: JWT type from google-auth-library
-  private oauth2Client?: any; // DISABLED: OAuth2Client type from google-auth-library
+  private oauth2Client?: {
+    credentials: OAuthToken;
+    getAccessToken: () => Promise<unknown>;
+    generateAuthUrl: (opts: unknown) => string;
+    getToken: (code: string) => Promise<{ tokens: OAuthToken }>;
+    setCredentials: (tokens: OAuthToken) => void;
+    revokeCredentials: () => Promise<void>;
+  }; // DISABLED: OAuth2Client type from google-auth-library
 
   constructor(config: WorkspaceClientConfig) {
     this.authMethod = config.authMethod;
@@ -81,7 +98,8 @@ export class GoogleWorkspaceClient {
   /**
    * Initialize authentication based on method
    */
-  private async initializeAuth(): Promise<any> { // DISABLED: JWT | OAuth2Client types
+  private async initializeAuth(): Promise<unknown> {
+    // DISABLED: JWT | OAuth2Client types
     if (this.authMethod === 'service_account') {
       return this.initializeServiceAccount();
     } else {
@@ -92,8 +110,11 @@ export class GoogleWorkspaceClient {
   /**
    * Initialize Service Account (JWT) authentication
    */
-  private initializeServiceAccount(): any { // DISABLED: JWT type
-    throw new Error('Google Workspace client temporarily disabled - googleapis compatibility issue');
+  private initializeServiceAccount(): never {
+    // DISABLED: JWT type
+    throw new Error(
+      'Google Workspace client temporarily disabled - googleapis compatibility issue'
+    );
 
     // DISABLED CODE:
     // if (this.jwtAuth) {
@@ -117,8 +138,11 @@ export class GoogleWorkspaceClient {
   /**
    * Initialize OAuth 2.0 authentication
    */
-  private async initializeOAuth(): Promise<any> { // DISABLED: OAuth2Client type
-    throw new Error('Google Workspace client temporarily disabled - googleapis compatibility issue');
+  private async initializeOAuth(): Promise<never> {
+    // DISABLED: OAuth2Client type
+    throw new Error(
+      'Google Workspace client temporarily disabled - googleapis compatibility issue'
+    );
 
     // DISABLED CODE:
     // if (this.oauth2Client) {
@@ -141,54 +165,31 @@ export class GoogleWorkspaceClient {
   }
 
   /**
-   * Load OAuth token from database
-   */
-  private async loadTokenFromDatabase(): Promise<void> {
-    if (!this.userId || !this.oauth2Client) {
-      return;
-    }
-
-    try {
-      // Query user preferences for OAuth token
-      const result = (db as any).all(
-        sql`SELECT preferences_json FROM user_preferences WHERE user_id = ${this.userId} LIMIT 1`
-      );
-
-      if (result && result.length > 0) {
-        const prefs = JSON.parse(result[0].preferences_json as string);
-        if (prefs.googleOAuthToken) {
-          this.oauth2Client.setCredentials(prefs.googleOAuthToken);
-        }
-      }
-    } catch (error) {
-      console.error('[GoogleWorkspace] Failed to load OAuth token:', error);
-    }
-  }
-
-  /**
    * Save OAuth token to database
    */
-  private async saveTokenToDatabase(token: any): Promise<void> {
+  private async saveTokenToDatabase(token: OAuthToken): Promise<void> {
     if (!this.userId) {
       return;
     }
 
     try {
       // Get existing preferences
-      const result = (db as any).all(
+      const result = (
+        db as unknown as { all: (query: unknown) => Array<{ preferences_json: string }> }
+      ).all(
         sql`SELECT preferences_json FROM user_preferences WHERE user_id = ${this.userId} LIMIT 1`
       );
 
-      let preferences: any = {};
+      let preferences: UserPreferences = {};
       if (result && result.length > 0) {
-        preferences = JSON.parse(result[0].preferences_json as string);
+        preferences = JSON.parse(result[0].preferences_json);
       }
 
       // Update with new token
       preferences.googleOAuthToken = token;
 
       // Upsert to database
-      (db as any).all(
+      (db as unknown as { all: (query: unknown) => void }).all(
         sql`INSERT INTO user_preferences (user_id, preferences_json, updated_at)
             VALUES (${this.userId}, ${JSON.stringify(preferences)}, CURRENT_TIMESTAMP)
             ON CONFLICT (user_id) DO UPDATE SET
@@ -214,14 +215,14 @@ export class GoogleWorkspaceClient {
     }
 
     const credentials = this.oauth2Client!.credentials;
-    return !!(credentials && credentials.access_token);
+    return !!credentials?.access_token;
   }
 
   /**
    * Ensure authentication is valid (refresh if needed)
    */
   async ensureAuthenticated(): Promise<void> {
-    const auth = await this.initializeAuth();
+    const _auth = await this.initializeAuth();
 
     if (this.authMethod === 'oauth' && this.oauth2Client) {
       try {
@@ -279,15 +280,17 @@ export class GoogleWorkspaceClient {
 
       // Clear from database
       if (this.userId) {
-        const result = (db as any).all(
+        const result = (
+          db as unknown as { all: (query: unknown) => Array<{ preferences_json: string }> }
+        ).all(
           sql`SELECT preferences_json FROM user_preferences WHERE user_id = ${this.userId} LIMIT 1`
         );
 
         if (result && result.length > 0) {
-          const prefs = JSON.parse(result[0].preferences_json as string);
+          const prefs: UserPreferences = JSON.parse(result[0].preferences_json);
           delete prefs.googleOAuthToken;
 
-          (db as any).all(
+          (db as unknown as { all: (query: unknown) => void }).all(
             sql`UPDATE user_preferences
                 SET preferences_json = ${JSON.stringify(prefs)}, updated_at = CURRENT_TIMESTAMP
                 WHERE user_id = ${this.userId}`
@@ -302,40 +305,50 @@ export class GoogleWorkspaceClient {
   /**
    * Get Google Drive API client
    */
-  async getDrive(): Promise<any> {
-    throw new Error('Google Workspace client temporarily disabled - googleapis compatibility issue');
+  async getDrive(): Promise<GoogleApiClient> {
+    throw new Error(
+      'Google Workspace client temporarily disabled - googleapis compatibility issue'
+    );
     // DISABLED: return google.drive({ version: 'v3', auth });
   }
 
   /**
    * Get Google Docs API client
    */
-  async getDocs(): Promise<any> {
-    throw new Error('Google Workspace client temporarily disabled - googleapis compatibility issue');
+  async getDocs(): Promise<GoogleApiClient> {
+    throw new Error(
+      'Google Workspace client temporarily disabled - googleapis compatibility issue'
+    );
     // DISABLED: return google.docs({ version: 'v1', auth });
   }
 
   /**
    * Get Google Sheets API client
    */
-  async getSheets(): Promise<any> {
-    throw new Error('Google Workspace client temporarily disabled - googleapis compatibility issue');
+  async getSheets(): Promise<GoogleApiClient> {
+    throw new Error(
+      'Google Workspace client temporarily disabled - googleapis compatibility issue'
+    );
     // DISABLED: return google.sheets({ version: 'v4', auth });
   }
 
   /**
    * Get Gmail API client
    */
-  async getGmail(): Promise<any> {
-    throw new Error('Google Workspace client temporarily disabled - googleapis compatibility issue');
+  async getGmail(): Promise<GoogleApiClient> {
+    throw new Error(
+      'Google Workspace client temporarily disabled - googleapis compatibility issue'
+    );
     // DISABLED: return google.gmail({ version: 'v1', auth });
   }
 
   /**
    * Get Calendar API client
    */
-  async getCalendar(): Promise<any> {
-    throw new Error('Google Workspace client temporarily disabled - googleapis compatibility issue');
+  async getCalendar(): Promise<GoogleApiClient> {
+    throw new Error(
+      'Google Workspace client temporarily disabled - googleapis compatibility issue'
+    );
     // DISABLED: return google.calendar({ version: 'v3', auth });
   }
 }

@@ -9,18 +9,13 @@
  * Run with: npm exec tsx scripts/validate-optimizations.ts
  */
 
-import { generateCacheableSkillsCatalog } from '../lib/skills';
 import {
   analyzeRequiredFields,
-  filterEmployeeFields,
-  estimateTokenCount,
   type Employee,
+  estimateTokenCount,
+  filterEmployeeFields,
 } from '../lib/employee-context';
-import {
-  calculateTokenCost,
-  calculateCacheSavings,
-  calculateCacheEfficiency,
-} from '../lib/performance-monitor';
+import { generateCacheableSkillsCatalog } from '../lib/skills';
 
 console.log('🔍 AI COST OPTIMIZATION - COMPREHENSIVE VALIDATION\n');
 console.log('='.repeat(80));
@@ -187,7 +182,7 @@ for (const test of testQueries) {
         )
         .map((f) => `${f}: ${emp[f]}`)
         .join(', ');
-      return `- ${fullName} (${emp.employee_id})${fields ? ': ' + fields : ''}`;
+      return `- ${fullName} (${emp.employee_id})${fields ? `: ${fields}` : ''}`;
     })
     .join('\n');
 
@@ -325,7 +320,7 @@ console.log(
 );
 
 // Final Validation
-console.log('\n\n' + '='.repeat(80));
+console.log(`\n\n${'='.repeat(80)}`);
 console.log('📊 FINAL VALIDATION RESULTS');
 console.log('='.repeat(80));
 
@@ -366,7 +361,7 @@ validations.forEach((v) => {
 
 const allPassed = validations.every((v) => v.status === 'PASS');
 
-console.log('\n' + '='.repeat(80));
+console.log(`\n${'='.repeat(80)}`);
 if (allPassed) {
   console.log('🎉 ALL VALIDATIONS PASSED - READY FOR PRODUCTION DEPLOYMENT');
 } else {

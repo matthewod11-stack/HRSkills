@@ -15,24 +15,24 @@
  *   }
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth/middleware';
+import { type NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import {
-  handleApiError,
   createSuccessResponse,
-  validationError,
-  notFoundError,
   HttpStatus,
+  handleApiError,
+  notFoundError,
+  validationError,
 } from '@/lib/api-helpers/error-handler';
+import { requireAuth } from '@/lib/auth/middleware';
+import { getRequestMetadata, logAuditEvent } from '@/lib/security/audit-logger';
 import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter';
 import {
-  getDocument,
-  updateDocument,
   deleteDocument,
+  getDocument,
   type UpdateDocumentInput,
+  updateDocument,
 } from '@/lib/services/document-service';
-import { logAuditEvent, getRequestMetadata } from '@/lib/security/audit-logger';
-import { z } from 'zod';
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -152,7 +152,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 // DELETE /api/documents/[id] - Delete Document
 // ============================================================================
 
-export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     // 1. Rate limiting
     const rateLimitResult = await applyRateLimit(request, RateLimitPresets.standard);
@@ -203,7 +206,11 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     // 6. Delete document
     await deleteDocument((await params).id);
 
-    return createSuccessResponse({ id: (await params).id }, 'Document deleted successfully', HttpStatus.OK);
+    return createSuccessResponse(
+      { id: (await params).id },
+      'Document deleted successfully',
+      HttpStatus.OK
+    );
   } catch (error) {
     return handleApiError(error, {
       endpoint: `/api/documents/${(await params).id}`,

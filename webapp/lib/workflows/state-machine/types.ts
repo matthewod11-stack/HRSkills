@@ -5,7 +5,7 @@
  * The core WorkflowState type is defined in ../types.ts
  */
 
-import type { WorkflowId, WorkflowState, SuggestedAction } from '../types';
+import type { WorkflowId, WorkflowState } from '../types';
 
 // ============================================================================
 // State Transition Types

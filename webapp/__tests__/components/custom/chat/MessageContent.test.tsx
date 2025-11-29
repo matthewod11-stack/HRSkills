@@ -1,8 +1,7 @@
+import { fireEvent, render, screen } from '@testing-library/react';
 import { vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { vi } from 'vitest';
+import type { Message, WorkflowState } from '@/components/custom/chat/ChatContext';
 import { MessageContent } from '@/components/custom/chat/MessageContent';
-import { Message, WorkflowState } from '@/components/custom/chat/ChatContext';
 
 /**
  * Test suite for MessageContent component
@@ -11,9 +10,29 @@ import { Message, WorkflowState } from '@/components/custom/chat/ChatContext';
  * progress indicators, action buttons, and suggested follow-ups.
  */
 
+// Mock prop types for child components
+interface WorkflowBadgeProps {
+  workflowType: string;
+  confidence?: number;
+}
+
+interface WorkflowProgressProps {
+  workflowId: string;
+  state: { progress: number };
+}
+
+interface ActionButtonsProps {
+  actions: Array<{ id: number; label: string }>;
+  workflowId: string;
+}
+
+interface MessageMarkdownProps {
+  content: string;
+}
+
 // Mock the child components
 vi.mock('@/components/custom/chat/WorkflowBadge', () => ({
-  WorkflowBadge: ({ workflowType, confidence }: any) => (
+  WorkflowBadge: ({ workflowType, confidence }: WorkflowBadgeProps) => (
     <div data-testid="workflow-badge">
       {workflowType} - {confidence}%
     </div>
@@ -21,7 +40,7 @@ vi.mock('@/components/custom/chat/WorkflowBadge', () => ({
 }));
 
 vi.mock('@/components/custom/WorkflowProgress', () => ({
-  WorkflowProgress: ({ workflowId, state }: any) => (
+  WorkflowProgress: ({ workflowId, state }: WorkflowProgressProps) => (
     <div data-testid="workflow-progress">
       {workflowId} - {state.progress}%
     </div>
@@ -29,7 +48,7 @@ vi.mock('@/components/custom/WorkflowProgress', () => ({
 }));
 
 vi.mock('@/components/custom/ActionButtons', () => ({
-  ActionButtons: ({ actions, conversationId, workflowId }: any) => (
+  ActionButtons: ({ actions, workflowId }: ActionButtonsProps) => (
     <div data-testid="action-buttons">
       {actions.length} actions for {workflowId}
     </div>
@@ -38,7 +57,9 @@ vi.mock('@/components/custom/ActionButtons', () => ({
 
 vi.mock('@/components/custom/chat/MessageMarkdown', () => ({
   __esModule: true,
-  default: ({ content }: any) => <div data-testid="markdown-content">{content}</div>,
+  default: ({ content }: MessageMarkdownProps) => (
+    <div data-testid="markdown-content">{content}</div>
+  ),
 }));
 
 describe('MessageContent', () => {
@@ -450,7 +471,7 @@ describe('MessageContent', () => {
         suggestedFollowUps: ['Test follow-up'],
       });
 
-      const { container } = render(
+      render(
         <MessageContent
           message={message}
           conversationId={conversationId}

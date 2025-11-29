@@ -1,9 +1,9 @@
-import { drizzle } from 'drizzle-orm/better-sqlite3';
+import fs from 'node:fs';
+import path from 'node:path';
 import Database from 'better-sqlite3';
-import * as schema from '../../db/schema';
-import path from 'path';
-import fs from 'fs';
+import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { env } from '@/env.mjs';
+import * as schema from '../../db/schema';
 
 /**
  * Phase 2 Database Client
@@ -50,7 +50,7 @@ export function getDatabase() {
 
     // Run schema initialization
     initializeSchema(sqliteInstance);
-    
+
     // Run migrations for existing databases
     runMigrations(sqliteInstance);
   }
@@ -320,37 +320,39 @@ export function closeDatabase() {
 function runMigrations(sqlite: InstanceType<typeof Database>) {
   try {
     console.log('[DB] Running migrations...');
-    
+
     // Check if employees table exists (indicates existing database)
     const employeesTable = sqlite
       .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='employees'")
       .get();
-    
+
     if (employeesTable) {
       // Migration: Add compensation_bonus and compensation_equity columns to employees table
       try {
         sqlite.exec(`ALTER TABLE employees ADD COLUMN compensation_bonus REAL;`);
         console.log('[DB] Added column: compensation_bonus');
-      } catch (error: any) {
-        if (!error.message?.includes('duplicate column')) {
-          console.warn('[DB] Could not add compensation_bonus column:', error.message);
+      } catch (error: unknown) {
+        const msg = error instanceof Error ? error.message : '';
+        if (!msg.includes('duplicate column')) {
+          console.warn('[DB] Could not add compensation_bonus column:', msg);
         }
       }
-      
+
       try {
         sqlite.exec(`ALTER TABLE employees ADD COLUMN compensation_equity REAL;`);
         console.log('[DB] Added column: compensation_equity');
-      } catch (error: any) {
-        if (!error.message?.includes('duplicate column')) {
-          console.warn('[DB] Could not add compensation_equity column:', error.message);
+      } catch (error: unknown) {
+        const msg = error instanceof Error ? error.message : '';
+        if (!msg.includes('duplicate column')) {
+          console.warn('[DB] Could not add compensation_equity column:', msg);
         }
       }
-      
+
       // Migration: Create web_vitals_metrics table if it doesn't exist
       const webVitalsTable = sqlite
         .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='web_vitals_metrics'")
         .get();
-      
+
       if (!webVitalsTable) {
         sqlite.exec(`
           CREATE TABLE IF NOT EXISTS web_vitals_metrics (
@@ -365,7 +367,7 @@ function runMigrations(sqlite: InstanceType<typeof Database>) {
           );
         `);
         console.log('[DB] Created table: web_vitals_metrics');
-        
+
         // Create indexes for web_vitals_metrics
         sqlite.exec(`
           CREATE INDEX IF NOT EXISTS idx_web_vitals_timestamp ON web_vitals_metrics(timestamp DESC);
@@ -375,7 +377,7 @@ function runMigrations(sqlite: InstanceType<typeof Database>) {
         console.log('[DB] Created indexes for web_vitals_metrics');
       }
     }
-    
+
     console.log('[DB] Migrations complete');
   } catch (error) {
     console.error('[DB] Migration error:', error);
@@ -487,7 +489,9 @@ function applyPerformanceIndexes(sqlite: InstanceType<typeof Database>) {
 
     sqlite.transaction(() => {
       // Check if indexes already exist
-      const indexes = sqlite.prepare(`SELECT name FROM sqlite_master WHERE type='index'`).all() as Array<{
+      const indexes = sqlite
+        .prepare(`SELECT name FROM sqlite_master WHERE type='index'`)
+        .all() as Array<{
         name: string;
       }>;
       const indexNames = new Set(indexes.map((idx) => idx.name));
@@ -505,7 +509,9 @@ function applyPerformanceIndexes(sqlite: InstanceType<typeof Database>) {
 
       // Add missing metrics indexes
       if (!indexNames.has('idx_metrics_performance_rating')) {
-        sqlite.exec(`CREATE INDEX IF NOT EXISTS idx_metrics_performance_rating ON employee_metrics(performance_rating);`);
+        sqlite.exec(
+          `CREATE INDEX IF NOT EXISTS idx_metrics_performance_rating ON employee_metrics(performance_rating);`
+        );
         console.log('[DB] Created index: idx_metrics_performance_rating (9-box grid)');
       }
 

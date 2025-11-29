@@ -3,11 +3,11 @@
  */
 
 import {
-  calculateEmployeeRating,
-  calculateDepartmentStats,
   calculateBatchRatings,
-  identifyRatingInflation,
+  calculateDepartmentStats,
+  calculateEmployeeRating,
   type EmployeeDataForRating,
+  identifyRatingInflation,
 } from '../performance-calculator';
 
 describe('Performance Calculator', () => {

@@ -1,8 +1,8 @@
 'use client';
 
-import { memo, useCallback, KeyboardEvent, RefObject } from 'react';
 import { motion } from 'framer-motion';
 import { Send } from 'lucide-react';
+import { type KeyboardEvent, memo, type RefObject, useCallback } from 'react';
 
 /**
  * Props for the ChatInput component
@@ -66,7 +66,7 @@ const ChatInput = memo(function ChatInput({
   const isSendDisabled = !value.trim() || isInputDisabled;
 
   return (
-    <div className="p-6 border-t border-warm bg-gradient-to-r from-terracotta/5 to-amber/5 rounded-b-2xl">
+    <div className="flex-shrink-0 p-6 border-t border-warm bg-gradient-to-r from-terracotta/5 to-amber/5 rounded-b-2xl">
       <label htmlFor="chat-input" className="sr-only">
         Chat message input
       </label>

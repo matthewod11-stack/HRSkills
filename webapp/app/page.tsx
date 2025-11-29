@@ -1,33 +1,50 @@
 'use client';
 
+import { motion } from 'framer-motion';
+import { Database, Grid3x3, Settings, Smile, Users } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import {
-  useState,
-  useEffect,
+  type CSSProperties,
   Suspense,
   useCallback,
-  useRef,
+  useEffect,
   useLayoutEffect,
-  type CSSProperties,
+  useRef,
+  useState,
 } from 'react';
-import dynamic from 'next/dynamic';
-import { motion } from 'framer-motion';
-import { Users, Smile, Grid3x3, Settings, Database } from 'lucide-react';
+import { AnalyticsChartPanel } from '@/components/custom/AnalyticsChartPanel';
+import { ChatInterface } from '@/components/custom/ChatInterface';
+import { ContextPanel, type ContextPanelData } from '@/components/custom/ContextPanel';
+import type { DocumentExportPayload } from '@/components/custom/DocumentEditorPanel';
 import { FloatingOrbs } from '@/components/custom/FloatingOrbs';
 import { MetricCard } from '@/components/custom/MetricCard';
-import { ChatInterface } from '@/components/custom/ChatInterface';
-import { ContextPanel, ContextPanelData } from '@/components/custom/ContextPanel';
-import type { DocumentExportPayload } from '@/components/custom/DocumentEditorPanel';
-import { AnalyticsChartPanel } from '@/components/custom/AnalyticsChartPanel';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
-import { logComponentError } from '@/lib/errorLogging';
-import { fetchWithRetry } from '@/lib/api-helpers/fetch-with-retry';
 import {
   DialogSkeleton,
   DocumentEditorSkeleton,
-  PerformanceGridSkeleton,
   ENPSSkeleton,
+  PerformanceGridSkeleton,
 } from '@/components/ui/skeletons';
+import { fetchWithRetry } from '@/lib/api-helpers/fetch-with-retry';
 import { useAuth } from '@/lib/auth/auth-context';
+import { logComponentError } from '@/lib/errorLogging';
+
+// API Response interfaces for type-safe fetching
+interface MetricsApiResponse {
+  headcount?: number;
+  enpsScore?: number;
+  lastUpdated?: string;
+  error?: string;
+  message?: string;
+}
+
+interface NineBoxApiResponse {
+  success: boolean;
+  data?: {
+    summary?: NineBoxSummary;
+  };
+  error?: string | { message?: string };
+}
 
 // Lazy load heavy dialog components
 // These are only needed when user interacts, reducing initial bundle size
@@ -75,13 +92,10 @@ const PerformanceGridPanel = dynamic(
   }
 );
 
-const ENPSPanel = dynamic(
-  () => import('@/components/custom/ENPSPanel'),
-  {
-    loading: () => <ENPSSkeleton />,
-    ssr: false, // eNPS panel is client-side only (tabs, complex UI)
-  }
-);
+const ENPSPanel = dynamic(() => import('@/components/custom/ENPSPanel'), {
+  loading: () => <ENPSSkeleton />,
+  ssr: false, // eNPS panel is client-side only (tabs, complex UI)
+});
 
 type MetricType = 'headcount' | 'attrition' | null;
 type MetricsState = {
@@ -122,8 +136,8 @@ export default function Home() {
   const [nineBoxError, setNineBoxError] = useState<string | null>(null);
   const [metricDialogOpen, setMetricDialogOpen] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState<MetricType>(null);
-  const [dialogTitle, setDialogTitle] = useState('');
-  const [dialogDescription, setDialogDescription] = useState('');
+  const [dialogTitle, _setDialogTitle] = useState('');
+  const [dialogDescription, _setDialogDescription] = useState('');
   const [externalChatPrompt, setExternalChatPrompt] = useState<ExternalChatPrompt | null>(null);
 
   // Layout alignment tracking
@@ -211,7 +225,9 @@ export default function Home() {
       nineBoxCardRef.current,
     ].filter((el): el is HTMLDivElement => Boolean(el));
 
-    observedElements.forEach((el) => resizeObserver.observe(el));
+    observedElements.forEach((el) => {
+      resizeObserver.observe(el);
+    });
     window.addEventListener('resize', handleResize);
 
     return () => {
@@ -223,62 +239,15 @@ export default function Home() {
     };
   }, []);
 
-  const handleDocumentExport = useCallback(
-    async (payload: DocumentExportPayload) => {
-      try {
-        const timestamp = new Date();
-        const datePart = timestamp.toISOString().split('T')[0];
-        const typePart = payload.documentType.replace(/_/g, '-');
-        const namePart = payload.employeeName
-          ? `_${payload.employeeName.trim().replace(/\s+/g, '_')}`
-          : '';
-        const title = `${datePart}_${typePart}${namePart}`;
-
-        const response = await fetch('/api/documents/export-to-google-docs', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...getAuthHeaders(),
-          },
-          body: JSON.stringify({
-            title,
-            content: payload.content,
-            documentType: payload.documentType,
-            metadata: {
-              employeeName: payload.employeeName,
-              source: payload.source,
-              templateId: payload.templateId,
-              templateName: payload.templateName,
-            },
-          }),
-        });
-
-        const data = await response.json();
-
-        if (data.needsAuth) {
-          const shouldConnect = window.confirm(
-            'You need to connect your Google account to export documents. Connect now?'
-          );
-          if (shouldConnect) {
-            window.location.href = '/api/auth/google';
-          }
-          return;
-        }
-
-        if (!response.ok) {
-          throw new Error(data.error || data.message || 'Export failed');
-        }
-
-        if (data.editLink) {
-          window.open(data.editLink, '_blank');
-        }
-      } catch (error: any) {
-        console.error('Failed to export to Google Docs:', error);
-        alert(`Failed to export document: ${error.message || 'Unknown error'}`);
-      }
-    },
-    [getAuthHeaders]
-  );
+  // Document export handler (DOCX and clipboard - no Google Drive)
+  const handleDocumentExport = useCallback((payload: DocumentExportPayload) => {
+    // Export is now handled client-side by DocumentEditorPanel
+    // This callback is for optional tracking/analytics
+    console.log(
+      `Document exported: ${payload.documentType} via ${payload.format}`,
+      payload.templateId ? `(template: ${payload.templateId})` : ''
+    );
+  }, []);
 
   useEffect(() => {
     // Auto-login for development
@@ -313,7 +282,7 @@ export default function Home() {
     setNineBoxError(null);
 
     try {
-      const data = await fetchWithRetry<any>(`/api/metrics?_=${Date.now()}`, {
+      const data = await fetchWithRetry<MetricsApiResponse>(`/api/metrics?_=${Date.now()}`, {
         method: 'GET',
         cache: 'no-store',
       });
@@ -331,7 +300,7 @@ export default function Home() {
         setMetricsStatus('live');
         setMetricsError(null);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to fetch metrics:', error);
       setMetrics({
         headcount: 0,
@@ -339,11 +308,11 @@ export default function Home() {
         lastUpdated: null,
       });
       setMetricsStatus('error');
-      setMetricsError(error?.message || 'Failed to load metrics');
+      setMetricsError(error instanceof Error ? error.message : 'Failed to load metrics');
     }
 
     try {
-      const analyticsResult = await fetchWithRetry<any>(
+      const analyticsResult = await fetchWithRetry<NineBoxApiResponse>(
         `/api/analytics?metric=nine-box&_=${Date.now()}`,
         {
           method: 'GET',
@@ -357,7 +326,7 @@ export default function Home() {
           typeof rawError === 'string'
             ? rawError
             : typeof rawError === 'object' && rawError !== null && 'message' in rawError
-              ? String((rawError as any).message)
+              ? String((rawError as { message?: string }).message)
               : '';
         if (message.toLowerCase().includes('no employee data')) {
           return 'Missing data';
@@ -383,14 +352,15 @@ export default function Home() {
         setNineBoxStatus('empty');
         setNineBoxError('Missing data');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to fetch nine-box analytics:', error);
       setNineBoxSummary(null);
       setNineBoxStatus('error');
+      const errorMessage = error instanceof Error ? error.message : '';
       setNineBoxError(
-        error?.message?.toLowerCase()?.includes('no employee data')
+        errorMessage.toLowerCase().includes('no employee data')
           ? 'Missing data'
-          : error?.message || 'Failed to load nine-box analytics'
+          : errorMessage || 'Failed to load nine-box analytics'
       );
     }
   }, []);
@@ -409,8 +379,12 @@ export default function Home() {
   const nineBoxFailed = nineBoxStatus === 'error';
 
   const headcountDisplay = metricsLoading || metricsFailed ? '—' : metrics.headcount;
-  const enpsDisplay = metricsLoading || metricsFailed ? '—' :
-    metrics.enpsScore >= 0 ? `+${metrics.enpsScore}` : `${metrics.enpsScore}`;
+  const enpsDisplay =
+    metricsLoading || metricsFailed
+      ? '—'
+      : metrics.enpsScore >= 0
+        ? `+${metrics.enpsScore}`
+        : `${metrics.enpsScore}`;
   const nineBoxDisplay =
     nineBoxLoading || nineBoxFailed ? '—' : (nineBoxSummary?.highPerformers ?? 0);
 
@@ -534,7 +508,9 @@ export default function Home() {
         highlights: ['High-High', 'High-Medium', 'Medium-High'],
       },
     });
-    triggerChatPrompt('Highlight high performers in the latest nine-box grid and flag any talent risks.');
+    triggerChatPrompt(
+      'Highlight high performers in the latest nine-box grid and flag any talent risks.'
+    );
   };
 
   const handleDialogClose = () => {
@@ -543,43 +519,30 @@ export default function Home() {
   };
 
   const isPanelActive = Boolean(contextPanelData?.type);
-  const isAlignmentReady =
-    alignmentMetrics.isDesktop && alignmentMetrics.panelWidth > 0 && isPanelActive;
 
-  const gridStyle: CSSProperties | undefined = isAlignmentReady
-    ? {
-        gridTemplateColumns: `minmax(0, 1fr) minmax(0, 1fr) minmax(0, ${alignmentMetrics.panelWidth}px)`,
-      }
-    : undefined;
-
+  // Simplified panel styling - minimal alignment for edge cases
   const contextPanelStyle: CSSProperties | undefined = isPanelActive
     ? {
         width: '100%',
-        ...(alignmentMetrics.isDesktop && alignmentMetrics.panelWidth > 0
-          ? { maxWidth: `${alignmentMetrics.panelWidth}px` }
-          : {}),
-        ...(alignmentMetrics.isDesktop && alignmentMetrics.panelInset > 0
-          ? { marginRight: `${alignmentMetrics.panelInset}px` }
-          : {}),
+        height: 'var(--content-height-z)',
       }
     : undefined;
 
-  const chatAlignmentStyle: CSSProperties | undefined =
-    alignmentMetrics.isDesktop && alignmentMetrics.chatOffset > 0
-      ? { paddingLeft: `${alignmentMetrics.chatOffset}px` }
-      : undefined;
+  const chatContainerStyle: CSSProperties = {
+    height: 'var(--content-height-z)',
+  };
 
   return (
-    <div className="min-h-screen bg-radial-cream text-charcoal overflow-hidden">
+    <div className="h-full bg-radial-cream text-charcoal">
       <FloatingOrbs />
 
-      <div className="relative z-10">
-        {/* Header */}
+      <div className="relative z-10 h-full flex flex-col overflow-hidden">
+        {/* Header - Fixed at top */}
         <motion.header
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="backdrop-blur-xl bg-cream-white/90 border-b border-warm sticky top-0 z-30 shadow-soft transition-premium"
-        >
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative z-30 flex-shrink-0 backdrop-blur-xl bg-cream-white/90 border-b border-warm shadow-soft transition-premium"
+      >
           <div className="max-w-[1600px] mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -594,7 +557,10 @@ export default function Home() {
 
               <div className="flex items-center gap-6">
                 <button
-                  onClick={() => (window.location.href = '/team-time')}
+                  type="button"
+                  onClick={() => {
+                    window.location.href = '/team-time';
+                  }}
                   className="text-right hidden md:block hover:bg-terracotta/5 px-4 py-2 rounded-xl transition-premium cursor-pointer hover-lift"
                 >
                   <p className="text-sm text-charcoal-light" suppressHydrationWarning>
@@ -606,7 +572,10 @@ export default function Home() {
                 </button>
 
                 <button
-                  onClick={() => (window.location.href = '/data-sources')}
+                  type="button"
+                  onClick={() => {
+                    window.location.href = '/data-sources';
+                  }}
                   aria-label="Upload Data & Documents"
                   title="Upload Data & Documents"
                   className="w-10 h-10 bg-cream hover:bg-terracotta/10 border border-warm hover:border-terracotta/40 rounded-xl flex items-center justify-center transition-premium hover-lift"
@@ -615,7 +584,10 @@ export default function Home() {
                 </button>
 
                 <button
-                  onClick={() => (window.location.href = '/settings')}
+                  type="button"
+                  onClick={() => {
+                    window.location.href = '/settings';
+                  }}
                   aria-label="Open settings"
                   className="w-10 h-10 bg-cream hover:bg-terracotta/10 border border-warm hover:border-terracotta/40 rounded-xl flex items-center justify-center transition-premium hover-lift"
                 >
@@ -626,13 +598,15 @@ export default function Home() {
           </div>
         </motion.header>
 
-        {/* Main Content */}
-        <main className="max-w-[1800px] mx-auto px-6 py-8">
+      {/* Main Content - Fills remaining space */}
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+        <div className="max-w-[1800px] mx-auto px-6 pt-8 pb-6">
           {/* Metrics Grid - Top Row - 3 Cards */}
           <section aria-label="Key metrics">
             <div className="flex items-center justify-between mb-4 gap-2">
               <h2 className="text-lg font-semibold text-charcoal">Key Metrics</h2>
               <button
+                type="button"
                 onClick={fetchMetrics}
                 disabled={metricsLoading}
                 className="px-3 py-2 text-sm font-medium rounded-xl border border-warm bg-cream hover:bg-terracotta hover:text-cream-white transition-premium disabled:opacity-50 disabled:cursor-not-allowed shadow-soft hover:shadow-warm"
@@ -689,7 +663,6 @@ export default function Home() {
           <div
             ref={metricsLayoutRef}
             className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-4"
-            style={gridStyle}
           >
             {/* Chat Interface */}
             <section
@@ -697,9 +670,8 @@ export default function Home() {
               className={`order-1 min-w-0 w-full ${
                 contextPanelData?.type ? 'lg:col-span-2' : 'lg:col-span-3'
               }`}
-              style={chatAlignmentStyle}
             >
-              <div className="h-full max-h-[calc(100vh-280px)] min-h-[650px]">
+              <div className="h-full" style={chatContainerStyle}>
                 <ErrorBoundary
                   level="section"
                   onError={(error, errorInfo) => {
@@ -723,9 +695,8 @@ export default function Home() {
             {contextPanelData?.type && (
               <aside
                 className="order-2 lg:order-2 min-w-0 w-full lg:col-span-1"
-                style={contextPanelStyle}
               >
-                <div className="h-full max-h-[calc(100vh-360px)] min-h-[500px]">
+                <div className="h-full" style={contextPanelStyle}>
                   <ContextPanel
                     panelData={contextPanelData}
                     onClose={() => setContextPanelData(null)}
@@ -738,9 +709,6 @@ export default function Home() {
                         documentType={contextPanelData.config?.documentType}
                         employeeName={contextPanelData.data?.employeeName}
                         generatedContent={contextPanelData.data?.generatedContent}
-                        driveTemplate={contextPanelData.data?.driveTemplate}
-                        driveTemplateError={contextPanelData.data?.driveTemplateError}
-                        driveTemplateNeedsAuth={contextPanelData.data?.driveTemplateNeedsAuth}
                         onExport={handleDocumentExport}
                       />
                     )}
@@ -765,15 +733,14 @@ export default function Home() {
                         }}
                       />
                     )}
-                    {contextPanelData.type === 'enps' && (
-                      <ENPSPanel data={contextPanelData.data} />
-                    )}
+                    {contextPanelData.type === 'enps' && <ENPSPanel data={contextPanelData.data} />}
                   </ContextPanel>
                 </div>
               </aside>
             )}
           </div>
-        </main>
+        </div>
+      </div>
       </div>
 
       <Suspense fallback={<DialogSkeleton />}>

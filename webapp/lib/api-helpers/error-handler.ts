@@ -14,7 +14,7 @@ import { env } from '@/env.mjs';
 export interface ErrorResponse {
   success: false;
   error: string;
-  details?: string | Record<string, any>;
+  details?: string | Record<string, unknown>;
   timestamp: string;
   path?: string;
 }
@@ -22,7 +22,7 @@ export interface ErrorResponse {
 /**
  * Standard success response structure
  */
-export interface SuccessResponse<T = any> {
+export interface SuccessResponse<T = unknown> {
   success: true;
   data?: T;
   message?: string;
@@ -68,7 +68,7 @@ export function logError(
     endpoint: string;
     method?: string;
     userId?: string;
-    requestBody?: any;
+    requestBody?: unknown;
   }
 ): void {
   const timestamp = new Date().toISOString();
@@ -142,7 +142,7 @@ export function handleApiError(
     endpoint: string;
     method?: string;
     userId?: string;
-    requestBody?: any;
+    requestBody?: unknown;
   }
 ): NextResponse<ErrorResponse> {
   // Log the error with context

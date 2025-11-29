@@ -10,13 +10,11 @@
  *   GET /api/analytics?metric=nine-box&department=Engineering
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, authErrorResponse } from '@/lib/auth/middleware';
-import { handleApiError } from '@/lib/api-helpers';
-import { db } from '@/lib/db';
+import { and, eq, sql } from 'drizzle-orm';
+import { type NextRequest, NextResponse } from 'next/server';
 import { employees } from '@/db/schema';
-import { eq, sql, and, gte, lte } from 'drizzle-orm';
-
+import { calculateAttrition, getAttritionByDepartment } from '@/lib/analytics/attrition-sql';
+import { calculateENPS } from '@/lib/analytics/enps-sql';
 // Import analytics calculators
 import {
   calculateHeadcount,
@@ -24,8 +22,9 @@ import {
   calculateHeadcountTrends,
   calculateSpanOfControl,
 } from '@/lib/analytics/headcount-sql';
-import { calculateAttrition, getAttritionByDepartment } from '@/lib/analytics/attrition-sql';
-import { calculateENPS, calculateENPSByDepartment } from '@/lib/analytics/enps-sql';
+import { handleApiError } from '@/lib/api-helpers';
+import { authErrorResponse, requireAuth } from '@/lib/auth/middleware';
+import { db } from '@/lib/db';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -65,22 +64,160 @@ interface AnalyticsQueryParams {
   format?: OutputFormat;
 }
 
+/** Analytics data can be various metric result shapes */
+type AnalyticsData =
+  | HeadcountMetricsResult
+  | AttritionMetricsResult
+  | NineBoxMetricsResult
+  | DiversityMetricsResult
+  | PerformanceMetricsResult
+  | CompensationMetricsResult
+  | EngagementMetricsResult
+  | CostMetricsResult;
+
 interface AnalyticsResponse {
   success: boolean;
   metric: string;
-  data: any;
+  data: AnalyticsData;
   metadata: {
     generatedAt: string;
-    filters: Record<string, any>;
+    filters: Record<string, string | undefined>;
     dataPoints: number;
     dataSource: string;
   };
 }
 
+/** Headcount metrics result */
+interface HeadcountMetricsResult {
+  total: number;
+  byDepartment?: Record<string, number>;
+  byLocation?: Record<string, number>;
+  byLevel?: Record<string, number>;
+  department?: string;
+  trends?: unknown[];
+  trendSummary?: unknown;
+  spanOfControl?: unknown;
+  grouped?: unknown;
+}
+
+/** Attrition metrics result */
+interface AttritionMetricsResult {
+  overall: {
+    totalTerminations: number;
+    attritionRate: number;
+    voluntaryRate: number;
+    involuntaryRate: number;
+  };
+  byDepartment: Record<string, unknown>;
+  byLevel: Record<string, unknown>;
+  byLocation: Record<string, unknown>;
+  message?: string;
+}
+
+/** Nine-box metrics result */
+interface NineBoxMetricsResult {
+  grid: NineBoxCell[];
+  summary: {
+    highPerformers: number;
+    coreEmployees: number;
+    developmentNeeded: number;
+    totalAnalyzed: number;
+    avgRatingInflation: number;
+  };
+  message?: string;
+}
+
+interface NineBoxCell {
+  performance: PerformanceLevel;
+  potential: PotentialLevel;
+  count: number;
+  employees: NineBoxEmployee[];
+  category: string;
+}
+
+interface NineBoxEmployee {
+  id: string;
+  name: string;
+  department: string;
+  aiPerformanceScore: number;
+  aiPotentialScore: number;
+  managerRating: number | null;
+  ratingInflation: number | null;
+}
+
+/** Diversity metrics result */
+interface DiversityMetricsResult {
+  gender: {
+    counts?: Record<string, number>;
+    percentages?: Record<string, number>;
+  };
+  ethnicity: {
+    counts?: Record<string, number>;
+    percentages?: Record<string, number>;
+  };
+  total: number;
+  message?: string;
+}
+
+/** Performance metrics result */
+interface PerformanceMetricsResult {
+  average: number;
+  distribution: Record<string, number>;
+  total: number;
+  analyzed?: number;
+  message?: string;
+}
+
+/** Compensation breakdown */
+interface CompensationBreakdown {
+  base: number;
+  bonus: number;
+  equity: number;
+  count: number;
+  averageBase?: number;
+  averageBonus?: number;
+  averageEquity?: number;
+}
+
+/** Compensation metrics result */
+interface CompensationMetricsResult {
+  average: {
+    base: number;
+    bonus: number;
+    equity: number;
+    total: number;
+  };
+  byDepartment: Record<string, CompensationBreakdown>;
+  byLevel: Record<string, CompensationBreakdown>;
+  total: number;
+  message?: string;
+}
+
+/** Engagement metrics result */
+interface EngagementMetricsResult {
+  score: number;
+  department?: string;
+  currentQuarter?: string;
+  distribution?: unknown;
+  trends?: unknown[];
+  byDepartment?: unknown[];
+  summary?: unknown;
+  message?: string;
+}
+
+/** Cost metrics result */
+interface CostMetricsResult {
+  totalCompensation: number;
+  byDepartment: Record<string, CompensationBreakdown>;
+  employees: number;
+  message?: string;
+}
+
 type PerformanceLevel = 'High' | 'Medium' | 'Low';
 type PotentialLevel = 'High' | 'Medium' | 'Low';
 
-interface Employee {
+// Employee interface kept for type documentation and future use
+type _Employee = {
   employee_id: string;
   name?: string;
   first_name?: string;
@@ -100,7 +237,7 @@ interface Employee {
   compensation_base?: number;
   compensation_bonus?: number;
   compensation_equity?: number;
-}
+};
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -125,12 +262,13 @@ function getDateRange(
     case 'mtd':
       start.setDate(1); // First day of current month
       break;
-    case 'qtd':
+    case 'qtd': {
       const currentMonth = start.getMonth();
       const quarterStartMonth = Math.floor(currentMonth / 3) * 3;
       start.setMonth(quarterStartMonth);
       start.setDate(1);
       break;
+    }
     case 'ytd':
       start.setMonth(0); // January
       start.setDate(1);
@@ -144,7 +282,6 @@ function getDateRange(
     case 'last_6_months':
       start.setMonth(start.getMonth() - 6);
       break;
-    case 'last_12_months':
     default:
       start.setMonth(start.getMonth() - 12);
       break;
@@ -196,7 +333,7 @@ function getCategoryName(performance: PerformanceLevel, potential: PotentialLeve
 /**
  * Convert JSON data to CSV format
  */
-function convertToCSV(data: any, metric: string): string {
+function convertToCSV(data: AnalyticsData, metric: string): string {
   // For now, return a simple CSV conversion
   // In production, use a proper CSV library
   let csv = '';
@@ -205,12 +342,14 @@ function convertToCSV(data: any, metric: string): string {
     if (data.length === 0) return '';
 
     // Get headers from first object
-    const headers = Object.keys(data[0]);
-    csv = headers.join(',') + '\n';
+    const firstRow = data[0] as Record<string, unknown>;
+    const headers = Object.keys(firstRow);
+    csv = `${headers.join(',')}\n`;
 
     // Add rows
     for (const row of data) {
-      csv += headers.map((h) => JSON.stringify(row[h] ?? '')).join(',') + '\n';
+      const rowData = row as Record<string, unknown>;
+      csv += `${headers.map((h) => JSON.stringify(rowData[h] ?? '')).join(',')}\n`;
     }
   } else {
     // For complex objects, flatten and convert
@@ -227,7 +366,9 @@ function convertToCSV(data: any, metric: string): string {
 /**
  * Calculate headcount metrics
  */
-async function calculateHeadcountMetrics(params: AnalyticsQueryParams): Promise<any> {
+async function calculateHeadcountMetrics(
+  params: AnalyticsQueryParams
+): Promise<HeadcountMetricsResult> {
   const [headcount, headcountByDeptAndLevel, trendData, spanOfControl] = await Promise.all([
     calculateHeadcount(),
     calculateHeadcountByDeptAndLevel(),
@@ -275,7 +416,9 @@ async function calculateHeadcountMetrics(params: AnalyticsQueryParams): Promise<
 /**
  * Calculate attrition/turnover metrics
  */
-async function calculateAttritionMetrics(params: AnalyticsQueryParams): Promise<any> {
+async function calculateAttritionMetrics(
+  params: AnalyticsQueryParams
+): Promise<AttritionMetricsResult> {
   const dateRange = params.dateRange || 'last_12_months';
   const { start, end } = getDateRange(dateRange, params.startDate, params.endDate);
 
@@ -303,7 +446,19 @@ async function calculateAttritionMetrics(params: AnalyticsQueryParams): Promise<
   }
 
   // Calculate attrition
-  let attrition;
+  let attrition:
+    | Awaited<ReturnType<typeof calculateAttrition>>
+    | {
+        overall: {
+          totalTerminations: number;
+          attritionRate: number;
+          voluntaryRate: number;
+          involuntaryRate: number;
+        };
+        byDepartment: Record<string, unknown>;
+        byLevel: Record<string, unknown>;
+        byLocation: Record<string, unknown>;
+      };
   if (params.department) {
     const deptAttrition = await getAttritionByDepartment(params.department, start, end);
     attrition = {
@@ -329,12 +484,17 @@ async function calculateAttritionMetrics(params: AnalyticsQueryParams): Promise<
 /**
  * Calculate 9-box grid metrics
  */
-async function calculateNineBoxMetrics(params: AnalyticsQueryParams): Promise<any> {
+async function calculateNineBoxMetrics(
+  params: AnalyticsQueryParams
+): Promise<NineBoxMetricsResult> {
   try {
     // Import helpers for performance metrics and rating inflation
-    let getEmployeesWithLatestMetrics, getPerformanceScore, getPotentialScore;
-    let calculateRatingInflationBatch, calculateAverageInflation;
-    
+    let getEmployeesWithLatestMetrics: typeof import('@/lib/analytics/employee-metrics-helper').getEmployeesWithLatestMetrics;
+    let getPerformanceScore: typeof import('@/lib/analytics/employee-metrics-helper').getPerformanceScore;
+    let getPotentialScore: typeof import('@/lib/analytics/employee-metrics-helper').getPotentialScore;
+    let calculateRatingInflationBatch: typeof import('@/lib/analytics/rating-inflation-calculator').calculateRatingInflationBatch;
+    let calculateAverageInflation: typeof import('@/lib/analytics/rating-inflation-calculator').calculateAverageInflation;
+
     try {
       const helperModule = await import('@/lib/analytics/employee-metrics-helper');
       getEmployeesWithLatestMetrics = helperModule.getEmployeesWithLatestMetrics;
@@ -342,7 +502,9 @@ async function calculateNineBoxMetrics(params: AnalyticsQueryParams): Promise<an
       getPotentialScore = helperModule.getPotentialScore;
     } catch (importError) {
       console.error('Error importing employee-metrics-helper:', importError);
-      throw new Error(`Failed to import employee-metrics-helper: ${importError instanceof Error ? importError.message : String(importError)}`);
+      throw new Error(
+        `Failed to import employee-metrics-helper: ${importError instanceof Error ? importError.message : String(importError)}`
+      );
     }
 
     try {
@@ -351,7 +513,9 @@ async function calculateNineBoxMetrics(params: AnalyticsQueryParams): Promise<an
       calculateAverageInflation = inflationModule.calculateAverageInflation;
     } catch (importError) {
       console.error('Error importing rating-inflation-calculator:', importError);
-      throw new Error(`Failed to import rating-inflation-calculator: ${importError instanceof Error ? importError.message : String(importError)}`);
+      throw new Error(
+        `Failed to import rating-inflation-calculator: ${importError instanceof Error ? importError.message : String(importError)}`
+      );
     }
 
     // Build where clause
@@ -360,12 +524,14 @@ async function calculateNineBoxMetrics(params: AnalyticsQueryParams): Promise<an
       : eq(employees.status, 'active');
 
     // Fetch active employees with their latest performance metrics
-    let employeesWithMetrics;
+    let employeesWithMetrics: Awaited<ReturnType<typeof getEmployeesWithLatestMetrics>>;
     try {
       employeesWithMetrics = await getEmployeesWithLatestMetrics(whereClause);
     } catch (queryError) {
       console.error('Error fetching employees with metrics:', queryError);
-      throw new Error(`Failed to fetch employees: ${queryError instanceof Error ? queryError.message : String(queryError)}`);
+      throw new Error(
+        `Failed to fetch employees: ${queryError instanceof Error ? queryError.message : String(queryError)}`
+      );
     }
 
     if (employeesWithMetrics.length === 0) {
@@ -387,7 +553,7 @@ async function calculateNineBoxMetrics(params: AnalyticsQueryParams): Promise<an
     const inflationMap = await calculateRatingInflationBatch(employeeIds);
 
     // Initialize 9-box grid
-    const cells = new Map<string, any>();
+    const cells = new Map<string, NineBoxCell>();
     const performanceLevels: PerformanceLevel[] = ['High', 'Medium', 'Low'];
     const potentialLevels: PotentialLevel[] = ['High', 'Medium', 'Low'];
 
@@ -474,7 +640,9 @@ async function calculateNineBoxMetrics(params: AnalyticsQueryParams): Promise<an
 /**
  * Calculate diversity metrics
  */
-async function calculateDiversityMetrics(params: AnalyticsQueryParams): Promise<any> {
+async function calculateDiversityMetrics(
+  _params: AnalyticsQueryParams
+): Promise<DiversityMetricsResult> {
   // Fetch active employees
   const activeEmployees = await db.select().from(employees).where(eq(employees.status, 'active'));
 
@@ -528,7 +696,9 @@ async function calculateDiversityMetrics(params: AnalyticsQueryParams): Promise<
 /**
  * Calculate performance metrics
  */
-async function calculatePerformanceMetrics(params: AnalyticsQueryParams): Promise<any> {
+async function calculatePerformanceMetrics(
+  _params: AnalyticsQueryParams
+): Promise<PerformanceMetricsResult> {
   // Import helper for performance metrics
   const { getEmployeesWithLatestMetrics, getPerformanceScore } = await import(
     '@/lib/analytics/employee-metrics-helper'
@@ -556,7 +726,7 @@ async function calculatePerformanceMetrics(params: AnalyticsQueryParams): Promis
     '1': 0,
   };
 
-  for (const { emp, metrics } of employeesWithMetrics) {
+  for (const { emp: _emp, metrics } of employeesWithMetrics) {
     // Get performance rating from metrics (defaults to 3 if no metrics)
     const rating = getPerformanceScore(metrics, 3);
 
@@ -584,7 +754,9 @@ async function calculatePerformanceMetrics(params: AnalyticsQueryParams): Promis
 /**
  * Calculate compensation metrics
  */
-async function calculateCompensationMetrics(params: AnalyticsQueryParams): Promise<any> {
+async function calculateCompensationMetrics(
+  _params: AnalyticsQueryParams
+): Promise<CompensationMetricsResult> {
   // Fetch active employees with compensation data
   const activeEmployees = await db.select().from(employees).where(eq(employees.status, 'active'));
 
@@ -603,8 +775,8 @@ async function calculateCompensationMetrics(params: AnalyticsQueryParams): Promi
   let totalEquity = 0;
   let count = 0;
 
-  const byDepartment: Record<string, any> = {};
-  const byLevel: Record<string, any> = {};
+  const byDepartment: Record<string, CompensationBreakdown> = {};
+  const byLevel: Record<string, CompensationBreakdown> = {};
 
   for (const emp of activeEmployees) {
     const base = emp.compensationBase || 0;
@@ -668,7 +840,9 @@ async function calculateCompensationMetrics(params: AnalyticsQueryParams): Promi
 /**
  * Calculate engagement metrics (eNPS)
  */
-async function calculateEngagementMetrics(params: AnalyticsQueryParams): Promise<any> {
+async function calculateEngagementMetrics(
+  params: AnalyticsQueryParams
+): Promise<EngagementMetricsResult> {
   // Calculate eNPS metrics
   const enpsData = await calculateENPS();
 
@@ -687,9 +861,7 @@ async function calculateEngagementMetrics(params: AnalyticsQueryParams): Promise
           }
         : null,
       trends: enpsData.trends.filter((t) => t.quarter),
-      message: deptData
-        ? undefined
-        : `No eNPS data found for department: ${params.department}`,
+      message: deptData ? undefined : `No eNPS data found for department: ${params.department}`,
     };
   }
 
@@ -707,7 +879,7 @@ async function calculateEngagementMetrics(params: AnalyticsQueryParams): Promise
 /**
  * Calculate cost metrics (placeholder)
  */
-async function calculateCostMetrics(params: AnalyticsQueryParams): Promise<any> {
+async function calculateCostMetrics(params: AnalyticsQueryParams): Promise<CostMetricsResult> {
   // Calculate total compensation costs
   const compensationMetrics = await calculateCompensationMetrics(params);
 
@@ -785,7 +957,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Route to appropriate metric calculator
-    let data: any;
+    let data: AnalyticsData;
     switch (metric) {
       case 'headcount':
         data = await calculateHeadcountMetrics(params);

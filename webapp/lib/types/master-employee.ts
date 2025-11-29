@@ -764,7 +764,7 @@ export interface ColumnMapping {
   confidence: number; // 0-1 confidence score
   is_custom: boolean; // True if no canonical match found
   data_type: string;
-  sample_values: any[]; // First few values for preview
+  sample_values: unknown[]; // First few values for preview
 }
 
 /**
@@ -777,7 +777,7 @@ export interface UploadPreview {
   conflicts: FieldConflict[]; // Fields that exist but have different values
   new_employees: number; // Count of new records
   existing_employees: number; // Count of updates to existing records
-  sample_data: Record<string, any>[]; // First 5 rows
+  sample_data: Record<string, unknown>[]; // First 5 rows
 }
 
 /**
@@ -786,7 +786,7 @@ export interface UploadPreview {
 export interface FieldConflict {
   employee_id: string;
   field_name: string;
-  existing_value: any;
-  new_value: any;
+  existing_value: unknown;
+  new_value: unknown;
   resolution: 'keep_existing' | 'use_new' | 'manual';
 }

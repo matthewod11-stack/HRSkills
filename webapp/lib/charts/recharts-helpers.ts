@@ -74,7 +74,10 @@ export function getChartColor(index: number): string {
 /**
  * Format number for chart display
  */
-export function formatChartValue(value: number, type?: 'number' | 'percentage' | 'currency'): string {
+export function formatChartValue(
+  value: number,
+  type?: 'number' | 'percentage' | 'currency'
+): string {
   if (type === 'percentage') {
     return `${value}%`;
   }

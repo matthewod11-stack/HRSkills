@@ -575,7 +575,11 @@ const ANALYTICS_WORKFLOW: Workflow = {
     // Specific metrics
     { pattern: /headcount/i, weight: 12 },
     { pattern: /turnover|attrition|retention/i, weight: 10 },
-    { pattern: /diversity|dei|inclusion/i, weight: 9, contextHints: ['metrics', 'report', 'analysis'] },
+    {
+      pattern: /diversity|dei|inclusion/i,
+      weight: 9,
+      contextHints: ['metrics', 'report', 'analysis'],
+    },
     { pattern: /\benps\b|engagement\s+score/i, weight: 10 },
     { pattern: /flight\s+risk/i, weight: 11 },
 

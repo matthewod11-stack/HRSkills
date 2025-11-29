@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify, SignJWT } from 'jose';
+import { type NextRequest, NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
-import { AuthUser, AuthResult } from './types';
+import type { AuthResult, AuthUser } from './types';
 
 const JWT_SECRET = new TextEncoder().encode(env.JWT_SECRET);
 
@@ -21,7 +21,7 @@ export async function verifyToken(token: string): Promise<AuthResult> {
       success: true,
       user: payload as unknown as AuthUser,
     };
-  } catch (error) {
+  } catch (_error) {
     return {
       success: false,
       error: 'Invalid or expired token',

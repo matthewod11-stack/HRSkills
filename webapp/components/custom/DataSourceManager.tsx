@@ -1,28 +1,28 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
+  ArrowLeft,
+  BarChart3,
+  Calendar,
+  CheckCircle2,
   Database,
-  Trash2,
   Eye,
   FileText,
-  Calendar,
-  BarChart3,
-  X,
-  ArrowLeft,
   Table2,
-  Users,
+  Trash2,
   TrendingUp,
-  CheckCircle2,
+  Users,
+  X,
 } from 'lucide-react';
 import Link from 'next/link';
-import { DataFile, FilePreview, FILE_TYPE_LABELS } from '@/lib/types/data-sources';
-import { SmartFileUpload } from './SmartFileUpload';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth/auth-context';
-import { useQuery } from '@tanstack/react-query';
 import { getDaysSinceFirstRun } from '@/lib/first-run-client';
 import { queryKeys } from '@/lib/query-keys';
+import { type DataFile, FILE_TYPE_LABELS, type FilePreview } from '@/lib/types/data-sources';
+import { SmartFileUpload } from './SmartFileUpload';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -40,20 +40,7 @@ export function DataSourceManager() {
     queryFn: () => fetcher('/api/setup/init'),
   });
 
-  useEffect(() => {
-    loadFiles();
-  }, []);
-
-  useEffect(() => {
-    setDaysSinceFirstRun(getDaysSinceFirstRun());
-
-    // Check if user has uploaded data (more than demo data count)
-    if (firstRunData && firstRunData.employeeCount > 200) {
-      setHasUploadedData(true);
-    }
-  }, [firstRunData]);
-
-  const loadFiles = async () => {
+  const loadFiles = useCallback(async () => {
     try {
       const response = await fetch('/api/data/list', {
         headers: getAuthHeaders(),
@@ -68,7 +55,20 @@ export function DataSourceManager() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getAuthHeaders]);
+
+  useEffect(() => {
+    loadFiles();
+  }, [loadFiles]);
+
+  useEffect(() => {
+    setDaysSinceFirstRun(getDaysSinceFirstRun());
+
+    // Check if user has uploaded data (more than demo data count)
+    if (firstRunData && firstRunData.employeeCount > 200) {
+      setHasUploadedData(true);
+    }
+  }, [firstRunData]);
 
   const handleDelete = async (fileId: string) => {
     if (!confirm('Are you sure you want to delete this file?')) return;
@@ -125,6 +125,7 @@ export function DataSourceManager() {
         {/* Back Button */}
         <Link href="/">
           <motion.button
+            type="button"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="flex items-center gap-2 px-4 py-2 mb-4 bg-cream hover:bg-terracotta/10 border-2 border-warm hover:border-terracotta/40 rounded-xl transition-all shadow-soft hover-lift text-terracotta"
@@ -140,7 +141,9 @@ export function DataSourceManager() {
           </div>
           <div>
             <h1 className="text-3xl font-bold text-charcoal">Data Input Hub</h1>
-            <p className="text-charcoal-light">Upload employee data and manage your document library</p>
+            <p className="text-charcoal-light">
+              Upload employee data and manage your document library
+            </p>
           </div>
         </div>
       </div>
@@ -173,7 +176,9 @@ export function DataSourceManager() {
               <TrendingUp className="w-4 h-4 text-amber" />
               <span className="text-xs text-charcoal-light font-medium">Analytics</span>
             </div>
-            <p className="text-2xl font-bold text-charcoal">{firstRunData?.progress?.percentage || 0}%</p>
+            <p className="text-2xl font-bold text-charcoal">
+              {firstRunData?.progress?.percentage || 0}%
+            </p>
             <p className="text-xs text-charcoal-soft mt-1">Setup complete</p>
           </div>
 
@@ -209,7 +214,9 @@ export function DataSourceManager() {
                   <Users className="w-7 h-7 text-cream-white" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold mb-1 text-charcoal">View & Edit Master Employee Data</h3>
+                  <h3 className="text-xl font-bold mb-1 text-charcoal">
+                    View & Edit Master Employee Data
+                  </h3>
                   <p className="text-charcoal-light">
                     Inline table editor with sorting, filtering, and bulk operations
                   </p>
@@ -255,7 +262,9 @@ export function DataSourceManager() {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-lg mb-1 text-charcoal">{file.fileName}</h3>
-                    <p className="text-sm text-charcoal-light mb-2">{FILE_TYPE_LABELS[file.fileType]}</p>
+                    <p className="text-sm text-charcoal-light mb-2">
+                      {FILE_TYPE_LABELS[file.fileType]}
+                    </p>
                     <div className="flex flex-wrap gap-4 text-sm text-charcoal-soft">
                       <span className="flex items-center gap-1">
                         <BarChart3 className="w-4 h-4" />
@@ -271,6 +280,7 @@ export function DataSourceManager() {
                   {/* Actions */}
                   <div className="flex gap-2">
                     <motion.button
+                      type="button"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handlePreview(file)}
@@ -280,6 +290,7 @@ export function DataSourceManager() {
                       <Eye className="w-5 h-5 text-sage group-hover:text-cream-white" />
                     </motion.button>
                     <motion.button
+                      type="button"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handleDelete(file.fileId)}
@@ -322,6 +333,7 @@ export function DataSourceManager() {
                   </p>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setPreview(null)}
                   className="p-2 hover:bg-terracotta/10 rounded-xl transition-colors text-terracotta hover-lift"
                 >
@@ -346,7 +358,10 @@ export function DataSourceManager() {
                   </thead>
                   <tbody>
                     {preview.data.rows.map((row, idx) => (
-                      <tr key={idx} className="border-b border-warm hover:bg-cream transition-colors">
+                      <tr
+                        key={idx}
+                        className="border-b border-warm hover:bg-cream transition-colors"
+                      >
                         {preview.data.columns.map((col) => (
                           <td key={col} className="px-3 py-2 whitespace-nowrap text-charcoal">
                             {row[col] !== null && row[col] !== undefined ? String(row[col]) : '—'}

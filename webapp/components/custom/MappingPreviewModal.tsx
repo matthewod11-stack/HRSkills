@@ -1,9 +1,13 @@
 'use client';
 
-import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Check, AlertTriangle, ArrowRight, Edit2 } from 'lucide-react';
-import { UploadPreview, ColumnMapping, CANONICAL_FIELDS } from '@/lib/types/master-employee';
+import { AlertTriangle, ArrowRight, Check, X } from 'lucide-react';
+import { useState } from 'react';
+import {
+  CANONICAL_FIELDS,
+  type ColumnMapping,
+  type UploadPreview,
+} from '@/lib/types/master-employee';
 
 interface MappingPreviewModalProps {
   preview: UploadPreview;
@@ -84,7 +88,11 @@ export function MappingPreviewModal({ preview, onConfirm, onCancel }: MappingPre
               )}
             </div>
           </div>
-          <button onClick={onCancel} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -92,6 +100,7 @@ export function MappingPreviewModal({ preview, onConfirm, onCancel }: MappingPre
         {/* Tabs */}
         <div className="flex gap-2 mb-4 border-b border-white/10">
           <button
+            type="button"
             onClick={() => setActiveTab('mappings')}
             className={`px-4 py-2 font-medium transition-colors border-b-2 ${
               activeTab === 'mappings'
@@ -103,6 +112,7 @@ export function MappingPreviewModal({ preview, onConfirm, onCancel }: MappingPre
           </button>
           {preview.conflicts.length > 0 && (
             <button
+              type="button"
               onClick={() => setActiveTab('conflicts')}
               className={`px-4 py-2 font-medium transition-colors border-b-2 ${
                 activeTab === 'conflicts'
@@ -114,6 +124,7 @@ export function MappingPreviewModal({ preview, onConfirm, onCancel }: MappingPre
             </button>
           )}
           <button
+            type="button"
             onClick={() => setActiveTab('preview')}
             className={`px-4 py-2 font-medium transition-colors border-b-2 ${
               activeTab === 'preview'
@@ -260,6 +271,7 @@ export function MappingPreviewModal({ preview, onConfirm, onCancel }: MappingPre
         {/* Actions */}
         <div className="flex justify-between items-center mt-6 pt-4 border-t border-white/10">
           <button
+            type="button"
             onClick={onCancel}
             className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
           >

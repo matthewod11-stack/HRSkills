@@ -1,4 +1,4 @@
-import { createHash, timingSafeEqual } from 'crypto';
+import { createHash, timingSafeEqual } from 'node:crypto';
 
 /**
  * Password verification utility for single-user authentication
@@ -23,13 +23,13 @@ export function hashPassword(password: string): string {
 export function verifyPassword(password: string, hash: string): boolean {
   try {
     const inputHash = hashPassword(password);
-    
+
     // Use timing-safe comparison to prevent timing attacks
     // Both hashes are hex strings (64 chars), so we can compare directly
     if (inputHash.length !== hash.length) {
       return false;
     }
-    
+
     // Convert hex strings to buffers for timing-safe comparison
     const inputBuffer = Buffer.from(inputHash, 'hex');
     const storedBuffer = Buffer.from(hash, 'hex');
@@ -40,9 +40,8 @@ export function verifyPassword(password: string, hash: string): boolean {
     }
 
     return timingSafeEqual(new Uint8Array(inputBuffer), new Uint8Array(storedBuffer));
-  } catch (error) {
+  } catch (_error) {
     // If any error occurs during comparison, return false
     return false;
   }
 }
-

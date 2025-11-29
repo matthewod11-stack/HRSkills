@@ -1,4 +1,4 @@
-import { groupByCount, groupBy, percentage, filterByDateRange } from './utils';
+import { type DataRow, filterByDateRange, groupBy, groupByCount, percentage } from './utils';
 
 export interface AttritionResult {
   overall: {
@@ -44,9 +44,9 @@ export interface AttritionResult {
  * Calculate attrition/turnover metrics
  */
 export function calculateAttrition(
-  employees: any[],
-  turnoverData: any[],
-  demographics?: any[],
+  employees: DataRow[],
+  turnoverData: DataRow[],
+  demographics?: DataRow[],
   startDate?: Date,
   endDate?: Date
 ): AttritionResult {
@@ -58,7 +58,7 @@ export function calculateAttrition(
 
   // Get active employees for denominator
   const activeEmployees = employees.filter(
-    (emp) => emp.status && emp.status.toLowerCase() === 'active'
+    (emp) => typeof emp.status === 'string' && emp.status.toLowerCase() === 'active'
   );
 
   // Calculate average headcount (current + terminated)
@@ -67,10 +67,12 @@ export function calculateAttrition(
   // Overall metrics
   const totalTerminations = filteredTurnover.length;
   const voluntaryTerminations = filteredTurnover.filter(
-    (t) => t.termination_type && t.termination_type.toLowerCase() === 'voluntary'
+    (t) =>
+      typeof t.termination_type === 'string' && t.termination_type.toLowerCase() === 'voluntary'
   ).length;
   const involuntaryTerminations = filteredTurnover.filter(
-    (t) => t.termination_type && t.termination_type.toLowerCase() === 'involuntary'
+    (t) =>
+      typeof t.termination_type === 'string' && t.termination_type.toLowerCase() === 'involuntary'
   ).length;
 
   const overall = {
@@ -104,7 +106,9 @@ export function calculateAttrition(
 
   // Regrettable turnover (if field exists)
   const regrettableTerminations = filteredTurnover.filter(
-    (t) => t.regrettable && (t.regrettable === true || t.regrettable.toLowerCase() === 'yes')
+    (t) =>
+      t.regrettable === true ||
+      (typeof t.regrettable === 'string' && t.regrettable.toLowerCase() === 'yes')
   );
 
   if (
@@ -151,8 +155,8 @@ export function calculateAttrition(
  * Helper: Calculate attrition rate by a specific field (dept, level, location)
  */
 function calculateAttritionByField(
-  employees: any[],
-  turnoverData: any[],
+  employees: DataRow[],
+  turnoverData: DataRow[],
   field: string
 ): Record<string, { terminations: number; attritionRate: number }> {
   const result: Record<string, { terminations: number; attritionRate: number }> = {};
@@ -168,7 +172,7 @@ function calculateAttritionByField(
 
   // Group active employees by field
   const activeByField = groupBy(
-    employees.filter((e) => e.status && e.status.toLowerCase() === 'active'),
+    employees.filter((e) => typeof e.status === 'string' && e.status.toLowerCase() === 'active'),
     field
   );
 
@@ -199,22 +203,24 @@ function calculateAttritionByField(
  * Helper: Calculate attrition by demographic field
  */
 function calculateDemographicAttrition(
-  employees: any[],
-  demographics: any[],
-  terminatedWithDemographics: any[],
+  employees: DataRow[],
+  demographics: DataRow[],
+  terminatedWithDemographics: DataRow[],
   field: string
 ): Record<string, { terminations: number; rate: number }> {
   const result: Record<string, { terminations: number; rate: number }> = {};
 
   // Join active employees with demographics
   const employeeMap = new Map(employees.map((e) => [e.employee_id, e]));
-  const activeEmployees = employees.filter((e) => e.status && e.status.toLowerCase() === 'active');
+  const _activeEmployees = employees.filter(
+    (e) => typeof e.status === 'string' && e.status.toLowerCase() === 'active'
+  );
   const activeWithDemographics = demographics
-    .filter(
-      (d) =>
-        employeeMap.has(d.employee_id) &&
-        employeeMap.get(d.employee_id)?.status?.toLowerCase() === 'active'
-    )
+    .filter((d) => {
+      if (!employeeMap.has(d.employee_id)) return false;
+      const status = employeeMap.get(d.employee_id)?.status;
+      return typeof status === 'string' && status.toLowerCase() === 'active';
+    })
     .map((d) => ({ ...d, ...employeeMap.get(d.employee_id) }));
 
   // Group by demographic field
@@ -246,10 +252,14 @@ export interface TimeToFillResult {
   byLevel: Record<string, number>;
 }
 
-export function calculateTimeToFill(requisitions: any[]): TimeToFillResult {
+export function calculateTimeToFill(requisitions: DataRow[]): TimeToFillResult {
   // Calculate time-to-fill for filled positions
   const filledRequisitions = requisitions.filter(
-    (req) => req.status && req.status.toLowerCase() === 'filled' && req.open_date && req.fill_date
+    (req) =>
+      typeof req.status === 'string' &&
+      req.status.toLowerCase() === 'filled' &&
+      req.open_date &&
+      req.fill_date
   );
 
   const timeToFillDays = filledRequisitions.map((req) => {
@@ -320,12 +330,12 @@ export interface RetentionResult {
 }
 
 export function calculateRetention(
-  employees: any[],
-  turnoverData: any[],
+  employees: DataRow[],
+  turnoverData: DataRow[],
   periodMonths: number = 12
 ): RetentionResult {
   const activeEmployees = employees.filter(
-    (emp) => emp.status && emp.status.toLowerCase() === 'active'
+    (emp) => typeof emp.status === 'string' && emp.status.toLowerCase() === 'active'
   );
 
   // Calculate period start date
@@ -346,9 +356,7 @@ export function calculateRetention(
     if (!emp.hire_date) return;
 
     const hireDate = new Date(emp.hire_date);
-    const tenureYears = Math.floor(
-      (new Date().getTime() - hireDate.getTime()) / (1000 * 60 * 60 * 24 * 365)
-    );
+    const tenureYears = Math.floor((Date.now() - hireDate.getTime()) / (1000 * 60 * 60 * 24 * 365));
 
     let tenureBucket = 'Unknown';
     if (tenureYears < 1) tenureBucket = '<1 year';

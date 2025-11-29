@@ -10,8 +10,8 @@
  * - Returns formatted insights with suggested actions
  */
 
-import { db } from '@/lib/db';
 import { sql } from 'drizzle-orm';
+import { db } from '@/lib/db';
 
 export interface FlightRiskEmployee {
   employeeId: string;
@@ -59,18 +59,17 @@ export interface FlightRiskAnalysis {
  * @param options Filter options
  * @returns Flight risk analysis with actionable insights
  */
-export async function detectFlightRisks(options: {
-  department?: string;
-  minRiskLevel?: 'medium' | 'high' | 'critical';
-  limit?: number;
-} = {}): Promise<FlightRiskAnalysis> {
+export async function detectFlightRisks(
+  options: {
+    department?: string;
+    minRiskLevel?: 'medium' | 'high' | 'critical';
+    limit?: number;
+  } = {}
+): Promise<FlightRiskAnalysis> {
   const { department, minRiskLevel = 'medium', limit = 50 } = options;
 
   // Build WHERE clause
-  const conditions: string[] = [
-    "e.status = 'active'",
-    "em.flight_risk IS NOT NULL",
-  ];
+  const conditions: string[] = ["e.status = 'active'", 'em.flight_risk IS NOT NULL'];
 
   // Filter by risk level
   if (minRiskLevel === 'critical') {
@@ -241,14 +240,16 @@ function generateRiskFactors(metrics: {
 /**
  * Get suggested retention actions based on risk analysis
  */
-export function getSuggestedRetentionActions(
-  employee: FlightRiskEmployee
-): Array<{
+export function getSuggestedRetentionActions(employee: FlightRiskEmployee): Array<{
   action: string;
   description: string;
   priority: 'high' | 'medium' | 'low';
 }> {
-  const actions: Array<{ action: string; description: string; priority: 'high' | 'medium' | 'low' }> = [];
+  const actions: Array<{
+    action: string;
+    description: string;
+    priority: 'high' | 'medium' | 'low';
+  }> = [];
 
   // Critical actions for high-risk employees
   if (employee.flightRiskLevel === 'critical' || employee.flightRisk > 0.8) {
@@ -299,8 +300,10 @@ export function getSuggestedRetentionActions(
   }
 
   // Review gaps
-  if (!employee.lastReviewDate ||
-      new Date(employee.lastReviewDate) < new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)) {
+  if (
+    !employee.lastReviewDate ||
+    new Date(employee.lastReviewDate) < new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)
+  ) {
     actions.push({
       action: 'Schedule performance review',
       description: 'Provide feedback and discuss progress',
@@ -339,7 +342,8 @@ export function formatFlightRiskForChat(analysis: FlightRiskAnalysis): string {
   if (employees.length > 0) {
     response += `### Top ${Math.min(5, employees.length)} At-Risk Employees\n\n`;
     employees.slice(0, 5).forEach((emp, idx) => {
-      const riskEmoji = emp.flightRiskLevel === 'critical' ? '🔴' : emp.flightRiskLevel === 'high' ? '🟠' : '🟡';
+      const riskEmoji =
+        emp.flightRiskLevel === 'critical' ? '🔴' : emp.flightRiskLevel === 'high' ? '🟠' : '🟡';
       response += `${idx + 1}. ${riskEmoji} **${emp.fullName}** (${emp.department})\n`;
       response += `   - **Role:** ${emp.jobTitle}\n`;
       response += `   - **Risk Level:** ${emp.flightRiskLevel.toUpperCase()} (${(emp.flightRisk * 100).toFixed(0)}% probability)\n`;

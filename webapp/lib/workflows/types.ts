@@ -56,11 +56,21 @@ export interface WorkflowStep {
   isTerminal?: boolean; // Whether this is a final step (workflow completion)
 }
 
+/** Flexible workflow data value type */
+export type WorkflowDataValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | WorkflowDataValue[]
+  | { [key: string]: WorkflowDataValue };
+
 export interface WorkflowActionDefinition {
   type: ActionType;
   label: string;
   description: string;
-  defaultPayload?: any;
+  defaultPayload?: Record<string, WorkflowDataValue>;
   requiresApproval?: boolean;
   requiredPermissions?: string[];
 }
@@ -81,7 +91,7 @@ export interface DetectionContext {
   message: string;
   conversationHistory?: ConversationMessage[];
   currentWorkflow?: WorkflowId;
-  userData?: any;
+  userData?: Record<string, WorkflowDataValue>;
 }
 
 export interface ConversationMessage {
@@ -98,12 +108,12 @@ export interface ConversationMessage {
 export interface WorkflowState {
   workflowId: WorkflowId;
   step: string;
-  data: Record<string, any>; // Workflow-specific data collected so far
+  data: Record<string, WorkflowDataValue>; // Workflow-specific data collected so far
   completedSteps: string[];
   nextActions: SuggestedAction[];
   createdAt: string;
   updatedAt: string;
-  metadata?: Record<string, any>; // Additional context
+  metadata?: Record<string, WorkflowDataValue>; // Additional context
 }
 
 export interface SuggestedAction {
@@ -111,7 +121,7 @@ export interface SuggestedAction {
   type: ActionType;
   label: string; // User-facing label: "Save to Google Drive"
   description: string; // Longer description of what this does
-  payload: any; // Action-specific payload
+  payload: Record<string, WorkflowDataValue>; // Action-specific payload
   requiresApproval: boolean;
   status?: 'pending' | 'approved' | 'rejected' | 'completed' | 'failed';
   icon?: string; // Icon name for UI
@@ -145,7 +155,7 @@ export type Action =
 export interface DocumentAction {
   type: 'create_document';
   documentType: DocumentType;
-  data: Record<string, any>;
+  data: Record<string, WorkflowDataValue>;
   saveToGoogleDrive?: boolean;
   driveFolder?: string;
   templateId?: string; // Google Docs template ID
@@ -259,7 +269,7 @@ export interface EmployeeData {
   location?: string;
   compensation_base?: number;
   status?: 'active' | 'terminated' | 'leave';
-  [key: string]: any;
+  [key: string]: WorkflowDataValue;
 }
 
 export interface DataUpdateMetadata {
@@ -281,14 +291,14 @@ export interface DriveFolderAction {
 export interface AnalyzeDataAction {
   type: 'analyze_data';
   analysisType: string;
-  filters?: Record<string, any>;
+  filters?: Record<string, WorkflowDataValue>;
   outputFormat?: 'json' | 'chart' | 'report';
 }
 
 // Export to Sheets Actions
 export interface ExportSheetsAction {
   type: 'export_to_sheets';
-  data: any[];
+  data: Record<string, WorkflowDataValue>[];
   sheetId?: string;
   sheetName?: string;
   range?: string;
@@ -302,7 +312,7 @@ export interface ExportSheetsAction {
 export interface ActionResult {
   success: boolean;
   actionId?: string;
-  data?: any;
+  data?: WorkflowDataValue | Record<string, WorkflowDataValue>;
   error?: string;
   metadata?: ActionResultMetadata;
 }
@@ -321,8 +331,8 @@ export interface ActionResultMetadata {
 export interface WorkflowContext {
   workflow: Workflow;
   state?: WorkflowState;
-  employeeData?: any[];
-  analyticsData?: any;
+  employeeData?: EmployeeData[];
+  analyticsData?: Record<string, WorkflowDataValue>;
   templates?: WorkflowTemplate[];
   userPermissions?: string[];
 }

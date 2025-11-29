@@ -1,12 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, authErrorResponse } from '@/lib/auth/middleware';
-import { handleApiError, createSuccessResponse } from '@/lib/api-helpers';
-import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter';
-import { db } from '@/lib/db';
+import { type NextRequest, NextResponse } from 'next/server';
 import { employees } from '@/db/schema';
-import { eq, and, gte, sql } from 'drizzle-orm';
-import { getAggregatedMetrics } from '@/lib/performance-monitor';
 import { calculateENPS } from '@/lib/analytics/enps-sql';
+import { handleApiError } from '@/lib/api-helpers';
+import { authErrorResponse, requireAuth } from '@/lib/auth/middleware';
+import { db } from '@/lib/db';
+import { getAggregatedMetrics } from '@/lib/performance-monitor';
+import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter';
 
 /**
  * GET /api/metrics
@@ -138,9 +137,10 @@ export async function GET(request: NextRequest) {
       });
 
       const terminatedYTD = terminatedEmployees.length;
-      const attritionRate = activeEmployees.length > 0
-        ? (terminatedYTD / (activeEmployees.length + terminatedYTD)) * 100
-        : 0;
+      const attritionRate =
+        activeEmployees.length > 0
+          ? (terminatedYTD / (activeEmployees.length + terminatedYTD)) * 100
+          : 0;
 
       if (details) {
         // Get last 5 terminations (sorted by termination_date DESC)
@@ -201,7 +201,7 @@ export async function GET(request: NextRequest) {
       },
       { status: 400 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     return handleApiError(error, {
       endpoint: '/api/metrics',
       method: 'GET',

@@ -20,8 +20,8 @@
  * @see https://cloud.google.com/vertex-ai/docs
  */
 
+import { EndpointServiceClient, PredictionServiceClient } from '@google-cloud/aiplatform';
 import { env } from '@/env.mjs';
-import { PredictionServiceClient, EndpointServiceClient } from '@google-cloud/aiplatform';
 
 // Singleton client instances
 let predictionClient: PredictionServiceClient | null = null;
@@ -127,7 +127,7 @@ export interface RiskFactor {
   factor: string;
   importance: number; // 0-1
   description: string;
-  value?: any;
+  value?: string | number | boolean | null;
 }
 
 export interface PerformancePrediction {
@@ -144,7 +144,7 @@ export interface PerformancePrediction {
 export interface Factor {
   name: string;
   impact: number; // -1 to 1 (negative = decline, positive = improve)
-  currentValue: any;
+  currentValue: string | number | boolean | null;
   description: string;
 }
 
@@ -166,6 +166,34 @@ export interface PredictionConfig {
   useCache?: boolean;
 }
 
+/** Input employee data for predictions (flexible schema from various sources) */
+export interface EmployeeInput {
+  id?: string;
+  employee_id?: string;
+  name?: string;
+  employee_name?: string;
+  hire_date?: string;
+  hireDate?: string;
+  age?: number;
+  department?: string;
+  level?: string;
+  job_title?: string;
+  eNPS?: number;
+  enps?: number;
+  salary?: number;
+  compensation?: number;
+  compensation_percentile?: number;
+  last_raise_date?: string;
+  last_raise_percent?: number;
+  reviews?: Array<{ rating?: number; score?: number; sentiment_score?: number }>;
+  promotion_history?: Array<{ date: string }>;
+  manager_tenure?: number;
+  team_size?: number;
+  sick_days_last_year?: number;
+  pto_used_percent?: number;
+  training_hours?: number;
+}
+
 export interface BatchPredictionRequest {
   employees: EmployeeFeatures[];
   predictionType: 'attrition' | 'performance' | 'promotion';
@@ -185,7 +213,7 @@ export interface BatchPredictionResult {
 /**
  * Extract features from employee data for ML predictions
  */
-export function extractEmployeeFeatures(employee: any): EmployeeFeatures {
+export function extractEmployeeFeatures(employee: EmployeeInput): EmployeeFeatures {
   // Calculate tenure
   const hireDate = new Date(employee.hire_date || employee.hireDate);
   const now = new Date();
@@ -201,8 +229,10 @@ export function extractEmployeeFeatures(employee: any): EmployeeFeatures {
   const last_review = reviews[reviews.length - 1];
   const avg_review_score =
     reviews.length > 0
-      ? reviews.reduce((sum: number, r: any) => sum + (r.rating || r.score || 3), 0) /
-        reviews.length
+      ? reviews.reduce(
+          (sum: number, r: { rating?: number; score?: number }) => sum + (r.rating || r.score || 3),
+          0
+        ) / reviews.length
       : 3;
 
   // Calculate sentiment from reviews
@@ -278,7 +308,7 @@ export function normalizeFeatures(features: EmployeeFeatures): Record<string, nu
  * Predict employee attrition risk
  */
 export async function predictAttrition(
-  employee: any,
+  employee: EmployeeInput,
   config: PredictionConfig = {}
 ): Promise<AttritionPrediction> {
   try {
@@ -303,11 +333,13 @@ export async function predictAttrition(
 
     const result = await client.predict({
       endpoint,
-      instances: [instance] as any,
+      instances: [instance] as unknown[],
     });
-    const [response] = result as any;
+    const [response] = result as [
+      { predictions?: Array<{ probability?: string; value?: string }> },
+    ];
 
-    const prediction = response.predictions?.[0];
+    const prediction = response?.predictions?.[0];
     const probability = parseFloat(prediction?.probability || prediction?.value || '0');
 
     return buildAttritionPrediction(employee, features, probability);
@@ -322,7 +354,10 @@ export async function predictAttrition(
 /**
  * Rule-based attrition prediction (fallback when ML model not available)
  */
-function predictAttritionRuleBased(employee: any, features: EmployeeFeatures): AttritionPrediction {
+function predictAttritionRuleBased(
+  employee: EmployeeInput,
+  features: EmployeeFeatures
+): AttritionPrediction {
   let riskScore = 0;
   const riskFactors: RiskFactor[] = [];
 
@@ -400,7 +435,7 @@ function predictAttritionRuleBased(employee: any, features: EmployeeFeatures): A
  * Build attrition prediction result
  */
 function buildAttritionPrediction(
-  employee: any,
+  employee: EmployeeInput,
   features: EmployeeFeatures,
   probability: number,
   customRiskFactors?: RiskFactor[]
@@ -452,7 +487,7 @@ function buildAttritionPrediction(
  * Batch attrition predictions
  */
 export async function batchPredictAttrition(
-  employees: any[],
+  employees: EmployeeInput[],
   config: PredictionConfig = {}
 ): Promise<AttritionPrediction[]> {
   const predictions = await Promise.all(employees.map((emp) => predictAttrition(emp, config)));
@@ -469,7 +504,7 @@ export async function batchPredictAttrition(
  * Predict employee performance in next review cycle
  */
 export async function predictPerformance(
-  employee: any,
+  employee: EmployeeInput,
   config: PredictionConfig = {}
 ): Promise<PerformancePrediction> {
   try {
@@ -490,11 +525,11 @@ export async function predictPerformance(
     const normalizedFeatures = normalizeFeatures(features);
     const result2 = await client.predict({
       endpoint,
-      instances: [{ features: normalizedFeatures }] as any,
+      instances: [{ features: normalizedFeatures }] as unknown[],
     });
-    const [response] = result2 as any;
+    const [response] = result2 as [{ predictions?: Array<{ rating?: string; value?: string }> }];
 
-    const prediction = response.predictions?.[0];
+    const prediction = response?.predictions?.[0];
     const predictedRating = parseFloat(prediction?.rating || prediction?.value || '3');
 
     return buildPerformancePrediction(employee, features, predictedRating);
@@ -509,7 +544,7 @@ export async function predictPerformance(
  * Rule-based performance prediction
  */
 function predictPerformanceRuleBased(
-  employee: any,
+  employee: EmployeeInput,
   features: EmployeeFeatures
 ): PerformancePrediction {
   let predictedRating = features.avg_review_score || 3;
@@ -578,7 +613,7 @@ function predictPerformanceRuleBased(
  * Build performance prediction result
  */
 function buildPerformancePrediction(
-  employee: any,
+  employee: EmployeeInput,
   features: EmployeeFeatures,
   predictedRating: number,
   customFactors?: Factor[]
@@ -629,7 +664,7 @@ function buildPerformancePrediction(
  * Predict employee promotion readiness
  */
 export async function predictPromotion(
-  employee: any,
+  employee: EmployeeInput,
   config: PredictionConfig = {}
 ): Promise<PromotionPrediction> {
   try {
@@ -650,11 +685,13 @@ export async function predictPromotion(
     const normalizedFeatures = normalizeFeatures(features);
     const result3 = await client.predict({
       endpoint,
-      instances: [{ features: normalizedFeatures }] as any,
+      instances: [{ features: normalizedFeatures }] as unknown[],
     });
-    const [response] = result3 as any;
+    const [response] = result3 as [
+      { predictions?: Array<{ probability?: string; value?: string }> },
+    ];
 
-    const prediction = response.predictions?.[0];
+    const prediction = response?.predictions?.[0];
     const probability = parseFloat(prediction?.probability || prediction?.value || '0');
 
     return buildPromotionPrediction(employee, features, probability);
@@ -668,7 +705,10 @@ export async function predictPromotion(
 /**
  * Rule-based promotion prediction
  */
-function predictPromotionRuleBased(employee: any, features: EmployeeFeatures): PromotionPrediction {
+function predictPromotionRuleBased(
+  employee: EmployeeInput,
+  features: EmployeeFeatures
+): PromotionPrediction {
   let readinessScore = 0;
   const strengths: string[] = [];
   const developmentAreas: string[] = [];
@@ -677,7 +717,7 @@ function predictPromotionRuleBased(employee: any, features: EmployeeFeatures): P
   if (features.avg_review_score && features.avg_review_score >= 4) {
     readinessScore += 30;
     strengths.push(
-      'Consistently high performance (avg rating: ' + features.avg_review_score.toFixed(1) + ')'
+      `Consistently high performance (avg rating: ${features.avg_review_score.toFixed(1)})`
     );
   } else if (features.avg_review_score && features.avg_review_score < 3.5) {
     developmentAreas.push('Needs to improve performance ratings');
@@ -722,7 +762,7 @@ function predictPromotionRuleBased(employee: any, features: EmployeeFeatures): P
  * Build promotion prediction result
  */
 function buildPromotionPrediction(
-  employee: any,
+  employee: EmployeeInput,
   features: EmployeeFeatures,
   probability: number,
   customStrengths?: string[],
@@ -787,13 +827,22 @@ export function calculatePredictionCost(predictionCount: number): number {
   return predictionCount * 0.000002;
 }
 
+/** Vertex AI endpoint information */
+export interface EndpointInfo {
+  name?: string;
+  displayName?: string;
+  deployedModels?: Array<{ model?: string; displayName?: string }>;
+  createTime?: string;
+  updateTime?: string;
+}
+
 /**
  * Get model endpoint status
  */
 export async function getEndpointStatus(
   endpointId: string,
   config: PredictionConfig = {}
-): Promise<any> {
+): Promise<EndpointInfo | null> {
   try {
     const client = getEndpointClient();
     const projectId = config.projectId || env.GOOGLE_CLOUD_PROJECT;

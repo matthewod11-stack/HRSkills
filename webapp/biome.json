@@ -3,10 +3,12 @@
   "vcs": {
     "enabled": true,
     "clientKind": "git",
-    "useIgnoreFile": false
+    "useIgnoreFile": true,
+    "defaultBranch": "main"
   },
   "files": {
-    "ignoreUnknown": false
+    "ignoreUnknown": false,
+    "includes": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.json", "**/*.css"]
   },
   "formatter": {
     "enabled": true,
@@ -67,6 +69,15 @@
       "indentWidth": 2
     }
   },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    },
+    "formatter": {
+      "enabled": true,
+      "indentWidth": 2
+    }
+  },
   "assist": {
     "enabled": true,
     "actions": {
@@ -84,6 +95,12 @@
             "noExplicitAny": "off"
           }
         }
+      }
+    },
+    {
+      "includes": ["public/sw.js", "public/workbox-*.js"],
+      "linter": {
+        "enabled": false
       }
     }
   ]

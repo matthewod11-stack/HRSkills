@@ -40,10 +40,7 @@ export const env = createEnv({
     // Google Workspace - OAuth
     GOOGLE_CLIENT_ID: z.string().optional(),
     GOOGLE_CLIENT_SECRET: z.string().optional(),
-    GOOGLE_REDIRECT_URI: z
-      .string()
-      .url()
-      .default('http://localhost:3000/api/auth/google/callback'),
+    GOOGLE_REDIRECT_URI: z.string().url().default('http://localhost:3000/api/auth/google/callback'),
 
     // Google Cloud Platform
     GOOGLE_CLOUD_PROJECT: z.string().optional(),

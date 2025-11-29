@@ -7,8 +7,8 @@
  * @see https://cloud.google.com/dlp/docs
  */
 
-import { DlpServiceClient } from '@google-cloud/dlp';
 import type { protos } from '@google-cloud/dlp';
+import { DlpServiceClient } from '@google-cloud/dlp';
 
 type IInfoType = protos.google.privacy.dlp.v2.IInfoType;
 type IInspectConfig = protos.google.privacy.dlp.v2.IInspectConfig;
@@ -126,12 +126,16 @@ export async function scanForPii(
       location: finding.location?.byteRange
         ? {
             byteRange: {
-              start: finding.location.byteRange.start !== null && finding.location.byteRange.start !== undefined
-                ? Number(finding.location.byteRange.start)
-                : undefined,
-              end: finding.location.byteRange.end !== null && finding.location.byteRange.end !== undefined
-                ? Number(finding.location.byteRange.end)
-                : undefined,
+              start:
+                finding.location.byteRange.start !== null &&
+                finding.location.byteRange.start !== undefined
+                  ? Number(finding.location.byteRange.start)
+                  : undefined,
+              end:
+                finding.location.byteRange.end !== null &&
+                finding.location.byteRange.end !== undefined
+                  ? Number(finding.location.byteRange.end)
+                  : undefined,
             },
           }
         : undefined,

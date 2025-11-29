@@ -3,8 +3,8 @@
  * Run with: npx tsx scripts/test-prompt-caching.ts
  */
 
-import { generateCacheableSkillsCatalog } from '../lib/skills';
 import { estimateTokenCount } from '../lib/employee-context';
+import { generateCacheableSkillsCatalog } from '../lib/skills';
 
 console.log('🧪 Testing Prompt Caching Implementation\n');
 console.log('='.repeat(60));
@@ -49,7 +49,7 @@ try {
 
     // Show sample of catalog
     console.log('\n   Sample (first 500 chars):');
-    console.log('   ' + catalog.substring(0, 500).split('\n').join('\n   '));
+    console.log(`   ${catalog.substring(0, 500).split('\n').join('\n   ')}`);
   }
 } catch (error) {
   console.log('❌ ERROR:', error);
@@ -110,7 +110,7 @@ try {
   console.log('❌ ERROR:', error);
 }
 
-console.log('\n' + '='.repeat(60));
+console.log(`\n${'='.repeat(60)}`);
 console.log('✅ Phase 1 Implementation Tests Complete');
 console.log('='.repeat(60));
 console.log('\nNext steps:');

@@ -27,7 +27,73 @@
 **Repository:** https://github.com/matthewod11-stack/HRSkills
 
 **Platform Version:** 0.2.0
-**Status:** Production-Ready (Phase 3.2 Complete)
+**Status:** Desktop App Implementation (Electron Phase 0-3)
+
+---
+
+## Current Focus: Desktop App Implementation
+
+> **IMPORTANT:** We are actively building the Electron desktop app. Keep these docs top-of-mind.
+
+### Primary Documentation
+
+| Document | Purpose | When to Reference |
+|----------|---------|-------------------|
+| **[docs/desktop/ROADMAP.md](docs/desktop/ROADMAP.md)** | Phase checklist & linear tasks | Start of each session |
+| **[docs/desktop/SESSION_PROTOCOL.md](docs/desktop/SESSION_PROTOCOL.md)** | Multi-session continuity rules | Every session |
+| **[docs/desktop/PROGRESS.md](docs/desktop/PROGRESS.md)** | Session-by-session progress log | Start/end of sessions |
+| **[docs/desktop/ARCHITECTURE.md](docs/desktop/ARCHITECTURE.md)** | Technical decisions | Design questions |
+| **[docs/desktop/CODE_EXAMPLES.md](docs/desktop/CODE_EXAMPLES.md)** | Implementation code | When coding |
+| **[docs/desktop/KNOWN_ISSUES.md](docs/desktop/KNOWN_ISSUES.md)** | Issue parking lot | When hitting blockers |
+| **[desktop/features.json](desktop/features.json)** | Feature pass/fail tracking | Session verification |
+
+### Session Initialization
+
+```bash
+# Run at start of every session:
+./desktop/scripts/dev-init.sh
+```
+
+### Current Phase Progress
+
+```
+[x] Phase 0  - Pre-flight validation
+[ ] Phase 1  - Electron scaffolding        <-- CURRENT
+[ ] Phase 2  - Icon creation
+[ ] Phase 3  - Next.js integration
+[ ] Phase 0.5 - Payment & licensing
+[ ] Phase 4  - Secure IPC
+[ ] Phase 5-13 - See ROADMAP.md
+```
+
+### Desktop Implementation Rules
+
+**1. Single-Feature-Per-Session Rule (CRITICAL):**
+> Work on ONE checkbox item per session. This prevents scope creep and ensures features are fully verified.
+
+**2. Session Protocol (See [SESSION_PROTOCOL.md](docs/desktop/SESSION_PROTOCOL.md)):**
+- START: Run `./desktop/scripts/dev-init.sh`
+- DURING: Work on one task, verify it works
+- END: Update PROGRESS.md, features.json, commit
+
+**3. Update KNOWN_ISSUES.md when:**
+- Encountering non-blocking bugs
+- Discovering edge cases
+- Deferring decisions
+
+**4. Keep ROADMAP.md checkboxes current:**
+- Check off tasks as completed
+- Note blockers at pause points
+
+**5. Desktop-specific code goes in:**
+- `desktop/` — Electron main process, preload, config
+- `webapp/app/setup/` — First-run wizard route
+- `webapp/components/onboarding/` — Setup wizard components
+- `webapp/lib/types/electron.d.ts` — Electron API types
+
+**6. Test both contexts:**
+- Web: `npm run dev` in webapp (no Electron APIs)
+- Desktop: Full Electron + Next.js integration
 
 ---
 
@@ -107,18 +173,34 @@ HRSkills/
   webapp/
     app/
       api/                 # Next.js API routes (chat, analytics, employees)
+      setup/               # [NEW] First-run wizard route (desktop only)
       page.tsx             # Chat-first dashboard (50/50 layout)
-    components/custom/     # Project-specific components (ChatInterface, ContextPanel)
+    components/
+      custom/              # Project-specific components (ChatInterface, ContextPanel)
+      onboarding/          # [NEW] Setup wizard components
     lib/
       ai/router.ts         # Multi-provider AI routing with failover
       db/index.ts          # Database singleton client
       auth/middleware.ts   # JWT + RBAC
       analytics/           # SQL-based analytics queries
       workflows/           # Context detection pattern matching
+      types/electron.d.ts  # [NEW] Electron API type definitions
     db/schema.ts           # 10 normalized tables (Drizzle)
+  desktop/                 # [NEW] Electron shell
+    src/
+      electron-main.ts     # Main process (starts Next.js, creates windows)
+      preload.ts           # Secure IPC bridge
+    icons/                 # macOS/Windows app icons
+    package.json           # Electron dependencies
+    electron-builder.yml   # Packaging configuration
   skills/                  # 25 Claude Skills for HR automation
-  docs/                    # Architecture decisions and guides
-  data/hrskills.db         # SQLite database
+  docs/
+    desktop/               # [NEW] Desktop implementation docs
+      ROADMAP.md           # Phase checklist (start here!)
+      ARCHITECTURE.md      # Technical specification
+      CODE_EXAMPLES.md     # Implementation code
+      KNOWN_ISSUES.md      # Issue parking lot
+  data/hrskills.db         # SQLite database (webapp), moves to ~/Library/... in desktop
 ```
 
 ### Key Architectural Decisions
@@ -363,6 +445,9 @@ Depending on your needs, you may also want:
 ```bash
 # PostgreSQL database access (if migrating from SQLite)
 claude mcp add --transport stdio postgres --env DATABASE_URL=your_db_url -- npx -y @modelcontextprotocol/server-postgres
+
+# Puppeteer browser automation (for UI testing, screenshots, web scraping)
+claude mcp add --transport stdio puppeteer -- npx -y @modelcontextprotocol/server-puppeteer
 
 # Figma design integration (if working with design system)
 # Run /mcp in Claude Code and authenticate via browser
@@ -708,6 +793,7 @@ No custom agents at this time.
 
 ### Documentation
 
+- **Desktop Implementation:** `/docs/desktop/ROADMAP.md` (current focus!)
 - **Comprehensive Guides:** `~/claude-docs/` (agents, plugins, rules, workflows)
 - **API Documentation:** `/docs/api/API_REFERENCE.md` (all 38 endpoints)
 - **Architecture Decisions:** `/docs/architecture/ARCHITECTURE_DECISIONS.md`
@@ -800,6 +886,6 @@ This is a **production-ready** HR automation platform serving as an MVP for chat
 
 ---
 
-**Last Updated:** November 17, 2024
-**Updated By:** Updated to align with ~/claude-docs/ template standards (MCP clarifications, placeholder cleanup)
-**Version:** 2.1.0
+**Last Updated:** November 26, 2025
+**Updated By:** Added Desktop Implementation focus section, KNOWN_ISSUES.md, updated directory structure
+**Version:** 2.2.0

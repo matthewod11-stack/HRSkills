@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { TrendingDown, Zap, DollarSign, Database, Activity, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Activity, Database, DollarSign, RefreshCw, TrendingDown, Zap } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth/auth-context';
 
 interface MetricsSummary {
@@ -51,7 +51,7 @@ export function AIMetricsDashboard() {
     fetchMetrics();
     const interval = setInterval(fetchMetrics, 30000); // Refresh every 30s
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchMetrics]);
 
   if (loading && !metrics) {
     return (
@@ -213,7 +213,9 @@ export function AIMetricsDashboard() {
               >
                 <card.icon className="w-5 h-5 text-cream-white" />
               </div>
-              <span className={`text-xs px-2 py-0.5 rounded-lg font-medium ${statusColors[card.status]}`}>
+              <span
+                className={`text-xs px-2 py-0.5 rounded-lg font-medium ${statusColors[card.status]}`}
+              >
                 {statusLabels[card.status]}
               </span>
             </div>
@@ -260,7 +262,9 @@ export function AIMetricsDashboard() {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-charcoal-light font-medium">Current Period Cost:</span>
-              <span className="font-mono text-sm font-bold text-charcoal">${metrics.totalCost.toFixed(4)}</span>
+              <span className="font-mono text-sm font-bold text-charcoal">
+                ${metrics.totalCost.toFixed(4)}
+              </span>
             </div>
             <div className="flex justify-between items-center border-t-2 border-warm pt-3">
               <span className="text-sm font-bold text-charcoal">Est. Monthly Cost:</span>
@@ -279,7 +283,9 @@ export function AIMetricsDashboard() {
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <div className="text-xs text-charcoal-light mb-1 font-medium">Baseline (Pre-Optimization)</div>
+            <div className="text-xs text-charcoal-light mb-1 font-medium">
+              Baseline (Pre-Optimization)
+            </div>
             <div className="text-2xl font-bold text-error">$4,800/mo</div>
           </div>
           <div>

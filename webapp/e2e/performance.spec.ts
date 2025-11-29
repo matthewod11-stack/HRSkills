@@ -9,7 +9,7 @@
  * - Chat response times
  */
 
-import { test, expect, type Page } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
 
 // Performance thresholds (in milliseconds)
 const PERFORMANCE_THRESHOLDS = {
@@ -33,7 +33,8 @@ async function measurePageLoad(page: Page) {
     return {
       fcp: fcp?.startTime || 0,
       lcp: (lcp as any)?.startTime || 0,
-      domContentLoaded: performance.timing.domContentLoadedEventEnd - performance.timing.navigationStart,
+      domContentLoaded:
+        performance.timing.domContentLoadedEventEnd - performance.timing.navigationStart,
       loadComplete: performance.timing.loadEventEnd - performance.timing.navigationStart,
     };
   });
@@ -118,7 +119,10 @@ test.describe('Performance Tests', () => {
 
         // Wait for analytics panel to appear
         const analyticsPanel = page.locator('[class*="AnalyticsChartPanel"]').first();
-        await analyticsPanel.waitFor({ state: 'visible', timeout: PERFORMANCE_THRESHOLDS.panelOpen });
+        await analyticsPanel.waitFor({
+          state: 'visible',
+          timeout: PERFORMANCE_THRESHOLDS.panelOpen,
+        });
 
         const endTime = Date.now();
         const loadTime = endTime - startTime;
@@ -185,7 +189,7 @@ test.describe('Performance Tests', () => {
       // Check that recharts is not loaded
       const hasRecharts = await page.evaluate(() => {
         // Check window object for recharts
-        return 'recharts' in window || Object.keys(window).some(key => key.includes('recharts'));
+        return 'recharts' in window || Object.keys(window).some((key) => key.includes('recharts'));
       });
 
       expect(hasRecharts).toBe(false);
@@ -196,7 +200,7 @@ test.describe('Performance Tests', () => {
 
       // Check network requests for separate chunk files
       const requests: string[] = [];
-      page.on('request', request => {
+      page.on('request', (request) => {
         if (request.url().includes('.js')) {
           requests.push(request.url());
         }
@@ -205,7 +209,7 @@ test.describe('Performance Tests', () => {
       await page.waitForLoadState('networkidle');
 
       // Should have multiple JS chunks (code splitting active)
-      const jsChunks = requests.filter(url => url.includes('/static/chunks/'));
+      const jsChunks = requests.filter((url) => url.includes('/static/chunks/'));
       expect(jsChunks.length).toBeGreaterThan(5);
 
       console.log(`Loaded ${jsChunks.length} JavaScript chunks`);
@@ -215,9 +219,9 @@ test.describe('Performance Tests', () => {
   test.describe('Resource Loading', () => {
     test('should not block on heavy resources', async ({ page }) => {
       const blockedTime: { url: string; time: number }[] = [];
-      let navigationStart = 0;
+      const _navigationStart = 0;
 
-      page.on('requestfinished', async request => {
+      page.on('requestfinished', async (request) => {
         const timing = await request.timing();
         if (timing.responseEnd - timing.requestStart > 1000) {
           blockedTime.push({
@@ -245,11 +249,7 @@ test.describe('Performance Tests', () => {
       // The skeleton should appear briefly before the actual component
 
       // This test verifies skeletons exist in the source
-      const skeletonFiles = [
-        'DocumentEditorSkeleton',
-        'PerformanceGridSkeleton',
-        'ENPSSkeleton',
-      ];
+      const _skeletonFiles = ['DocumentEditorSkeleton', 'PerformanceGridSkeleton', 'ENPSSkeleton'];
 
       // Verify skeleton components are being used
       const pageSource = await page.evaluate(() => document.documentElement.innerHTML);

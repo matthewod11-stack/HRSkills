@@ -2,9 +2,10 @@
  * E2E Integration Tests for File Upload Flow
  * Tests CSV and Excel file uploads with date handling
  */
-import { test, expect } from '@playwright/test';
-import * as path from 'path';
-import * as fs from 'fs';
+
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { expect, test } from '@playwright/test';
 import * as XLSX from 'xlsx';
 
 const FIXTURES_DIR = path.join(__dirname, '../__tests__/fixtures');

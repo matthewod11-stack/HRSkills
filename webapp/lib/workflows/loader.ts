@@ -5,9 +5,8 @@
  * Replaces the legacy skill loading system.
  */
 
-import type { Workflow, WorkflowContext, WorkflowState, WorkflowTemplate } from './types';
+import type { Workflow, WorkflowContext, WorkflowId, WorkflowState } from './types';
 import { getWorkflow, WORKFLOWS } from './workflows.config';
-import type { WorkflowId } from './types';
 
 /**
  * Load workflow configuration
@@ -192,7 +191,9 @@ export function getWorkflowRequirements(workflowId: WorkflowId): string[] {
 
   for (const capability of workflow.capabilities) {
     if (capability.requirements) {
-      capability.requirements.forEach((req) => requirements.add(req));
+      capability.requirements.forEach((req) => {
+        requirements.add(req);
+      });
     }
   }
 
@@ -206,7 +207,7 @@ export function getWorkflowRequirements(workflowId: WorkflowId): string[] {
  * @param userPermissions - User's permissions
  * @returns true if user can access workflow
  */
-export function canAccessWorkflow(workflowId: WorkflowId, userPermissions: string[]): boolean {
+export function canAccessWorkflow(_workflowId: WorkflowId, userPermissions: string[]): boolean {
   // For now, all workflows are accessible to authenticated users
   // In the future, this could check specific permissions
   return userPermissions.includes('chat:read');

@@ -7,15 +7,14 @@
  * @module hooks
  */
 
+// Re-export commonly used hooks for convenience
+export { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 export { useDebounce, useDebouncedCallback, useDebounceEffect } from './useDebounce';
-export { useLocalStorage, useSessionStorage, useLocalStorageWithExpiry } from './useLocalStorage';
+export { useLocalStorage, useLocalStorageWithExpiry, useSessionStorage } from './useLocalStorage';
 export {
-  usePagination,
-  useInfinitePagination,
   type PaginationOptions,
   type PaginationResult,
+  useInfinitePagination,
+  usePagination,
 } from './usePagination';
-export { useToggle, useBoolean, useCounter, useArray, useSet } from './useToggle';
-
-// Re-export commonly used hooks for convenience
-export { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+export { useArray, useBoolean, useCounter, useSet, useToggle } from './useToggle';

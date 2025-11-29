@@ -1,7 +1,7 @@
-import { useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { MasterEmployeeRecord } from '@/lib/types/master-employee';
+import { useCallback } from 'react';
 import { queryKeys } from '@/lib/query-keys';
+import type { MasterEmployeeRecord } from '@/lib/types/master-employee';
 
 type EmployeesResponse = {
   employees: MasterEmployeeRecord[];

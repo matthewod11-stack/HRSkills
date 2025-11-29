@@ -7,22 +7,22 @@
 
 import { nanoid } from 'nanoid';
 import type {
-  BaseAction,
-  ActionType,
   ActionContext,
-  ActionResult,
-  ActionHandler,
-  ActionRegistryEntry,
-  ActionValidationResult,
-  ActionValidationError,
-  ActionValidationWarning,
   ActionExecutionOptions,
+  ActionHandler,
+  ActionHistoryEntry,
+  ActionRegistryEntry,
+  ActionResult,
+  ActionStatistics,
+  ActionType,
+  ActionValidationError,
+  ActionValidationResult,
+  ActionValidationWarning,
+  BaseAction,
   BatchActionRequest,
   BatchActionResult,
   CreateActionInput,
   UpdateActionInput,
-  ActionStatistics,
-  ActionHistoryEntry,
 } from './types';
 
 // ============================================================================
@@ -324,7 +324,7 @@ export class ActionExecutor {
           console.log(`Action ${action.id} failed, retrying (${attempt + 1}/${maxRetries})...`);
           await this.delay(1000 * (attempt + 1)); // Exponential backoff
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         result = {
           success: false,
           actionId: action.id,
@@ -332,7 +332,7 @@ export class ActionExecutor {
           duration: Date.now() - startTime,
           error: {
             code: 'execution_error',
-            message: error.message || 'Unknown execution error',
+            message: error instanceof Error ? error.message : 'Unknown execution error',
             details: error,
           },
         };

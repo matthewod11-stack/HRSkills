@@ -1,6 +1,6 @@
-import { SQL_ANALYSIS_TOOL, SQLAnalysisResult } from './config';
+import { type Anthropic, createMessage } from '@/lib/api-helpers/anthropic-client';
+import { SQL_ANALYSIS_TOOL, type SQLAnalysisResult } from './config';
 import { buildSchemaContext } from './utils';
-import { createMessage, type Anthropic } from '@/lib/api-helpers/anthropic-client';
 
 /**
  * Build system prompt for Claude with schema context and guidelines
@@ -64,7 +64,7 @@ export async function generateSQLAndAnalysis(
   const systemPrompt = buildSystemPrompt(dataSources, conversationHistory);
 
   const response = await createMessage({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-opus-4-5-20251101',
     max_tokens: 2048,
     system: systemPrompt,
     messages: [

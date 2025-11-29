@@ -32,8 +32,8 @@ export function detectSensitivePII(text: string): PIIDetectionResult {
 
   // Date of Birth patterns (common formats)
   const dobPatterns = [
-    /\b(0?[1-9]|1[0-2])[\/\-](0?[1-9]|[12]\d|3[01])[\/\-](19|20)\d{2}\b/g, // MM/DD/YYYY or MM-DD-YYYY
-    /\b(19|20)\d{2}[\/\-](0?[1-9]|1[0-2])[\/\-](0?[1-9]|[12]\d|3[01])\b/g, // YYYY/MM/DD or YYYY-MM-DD
+    /\b(0?[1-9]|1[0-2])[/-](0?[1-9]|[12]\d|3[01])[/-](19|20)\d{2}\b/g, // MM/DD/YYYY or MM-DD-YYYY
+    /\b(19|20)\d{2}[/-](0?[1-9]|1[0-2])[/-](0?[1-9]|[12]\d|3[01])\b/g, // YYYY/MM/DD or YYYY-MM-DD
   ];
 
   // Only flag if looks like DOB context (birth, born, dob)
@@ -50,7 +50,7 @@ export function detectSensitivePII(text: string): PIIDetectionResult {
   // Bank account numbers (8-17 digits, often with spaces or dashes)
   const bankAccountPatterns = [
     /\b\d{8,17}\b/g, // 8-17 consecutive digits
-    /\b\d{4}[\s\-]\d{4}[\s\-]\d{4,9}\b/g, // 1234-5678-90123456 format
+    /\b\d{4}[\s-]\d{4}[\s-]\d{4,9}\b/g, // 1234-5678-90123456 format
   ];
 
   // Only flag if looks like bank context
@@ -66,7 +66,7 @@ export function detectSensitivePII(text: string): PIIDetectionResult {
 
   // Credit card numbers (16 digits, optionally with spaces/dashes)
   const creditCardPatterns = [
-    /\b\d{4}[\s\-]?\d{4}[\s\-]?\d{4}[\s\-]?\d{4}\b/g, // 1234-5678-9012-3456
+    /\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g, // 1234-5678-9012-3456
   ];
 
   const cardContext = /\b(card|credit|visa|mastercard|amex|discover)\b/i.test(text);
@@ -107,14 +107,14 @@ export function maskPII(text: string): string {
   masked = masked.replace(/\b\d{3}\s\d{2}\s\d{4}\b/g, 'XXX XX XXXX');
 
   // Mask bank accounts (last 4 digits only)
-  masked = masked.replace(/\b\d{4}[\s\-]\d{4}[\s\-]\d{4,9}\b/g, (match) => {
+  masked = masked.replace(/\b\d{4}[\s-]\d{4}[\s-]\d{4,9}\b/g, (match) => {
     const last4 = match.slice(-4);
-    return '****-****-' + last4;
+    return `****-****-${last4}`;
   });
 
   // Mask credit cards (last 4 digits only)
-  masked = masked.replace(/\b\d{4}[\s\-]?\d{4}[\s\-]?\d{4}[\s\-]?(\d{4})\b/g, (match, last4) => {
-    return '****-****-****-' + last4;
+  masked = masked.replace(/\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?(\d{4})\b/g, (_match, last4) => {
+    return `****-****-****-${last4}`;
   });
 
   return masked;

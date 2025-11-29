@@ -1,8 +1,8 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Users, FileText, Calendar, Settings, TrendingUp } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Calendar, FileText, Search, Settings, TrendingUp, Users } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -80,7 +80,6 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="flex-1 bg-transparent outline-none text-white placeholder-gray-500"
-                  autoFocus
                 />
                 <kbd className="px-2 py-1 bg-white/5 border border-white/20 rounded text-xs text-gray-400">
                   ESC

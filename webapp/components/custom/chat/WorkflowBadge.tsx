@@ -1,7 +1,7 @@
 'use client';
 
-import { memo } from 'react';
 import { Sparkles } from 'lucide-react';
+import { memo } from 'react';
 
 /**
  * Props for the WorkflowBadge component
@@ -31,7 +31,7 @@ export interface WorkflowBadgeProps {
  */
 export const WorkflowBadge = memo(function WorkflowBadge({
   workflowType,
-  confidence
+  confidence,
 }: WorkflowBadgeProps) {
   // Don't show badge for general/undetected workflows
   if (!workflowType || workflowType === 'general') {

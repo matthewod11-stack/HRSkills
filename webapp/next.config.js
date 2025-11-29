@@ -192,8 +192,8 @@ const sentryWebpackPluginOptions = {
   // https://github.com/getsentry/sentry-webpack-plugin#options
 
   // Organization and project from Sentry wizard
-  org: process.env.SENTRY_ORG || "foundryhr",
-  project: process.env.SENTRY_PROJECT || "hrcommandcenter",
+  org: process.env.SENTRY_ORG || 'foundryhr',
+  project: process.env.SENTRY_PROJECT || 'hrcommandcenter',
 
   // Only upload source maps if auth token is provided
   authToken: process.env.SENTRY_AUTH_TOKEN,
@@ -208,7 +208,7 @@ const sentryWebpackPluginOptions = {
   disableLogger: true,
 
   // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers
-  tunnelRoute: "/monitoring",
+  tunnelRoute: '/monitoring',
 
   // Enables automatic instrumentation of Vercel Cron Monitors
   automaticVercelMonitors: true,

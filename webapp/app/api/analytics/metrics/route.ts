@@ -1,7 +1,22 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { handleApiError } from '@/lib/api-helpers';
-import { storeMetric, getMetrics, getMetricCount, type MetricFilters } from '@/lib/services/web-vitals-service';
+import { type NextRequest, NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
+import { handleApiError } from '@/lib/api-helpers';
+import {
+  getMetricCount,
+  getMetrics,
+  type MetricFilters,
+  storeMetric,
+} from '@/lib/services/web-vitals-service';
+
+interface MetricPayload {
+  name: string;
+  value: number;
+  rating?: 'good' | 'needs-improvement' | 'poor';
+  timestamp: number;
+  url?: string;
+  userAgent?: string;
+  navigationType?: string;
+}
 
 /**
  * POST /api/analytics/metrics
@@ -16,7 +31,7 @@ import { env } from '@/env.mjs';
  * For now, this is a simple logging endpoint.
  */
 export async function POST(request: NextRequest) {
-  let metric: any;
+  let metric: MetricPayload | undefined;
   try {
     metric = await request.json();
 
@@ -72,14 +87,14 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    
+
     const filters: MetricFilters = {
       metricName: searchParams.get('metricName') || undefined,
       startDate: searchParams.get('startDate') || undefined,
       endDate: searchParams.get('endDate') || undefined,
       rating: (searchParams.get('rating') as 'good' | 'needs-improvement' | 'poor') || undefined,
-      limit: parseInt(searchParams.get('limit') || '100'),
-      offset: parseInt(searchParams.get('offset') || '0'),
+      limit: parseInt(searchParams.get('limit') || '100', 10),
+      offset: parseInt(searchParams.get('offset') || '0', 10),
     };
 
     const metrics = await getMetrics(filters);

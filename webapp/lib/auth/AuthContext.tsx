@@ -1,6 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import type React from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
 interface User {
   email: string;
@@ -27,6 +28,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const logout = useCallback(() => {
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    localStorage.removeItem(USER_STORAGE_KEY);
+    setToken(null);
+    setUser(null);
+  }, []);
+
   // Load token and user from localStorage on mount
   useEffect(() => {
     const storedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
@@ -43,7 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     setIsLoading(false);
-  }, []);
+  }, [logout]);
 
   const login = async (email: string, password?: string) => {
     try {
@@ -71,13 +79,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Login error:', error);
       throw error;
     }
-  };
-
-  const logout = () => {
-    localStorage.removeItem(TOKEN_STORAGE_KEY);
-    localStorage.removeItem(USER_STORAGE_KEY);
-    setToken(null);
-    setUser(null);
   };
 
   return (

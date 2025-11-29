@@ -5,9 +5,9 @@
  * Calculates turnover rates, voluntary vs involuntary, and demographic breakdowns.
  */
 
-import { db } from '@/lib/db';
+import { and, eq, gte, lte, sql } from 'drizzle-orm';
 import { employees } from '@/db/schema';
-import { eq, and, sql, gte, lte, between } from 'drizzle-orm';
+import { db } from '@/lib/db';
 
 export interface AttritionResult {
   overall: {

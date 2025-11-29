@@ -6,10 +6,10 @@
  * getting the most recent metric_date entry for each employee.
  */
 
-import { db } from '@/lib/db';
-import { employees, employeeMetrics } from '@/db/schema';
-import { eq, and, desc, SQL } from 'drizzle-orm';
+import { desc, eq, type SQL } from 'drizzle-orm';
 import type { Employee, EmployeeMetric } from '@/db/schema';
+import { employeeMetrics, employees } from '@/db/schema';
+import { db } from '@/lib/db';
 
 /**
  * Employee with their latest metrics joined
@@ -39,11 +39,10 @@ export async function getEmployeesWithLatestMetrics(
   whereClause?: SQL
 ): Promise<EmployeeWithMetrics[]> {
   // Step 1: Get all employees matching the where clause
-  let query = db.select().from(employees);
-  if (whereClause) {
-    query = query.where(whereClause);
-  }
-  const employeeList = await query;
+  // Note: We execute the query conditionally to avoid Drizzle ORM type narrowing issues
+  const employeeList = whereClause
+    ? await db.select().from(employees).where(whereClause)
+    : await db.select().from(employees);
 
   if (employeeList.length === 0) {
     return [];
@@ -79,11 +78,7 @@ export async function getEmployeesWithLatestMetrics(
 export async function getEmployeeWithLatestMetrics(
   employeeId: string
 ): Promise<EmployeeWithMetrics | null> {
-  const emp = await db
-    .select()
-    .from(employees)
-    .where(eq(employees.id, employeeId))
-    .limit(1);
+  const emp = await db.select().from(employees).where(eq(employees.id, employeeId)).limit(1);
 
   if (emp.length === 0) {
     return null;

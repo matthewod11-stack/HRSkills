@@ -1,8 +1,7 @@
+import { act, renderHook } from '@testing-library/react';
 import { vi } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { vi } from 'vitest';
-import { useChatErrorHandler } from '@/lib/hooks/useChatErrorHandler';
 import type { Message } from '@/components/custom/chat/ChatContext';
+import { useChatErrorHandler } from '@/lib/hooks/useChatErrorHandler';
 
 describe('useChatErrorHandler', () => {
   let mockAddMessage: vi.Mock;
@@ -74,13 +73,15 @@ describe('useChatErrorHandler', () => {
         act(() => {
           result.current.handleApiError(error, {
             apiType: 'analytics',
-            userMessage: 'The analytics service is temporarily unavailable. Please try again in a few minutes.',
+            userMessage:
+              'The analytics service is temporarily unavailable. Please try again in a few minutes.',
           });
         });
 
         expect(mockAddMessage).toHaveBeenCalledWith(
           expect.objectContaining({
-            content: 'The analytics service is temporarily unavailable. Please try again in a few minutes.',
+            content:
+              'The analytics service is temporarily unavailable. Please try again in a few minutes.',
           })
         );
       });
@@ -356,7 +357,9 @@ describe('useChatErrorHandler', () => {
       const error = new Error('Database timeout');
       const formatted = result.current.formatErrorForUser(error, 'analytics');
 
-      expect(formatted).toBe("Sorry, I couldn't run that analysis: Database timeout. Please try again later.");
+      expect(formatted).toBe(
+        "Sorry, I couldn't run that analysis: Database timeout. Please try again later."
+      );
     });
 
     it('should format chat errors correctly', () => {
@@ -418,7 +421,9 @@ describe('useChatErrorHandler', () => {
 
       const formatted = result.current.formatErrorForUser(error, 'analytics');
 
-      expect(formatted).toBe("Sorry, I couldn't run that analysis: Unknown error. Please try again later.");
+      expect(formatted).toBe(
+        "Sorry, I couldn't run that analysis: Unknown error. Please try again later."
+      );
     });
   });
 
@@ -471,7 +476,9 @@ describe('useChatErrorHandler', () => {
       });
 
       expect(consoleSpy).toHaveBeenCalledWith('Export error:', error);
-      expect(alertSpy).toHaveBeenCalledWith('You do not have permission to create documents in this folder.');
+      expect(alertSpy).toHaveBeenCalledWith(
+        'You do not have permission to create documents in this folder.'
+      );
       expect(mockAddMessage).not.toHaveBeenCalled();
       expect(mockSetIsTyping).toHaveBeenCalledWith(false);
     });

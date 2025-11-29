@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, authErrorResponse } from '@/lib/auth/middleware';
+import { and, asc, desc, eq, like, or } from 'drizzle-orm';
+import { type NextRequest, NextResponse } from 'next/server';
+import { employees } from '@/db/schema';
 import { handleApiError } from '@/lib/api-helpers';
-import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter';
+import { authErrorResponse, requireAuth } from '@/lib/auth/middleware';
 import { db } from '@/lib/db';
-import { employees, performanceReviews, employeeMetrics } from '@/db/schema';
-import { eq, and, like, or, asc, desc, sql } from 'drizzle-orm';
+import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter';
 
 /**
  * Phase 2: SQLite-powered Employee API
@@ -72,7 +72,9 @@ export async function GET(request: NextRequest) {
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
     // Determine sort column and direction
-    const sortColumn = (employees as any)[sortBy] || employees.fullName;
+    const sortColumn =
+      (employees as unknown as Record<string, typeof employees.fullName>)[sortBy] ||
+      employees.fullName;
     const orderByClause = sortOrder === 'desc' ? desc(sortColumn) : asc(sortColumn);
 
     const employeesList = await db
@@ -109,7 +111,7 @@ export async function GET(request: NextRequest) {
       employees: transformedEmployees,
       count: transformedEmployees.length,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return handleApiError(error, {
       endpoint: '/api/employees',
       method: 'GET',
@@ -222,7 +224,7 @@ export async function POST(request: NextRequest) {
       success: true,
       employee: response,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return handleApiError(error, {
       endpoint: '/api/employees',
       method: 'POST',
@@ -268,7 +270,7 @@ export async function PATCH(request: NextRequest) {
       if (!update.employee_id) continue;
 
       // Transform from Phase 1 format to Phase 2
-      const updateData: any = {
+      const updateData: Record<string, string | number | boolean | null | undefined> = {
         updatedAt: new Date().toISOString(),
       };
 
@@ -303,7 +305,7 @@ export async function PATCH(request: NextRequest) {
       success: true,
       updated: updatedCount,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return handleApiError(error, {
       endpoint: '/api/employees',
       method: 'PATCH',
@@ -356,7 +358,7 @@ export async function DELETE(request: NextRequest) {
       success: true,
       deleted: deletedCount,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return handleApiError(error, {
       endpoint: '/api/employees',
       method: 'DELETE',

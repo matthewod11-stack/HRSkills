@@ -12,9 +12,9 @@
  *   <ShowForRole role="user">User-only content</ShowForRole>
  */
 
-import { ReactNode } from 'react';
-import { SimpleRole, RoleName } from '@/lib/auth/roles-v2';
+import type { ReactNode } from 'react';
 import { useAuth } from '@/lib/auth/auth-context';
+import type { RoleName, SimpleRole } from '@/lib/auth/roles-v2';
 
 interface RoleGuardProps {
   children: ReactNode;
@@ -28,7 +28,6 @@ interface PermissionGuardProps extends RoleGuardProps {
 interface RoleSpecificGuardProps extends RoleGuardProps {
   role: RoleName;
 }
-
 
 /**
  * Render children only if user is admin
@@ -125,7 +124,7 @@ export function PermissionButton({
   className?: string;
 }) {
   const { user } = useAuth();
-  const hasPermission = user && user.role.permissions[permission];
+  const hasPermission = user?.role.permissions[permission];
 
   return (
     <button

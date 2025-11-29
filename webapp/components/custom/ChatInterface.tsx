@@ -1,22 +1,21 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Bot, Sparkles } from 'lucide-react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/lib/auth/auth-context';
-import { ContextPanelData } from './ContextPanel';
-import { ChatProvider, Message, useChatContext } from './chat/ChatContext';
-import { ChatHeader } from './chat/ChatHeader';
-import { MessageList } from './chat/MessageList';
-import { SuggestionCards } from './chat/SuggestionCards';
-import ChatInput from './chat/ChatInput';
-import { PIIWarningModal } from './chat/PIIWarningModal';
-import { usePIIDetection } from '@/lib/hooks/usePIIDetection';
-import { useExternalPrompt } from '@/lib/hooks/useExternalPrompt';
+import { useChatAPI } from '@/lib/hooks/useChatAPI';
 import { useChatErrorHandler } from '@/lib/hooks/useChatErrorHandler';
 import { useContextPanelDetection } from '@/lib/hooks/useContextPanelDetection';
-import { useGoogleDocsExport } from '@/lib/hooks/useGoogleDocsExport';
-import { useChatAPI } from '@/lib/hooks/useChatAPI';
+import { useExternalPrompt } from '@/lib/hooks/useExternalPrompt';
+import { usePIIDetection } from '@/lib/hooks/usePIIDetection';
+import type { ContextPanelData } from './ContextPanel';
+import { ChatProvider, type Message, useChatContext } from './chat/ChatContext';
+import { ChatHeader } from './chat/ChatHeader';
+import ChatInput from './chat/ChatInput';
+import { MessageList } from './chat/MessageList';
+import { PIIWarningModal } from './chat/PIIWarningModal';
+import { SuggestionCards } from './chat/SuggestionCards';
 
 /**
  * External prompt configuration
@@ -44,18 +43,27 @@ function ChatInterfaceInner({
   onExternalPromptConsumed,
 }: ChatInterfaceProps) {
   const { getAuthHeaders } = useAuth();
-  const { messages, isTyping, conversationId, addMessage, setIsTyping, clearMessages, resetConversation } = useChatContext();
+  const {
+    messages,
+    isTyping,
+    conversationId,
+    addMessage,
+    setIsTyping,
+    clearMessages: _clearMessages,
+    resetConversation,
+  } = useChatContext();
 
   // Local state (not in context - orchestration-specific)
   const [input, setInput] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Phase 1 Hooks: Extract simple, isolated concerns
-  const { piiWarning, checkForPII, handleEditMessage, handleProceedWithPII, resetPIIWarning } = usePIIDetection({
-    inputRef,
-    onSendWithBypass: (text) => handleSend(text, true),
-    onEdit: (text) => setInput(text),
-  });
+  const { piiWarning, checkForPII, handleEditMessage, handleProceedWithPII, resetPIIWarning } =
+    usePIIDetection({
+      inputRef,
+      onSendWithBypass: (text) => handleSend(text, true),
+      onEdit: (text) => setInput(text),
+    });
 
   const { handleApiError } = useChatErrorHandler({
     addMessage,
@@ -67,16 +75,6 @@ function ChatInterfaceInner({
   const { detectAndUpdatePanel } = useContextPanelDetection({
     onPanelChange: onContextPanelChange,
     confidenceThreshold: 70,
-  });
-
-  const { exportToGoogleDocs } = useGoogleDocsExport({
-    getAuthHeaders,
-    onError: (error, userMessage) => {
-      handleApiError(error, {
-        apiType: 'export',
-        userMessage,
-      });
-    },
   });
 
   // Phase 3 Hook: Extract dual routing API logic
@@ -103,9 +101,9 @@ function ChatInterfaceInner({
         return; // Blocked by PII detection
       }
 
-      // Create and add user message
+      // Create and add user message with unique ID
       const userMessage: Message = {
-        id: messages.length + 1,
+        id: `user_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
         role: 'user',
         content: finalText,
         timestamp: new Date(),
@@ -208,9 +206,9 @@ function ChatInterfaceInner({
       {/* Background glow effect */}
       <div className="absolute inset-0 bg-gradient-to-br from-terracotta/8 via-amber/8 to-sage/8 rounded-3xl blur-2xl group-hover:blur-3xl transition-premium opacity-60" />
 
-      <div className="relative backdrop-blur-2xl bg-cream-white border-2 border-cream-light rounded-3xl flex flex-col h-full overflow-hidden hover:border-terracotta/30 hover:shadow-warm transition-premium">
+      <div className="relative backdrop-blur-2xl bg-cream-white border-2 border-sage/20 rounded-3xl flex flex-col h-full max-h-[calc(100vh-250px)] overflow-hidden hover:border-sage/40 hover:shadow-warm transition-premium">
         {/* Header with branding and reset button */}
-        <div className="p-6 border-b border-warm bg-gradient-to-r from-terracotta/8 to-amber/8 rounded-t-3xl">
+        <div className="p-6 border-b border-warm bg-gradient-to-r from-terracotta/10 to-amber/10 rounded-t-3xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-terracotta to-amber flex items-center justify-center shadow-warm">
@@ -221,7 +219,9 @@ function ChatInterfaceInner({
                   Chief People Officer
                   <Sparkles className="w-5 h-5 text-amber" />
                 </h2>
-                <p className="text-sm text-charcoal-light font-medium">&ldquo;More People, More Problems&rdquo;</p>
+                <p className="text-sm text-charcoal-light font-medium">
+                  &ldquo;More People, More Problems&rdquo;
+                </p>
               </div>
             </div>
 
@@ -244,7 +244,6 @@ function ChatInterfaceInner({
           <MessageList
             conversationId={conversationId}
             onCopy={handleCopy}
-            onExportToGoogleDocs={exportToGoogleDocs}
             onFollowUp={handleFollowUp}
           />
 
@@ -284,9 +283,7 @@ function ChatInterfaceInner({
         </div>
 
         {/* Suggestion Cards (shown when no messages) */}
-        {messages.length === 0 && (
-          <SuggestionCards onSuggestionClick={handleSuggestionClick} />
-        )}
+        {messages.length === 0 && <SuggestionCards onSuggestionClick={handleSuggestionClick} />}
 
         {/* Input */}
         <ChatInput

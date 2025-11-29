@@ -1,7 +1,6 @@
-import { vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
-import { useExternalPrompt, ExternalPrompt } from '@/lib/hooks/useExternalPrompt';
+import { type ExternalPrompt, useExternalPrompt } from '@/lib/hooks/useExternalPrompt';
 
 describe('useExternalPrompt', () => {
   let mockOnPromptReceived: vi.Mock;

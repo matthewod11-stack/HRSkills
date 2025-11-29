@@ -59,8 +59,8 @@ vi.mock('@sentry/nextjs', () => ({
 }));
 
 import '@testing-library/jest-dom/vitest';
-import { expect } from 'vitest';
 import { toHaveNoViolations } from 'jest-axe';
+import { expect } from 'vitest';
 
 // Extend Vitest matchers with jest-axe for accessibility testing
 expect.extend(toHaveNoViolations);
@@ -103,9 +103,6 @@ Object.defineProperty(window, 'matchMedia', {
 // Provide default mock but allow tests to delete it to test fallback behavior
 if (typeof global.PerformanceObserver === 'undefined') {
   class MockPerformanceObserver {
-    constructor(callback: PerformanceObserverCallback) {
-      // Store callback but don't call it (no performance entries in tests)
-    }
     observe() {}
     disconnect() {}
     takeRecords() {

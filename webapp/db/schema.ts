@@ -1,5 +1,5 @@
-import { sqliteTable, text, integer, real, primaryKey, uniqueIndex } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
+import { integer, primaryKey, real, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 /**
  * Phase 2 Database Schema for HR Command Center
@@ -48,12 +48,8 @@ export const employees = sqliteTable('employees', {
   attributes: text('attributes'), // JSON blob for additional fields not in schema
 
   // Timestamps
-  createdAt: text('created_at')
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: text('updated_at')
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
+  createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 // ============================================================================
@@ -118,9 +114,7 @@ export const performanceReviews = sqliteTable('performance_reviews', {
   ratingScale: text('rating_scale'), // e.g., "1-5"
 
   // Metadata
-  createdAt: text('created_at')
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
+  createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 // ============================================================================
@@ -136,12 +130,8 @@ export const conversations = sqliteTable('conversations', {
   workflowStateJson: text('workflow_state_json'), // Current workflow state
 
   // Timestamps
-  createdAt: text('created_at')
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: text('updated_at')
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
+  createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 // ============================================================================
@@ -166,9 +156,7 @@ export const actions = sqliteTable('actions', {
   aiModel: text('ai_model'), // claude-3-5-sonnet, gpt-4o, etc.
 
   // Timestamps
-  createdAt: text('created_at')
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
+  createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
   completedAt: text('completed_at'),
 });
 
@@ -195,12 +183,8 @@ export const documents = sqliteTable('documents', {
   metadataJson: text('metadata_json'), // Additional fields (tags, category, etc.)
 
   // Timestamps
-  createdAt: text('created_at')
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: text('updated_at')
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
+  createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 // ============================================================================
@@ -216,9 +200,7 @@ export const userPreferences = sqliteTable('user_preferences', {
   anthropicApiKey: text('anthropic_api_key'), // User's personal Anthropic API key
 
   // Timestamps
-  updatedAt: text('updated_at')
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 // ============================================================================
@@ -235,9 +217,7 @@ export const workflowSnapshots = sqliteTable('workflow_snapshots', {
   stateJson: text('state_json').notNull(), // Complete state snapshot
 
   // Timestamps
-  createdAt: text('created_at')
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
+  createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 // ============================================================================
@@ -259,9 +239,7 @@ export const insightEvents = sqliteTable('insight_events', {
   status: text('status').notNull().default('open'), // open, acknowledged, dismissed
 
   // Timestamps
-  createdAt: text('created_at')
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
+  createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
   acknowledgedAt: text('acknowledged_at'),
 });
 
@@ -288,9 +266,7 @@ export const aiUsage = sqliteTable('ai_usage', {
   userId: text('user_id'),
 
   // Timestamps
-  createdAt: text('created_at')
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
+  createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 // ============================================================================
@@ -323,12 +299,8 @@ export const aiQuotaUsage = sqliteTable(
     quotaLimit: integer('quota_limit').notNull(), // Daily limit for this user
 
     // Timestamps
-    createdAt: text('created_at')
-      .notNull()
-      .default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: text('updated_at')
-      .notNull()
-      .default(sql`CURRENT_TIMESTAMP`),
+    createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
     // Unique constraint on user_id + date

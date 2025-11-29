@@ -10,16 +10,16 @@
  * - Information about demo data
  */
 
-import { useState, useEffect } from 'react';
+import { ArrowRight, Database, MessageSquare, Play, Sparkles } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Sparkles, Database, MessageSquare, ArrowRight, Play } from 'lucide-react';
 
 interface WelcomeDialogProps {
   onClose?: () => void;
@@ -140,6 +140,7 @@ export function WelcomeDialog({ onClose, onQuickStart }: WelcomeDialogProps) {
                   </div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Demo video coming soon</p>
                   <Button
+                    type="button"
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowVideo(false)}
@@ -194,6 +195,7 @@ export function WelcomeDialog({ onClose, onQuickStart }: WelcomeDialogProps) {
                 const Icon = prompt.icon;
                 return (
                   <button
+                    type="button"
                     key={idx}
                     onClick={() => handleQuickStart(prompt.prompt)}
                     className={`
@@ -253,6 +255,7 @@ export function WelcomeDialog({ onClose, onQuickStart }: WelcomeDialogProps) {
           {/* Footer */}
           <div className="text-center pt-2">
             <button
+              type="button"
               onClick={handleClose}
               className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             >

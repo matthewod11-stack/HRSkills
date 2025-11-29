@@ -7,10 +7,10 @@
  * GET /api/ai/quota - Get current quota status
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { checkQuota, getAnthropicKey } from '@/lib/ai/shared-key-manager';
-import { requireAuth } from '@/lib/auth/middleware';
 import { handleApiError } from '@/lib/api-helpers';
+import { requireAuth } from '@/lib/auth/middleware';
 
 export async function GET(request: NextRequest) {
   try {

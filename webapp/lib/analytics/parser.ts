@@ -1,10 +1,13 @@
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
-import { FileType, FILE_SCHEMAS, PII_FIELDS } from '@/lib/types/data-sources';
+import { FILE_SCHEMAS, type FileType, PII_FIELDS } from '@/lib/types/data-sources';
+
+/** Generic data row for parsed files */
+type ParsedRow = Record<string, string | number | boolean | null | undefined>;
 
 export interface ParseResult {
   success: boolean;
-  data?: any[];
+  data?: ParsedRow[];
   columns?: string[];
   rowCount?: number;
   errors?: string[];
@@ -66,15 +69,15 @@ export function parseExcel(fileBuffer: Buffer): ParseResult {
     }
 
     // Extract columns and normalize
-    const firstRow = jsonData[0] as Record<string, any>;
+    const firstRow = jsonData[0] as ParsedRow;
     const columns = Object.keys(firstRow).map((col) =>
       col.trim().toLowerCase().replace(/\s+/g, '_')
     );
 
     // Normalize all row keys
     const normalizedData = jsonData.map((row) => {
-      const normalized: Record<string, any> = {};
-      Object.entries(row as Record<string, any>).forEach(([key, value]) => {
+      const normalized: ParsedRow = {};
+      Object.entries(row as ParsedRow).forEach(([key, value]) => {
         const normalizedKey = key.trim().toLowerCase().replace(/\s+/g, '_');
         normalized[normalizedKey] = value;
       });
@@ -128,9 +131,9 @@ export function detectPIIColumns(columns: string[]): string[] {
 /**
  * Mask PII in data for preview
  */
-export function maskPII(data: any[]): any[] {
+export function maskPII(data: ParsedRow[]): ParsedRow[] {
   return data.map((row) => {
-    const maskedRow: Record<string, any> = {};
+    const maskedRow: ParsedRow = {};
 
     Object.entries(row).forEach(([key, value]) => {
       if (PII_FIELDS.some((piiField) => key.includes(piiField))) {

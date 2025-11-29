@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 /**
  * Offline Fallback Page
@@ -89,11 +89,13 @@ export default function OfflinePage() {
         {/* Main Message */}
         <h1 className="text-3xl font-bold mb-4">You&apos;re offline</h1>
         <p className="text-gray-400 mb-8">
-          It looks like you&apos;ve lost your internet connection. Check your connection and try again.
+          It looks like you&apos;ve lost your internet connection. Check your connection and try
+          again.
         </p>
 
         {/* Retry Button */}
         <button
+          type="button"
           onClick={handleRetry}
           disabled={retrying}
           className="w-full px-6 py-3 bg-white text-black rounded-lg font-medium hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-8"

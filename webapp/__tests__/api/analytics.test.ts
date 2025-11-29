@@ -4,8 +4,8 @@
  * Tests the /api/analytics/metrics and /api/analytics/errors endpoints.
  */
 
-import { vi, describe, it, expect } from 'vitest';
 import { NextRequest } from 'next/server';
+import { describe, expect, it, vi } from 'vitest';
 
 // Use dynamic import for ESM route handlers (Next.js App Router compatibility)
 const metricsModule = await import('@/app/api/analytics/metrics/route');

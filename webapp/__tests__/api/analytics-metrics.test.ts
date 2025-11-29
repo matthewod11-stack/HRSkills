@@ -1,7 +1,7 @@
 /**
  * Tests for /api/analytics/metrics route handlers
  */
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock(
   'next/server',
@@ -33,11 +33,7 @@ vi.mock('@/lib/services/web-vitals-service', () => ({
 
 // Import mocked service (must come after vi.mock for proper hoisting)
 const webVitalsService = await import('@/lib/services/web-vitals-service');
-const {
-  storeMetric,
-  getMetrics,
-  getMetricCount,
-} = webVitalsService as {
+const { storeMetric, getMetrics, getMetricCount } = webVitalsService as {
   storeMetric: vi.Mock;
   getMetrics: vi.Mock;
   getMetricCount: vi.Mock;
@@ -63,7 +59,7 @@ describe('API /api/analytics/metrics', () => {
       async json() {
         return payload;
       },
-    } as any;
+    } as { json: () => Promise<typeof payload> };
 
     const response = await POST(request);
     const body = await response.json();
@@ -90,10 +86,8 @@ describe('API /api/analytics/metrics', () => {
     getMetricCount.mockResolvedValue(10);
 
     const request = {
-      nextUrl: new URL(
-        'http://localhost/api/analytics/metrics?metricName=LCP&limit=5&offset=5'
-      ),
-    } as any;
+      nextUrl: new URL('http://localhost/api/analytics/metrics?metricName=LCP&limit=5&offset=5'),
+    } as { nextUrl: URL };
 
     const response = await GET(request);
     const body = await response.json();

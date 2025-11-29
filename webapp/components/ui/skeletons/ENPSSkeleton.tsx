@@ -62,7 +62,8 @@ export function ENPSSkeleton() {
           {[...Array(3)].map((_, i) => (
             <div key={i} className="flex items-center gap-3">
               <div className="h-4 bg-white/10 rounded w-24" />
-              <div className="flex-1 h-6 bg-white/10 rounded"
+              <div
+                className="flex-1 h-6 bg-white/10 rounded"
                 style={{
                   animation: `pulse 2s ease-in-out ${i * 0.2}s infinite`,
                 }}

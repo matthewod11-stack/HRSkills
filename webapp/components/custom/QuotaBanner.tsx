@@ -11,9 +11,9 @@
  * - Call-to-action to add personal API key
  */
 
-import { useState, useEffect } from 'react';
-import { AlertCircle, Zap, Clock, ArrowUpRight } from 'lucide-react';
+import { AlertCircle, ArrowUpRight, Clock, Zap } from 'lucide-react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 export interface QuotaStatus {
   hasPersonalKey: boolean;
@@ -69,7 +69,7 @@ export function QuotaBanner({ quotaStatus, className = '' }: QuotaBannerProps) {
     const interval = setInterval(updateTimeUntilReset, 60000); // Update every minute
 
     return () => clearInterval(interval);
-  }, [quotaStatus?.quotaResetAt]);
+  }, [quotaStatus?.quotaResetAt, quotaStatus]);
 
   // Don't show banner if user has personal API key
   if (!quotaStatus || quotaStatus.hasPersonalKey) {
@@ -130,8 +130,8 @@ export function QuotaBanner({ quotaStatus, className = '' }: QuotaBannerProps) {
             <div className="space-y-2">
               <p className="font-semibold text-red-900 dark:text-red-100">Daily quota exceeded</p>
               <p className="text-red-800 dark:text-red-200">
-                You&apos;ve used all {quotaStatus.quotaLimit} free requests today. Add your own API key
-                for unlimited usage, or wait for quota reset.
+                You&apos;ve used all {quotaStatus.quotaLimit} free requests today. Add your own API
+                key for unlimited usage, or wait for quota reset.
               </p>
             </div>
           ) : (

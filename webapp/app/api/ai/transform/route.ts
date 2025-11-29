@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, authErrorResponse } from '@/lib/auth/middleware';
-import { handleApiError, createSuccessResponse } from '@/lib/api-helpers';
-import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter';
+import { type NextRequest, NextResponse } from 'next/server';
 import { translateWithAI } from '@/lib/ai/router';
+import { createSuccessResponse, handleApiError } from '@/lib/api-helpers';
+import { authErrorResponse, requireAuth } from '@/lib/auth/middleware';
+import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter';
 
 /**
  * POST /api/ai/transform
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { type, text, texts, targetLanguage, options } = body;
+    const { type, text, texts, targetLanguage, options: _options } = body;
 
     // Validate transformation type
     const validTypes = ['translate', 'transcribe', 'ocr'];

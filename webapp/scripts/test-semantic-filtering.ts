@@ -5,10 +5,9 @@
 
 import {
   analyzeRequiredFields,
-  filterEmployeeFields,
-  generateEmployeeContext,
-  estimateTokenCount,
   type Employee,
+  estimateTokenCount,
+  filterEmployeeFields,
 } from '../lib/employee-context';
 
 console.log('🧪 Testing Semantic Employee Data Filtering\n');
@@ -228,7 +227,7 @@ for (let i = 0; i < testQueries.length; i++) {
         )
         .map((f) => `${f}: ${emp[f]}`)
         .join(', ');
-      return `- ${fullName} (${emp.employee_id})${fields ? ': ' + fields : ''}`;
+      return `- ${fullName} (${emp.employee_id})${fields ? `: ${fields}` : ''}`;
     })
     .join('\n');
 
@@ -251,7 +250,7 @@ for (let i = 0; i < testQueries.length; i++) {
 }
 
 // Summary statistics
-console.log('\n\n' + '='.repeat(70));
+console.log(`\n\n${'='.repeat(70)}`);
 console.log('📈 SUMMARY STATISTICS');
 console.log('='.repeat(70));
 
@@ -298,7 +297,7 @@ if (monthlySavings >= targetMonthlySavings * 0.8) {
   );
 }
 
-console.log('\n' + '='.repeat(70));
+console.log(`\n${'='.repeat(70)}`);
 console.log('✅ Phase 2 Semantic Filtering Tests Complete');
 console.log('='.repeat(70));
 console.log('\nKey findings:');

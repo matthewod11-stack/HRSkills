@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Globe, Check, ChevronDown, Search, Loader2 } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Check, ChevronDown, Globe, Loader2, Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface Language {
   code: string;
@@ -34,7 +34,7 @@ export function LanguageSelector({
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [languages, setLanguages] = useState<Language[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [_loading, _setLoading] = useState(false);
 
   // Predefined language presets
   const PRESETS: Record<string, Language[]> = {
@@ -258,6 +258,7 @@ export function TranslationPreview({
           {/* Actions */}
           <div className="flex items-center justify-end gap-3">
             <button
+              type="button"
               onClick={onClose}
               className="px-6 py-2 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 transition-colors"
             >
@@ -265,6 +266,7 @@ export function TranslationPreview({
             </button>
             {onConfirm && (
               <button
+                type="button"
                 onClick={() => {
                   onConfirm();
                   onClose();
@@ -281,10 +283,17 @@ export function TranslationPreview({
   );
 }
 
+interface TranslationResult {
+  text: string;
+  originalText: string;
+  sourceLanguage: string;
+  targetLanguage: string;
+}
+
 interface TranslationButtonProps {
   text: string;
   targetLanguage?: string;
-  onTranslated?: (result: { text: string; sourceLanguage: string; targetLanguage: string }) => void;
+  onTranslated?: (result: TranslationResult) => void;
   className?: string;
   variant?: 'button' | 'icon';
 }
@@ -301,7 +310,7 @@ export function TranslationButton({
 }: TranslationButtonProps) {
   const [isTranslating, setIsTranslating] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [translationResult, setTranslationResult] = useState<any>(null);
+  const [translationResult, setTranslationResult] = useState<TranslationResult | null>(null);
 
   const handleTranslate = async () => {
     setIsTranslating(true);
@@ -336,6 +345,7 @@ export function TranslationButton({
     return (
       <>
         <button
+          type="button"
           onClick={handleTranslate}
           disabled={isTranslating}
           className={`p-2 hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50 ${className}`}
@@ -365,6 +375,7 @@ export function TranslationButton({
   return (
     <>
       <button
+        type="button"
         onClick={handleTranslate}
         disabled={isTranslating}
         className={`flex items-center gap-2 px-4 py-2 bg-blue-500/20 border border-blue-500/30 rounded-lg hover:bg-blue-500/30 transition-colors disabled:opacity-50 ${className}`}

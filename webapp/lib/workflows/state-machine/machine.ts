@@ -5,20 +5,18 @@
  * This is the core orchestration layer for multi-step workflows.
  */
 
-import type { WorkflowState, WorkflowId, SuggestedAction, WorkflowStep } from '../types';
+import { loadWorkflow } from '../loader';
+import type { SuggestedAction, WorkflowId, WorkflowState, WorkflowStep } from '../types';
+import { createStateSnapshot, saveConversationState, updateWorkflowState } from './persistence';
 import type {
-  StateTransitionEvent,
-  TransitionEventType,
-  StateTransitionResult,
   StateMachineConfig,
+  StateTransitionEvent,
+  StateTransitionResult,
+  StateValidationError,
+  StateValidationResult,
   StepConfig,
   TransitionRule,
-  StateValidationResult,
-  StateValidationError,
-  ValidationErrorCode,
 } from './types';
-import { loadWorkflow } from '../loader';
-import { saveConversationState, createStateSnapshot, updateWorkflowState } from './persistence';
 
 // ============================================================================
 // WorkflowStateMachine Class
@@ -271,7 +269,7 @@ export class WorkflowStateMachine {
     }
 
     // Build new state
-    let newState = updateWorkflowState(this.state, {
+    const newState = updateWorkflowState(this.state, {
       step: targetStep || this.state.step,
       data: { ...this.state.data, ...data },
       completedSteps:

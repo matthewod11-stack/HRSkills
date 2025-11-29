@@ -10,8 +10,8 @@
  * Wait for the updated implementation in Phase 2.2.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, authErrorResponse } from '@/lib/auth/middleware';
+import { type NextRequest, NextResponse } from 'next/server';
+import { authErrorResponse, requireAuth } from '@/lib/auth/middleware';
 
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth(request);

@@ -8,17 +8,17 @@
  */
 
 import type {
+  ConversationMessage,
+  DetectionContext,
   WorkflowId,
   WorkflowMatch,
-  DetectionContext,
   WorkflowTrigger,
-  ConversationMessage,
 } from './types';
-import { WORKFLOWS, getWorkflow } from './workflows.config';
+import { WORKFLOWS } from './workflows.config';
 
 // Confidence thresholds
 const MIN_SCORE_THRESHOLD = 7; // Minimum raw score to trigger workflow
-const HIGH_CONFIDENCE_THRESHOLD = 90; // Very confident match
+const _HIGH_CONFIDENCE_THRESHOLD = 90; // Very confident match
 const CONTEXT_BOOST = 10; // Points added when context hints match
 const CONVERSATION_HISTORY_BOOST = 15; // Points when workflow is already active
 const CONFIDENCE_SCALE = 10; // Multiplier to convert score -> confidence
@@ -30,7 +30,7 @@ const CONFIDENCE_SCALE = 10; // Multiplier to convert score -> confidence
  * @returns WorkflowMatch with confidence score and matched workflow
  */
 export function detectWorkflow(context: DetectionContext): WorkflowMatch {
-  const { message, conversationHistory, currentWorkflow } = context;
+  const { message, conversationHistory: _conversationHistory, currentWorkflow } = context;
 
   // Normalize message for matching
   const normalizedMessage = message.toLowerCase().trim();
@@ -86,10 +86,7 @@ export function detectWorkflow(context: DetectionContext): WorkflowMatch {
       contextFactors.push('conversation_continuity');
     }
 
-    if (
-      workflow.keywords &&
-      workflow.keywords.some((keyword) => tokens.includes(keyword.toLowerCase()))
-    ) {
+    if (workflow.keywords?.some((keyword) => tokens.includes(keyword.toLowerCase()))) {
       score += CONTEXT_BOOST;
       contextFactors.push('keyword_boost');
     }

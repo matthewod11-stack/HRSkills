@@ -1,8 +1,8 @@
 'use client';
 
-import { memo } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Users as UsersIcon, Zap, LucideIcon } from 'lucide-react';
+import { FileText, type LucideIcon, Users as UsersIcon, Zap } from 'lucide-react';
+import { memo } from 'react';
 
 /**
  * Suggestion configuration
@@ -54,7 +54,7 @@ const DEFAULT_SUGGESTIONS: Suggestion[] = [
  * ```
  */
 export const SuggestionCards = memo(function SuggestionCards({
-  onSuggestionClick
+  onSuggestionClick,
 }: SuggestionCardsProps) {
   return (
     <motion.div

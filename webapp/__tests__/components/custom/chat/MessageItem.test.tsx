@@ -1,7 +1,7 @@
+import { fireEvent, render, screen } from '@testing-library/react';
 import { vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import type { Message } from '@/components/custom/chat/ChatContext';
 import { MessageItem } from '@/components/custom/chat/MessageItem';
-import { Message } from '@/components/custom/chat/ChatContext';
 
 /**
  * Test suite for MessageItem component
@@ -10,10 +10,26 @@ import { Message } from '@/components/custom/chat/ChatContext';
  * edit mode, display mode, and integration with MessageContent and MessageActions.
  */
 
+// Mock types for Framer Motion components
+interface MotionDivProps {
+  children?: React.ReactNode;
+  className?: string;
+  [key: string]: unknown;
+}
+
+// Mock types for child components
+interface MockMessageContentProps {
+  message: { content: string; role: string };
+}
+
+interface MockMessageActionsProps {
+  message: { id: number };
+}
+
 // Mock Framer Motion to avoid animation issues in tests
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, className, ...props }: any) => (
+    div: ({ children, className, ...props }: MotionDivProps) => (
       <div className={className} {...props}>
         {children}
       </div>
@@ -23,7 +39,7 @@ vi.mock('framer-motion', () => ({
 
 // Mock child components
 vi.mock('@/components/custom/chat/MessageContent', () => ({
-  MessageContent: ({ message, onFollowUp }: any) => (
+  MessageContent: ({ message }: MockMessageContentProps) => (
     <div data-testid="message-content">
       {message.content} - {message.role}
     </div>
@@ -31,7 +47,9 @@ vi.mock('@/components/custom/chat/MessageContent', () => ({
 }));
 
 vi.mock('@/components/custom/chat/MessageActions', () => ({
-  MessageActions: ({ message }: any) => <div data-testid="message-actions">Actions for {message.id}</div>,
+  MessageActions: ({ message }: MockMessageActionsProps) => (
+    <div data-testid="message-actions">Actions for {message.id}</div>
+  ),
 }));
 
 describe('MessageItem', () => {

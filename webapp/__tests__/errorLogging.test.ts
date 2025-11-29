@@ -3,10 +3,10 @@
 
 import { vi } from 'vitest';
 import {
-  errorLogger,
   ErrorSeverity,
-  logComponentError,
+  errorLogger,
   logApiError,
+  logComponentError,
   logUserActionError,
 } from '@/lib/errorLogging';
 

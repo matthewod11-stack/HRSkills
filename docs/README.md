@@ -4,6 +4,27 @@ Welcome to the HR Command Center documentation! This guide helps you navigate al
 
 ---
 
+## 🖥️ Current Focus: Desktop App Implementation
+
+> **We are actively building the Electron desktop app.** Start here for desktop-related work.
+
+| Document | Purpose |
+|----------|---------|
+| **[desktop/ROADMAP.md](./desktop/ROADMAP.md)** | Phase checklist & linear tasks — **start each session here** |
+| **[desktop/SESSION_PROTOCOL.md](./desktop/SESSION_PROTOCOL.md)** | Multi-session continuity protocol (long-running agent patterns) |
+| **[desktop/PROGRESS.md](./desktop/PROGRESS.md)** | Session-by-session progress log |
+| **[desktop/ARCHITECTURE.md](./desktop/ARCHITECTURE.md)** | Technical decisions & concepts |
+| **[desktop/CODE_EXAMPLES.md](./desktop/CODE_EXAMPLES.md)** | Copy-paste implementation code |
+| **[desktop/KNOWN_ISSUES.md](./desktop/KNOWN_ISSUES.md)** | Issue parking lot & deferred decisions |
+| [desktop/WEBAPP_BASELINE.md](./desktop/WEBAPP_BASELINE.md) | Performance baseline (Phase 0) |
+| [desktop/FEATURE_PARITY_CHECKLIST.md](./desktop/FEATURE_PARITY_CHECKLIST.md) | Features to replicate |
+
+**Session Start:** Run `./desktop/scripts/dev-init.sh` to verify environment and see progress
+
+**Current Phase:** Phase 1 (Electron Scaffolding) — See [ROADMAP.md](./desktop/ROADMAP.md) for progress
+
+---
+
 ## 🚀 Getting Started
 
 Start here if you're new to the project:
@@ -188,47 +209,33 @@ Want to contribute? Check out our comprehensive guides:
 ├── CLAUDE.md                    # Claude AI assistant context
 ├── docs/                       # All documentation (you are here!)
 │   ├── README.md               # Documentation index (this file)
-│   ├── desktop-app-electron-plan.md  # Desktop app implementation plan
+│   ├── desktop-app-electron-plan.md  # Desktop app master plan (reference)
+│   ├── desktop/                # 🖥️ DESKTOP APP DOCS (current focus!)
+│   │   ├── ROADMAP.md          # Phase checklist — start here!
+│   │   ├── ARCHITECTURE.md     # Technical specification
+│   │   ├── CODE_EXAMPLES.md    # Implementation code
+│   │   ├── KNOWN_ISSUES.md     # Issue parking lot
+│   │   ├── WEBAPP_BASELINE.md  # Performance baseline
+│   │   └── FEATURE_PARITY_CHECKLIST.md  # Feature checklist
 │   ├── overview/               # Documentation summaries & templates
-│   │   ├── DOCUMENTATION_SUMMARY.md
-│   │   ├── claude-hr-capabilities-master.md
-│   │   └── projectlevel-template.md
 │   ├── guides/                 # How-to guides
-│   │   ├── GETTING_STARTED.md
-│   │   ├── CONTRIBUTING.md
-│   │   ├── quick-reference-card.md
-│   │   ├── QUICK_START_WARM_THEME.md
-│   │   └── CONTEXT_PANELS_UPDATE.md
-│   │   └── ... (other guides)
 │   ├── architecture/           # Architecture & design docs
-│   │   ├── ARCHITECTURE_DECISIONS.md
-│   │   ├── REMEDIATION_PLAN.md
-│   │   ├── UNIFIED_COMMAND_CENTER_DESIGN.md
-│   │   ├── TECH_STACK_REMEDIATION_PLAN.md
-│   │   ├── dependencies.md
-│   │   ├── WARM_REDESIGN_SUMMARY.md
-│   │   └── BEFORE_AFTER_COMPARISON.md
-│   │   └── ... (other architecture docs)
-│   ├── phases/                 # Implementation phases
-│   │   ├── PHASE_1_IMPLEMENTATION_SUMMARY.md
-│   │   ├── PHASE1_WEEK1_COMPLETE.md
-│   │   ├── PHASE1_WEEK2_COMPLETE.md
-│   │   └── ... (other phase docs)
+│   ├── phases/                 # Implementation phases (webapp)
 │   ├── releases/               # Release notes & changelog
-│   │   └── CHANGELOG.md
-│   ├── context/                # AI assistant context files
-│   │   └── cursor.md
-│   ├── integrations/           # Integration plans
-│   │   └── google/
 │   ├── features/               # Feature documentation
 │   ├── audits/                 # Audit reports
 │   ├── api/                    # API reference
 │   ├── components/             # Component library
 │   └── workflows/              # Workflow documentation
+├── desktop/                    # 🖥️ ELECTRON SHELL (new!)
+│   ├── src/
+│   │   ├── electron-main.ts    # Main process
+│   │   └── preload.ts          # Secure IPC bridge
+│   ├── icons/                  # App icons
+│   ├── package.json            # Electron dependencies
+│   └── electron-builder.yml    # Packaging config
 ├── webapp/                     # Next.js web application
-├── skills/                     # 27 Claude skills
-├── agents/                     # Python automation agents
-├── integrations/               # Third-party integrations
+├── skills/                     # 25 Claude skills
 ├── scripts/                    # Utility scripts
 └── data/                       # Runtime data files
 ```
@@ -240,6 +247,7 @@ Want to contribute? Check out our comprehensive guides:
 When adding new documentation:
 
 1. **Location**: Place docs in the appropriate subfolder:
+   - **Desktop App**: `desktop/` - All desktop/Electron implementation docs (current focus!)
    - **Architecture & Design**: `architecture/` - Technical decisions, roadmaps, remediation plans
    - **Implementation Phases**: `phases/` - Phase summaries, week-by-week progress
    - **Guides**: `guides/` - How-to guides, setup instructions, quick references
@@ -252,10 +260,12 @@ When adding new documentation:
 5. **Index**: Update this README.md when adding new major documentation
 
 ### Special Files
-- `desktop-app-electron-plan.md` - Stays in `docs/` root (desktop app planning)
+- `desktop/ROADMAP.md` - Desktop implementation checklist (start here for desktop work!)
+- `desktop/KNOWN_ISSUES.md` - Park issues and deferred decisions here
+- `desktop-app-electron-plan.md` - Master reference (split into desktop/ folder docs)
 - `CLAUDE.md` - Stays in repository root (Claude AI context)
 - `README.md` - Stays in repository root (project overview)
 
 ---
 
-**Last Updated:** January 2025
+**Last Updated:** November 2025

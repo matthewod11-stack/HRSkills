@@ -1,44 +1,34 @@
-import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-import {
-  loadSkill,
-  loadSkillWithDriveTemplates,
-  buildSkillSystemPrompt,
-  generateCacheableSkillsCatalog,
-} from '@/lib/skills';
-import { readMetadata, loadDataFileByType } from '@/lib/analytics/utils';
-import { requireAuth, authErrorResponse } from '@/lib/auth/middleware';
-import { generateEmployeeContext, type Employee } from '@/lib/employee-context';
-import { trackMetric } from '@/lib/performance-monitor';
-import { handleApiError, createSuccessResponse, validateRequiredFields } from '@/lib/api-helpers';
+import fs from 'node:fs';
+import path from 'node:path';
+import { type NextRequest, NextResponse } from 'next/server';
+import type { ContextPanelData } from '@/components/custom/ContextPanel';
+import { env } from '@/env.mjs';
+import { checkQuota, trackQuotaUsage } from '@/lib/ai/shared-key-manager';
+import { loadDataFileByType, readMetadata } from '@/lib/analytics/utils';
+import { handleApiError } from '@/lib/api-helpers';
 import { createMessage, extractTextContent } from '@/lib/api-helpers/anthropic-client';
+import { authErrorResponse, requireAuth } from '@/lib/auth/middleware';
+import { type Employee, generateEmployeeContext } from '@/lib/employee-context';
+import { trackMetric } from '@/lib/performance-monitor';
+import { DLP_INFO_TYPE_PRESETS, deidentifyText } from '@/lib/security/dlp-service';
 import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter';
-import type { Anthropic } from '@/lib/api-helpers/anthropic-client';
-import { deidentifyText, DLP_INFO_TYPE_PRESETS } from '@/lib/security/dlp-service';
-import { detectWorkflow, buildDetectionContext } from '@/lib/workflows/detection';
+import type { SuggestionContext } from '@/lib/workflows/actions/suggestions';
+import { suggestActions, suggestFollowUpQuestions } from '@/lib/workflows/actions/suggestions';
+import { detectContext } from '@/lib/workflows/context-detector';
+import { buildDetectionContext, detectWorkflow } from '@/lib/workflows/detection';
 import {
-  loadWorkflow,
-  buildWorkflowSystemPrompt,
   buildWorkflowCatalog,
+  buildWorkflowSystemPrompt,
+  loadWorkflow,
 } from '@/lib/workflows/loader';
-import type { WorkflowId, WorkflowState } from '@/lib/workflows/types';
+import type { WorkflowStateMachine } from '@/lib/workflows/state-machine/machine';
+import { createStateMachine, loadStateMachine } from '@/lib/workflows/state-machine/machine';
 import {
   determineStateMode,
   loadConversationState,
   saveConversationState,
-  initializeWorkflowState,
-  createStateSnapshot,
 } from '@/lib/workflows/state-machine/persistence';
-import { createStateMachine, loadStateMachine } from '@/lib/workflows/state-machine/machine';
-import type { WorkflowStateMachine } from '@/lib/workflows/state-machine/machine';
-import { checkQuota, trackQuotaUsage, getAnthropicKey } from '@/lib/ai/shared-key-manager';
-import { suggestActions, suggestFollowUpQuestions } from '@/lib/workflows/actions/suggestions';
-import type { SuggestionContext } from '@/lib/workflows/actions/suggestions';
-import { detectContext } from '@/lib/workflows/context-detector';
-import type { ContextPanelData } from '@/components/custom/ContextPanel';
-import { fetchBestTemplateForDocumentType } from '@/lib/templates-drive';
-import { env } from '@/env.mjs';
+import type { WorkflowId, WorkflowState } from '@/lib/workflows/types';
 
 // In-memory response cache (OPTIMIZATION: saves $1,350/month on repeated queries)
 interface CachedResponse {
@@ -48,6 +38,35 @@ interface CachedResponse {
   contextPanel?: ContextPanelData | null;
   timestamp: number;
   dataHash: string;
+}
+
+/** Chat history message entry */
+interface HistoryMessage {
+  role: string;
+  content: string;
+  workflowId?: WorkflowId;
+  timestamp?: string;
+}
+
+/** Anthropic usage with caching fields */
+interface AnthropicUsageWithCache {
+  input_tokens: number;
+  output_tokens: number;
+  cache_read_input_tokens?: number;
+  cache_creation_input_tokens?: number;
+}
+
+/** Chat API response */
+interface ChatApiResponse {
+  reply: string;
+  detectedWorkflow: WorkflowId;
+  workflowConfidence: number;
+  cached: boolean;
+  quotaStatus: string;
+  suggestedActions: unknown[];
+  followUpQuestions: string[];
+  contextPanel: ContextPanelData | null;
+  workflowState?: WorkflowState;
 }
 
 const responseCache = new Map<string, CachedResponse>();
@@ -89,7 +108,7 @@ function estimateMaxTokens(message: string): number {
 
 // Legacy function - now deprecated in favor of workflow detection
 // Kept for backward compatibility during migration period
-function detectSkill(message: string): string {
+function _detectSkill(message: string): string {
   console.warn('[DEPRECATED] detectSkill() is deprecated. Use detectWorkflow() instead.');
 
   // Map to workflow detection as fallback
@@ -100,65 +119,31 @@ function detectSkill(message: string): string {
   return workflowMatch.workflowId;
 }
 
+/**
+ * Process document panel data (simplified - local templates only)
+ *
+ * Previously fetched templates from Google Drive. Now just ensures
+ * the panel data has the expected structure for the DocumentEditorPanel
+ * component, which uses local templates from /lib/templates/hr-templates.ts
+ */
 async function enrichDocumentPanelWithTemplate(
   panelData: ContextPanelData | null,
-  userId: string
+  _userId: string
 ): Promise<ContextPanelData | null> {
   if (!panelData || panelData.type !== 'document') {
     return panelData;
   }
 
-  const documentType = panelData.config?.documentType || 'general';
   const existingData = panelData.data || {};
-  const existingGenerated =
-    existingData.generatedContent ?? existingData.content ?? '';
+  const existingGenerated = existingData.generatedContent ?? existingData.content ?? '';
 
-  try {
-    const match = await fetchBestTemplateForDocumentType(userId, documentType);
-    if (!match) {
-      return {
-        ...panelData,
-        data: {
-          ...existingData,
-          generatedContent: existingGenerated,
-        },
-      };
-    }
-
-    return {
-      ...panelData,
-      data: {
-        ...existingData,
-        content: match.content,
-        generatedContent: existingGenerated,
-        driveTemplate: {
-          id: match.templateId,
-          name: match.name,
-          skillName: match.skillName,
-          webViewLink: match.webViewLink,
-          matchConfidence: match.matchConfidence,
-          matchReason: match.matchReason,
-          source: match.source,
-          content: match.content,
-        },
-      },
-    };
-  } catch (error: any) {
-    const message = error?.message || 'Failed to load Google Drive template';
-    const needsAuth =
-      typeof message === 'string' &&
-      /auth|oauth|credential|token/i.test(message);
-
-    return {
-      ...panelData,
-      data: {
-        ...existingData,
-        generatedContent: existingGenerated,
-        driveTemplateError: message,
-        driveTemplateNeedsAuth: needsAuth,
-      },
-    };
-  }
+  return {
+    ...panelData,
+    data: {
+      ...existingData,
+      generatedContent: existingGenerated,
+    },
+  };
 }
 
 // Load HR capabilities documentation
@@ -218,27 +203,21 @@ export async function POST(request: NextRequest) {
     }
 
     const message = rawMessage.trim();
-    const skill = payload?.skill;
+    const _skill = payload?.skill;
     const history: Array<{
       role: string;
       content: string;
       workflowId?: WorkflowId;
       timestamp?: string;
-    }> =
-      Array.isArray(payload?.history)
-        ? payload.history.filter(
-            (entry: any): entry is {
-              role: string;
-              content: string;
-              workflowId?: WorkflowId;
-              timestamp?: string;
-            } =>
-              entry &&
-              typeof entry === 'object' &&
-              typeof entry.role === 'string' &&
-              typeof entry.content === 'string'
-          )
-        : [];
+    }> = Array.isArray(payload?.history)
+      ? payload.history.filter(
+          (entry: unknown): entry is HistoryMessage =>
+            entry &&
+            typeof entry === 'object' &&
+            typeof entry.role === 'string' &&
+            typeof entry.content === 'string'
+        )
+      : [];
 
     const conversationId: string | undefined =
       typeof payload?.conversationId === 'string' && payload.conversationId.length > 0
@@ -248,7 +227,7 @@ export async function POST(request: NextRequest) {
     const cacheable = history.length === 0;
 
     // Generate cache key from message + employee data hash
-    const crypto = require('crypto');
+    const crypto = require('node:crypto');
     let dataHash = 'no-data';
 
     try {
@@ -260,7 +239,7 @@ export async function POST(request: NextRequest) {
           .digest('hex')
           .slice(0, 8);
       }
-    } catch (e) {
+    } catch (_e) {
       // No employee data available
     }
 
@@ -306,8 +285,8 @@ export async function POST(request: NextRequest) {
     let currentWorkflow: WorkflowId | undefined;
     if (history && history.length > 0) {
       // Check if previous messages had a workflow context
-      const lastUserMessage = history.filter((msg: any) => msg.role === 'user').pop();
-      if (lastUserMessage && lastUserMessage.workflowId) {
+      const lastUserMessage = history.filter((msg: HistoryMessage) => msg.role === 'user').pop();
+      if (lastUserMessage?.workflowId) {
         currentWorkflow = lastUserMessage.workflowId;
       }
     }
@@ -317,8 +296,7 @@ export async function POST(request: NextRequest) {
       role: (item.role === 'assistant' ? 'assistant' : 'user') as 'assistant' | 'user',
       content: item.content,
       timestamp:
-        item.timestamp ||
-        new Date(Date.now() - (history.length - index) * 1000).toISOString(),
+        item.timestamp || new Date(Date.now() - (history.length - index) * 1000).toISOString(),
       workflowId: item.workflowId,
     }));
     const detectionContext = buildDetectionContext(message, detectionHistory, currentWorkflow);
@@ -511,7 +489,7 @@ Your goal: Help this startup scale its people, culture, and leadership with the 
     }
 
     const messages = [
-      ...history.map((msg: any) => ({
+      ...history.map((msg: HistoryMessage) => ({
         role: msg.role,
         content: msg.content,
       })),
@@ -565,10 +543,16 @@ Your goal: Help this startup scale its people, culture, and leadership with the 
     // ========================================================================
 
     // Check if this is a flight risk query
-    const isFlightRiskQuery = /flight\s*risk|at[-\s]*risk\s+employee|retention\s+concern|who.*leave|turnover\s+risk/i.test(message);
+    const isFlightRiskQuery =
+      /flight\s*risk|at[-\s]*risk\s+employee|retention\s+concern|who.*leave|turnover\s+risk/i.test(
+        message
+      );
 
     // Check if this is a hiring bottleneck query
-    const isHiringBottleneckQuery = /hiring.*bottleneck|slow.*hiring|time[-\s]*to[-\s]*fill|stalled.*position|open.*req|recruiting.*issue/i.test(message);
+    const isHiringBottleneckQuery =
+      /hiring.*bottleneck|slow.*hiring|time[-\s]*to[-\s]*fill|stalled.*position|open.*req|recruiting.*issue/i.test(
+        message
+      );
 
     // If it's an analytical query, run the analysis first and inject results
     if (isFlightRiskQuery || isHiringBottleneckQuery) {
@@ -576,8 +560,12 @@ Your goal: Help this startup scale its people, culture, and leadership with the 
         let analyticsResult = '';
 
         if (isFlightRiskQuery) {
-          const { detectFlightRisks, formatFlightRiskForChat } = await import('@/lib/analytics/flight-risk-detector');
-          const department = message.match(/\b(engineering|product|sales|marketing|finance|hr)\b/i)?.[1];
+          const { detectFlightRisks, formatFlightRiskForChat } = await import(
+            '@/lib/analytics/flight-risk-detector'
+          );
+          const department = message.match(
+            /\b(engineering|product|sales|marketing|finance|hr)\b/i
+          )?.[1];
           const analysis = await detectFlightRisks({
             department,
             minRiskLevel: 'medium',
@@ -587,8 +575,12 @@ Your goal: Help this startup scale its people, culture, and leadership with the 
         }
 
         if (isHiringBottleneckQuery) {
-          const { analyzeHiringBottlenecks, formatHiringBottlenecksForChat } = await import('@/lib/analytics/hiring-bottlenecks');
-          const department = message.match(/\b(engineering|product|sales|marketing|finance|hr)\b/i)?.[1];
+          const { analyzeHiringBottlenecks, formatHiringBottlenecksForChat } = await import(
+            '@/lib/analytics/hiring-bottlenecks'
+          );
+          const department = message.match(
+            /\b(engineering|product|sales|marketing|finance|hr)\b/i
+          )?.[1];
           const analysis = await analyzeHiringBottlenecks({
             department,
             minDaysOpen: 30,
@@ -631,7 +623,10 @@ Your goal: Help this startup scale its people, culture, and leadership with the 
           });
         }
       } catch (analyticsError) {
-        console.error('[OnDemandAnalytics] Failed to run analytics, falling back to AI:', analyticsError);
+        console.error(
+          '[OnDemandAnalytics] Failed to run analytics, falling back to AI:',
+          analyticsError
+        );
         // Fall through to normal AI call if analytics fails
       }
     }
@@ -644,7 +639,7 @@ Your goal: Help this startup scale its people, culture, and leadership with the 
     const maxTokens = estimateMaxTokens(message);
 
     const response = await createMessage({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-opus-4-5-20251101',
       max_tokens: maxTokens,
       system: cacheableSystemBlocks,
       messages,
@@ -664,8 +659,8 @@ Your goal: Help this startup scale its people, culture, and leadership with the 
       tokensUsed: {
         input: response.usage.input_tokens,
         output: response.usage.output_tokens,
-        cached: (response.usage as any).cache_read_input_tokens || 0,
-        cacheCreation: (response.usage as any).cache_creation_input_tokens || 0,
+        cached: (response.usage as AnthropicUsageWithCache).cache_read_input_tokens || 0,
+        cacheCreation: (response.usage as AnthropicUsageWithCache).cache_creation_input_tokens || 0,
       },
       endpoint: '/api/chat',
       timestamp: Date.now(),
@@ -677,9 +672,9 @@ Your goal: Help this startup scale its people, culture, and leadership with the 
     // ========================================================================
 
     // Get user permissions for action filtering
-    const rolePermissions = (authResult.user as any)?.role?.permissions as
-      | Record<string, boolean>
-      | undefined;
+    const rolePermissions = (
+      authResult.user as { role?: { permissions?: Record<string, boolean> } }
+    )?.role?.permissions;
 
     const userPermissions = rolePermissions
       ? Object.entries(rolePermissions)
@@ -746,7 +741,7 @@ Your goal: Help this startup scale its people, culture, and leadership with the 
     }
 
     // Build response with workflow state information
-    const apiResponse: any = {
+    const apiResponse: ChatApiResponse = {
       reply,
       detectedWorkflow: workflowMatch.workflowId,
       workflowConfidence: workflowMatch.confidence,
@@ -783,7 +778,7 @@ Your goal: Help this startup scale its people, culture, and leadership with the 
     }
 
     return NextResponse.json(apiResponse);
-  } catch (error: any) {
+  } catch (error: unknown) {
     return handleApiError(error, {
       endpoint: '/api/chat',
       method: 'POST',

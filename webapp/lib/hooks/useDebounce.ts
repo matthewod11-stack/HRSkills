@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 /**
  * useDebounce
@@ -55,8 +55,12 @@ export function useDebouncedCallback<T extends (...args: any[]) => void>(
  * useDebounceEffect
  * Runs a side effect after the provided dependencies stop changing for the delay.
  */
-export function useDebounceEffect(effect: () => void | (() => void), deps: any[], delay = 300) {
-  const cleanupRef = useRef<void | (() => void) | undefined>(undefined);
+export function useDebounceEffect(
+  effect: () => undefined | (() => void),
+  deps: any[],
+  delay = 300
+) {
+  const cleanupRef = useRef<undefined | (() => void) | undefined>(undefined);
 
   useEffect(() => {
     const handler = window.setTimeout(() => {
@@ -70,5 +74,5 @@ export function useDebounceEffect(effect: () => void | (() => void), deps: any[]
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [...deps, delay]);
+  }, [...deps, delay, effect]);
 }

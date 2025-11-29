@@ -5,7 +5,7 @@
  * Supports: Document Editor, Analytics Charts, Performance Grid
  */
 
-import { ContextPanelData } from '@/components/custom/ContextPanel';
+import type { ContextPanelData } from '@/components/custom/ContextPanel';
 
 export interface DetectionResult {
   panelData: ContextPanelData | null;
@@ -164,8 +164,11 @@ function getPerformanceHighlights(message: string): string[] {
  * Analyzes a message and returns context panel data if applicable
  */
 export function detectContext(message: string, aiResponse?: string): DetectionResult {
-  const messageLower = message.toLowerCase();
-  let bestMatch: { type: 'document' | 'analytics' | 'performance' | 'enps' | null; confidence: number } = {
+  const _messageLower = message.toLowerCase();
+  let bestMatch: {
+    type: 'document' | 'analytics' | 'performance' | 'enps' | null;
+    confidence: number;
+  } = {
     type: null,
     confidence: 0,
   };

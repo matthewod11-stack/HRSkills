@@ -1,7 +1,7 @@
-import { defineConfig } from 'vitest/config';
+import path from 'node:path';
 import react from '@vitejs/plugin-react';
 import tsconfigPaths from 'vite-tsconfig-paths';
-import path from 'node:path';
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   plugins: [
@@ -72,7 +72,7 @@ export default defineConfig({
       '@': path.resolve(__dirname, './'),
       // Force single React version for tests (React 19 compatibility)
       // Note: node_modules is at project root (../)
-      'react': path.resolve(__dirname, '../node_modules/react'),
+      react: path.resolve(__dirname, '../node_modules/react'),
       'react-dom': path.resolve(__dirname, '../node_modules/react-dom'),
       // React 19 JSX runtime entry points (fixes "Failed to resolve import" errors)
       'react/jsx-dev-runtime': path.resolve(__dirname, '../node_modules/react/jsx-dev-runtime.js'),

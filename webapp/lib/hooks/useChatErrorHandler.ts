@@ -123,14 +123,11 @@ export function useChatErrorHandler(
   /**
    * Format error for user display
    */
-  const formatErrorForUser = useCallback(
-    (error: Error, apiType: string): string => {
-      const template = DEFAULT_ERROR_MESSAGES[apiType] || DEFAULT_ERROR_MESSAGES.chat;
-      const errorMsg = error.message || 'Unknown error';
-      return template.replace('{error}', errorMsg);
-    },
-    []
-  );
+  const formatErrorForUser = useCallback((error: Error, apiType: string): string => {
+    const template = DEFAULT_ERROR_MESSAGES[apiType] || DEFAULT_ERROR_MESSAGES.chat;
+    const errorMsg = error.message || 'Unknown error';
+    return template.replace('{error}', errorMsg);
+  }, []);
 
   /**
    * Create an error message object
@@ -140,13 +137,13 @@ export function useChatErrorHandler(
       const content = customMessage || error.message || 'An error occurred';
 
       return {
-        id: messages.length + 2, // +1 for user message, +1 for assistant response
+        id: `error_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
         role: 'assistant',
         content,
         timestamp: new Date(),
       };
     },
-    [messages.length]
+    []
   );
 
   /**
@@ -157,7 +154,7 @@ export function useChatErrorHandler(
       const { apiType, userMessage, shouldAddToChat } = context;
 
       // Determine if we should add to chat (default: true for analytics/chat, false for export)
-      const addToChatHistory = shouldAddToChat ?? (apiType !== 'export');
+      const addToChatHistory = shouldAddToChat ?? apiType !== 'export';
 
       // Log error with context
       console.error(`${apiType.charAt(0).toUpperCase() + apiType.slice(1)} error:`, error);

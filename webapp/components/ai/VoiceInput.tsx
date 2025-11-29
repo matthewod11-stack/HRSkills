@@ -1,8 +1,50 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, Loader2, Upload, X } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Loader2, Mic, MicOff, Upload, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+
+// Web Speech API types (not in standard DOM types)
+interface SpeechRecognitionResult {
+  readonly isFinal: boolean;
+  readonly length: number;
+  [index: number]: { transcript: string; confidence: number };
+}
+
+interface SpeechRecognitionResultList {
+  readonly length: number;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionEvent extends Event {
+  readonly resultIndex: number;
+  readonly results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  readonly error: string;
+  readonly message: string;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+  start(): void;
+  stop(): void;
+}
+
+interface SpeechRecognitionConstructor {
+  new (): SpeechRecognition;
+}
+
+interface WindowWithSpeechRecognition {
+  SpeechRecognition?: SpeechRecognitionConstructor;
+  webkitSpeechRecognition?: SpeechRecognitionConstructor;
+}
 
 interface VoiceInputProps {
   onTranscript: (text: string) => void;
@@ -27,29 +69,30 @@ export function VoiceInput({
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Initialize Web Speech API
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const SpeechRecognition =
-        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const windowWithSpeech = window as unknown as WindowWithSpeechRecognition;
+      const SpeechRecognitionCtor =
+        windowWithSpeech.SpeechRecognition || windowWithSpeech.webkitSpeechRecognition;
 
-      if (SpeechRecognition) {
-        const recognition = new SpeechRecognition();
+      if (SpeechRecognitionCtor) {
+        const recognition = new SpeechRecognitionCtor();
         recognition.continuous = true;
         recognition.interimResults = true;
         recognition.lang = languageCode;
 
-        recognition.onresult = (event: any) => {
+        recognition.onresult = (event: SpeechRecognitionEvent) => {
           let interimTranscript = '';
           let finalTranscript = '';
 
           for (let i = event.resultIndex; i < event.results.length; i++) {
             const transcriptPiece = event.results[i][0].transcript;
             if (event.results[i].isFinal) {
-              finalTranscript += transcriptPiece + ' ';
+              finalTranscript += `${transcriptPiece} `;
             } else {
               interimTranscript += transcriptPiece;
             }
@@ -59,7 +102,7 @@ export function VoiceInput({
           setTranscript(fullTranscript);
         };
 
-        recognition.onerror = (event: any) => {
+        recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
           console.error('Speech recognition error:', event.error);
           onError?.(`Speech recognition error: ${event.error}`);
           setIsRecording(false);
@@ -82,7 +125,7 @@ export function VoiceInput({
         recognitionRef.current.stop();
       }
     };
-  }, [languageCode]);
+  }, [languageCode, onError, onTranscript, transcript]);
 
   const toggleRecording = () => {
     if (!recognitionRef.current) {
@@ -141,6 +184,7 @@ export function VoiceInput({
     return (
       <>
         <button
+          type="button"
           onClick={toggleRecording}
           disabled={isProcessing}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all disabled:opacity-50 ${
@@ -194,6 +238,7 @@ export function VoiceInput({
   return (
     <>
       <button
+        type="button"
         onClick={toggleRecording}
         disabled={isProcessing}
         className={`p-2 rounded-lg transition-all disabled:opacity-50 relative ${
@@ -271,6 +316,7 @@ function UploadAudioModal({ isOpen, onClose, onFileSelect }: UploadAudioModalPro
           className="relative bg-gradient-to-br from-gray-900 to-black border-2 border-white/20 rounded-2xl p-6 max-w-md w-full"
         >
           <button
+            type="button"
             onClick={onClose}
             className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-lg transition-colors"
           >
@@ -286,6 +332,7 @@ function UploadAudioModal({ isOpen, onClose, onFileSelect }: UploadAudioModalPro
 
           <div className="space-y-3">
             <button
+              type="button"
               onClick={onFileSelect}
               className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg hover:shadow-lg hover:shadow-blue-500/50 transition-all"
             >
@@ -294,6 +341,7 @@ function UploadAudioModal({ isOpen, onClose, onFileSelect }: UploadAudioModalPro
             </button>
 
             <button
+              type="button"
               onClick={onClose}
               className="w-full px-6 py-3 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 transition-colors"
             >
@@ -361,7 +409,9 @@ export function AudioRecorder({
         const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
         onRecordingComplete(audioBlob);
 
-        stream.getTracks().forEach((track) => track.stop());
+        stream.getTracks().forEach((track) => {
+          track.stop();
+        });
 
         if (timerRef.current) {
           clearInterval(timerRef.current);
@@ -418,6 +468,7 @@ export function AudioRecorder({
     <div className={`flex items-center gap-3 ${className}`}>
       {!isRecording ? (
         <button
+          type="button"
           onClick={startRecording}
           className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 rounded-xl hover:shadow-lg hover:shadow-red-500/50 transition-all"
         >
@@ -432,6 +483,7 @@ export function AudioRecorder({
           </div>
 
           <button
+            type="button"
             onClick={togglePause}
             className="px-4 py-2 bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 transition-colors"
           >
@@ -439,6 +491,7 @@ export function AudioRecorder({
           </button>
 
           <button
+            type="button"
             onClick={stopRecording}
             className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl hover:shadow-lg hover:shadow-blue-500/50 transition-all"
           >

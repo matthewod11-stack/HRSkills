@@ -8,19 +8,19 @@
  * POST /api/setup/init - Trigger initialization
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { checkFirstRun, getInitializationProgress } from '@/lib/first-run';
-import { handleApiError } from '@/lib/api-helpers';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { exec } from 'node:child_process';
+import { promisify } from 'node:util';
+import { type NextRequest, NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
+import { handleApiError } from '@/lib/api-helpers';
+import { checkFirstRun, getInitializationProgress } from '@/lib/first-run';
 
 const execAsync = promisify(exec);
 
 /**
  * GET - Check initialization status
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const status = await checkFirstRun();
     const progress = await getInitializationProgress();
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
         progress,
         output: stdout,
       });
-    } catch (execError: any) {
+    } catch (execError: unknown) {
       console.error('[Setup] Failed to run seeding script:', execError);
 
       // Return error but with helpful message
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           error: 'Failed to seed demo data',
-          details: execError.message,
+          details: execError instanceof Error ? execError.message : 'Unknown error',
           hint: 'You can manually run: npm run seed:demo',
         },
         { status: 500 }
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
  * DELETE - Reset initialization (for testing)
  * WARNING: This will clear all employee and conversation data!
  */
-export async function DELETE(request: NextRequest) {
+export async function DELETE(_request: NextRequest) {
   // Only allow in development
   if (env.NODE_ENV === 'production') {
     return NextResponse.json(

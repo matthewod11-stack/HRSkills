@@ -2,9 +2,9 @@
  * Helper script to create Excel test fixtures
  * Run with: npx tsx __tests__/fixtures/create-excel-fixture.ts
  */
+
+import * as path from 'node:path';
 import * as XLSX from 'xlsx';
-import * as fs from 'fs';
-import * as path from 'path';
 
 const sampleData = [
   {
@@ -122,7 +122,19 @@ const edgeCaseData = [
   },
 ];
 
-function createExcelFile(data: any[], filename: string) {
+interface EmployeeRecord {
+  employee_id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  department: string;
+  level: string;
+  hire_date: Date | null;
+  termination_date: Date | null;
+  status: string;
+}
+
+function createExcelFile(data: EmployeeRecord[], filename: string) {
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Employees');

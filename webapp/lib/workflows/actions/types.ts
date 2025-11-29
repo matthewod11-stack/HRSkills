@@ -46,6 +46,16 @@ export type ActionPriority = 'low' | 'medium' | 'high' | 'critical';
  * Base action interface
  * All actions extend this base structure
  */
+/** Flexible payload value type for action data */
+export type ActionPayloadValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | ActionPayloadValue[]
+  | { [key: string]: ActionPayloadValue };
+
 export interface BaseAction {
   id: string;
   type: ActionType;
@@ -58,12 +68,12 @@ export interface BaseAction {
   createdAt: string;
   updatedAt?: string;
   executedAt?: string;
-  payload: Record<string, any>;
+  payload: Record<string, ActionPayloadValue>;
   metadata?: {
     workflowId?: string;
     conversationId?: string;
     userId?: string;
-    [key: string]: any;
+    [key: string]: ActionPayloadValue;
   };
 }
 
@@ -87,13 +97,13 @@ export interface ActionResult {
   actionId: string;
   executedAt: string;
   duration: number; // Execution time in milliseconds
-  output?: any;
+  output?: ActionPayloadValue | Record<string, ActionPayloadValue>;
   error?: {
     code: string;
     message: string;
-    details?: any;
+    details?: unknown;
   };
-  metadata?: Record<string, any>;
+  metadata?: Record<string, ActionPayloadValue>;
 }
 
 // ============================================================================
@@ -125,7 +135,7 @@ export interface CreateDocumentPayload {
     fileName?: string;
   };
   templateId?: string;
-  variables?: Record<string, any>;
+  variables?: Record<string, ActionPayloadValue>;
 }
 
 /**
@@ -150,11 +160,14 @@ export interface SendEmailPayload {
 /**
  * Send Slack Message Action
  */
+/** Slack Block Kit block element */
+export type SlackBlock = Record<string, ActionPayloadValue>;
+
 export interface SendSlackMessagePayload {
   channel?: string;
   user?: string;
   text: string;
-  blocks?: any[]; // Slack Block Kit
+  blocks?: SlackBlock[]; // Slack Block Kit
   threadTs?: string;
   createChannel?: {
     name: string;
@@ -193,8 +206,8 @@ export interface CreateCalendarEventPayload {
 export interface UpdateDatabasePayload {
   table: string;
   operation: 'insert' | 'update' | 'delete' | 'upsert';
-  data: Record<string, any>;
-  where?: Record<string, any>;
+  data: Record<string, ActionPayloadValue>;
+  where?: Record<string, ActionPayloadValue>;
   returning?: string[];
 }
 
@@ -205,7 +218,7 @@ export interface ApiCallPayload {
   url: string;
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   headers?: Record<string, string>;
-  body?: any;
+  body?: ActionPayloadValue | Record<string, ActionPayloadValue>;
   timeout?: number;
   retries?: number;
 }
@@ -217,7 +230,7 @@ export interface WebhookPayload {
   url: string;
   method?: 'POST' | 'PUT';
   headers?: Record<string, string>;
-  body: any;
+  body: ActionPayloadValue | Record<string, ActionPayloadValue>;
   secret?: string; // For HMAC signature
 }
 
@@ -253,7 +266,7 @@ export interface ActionValidationWarning {
  * Action handler interface
  * Each action type has a corresponding handler implementation
  */
-export interface ActionHandler<TPayload = any, TResult = any> {
+export interface ActionHandler<_TPayload = unknown, _TResult = unknown> {
   type: ActionType;
 
   /**

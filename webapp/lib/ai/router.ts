@@ -10,27 +10,27 @@
  * Phase 5 changes: Removed Gemini provider for simplified production operation
  */
 
-import {
+import { randomUUID } from 'node:crypto';
+import { aiUsage } from '@/db/schema';
+import { db } from '@/lib/db';
+import { AnthropicAdapter } from './providers/anthropic-adapter';
+import { OpenAIAdapter } from './providers/openai-adapter';
+import type {
   AIProvider,
-  AIProviderType,
   AIProviderConfig,
+  AIProviderType,
+  AnalysisResult,
+  AnalysisTask,
   ChatMessage,
   ChatOptions,
   ChatResponse,
-  AnalysisTask,
-  AnalysisResult,
   ProviderHealth,
 } from './types';
-import { AnthropicAdapter } from './providers/anthropic-adapter';
-import { OpenAIAdapter } from './providers/openai-adapter';
-import { db } from '@/lib/db';
-import { aiUsage } from '@/db/schema';
-import { randomUUID } from 'crypto';
 
 class AIProviderRouter {
   private providers: Map<AIProviderType, AIProvider>;
-  private config: AIProviderConfig;
   private healthCache: Map<AIProviderType, ProviderHealth>;
+  private config: AIProviderConfig;
   private fallbackChain: AIProviderType[];
 
   constructor() {
@@ -118,9 +118,10 @@ class AIProviderRouter {
         }
 
         return response;
-      } catch (error: any) {
-        errors[providerType] = error.message;
-        console.error(`[AIRouter] ${providerType} failed:`, error.message);
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        errors[providerType] = errorMessage;
+        console.error(`[AIRouter] ${providerType} failed:`, errorMessage);
 
         // Continue to next provider
         if (providersToTry.indexOf(providerType) < providersToTry.length - 1) {
@@ -165,13 +166,14 @@ class AIProviderRouter {
       );
 
       return result;
-    } catch (error: any) {
-      console.error(`[AIRouter] Analysis failed with ${providerType}:`, error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`[AIRouter] Analysis failed with ${providerType}:`, message);
 
       // Try fallback
       if (this.config.enableAutoFallback && this.config.fallback) {
         const fallbackProvider = this.providers.get(this.config.fallback);
-        if (fallbackProvider && fallbackProvider.available) {
+        if (fallbackProvider?.available) {
           console.log(`[AIRouter] Failing over analysis to ${this.config.fallback}`);
           const result = await fallbackProvider.analyze(task);
 
@@ -198,7 +200,7 @@ class AIProviderRouter {
   async translate(
     text: string,
     targetLanguage: string,
-    options?: { userId?: string; endpoint?: string }
+    _options?: { userId?: string; endpoint?: string }
   ): Promise<string> {
     const providerType = this.config.primary;
 
@@ -209,13 +211,14 @@ class AIProviderRouter {
       }
 
       return await provider.translate(text, targetLanguage);
-    } catch (error: any) {
-      console.error(`[AIRouter] Translation failed with ${providerType}:`, error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`[AIRouter] Translation failed with ${providerType}:`, message);
 
       // Try fallback
       if (this.config.enableAutoFallback && this.config.fallback) {
         const fallbackProvider = this.providers.get(this.config.fallback);
-        if (fallbackProvider && fallbackProvider.available) {
+        if (fallbackProvider?.available) {
           console.log(`[AIRouter] Failing over translation to ${this.config.fallback}`);
           return await fallbackProvider.translate(text, targetLanguage);
         }
@@ -234,7 +237,7 @@ class AIProviderRouter {
     for (const [type, provider] of this.providers.entries()) {
       try {
         health[type] = await provider.healthCheck();
-      } catch (error) {
+      } catch (_error) {
         health[type] = {
           provider: type,
           healthy: false,

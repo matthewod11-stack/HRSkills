@@ -11,10 +11,10 @@
  * - Results stored in employeeMetrics.sentiment fields
  */
 
-import { db } from '@/lib/db';
+import { and, eq, isNotNull, isNull, sql } from 'drizzle-orm';
 import { employeeMetrics } from '@/db/schema';
-import { eq, and, isNotNull, isNull, sql } from 'drizzle-orm';
 import { aiRouter } from '@/lib/ai/router';
+import { db } from '@/lib/db';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -356,7 +356,10 @@ export async function getTopPositiveComments(
     })
     .from(employeeMetrics)
     .where(and(...whereConditions))
-    .orderBy(sql`${employeeMetrics.sentimentConfidence} DESC`, sql`${employeeMetrics.enpsScore} DESC`)
+    .orderBy(
+      sql`${employeeMetrics.sentimentConfidence} DESC`,
+      sql`${employeeMetrics.enpsScore} DESC`
+    )
     .limit(limit);
 
   return results.map((row) => ({
@@ -397,7 +400,10 @@ export async function getTopNegativeComments(
     })
     .from(employeeMetrics)
     .where(and(...whereConditions))
-    .orderBy(sql`${employeeMetrics.sentimentConfidence} DESC`, sql`${employeeMetrics.enpsScore} ASC`)
+    .orderBy(
+      sql`${employeeMetrics.sentimentConfidence} DESC`,
+      sql`${employeeMetrics.enpsScore} ASC`
+    )
     .limit(limit);
 
   return results.map((row) => ({

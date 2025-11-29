@@ -1,4 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk';
+import type Anthropic from '@anthropic-ai/sdk';
 
 /**
  * Cache configuration for analytics chat responses
@@ -127,12 +127,32 @@ export const TABLE_SCHEMAS = {
       { name: 'survey_quarter', type: 'TEXT', description: 'Survey quarter (e.g., Q1 2025)' },
       { name: 'survey_response_date', type: 'TEXT', description: 'Survey response date' },
       { name: 'survey_category', type: 'TEXT', description: 'Promoter, Passive, or Detractor' },
-      { name: 'survey_comment', type: 'TEXT', description: 'Open-ended survey feedback (use survey_comment, NOT "survey comment")' },
-      { name: 'sentiment', type: 'TEXT', description: 'AI sentiment analysis: positive, neutral, negative' },
-      { name: 'sentiment_confidence', type: 'REAL', description: 'Sentiment confidence score (0-1)' },
-      { name: 'sentiment_analyzed_at', type: 'TEXT', description: 'Timestamp of sentiment analysis' },
+      {
+        name: 'survey_comment',
+        type: 'TEXT',
+        description: 'Open-ended survey feedback (use survey_comment, NOT "survey comment")',
+      },
+      {
+        name: 'sentiment',
+        type: 'TEXT',
+        description: 'AI sentiment analysis: positive, neutral, negative',
+      },
+      {
+        name: 'sentiment_confidence',
+        type: 'REAL',
+        description: 'Sentiment confidence score (0-1)',
+      },
+      {
+        name: 'sentiment_analyzed_at',
+        type: 'TEXT',
+        description: 'Timestamp of sentiment analysis',
+      },
       { name: 'performance_rating', type: 'REAL', description: 'Performance rating (1-5 scale)' },
-      { name: 'performance_forecast', type: 'REAL', description: 'Performance forecast (1-5 scale)' },
+      {
+        name: 'performance_forecast',
+        type: 'REAL',
+        description: 'Performance forecast (1-5 scale)',
+      },
       { name: 'potential_rating', type: 'REAL', description: 'Potential rating (1-5 scale)' },
     ],
   },

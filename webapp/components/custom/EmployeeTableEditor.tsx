@@ -1,22 +1,25 @@
 'use client';
 
-import { useReducer, useMemo, useCallback, memo, useState } from 'react';
-import { Save, X, Plus, Trash2, ArrowLeft, Eye, ArrowUp, ArrowDown, Search } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowDown, ArrowLeft, ArrowUp, Eye, Plus, Save, Search, Trash2, X } from 'lucide-react';
 import Link from 'next/link';
-import { MasterEmployeeRecord, CANONICAL_FIELDS } from '@/lib/types/master-employee';
+import { memo, useCallback, useMemo, useReducer, useState } from 'react';
 import { generateEmployeeId } from '@/lib/analytics/column-mapper';
 import { useEmployeesData } from '@/lib/hooks/use-employees';
-import { AnimatePresence, motion } from 'framer-motion';
+import { CANONICAL_FIELDS, type MasterEmployeeRecord } from '@/lib/types/master-employee';
 
 // ============================================================================
 // TYPE DEFINITIONS
 // ============================================================================
 
+/** Possible values for table cells */
+type CellValue = string | number | boolean | null | undefined | unknown[] | Record<string, unknown>;
+
 // UI State only - employee data comes from global store
 interface TableState {
   saving: boolean;
   selectedIds: Set<string>;
-  editedCells: Map<string, any>;
+  editedCells: Map<string, CellValue>;
   sortField: string | null;
   sortOrder: 'asc' | 'desc';
   searchTerm: string;
@@ -32,7 +35,7 @@ type TableAction =
   | { type: 'TOGGLE_SELECT'; payload: string }
   | { type: 'SELECT_ALL'; payload: string[] }
   | { type: 'CLEAR_SELECTION' }
-  | { type: 'EDIT_CELL'; payload: { employeeId: string; field: string; value: any } }
+  | { type: 'EDIT_CELL'; payload: { employeeId: string; field: string; value: CellValue } }
   | { type: 'CLEAR_EDITS' }
   | { type: 'TOGGLE_COLUMN'; payload: string };
 
@@ -112,10 +115,10 @@ interface EmployeeRowProps {
   index: number;
   visibleColumns: string[];
   isSelected: boolean;
-  editedCells: Map<string, any>;
+  editedCells: Map<string, CellValue>;
   onToggleSelect: (id: string) => void;
-  onCellEdit: (employeeId: string, field: string, value: any) => void;
-  onComplexFieldClick?: (fieldKey: string, value: any) => void;
+  onCellEdit: (employeeId: string, field: string, value: CellValue) => void;
+  onComplexFieldClick?: (fieldKey: string, value: CellValue) => void;
 }
 
 const EmployeeRow = memo(function EmployeeRow({
@@ -150,7 +153,7 @@ const EmployeeRow = memo(function EmployeeRow({
         // Use edited value if exists, otherwise use employee data
         const value = editedCells.has(cellKey)
           ? editedCells.get(cellKey)
-          : (employee as any)[fieldKey];
+          : (employee as Record<string, CellValue>)[fieldKey];
         const isEdited = editedCells.has(cellKey);
 
         return (
@@ -176,10 +179,10 @@ const EmployeeRow = memo(function EmployeeRow({
 interface EmployeeCellProps {
   employeeId: string;
   fieldKey: string;
-  value: any;
+  value: CellValue;
   isEdited: boolean;
-  onCellEdit: (employeeId: string, field: string, value: any) => void;
-  onComplexFieldClick?: (fieldKey: string, value: any) => void;
+  onCellEdit: (employeeId: string, field: string, value: CellValue) => void;
+  onComplexFieldClick?: (fieldKey: string, value: CellValue) => void;
 }
 
 const EmployeeCell = memo(function EmployeeCell({
@@ -253,7 +256,7 @@ export function EmployeeTableEditor() {
   const [state, dispatch] = useReducer(tableReducer, {
     saving: false,
     selectedIds: new Set<string>(),
-    editedCells: new Map<string, any>(),
+    editedCells: new Map<string, CellValue>(),
     sortField: 'employee_id',
     sortOrder: 'asc' as 'asc' | 'desc',
     searchTerm: '',
@@ -272,7 +275,7 @@ export function EmployeeTableEditor() {
   // Complex field modal state
   const [complexFieldModal, setComplexFieldModal] = useState<{
     fieldKey: string;
-    value: any;
+    value: CellValue;
   } | null>(null);
 
   // Column dropdown state
@@ -311,8 +314,8 @@ export function EmployeeTableEditor() {
     // Apply sort
     if (state.sortField) {
       filtered.sort((a, b) => {
-        const aVal = (a as any)[state.sortField!];
-        const bVal = (b as any)[state.sortField!];
+        const aVal = (a as Record<string, CellValue>)[state.sortField!];
+        const bVal = (b as Record<string, CellValue>)[state.sortField!];
 
         if (aVal == null) return 1;
         if (bVal == null) return -1;
@@ -326,7 +329,7 @@ export function EmployeeTableEditor() {
   }, [employees, state.searchTerm, state.sortField, state.sortOrder]);
 
   // Callbacks
-  const handleCellEdit = useCallback((employeeId: string, field: string, value: any) => {
+  const handleCellEdit = useCallback((employeeId: string, field: string, value: CellValue) => {
     dispatch({ type: 'EDIT_CELL', payload: { employeeId, field, value } });
   }, []);
 
@@ -391,7 +394,11 @@ export function EmployeeTableEditor() {
     if (result.success) {
       // Mark all visible fields as edited so user can fill them in
       state.visibleColumns.forEach((field) => {
-        handleCellEdit(newEmployee.employee_id, field, (newEmployee as any)[field]);
+        handleCellEdit(
+          newEmployee.employee_id,
+          field,
+          (newEmployee as Record<string, CellValue>)[field]
+        );
       });
     } else {
       alert(`Failed to add employee: ${result.error}`);
@@ -417,7 +424,7 @@ export function EmployeeTableEditor() {
     dispatch({ type: 'TOGGLE_COLUMN', payload: columnKey });
   }, []);
 
-  const handleComplexFieldClick = useCallback((fieldKey: string, value: any) => {
+  const handleComplexFieldClick = useCallback((fieldKey: string, value: CellValue) => {
     setComplexFieldModal({ fieldKey, value });
   }, []);
 
@@ -441,6 +448,7 @@ export function EmployeeTableEditor() {
             {employeesError instanceof Error ? employeesError.message : 'Please try again later.'}
           </p>
           <button
+            type="button"
             onClick={() => refresh()}
             className="inline-flex items-center gap-2 rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600"
           >
@@ -474,6 +482,7 @@ export function EmployeeTableEditor() {
             {state.editedCells.size > 0 && (
               <>
                 <button
+                  type="button"
                   onClick={async () => {
                     dispatch({ type: 'CLEAR_EDITS' });
                     await refresh();
@@ -484,6 +493,7 @@ export function EmployeeTableEditor() {
                   Discard Changes
                 </button>
                 <button
+                  type="button"
                   onClick={handleSave}
                   disabled={state.saving}
                   className="flex items-center gap-2 rounded-lg bg-green-500 px-6 py-2 font-medium text-white transition-colors hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-50"
@@ -524,6 +534,7 @@ export function EmployeeTableEditor() {
 
           {/* Actions */}
           <button
+            type="button"
             onClick={handleAddEmployee}
             className="flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-white transition-colors hover:bg-blue-600"
           >
@@ -533,6 +544,7 @@ export function EmployeeTableEditor() {
 
           {state.selectedIds.size > 0 && (
             <button
+              type="button"
               onClick={handleDeleteSelected}
               className="flex items-center gap-2 rounded-lg border-2 border-red-500/30 bg-red-500/20 px-4 py-2 transition-colors hover:bg-red-500/30"
             >
@@ -544,6 +556,7 @@ export function EmployeeTableEditor() {
           {/* Column Visibility */}
           <div className="relative">
             <button
+              type="button"
               onClick={() => setIsColumnDropdownOpen(!isColumnDropdownOpen)}
               className="flex items-center gap-2 px-4 py-2 bg-white/5 border-2 border-white/10 rounded-lg hover:border-white/20 transition-colors"
             >
@@ -668,6 +681,7 @@ export function EmployeeTableEditor() {
                     complexFieldModal.fieldKey}
                 </h3>
                 <button
+                  type="button"
                   onClick={() => setComplexFieldModal(null)}
                   className="p-2 hover:bg-white/10 rounded-lg transition-colors"
                 >
@@ -678,7 +692,7 @@ export function EmployeeTableEditor() {
               <div className="overflow-auto flex-1">
                 {Array.isArray(complexFieldModal.value) ? (
                   <div className="space-y-4">
-                    {complexFieldModal.value.map((item: any, index: number) => (
+                    {complexFieldModal.value.map((item: unknown, index: number) => (
                       <div key={index} className="p-4 bg-white/5 border border-white/10 rounded-lg">
                         <div className="text-sm font-semibold text-blue-400 mb-2">
                           Item {index + 1}

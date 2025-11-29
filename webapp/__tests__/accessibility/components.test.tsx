@@ -62,13 +62,13 @@ describe('Accessibility Tests - Core Components', () => {
     });
 
     it('should announce loading state', async () => {
-      const { getByText } = render(
+      render(
         <MetricDetailsDialog
           isOpen={true}
-          onClose={() => {}}
           metric="headcount"
-          title="Recent Hires"
-          description="Last 5 employees who joined"
+          title="Employee Headcount"
+          description="Loading employee headcount details"
+          onClose={() => {}}
         />
       );
       // Loading state should have live region
@@ -108,7 +108,9 @@ describe('Accessibility Tests - Common Patterns', () => {
   describe('Focus Management', () => {
     it('should have visible focus indicators', async () => {
       const { container } = render(
-        <button className="focus-visible:outline focus-visible:outline-2">Test Button</button>
+        <button type="button" className="focus-visible:outline focus-visible:outline-2">
+          Test Button
+        </button>
       );
       const results = await axe(container, {
         rules: {
@@ -140,7 +142,7 @@ describe('Accessibility Tests - Common Patterns', () => {
     it('should validate ARIA attributes', async () => {
       const { container } = render(
         <div>
-          <button aria-label="Close dialog">
+          <button type="button" aria-label="Close dialog">
             <span aria-hidden="true">×</span>
           </button>
         </div>

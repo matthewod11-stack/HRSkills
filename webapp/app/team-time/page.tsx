@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Clock, MapPin, Globe } from 'lucide-react';
+import { ArrowLeft, Clock, Globe, MapPin } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 interface TimeZone {
   location: string;
@@ -108,7 +108,8 @@ export default function TeamTimePage() {
         timeZone: timezone,
         hour: '2-digit',
         hour12: false,
-      })
+      }),
+      10
     );
 
     if (hour >= 9 && hour < 18) {
@@ -150,6 +151,7 @@ export default function TeamTimePage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
+                type="button"
                 onClick={() => router.push('/')}
                 className="w-10 h-10 bg-cream hover:bg-terracotta/10 border-2 border-warm hover:border-terracotta/40 rounded-xl flex items-center justify-center transition-premium hover-lift"
                 aria-label="Back to dashboard"

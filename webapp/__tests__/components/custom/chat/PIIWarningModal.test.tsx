@@ -1,5 +1,4 @@
-import { vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { vi } from 'vitest';
 import { PIIWarningModal } from '@/components/custom/chat/PIIWarningModal';
 
@@ -10,21 +9,40 @@ import { PIIWarningModal } from '@/components/custom/chat/PIIWarningModal';
  * when sensitive data is detected in user messages.
  */
 
+// Mock types for Framer Motion components
+interface MotionDivProps {
+  children?: React.ReactNode;
+  onClick?: () => void;
+  className?: string;
+  [key: string]: unknown;
+}
+
+interface MotionButtonProps {
+  children?: React.ReactNode;
+  onClick?: () => void;
+  className?: string;
+  [key: string]: unknown;
+}
+
+interface AnimatePresenceProps {
+  children?: React.ReactNode;
+}
+
 // Mock Framer Motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, onClick, className, ...props }: any) => (
+    div: ({ children, onClick, className, ...props }: MotionDivProps) => (
       <div onClick={onClick} className={className} {...props}>
         {children}
       </div>
     ),
-    button: ({ children, onClick, className, ...props }: any) => (
+    button: ({ children, onClick, className, ...props }: MotionButtonProps) => (
       <button onClick={onClick} className={className} {...props}>
         {children}
       </button>
     ),
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
+  AnimatePresence: ({ children }: AnimatePresenceProps) => <>{children}</>,
 }));
 
 describe('PIIWarningModal', () => {
@@ -318,7 +336,7 @@ describe('PIIWarningModal', () => {
     });
 
     it('should style detected types with error color', () => {
-      const { container } = render(<PIIWarningModal {...defaultProps} />);
+      render(<PIIWarningModal {...defaultProps} />);
 
       const detectedLabel = screen.getByText(/Detected:/);
       expect(detectedLabel).toHaveClass('text-error');

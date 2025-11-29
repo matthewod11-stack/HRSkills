@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, type ReactNode, useCallback, useContext, useState } from 'react';
 
 /**
  * Represents the state of a workflow/skill being executed
@@ -18,7 +18,8 @@ export interface WorkflowState {
  * Represents a single chat message in the conversation
  */
 export interface Message {
-  id: number;
+  /** Unique identifier - string for new messages, number for legacy compatibility */
+  id: string | number;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
@@ -39,12 +40,12 @@ export interface ChatContextValue {
   isTyping: boolean;
   conversationId: string;
   addMessage: (message: Message) => void;
-  updateMessage: (id: number, updates: Partial<Message>) => void;
-  deleteMessage: (id: number) => void;
+  updateMessage: (id: string | number, updates: Partial<Message>) => void;
+  deleteMessage: (id: string | number) => void;
   clearMessages: () => void;
-  toggleEdit: (id: number) => void;
-  updateEdit: (id: number, content: string) => void;
-  saveEdit: (id: number) => void;
+  toggleEdit: (id: string | number) => void;
+  updateEdit: (id: string | number, content: string) => void;
+  saveEdit: (id: string | number) => void;
   setIsTyping: (typing: boolean) => void;
   resetConversation: () => void;
 }
@@ -63,8 +64,7 @@ const ChatContext = createContext<ChatContextValue | undefined>(undefined);
 /**
  * Generates a unique conversation ID
  */
-const createConversationId = () =>
-  `conv_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+const createConversationId = () => `conv_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
 /**
  * ChatProvider - Manages shared state for the entire chat interface
@@ -85,33 +85,33 @@ const createConversationId = () =>
 export function ChatProvider({
   children,
   initialConversationId,
-  initialMessages = []
+  initialMessages = [],
 }: ChatProviderProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [isTyping, setIsTyping] = useState(false);
-  const [conversationId, setConversationId] = useState(() => initialConversationId || createConversationId());
+  const [conversationId, setConversationId] = useState(
+    () => initialConversationId || createConversationId()
+  );
 
   /**
    * Add a new message to the conversation
    */
   const addMessage = useCallback((message: Message) => {
-    setMessages(prev => [...prev, message]);
+    setMessages((prev) => [...prev, message]);
   }, []);
 
   /**
    * Update an existing message with partial updates
    */
-  const updateMessage = useCallback((id: number, updates: Partial<Message>) => {
-    setMessages(prev => prev.map(msg =>
-      msg.id === id ? { ...msg, ...updates } : msg
-    ));
+  const updateMessage = useCallback((id: string | number, updates: Partial<Message>) => {
+    setMessages((prev) => prev.map((msg) => (msg.id === id ? { ...msg, ...updates } : msg)));
   }, []);
 
   /**
    * Delete a message from the conversation
    */
-  const deleteMessage = useCallback((id: number) => {
-    setMessages(prev => prev.filter(msg => msg.id !== id));
+  const deleteMessage = useCallback((id: string | number) => {
+    setMessages((prev) => prev.filter((msg) => msg.id !== id));
   }, []);
 
   /**
@@ -124,41 +124,45 @@ export function ChatProvider({
   /**
    * Toggle edit mode for a specific message
    */
-  const toggleEdit = useCallback((id: number) => {
-    setMessages(prev => prev.map(msg =>
-      msg.id === id
-        ? {
-            ...msg,
-            isEditing: !msg.isEditing,
-            editedContent: msg.isEditing ? undefined : msg.content
-          }
-        : msg
-    ));
+  const toggleEdit = useCallback((id: string | number) => {
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.id === id
+          ? {
+              ...msg,
+              isEditing: !msg.isEditing,
+              editedContent: msg.isEditing ? undefined : msg.content,
+            }
+          : msg
+      )
+    );
   }, []);
 
   /**
    * Update the edited content of a message while in edit mode
    */
-  const updateEdit = useCallback((id: number, content: string) => {
-    setMessages(prev => prev.map(msg =>
-      msg.id === id ? { ...msg, editedContent: content } : msg
-    ));
+  const updateEdit = useCallback((id: string | number, content: string) => {
+    setMessages((prev) =>
+      prev.map((msg) => (msg.id === id ? { ...msg, editedContent: content } : msg))
+    );
   }, []);
 
   /**
    * Save the edited content and exit edit mode
    */
-  const saveEdit = useCallback((id: number) => {
-    setMessages(prev => prev.map(msg =>
-      msg.id === id
-        ? {
-            ...msg,
-            content: msg.editedContent || msg.content,
-            isEditing: false,
-            editedContent: undefined,
-          }
-        : msg
-    ));
+  const saveEdit = useCallback((id: string | number) => {
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.id === id
+          ? {
+              ...msg,
+              content: msg.editedContent || msg.content,
+              isEditing: false,
+              editedContent: undefined,
+            }
+          : msg
+      )
+    );
   }, []);
 
   /**
@@ -185,11 +189,7 @@ export function ChatProvider({
     resetConversation,
   };
 
-  return (
-    <ChatContext.Provider value={value}>
-      {children}
-    </ChatContext.Provider>
-  );
+  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 }
 
 /**

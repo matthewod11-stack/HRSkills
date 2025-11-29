@@ -7,8 +7,7 @@
  * Shows current step, completed steps, and overall progress percentage.
  */
 
-import React from 'react';
-import { CheckCircle2, Circle, ArrowRight } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Circle } from 'lucide-react';
 
 interface WorkflowStateData {
   currentStep: string | null;
@@ -62,72 +61,64 @@ export function WorkflowProgress({
 }: WorkflowProgressProps) {
   const displayName = workflowName || getWorkflowDisplayName(workflowId);
 
-  // Don't show progress for general workflow
   if (workflowId === 'general' || !state.currentStep) {
     return null;
   }
 
   const { currentStep, progress, completedSteps, isComplete, hasActions, actionCount } = state;
 
+  const allSteps = [...completedSteps, currentStep];
+
   return (
     <div
-      className={`workflow-progress rounded-lg border border-gray-200 bg-white p-4 shadow-sm ${className}`}
+      className={`workflow-progress rounded-lg border border-white/10 bg-white/5 p-6 shadow-sm ${className}`}
     >
       {/* Header */}
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-4 flex items-start justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900">{displayName}</h3>
-          <p className="text-xs text-gray-500">
-            {isComplete ? 'Workflow Complete' : `Step: ${formatStepName(currentStep)}`}
+          <h3 className="text-sm font-semibold text-white">{displayName}</h3>
+          <p className="text-xs text-gray-400">
+            {isComplete ? 'Workflow Complete' : `In Progress`}
           </p>
         </div>
         <div className="text-right">
-          <div className="text-lg font-bold text-blue-600">{progress}%</div>
-          <div className="text-xs text-gray-500">Complete</div>
+          <div className="text-lg font-bold text-blue-400">{progress}%</div>
         </div>
       </div>
 
       {/* Progress Bar */}
-      <div className="mb-3">
-        <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+      <div className="mb-4">
+        <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
           <div
-            className="h-full rounded-full bg-blue-600 transition-all duration-500 ease-out"
+            className="h-full rounded-full bg-blue-500 transition-all duration-500 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
       </div>
 
-      {/* Completed Steps */}
-      {completedSteps.length > 0 && (
-        <div className="mb-3">
-          <div className="text-xs font-medium text-gray-700 mb-1">Completed Steps:</div>
-          <div className="flex flex-wrap gap-2">
-            {completedSteps.map((step, index) => (
-              <div
-                key={index}
-                className="inline-flex items-center gap-1 rounded-md bg-green-50 px-2 py-1 text-xs text-green-700"
-              >
-                <CheckCircle2 className="h-3 w-3" />
+      {/* Steps */}
+      <div className="space-y-2">
+        {allSteps.map((step, index) => {
+          const isCompleted = completedSteps.includes(step);
+          const isCurrent = step === currentStep && !isComplete;
+          return (
+            <div key={index} className="flex items-center gap-2 text-xs">
+              {isCompleted ? (
+                <CheckCircle2 className="h-4 w-4 text-green-400" />
+              ) : (
+                <Circle className="h-4 w-4 text-blue-400" />
+              )}
+              <span className={`${isCurrent ? 'font-bold text-white' : 'text-gray-400'}`}>
                 {formatStepName(step)}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Current Step */}
-      {!isComplete && currentStep && (
-        <div className="mb-2">
-          <div className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-xs text-blue-700">
-            <Circle className="h-3 w-3" />
-            <span className="font-medium">Current:</span> {formatStepName(currentStep)}
-          </div>
-        </div>
-      )}
+              </span>
+            </div>
+          );
+        })}
+      </div>
 
       {/* Pending Actions Indicator */}
       {hasActions && actionCount > 0 && (
-        <div className="mt-3 flex items-center gap-2 rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">
+        <div className="mt-4 flex items-center gap-2 rounded-md bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
           <ArrowRight className="h-4 w-4" />
           <span>
             <span className="font-medium">{actionCount}</span> suggested action
@@ -138,7 +129,7 @@ export function WorkflowProgress({
 
       {/* Completion Badge */}
       {isComplete && (
-        <div className="mt-3 flex items-center gap-2 rounded-md bg-green-50 px-3 py-2 text-xs text-green-800">
+        <div className="mt-4 flex items-center gap-2 rounded-md bg-green-500/10 px-3 py-2 text-xs text-green-300">
           <CheckCircle2 className="h-4 w-4" />
           <span className="font-medium">Workflow completed successfully</span>
         </div>
@@ -163,17 +154,17 @@ export function WorkflowProgressCompact({
 
   return (
     <div className={`inline-flex items-center gap-2 ${className}`}>
-      <div className="flex items-center gap-1 text-xs text-gray-600">
-        <div className="h-1.5 w-12 overflow-hidden rounded-full bg-gray-200">
+      <div className="flex items-center gap-1 text-xs text-gray-400">
+        <div className="h-1.5 w-12 overflow-hidden rounded-full bg-white/10">
           <div
-            className="h-full rounded-full bg-blue-600 transition-all"
+            className="h-full rounded-full bg-blue-500 transition-all"
             style={{ width: `${progress}%` }}
           />
         </div>
-        <span className="font-medium">{progress}%</span>
+        <span className="font-medium text-gray-300">{progress}%</span>
       </div>
-      {!isComplete && <span className="text-xs text-gray-500">{formatStepName(currentStep)}</span>}
-      {isComplete && <span className="text-xs font-medium text-green-600">✓ Complete</span>}
+      {!isComplete && <span className="text-xs text-gray-400">{formatStepName(currentStep)}</span>}
+      {isComplete && <span className="text-xs font-medium text-green-400">✓ Complete</span>}
     </div>
   );
 }

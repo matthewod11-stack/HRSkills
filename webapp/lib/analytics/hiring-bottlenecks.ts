@@ -10,8 +10,27 @@
  * - Returns formatted insights with actionable recommendations
  */
 
-import { db } from '@/lib/db';
 import { sql } from 'drizzle-orm';
+import { db } from '@/lib/db';
+
+/** Raw requisition row from database */
+interface RequisitionRow {
+  requisition_id: string;
+  job_title: string;
+  department: string;
+  opened_date: string;
+  status: string;
+  hiring_manager_id: string;
+  candidates_screened?: number;
+  candidates_interviewed?: number;
+  offers_extended?: number;
+}
+
+/** Raw employee row for manager lookup */
+interface EmployeeNameRow {
+  employee_id: string;
+  full_name: string;
+}
 
 export interface HiringRequisition {
   requisitionId: string;
@@ -38,11 +57,14 @@ export interface HiringBottleneckAnalysis {
   stalledRequisitions: number;
   averageTimeToFill: number; // days
   longestOpenReq: number; // days
-  byDepartment: Record<string, {
-    openReqs: number;
-    avgDaysOpen: number;
-    stalledCount: number;
-  }>;
+  byDepartment: Record<
+    string,
+    {
+      openReqs: number;
+      avgDaysOpen: number;
+      stalledCount: number;
+    }
+  >;
   requisitions: HiringRequisition[];
   trends: {
     timeToFillTrend: 'improving' | 'worsening' | 'stable';
@@ -57,16 +79,10 @@ export interface HiringBottleneckAnalysis {
  * @param options Filter options
  * @returns Hiring bottleneck analysis
  */
-export async function analyzeHiringBottlenecks(options: {
-  department?: string;
-  minDaysOpen?: number;
-  includeStalled?: boolean;
-} = {}): Promise<HiringBottleneckAnalysis> {
-  const {
-    department,
-    minDaysOpen = 30,
-    includeStalled = true,
-  } = options;
+export async function analyzeHiringBottlenecks(
+  options: { department?: string; minDaysOpen?: number; includeStalled?: boolean } = {}
+): Promise<HiringBottleneckAnalysis> {
+  const { department, minDaysOpen = 30, includeStalled = true } = options;
 
   // For demo purposes, we'll query from a hypothetical job_requisitions table
   // If this table doesn't exist, we'll generate mock data based on open positions in metrics
@@ -106,25 +122,23 @@ export async function analyzeHiringBottlenecks(options: {
       LIMIT 100
     `);
 
-    const result = (db as any).all(query);
-    const rows = result as any[];
+    const result = (db as unknown as { all: (q: unknown) => RequisitionRow[] }).all(query);
+    const rows = result;
 
     // Get hiring manager names
     const managerQuery = sql.raw(`
       SELECT employee_id, full_name
       FROM employees
-      WHERE employee_id IN (${rows.map(r => `'${r.hiring_manager_id}'`).join(',')})
+      WHERE employee_id IN (${rows.map((r) => `'${r.hiring_manager_id}'`).join(',')})
     `);
-    const managerResult = (db as any).all(managerQuery);
-    const managerMap = new Map(
-      (managerResult.rows as any[]).map(m => [m.employee_id, m.full_name])
+    const managerResult = (db as unknown as { all: (q: unknown) => EmployeeNameRow[] }).all(
+      managerQuery
     );
+    const managerMap = new Map(managerResult.map((m) => [m.employee_id, m.full_name]));
 
     requisitions = rows.map((row) => {
       const openedDate = new Date(row.opened_date);
-      const daysOpen = Math.floor(
-        (Date.now() - openedDate.getTime()) / (1000 * 60 * 60 * 24)
-      );
+      const daysOpen = Math.floor((Date.now() - openedDate.getTime()) / (1000 * 60 * 60 * 24));
 
       const stalledAnalysis = analyzeIfStalled({
         daysOpen,
@@ -149,8 +163,7 @@ export async function analyzeHiringBottlenecks(options: {
         hiringManagerName: managerMap.get(row.hiring_manager_id) || null,
       };
     });
-
-  } catch (error) {
+  } catch (_error) {
     // If job_requisitions table doesn't exist, generate mock data from employee metrics
     console.warn('[HiringBottlenecks] job_requisitions table not found, using mock data');
     requisitions = await generateMockRequisitions(department, minDaysOpen);
@@ -158,23 +171,26 @@ export async function analyzeHiringBottlenecks(options: {
 
   // Filter stalled if requested
   if (includeStalled) {
-    requisitions = requisitions.filter(r => r.isStalled);
+    requisitions = requisitions.filter((r) => r.isStalled);
   }
 
   // Calculate summary statistics
   const totalOpenRequisitions = requisitions.length;
-  const stalledRequisitions = requisitions.filter(r => r.isStalled).length;
+  const stalledRequisitions = requisitions.filter((r) => r.isStalled).length;
 
-  const averageTimeToFill = requisitions.length > 0
-    ? requisitions.reduce((sum, r) => sum + r.daysOpen, 0) / requisitions.length
-    : 0;
+  const averageTimeToFill =
+    requisitions.length > 0
+      ? requisitions.reduce((sum, r) => sum + r.daysOpen, 0) / requisitions.length
+      : 0;
 
-  const longestOpenReq = requisitions.length > 0
-    ? Math.max(...requisitions.map(r => r.daysOpen))
-    : 0;
+  const longestOpenReq =
+    requisitions.length > 0 ? Math.max(...requisitions.map((r) => r.daysOpen)) : 0;
 
   // Group by department
-  const byDepartment: Record<string, { openReqs: number; avgDaysOpen: number; stalledCount: number }> = {};
+  const byDepartment: Record<
+    string,
+    { openReqs: number; avgDaysOpen: number; stalledCount: number }
+  > = {};
 
   requisitions.forEach((req) => {
     if (!byDepartment[req.department]) {
@@ -194,8 +210,7 @@ export async function analyzeHiringBottlenecks(options: {
 
   // Calculate averages
   Object.keys(byDepartment).forEach((dept) => {
-    byDepartment[dept].avgDaysOpen =
-      byDepartment[dept].avgDaysOpen / byDepartment[dept].openReqs;
+    byDepartment[dept].avgDaysOpen = byDepartment[dept].avgDaysOpen / byDepartment[dept].openReqs;
   });
 
   // Calculate trends (compare last 30 days vs previous 30 days)
@@ -264,9 +279,9 @@ function analyzeIfStalled(metrics: {
  */
 function estimateTimeToFill(daysOpen: number, candidatesInterviewed: number): number | null {
   // Industry averages by stage
-  const avgDaysToScreen = 14;
-  const avgDaysToInterview = 21;
-  const avgDaysToOffer = 35;
+  const _avgDaysToScreen = 14;
+  const _avgDaysToInterview = 21;
+  const _avgDaysToOffer = 35;
   const avgDaysToAccept = 42;
 
   if (candidatesInterviewed > 0) {
@@ -287,23 +302,28 @@ async function calculateTimeToFillTrends(): Promise<{
 }> {
   try {
     // Compare average days open for reqs opened in last 30 days vs previous 30 days
-    const recent = (db as any).all(sql.raw(`
+    type AvgDaysRow = { avg_days: number | null };
+    const recent = (db as unknown as { all: (q: unknown) => AvgDaysRow[] }).all(
+      sql.raw(`
       SELECT AVG(julianday('now') - julianday(opened_date)) as avg_days
       FROM job_requisitions
       WHERE status = 'open'
         AND julianday('now') - julianday(opened_date) <= 30
-    `));
+    `)
+    );
 
-    const previous = (db as any).all(sql.raw(`
+    const previous = (db as unknown as { all: (q: unknown) => AvgDaysRow[] }).all(
+      sql.raw(`
       SELECT AVG(julianday('now') - julianday(opened_date)) as avg_days
       FROM job_requisitions
       WHERE status = 'open'
         AND julianday('now') - julianday(opened_date) > 30
         AND julianday('now') - julianday(opened_date) <= 60
-    `));
+    `)
+    );
 
-    const recentAvg = (recent.rows[0] as any)?.avg_days || 0;
-    const previousAvg = (previous.rows[0] as any)?.avg_days || 0;
+    const recentAvg = recent[0]?.avg_days || 0;
+    const previousAvg = previous[0]?.avg_days || 0;
 
     if (previousAvg === 0) {
       return { timeToFillTrend: 'stable', percentChange: 0 };
@@ -321,8 +341,7 @@ async function calculateTimeToFillTrends(): Promise<{
     }
 
     return { timeToFillTrend: trend, percentChange: Math.round(percentChange) };
-
-  } catch (error) {
+  } catch (_error) {
     // If table doesn't exist or query fails
     return { timeToFillTrend: 'stable', percentChange: 0 };
   }
@@ -384,7 +403,7 @@ async function generateMockRequisitions(
     },
   ];
 
-  return mockReqs.filter(req => {
+  return mockReqs.filter((req) => {
     if (department && req.department !== department) return false;
     if (req.daysOpen < minDaysOpen) return false;
     return true;
@@ -397,7 +416,11 @@ async function generateMockRequisitions(
 export function getSuggestedHiringActions(
   req: HiringRequisition
 ): Array<{ action: string; description: string; priority: 'high' | 'medium' | 'low' }> {
-  const actions: Array<{ action: string; description: string; priority: 'high' | 'medium' | 'low' }> = [];
+  const actions: Array<{
+    action: string;
+    description: string;
+    priority: 'high' | 'medium' | 'low';
+  }> = [];
 
   // No candidates screened
   if (req.candidatesScreened === 0 && req.daysOpen > 30) {
@@ -478,8 +501,12 @@ export function formatHiringBottlenecksForChat(analysis: HiringBottleneckAnalysi
   response += `**Longest Open:** ${longestOpenReq} days\n\n`;
 
   // Trend indicator
-  const trendEmoji = trends.timeToFillTrend === 'improving' ? '📈 Improving' :
-                     trends.timeToFillTrend === 'worsening' ? '📉 Worsening' : '➡️ Stable';
+  const trendEmoji =
+    trends.timeToFillTrend === 'improving'
+      ? '📈 Improving'
+      : trends.timeToFillTrend === 'worsening'
+        ? '📉 Worsening'
+        : '➡️ Stable';
   response += `**Trend:** ${trendEmoji} (${trends.percentChange > 0 ? '+' : ''}${trends.percentChange}% vs last month)\n\n`;
 
   // Department breakdown

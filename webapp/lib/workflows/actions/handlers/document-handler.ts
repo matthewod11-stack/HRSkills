@@ -5,20 +5,24 @@
  * Saves to SQLite database with optional Google Drive export.
  */
 
+import { Readable } from 'node:stream';
+import { env } from '@/env.mjs';
+import {
+  type GoogleWorkspaceClient,
+  getOAuthClient,
+  getServiceAccountClient,
+} from '@/lib/google/workspace-client';
+import { type CreateDocumentInput, createDocument } from '@/lib/services/document-service';
 import type {
-  ActionHandler,
-  BaseAction,
   ActionContext,
+  ActionHandler,
   ActionResult,
-  ActionValidationResult,
   ActionValidationError,
+  ActionValidationResult,
   ActionValidationWarning,
+  BaseAction,
   CreateDocumentPayload,
 } from '../types';
-import { env } from '@/env.mjs';
-import { createDocument, type CreateDocumentInput } from '@/lib/services/document-service';
-import { getServiceAccountClient, getOAuthClient } from '@/lib/google/workspace-client';
-import { Readable } from 'stream';
 
 /**
  * Helper functions for document handling
@@ -70,10 +74,33 @@ function getFolderNameForDocumentType(documentType: string): string {
   return folderMap[documentType] || 'HR Documents';
 }
 
+/** Google Drive client interface (minimal) */
+interface DriveClient {
+  files: {
+    list: (options: { q: string; fields: string; spaces: string }) => Promise<{
+      data: { files?: Array<{ id: string; name: string }> };
+    }>;
+    create: (options: {
+      requestBody: Record<string, unknown>;
+      media?: { mimeType: string; body: unknown };
+      fields?: string;
+    }) => Promise<{
+      data: { id?: string; webViewLink?: string; webContentLink?: string };
+    }>;
+  };
+  permissions: {
+    create: (options: {
+      fileId: string;
+      requestBody: { type: string; role: string; emailAddress: string };
+      sendNotificationEmail: boolean;
+    }) => Promise<void>;
+  };
+}
+
 /**
  * Find or create a folder in Google Drive
  */
-async function findOrCreateFolder(drive: any, folderName: string): Promise<string> {
+async function findOrCreateFolder(drive: DriveClient, folderName: string): Promise<string> {
   // Search for existing folder
   const searchResponse = await drive.files.list({
     q: `name='${folderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
@@ -100,15 +127,23 @@ async function findOrCreateFolder(drive: any, folderName: string): Promise<strin
   return folder.data.id;
 }
 
+/** Drive destination options */
+interface DriveDestination {
+  folderId?: string;
+  shareWith?: string[];
+  sharePermission?: string;
+  sendNotification?: boolean;
+}
+
 /**
  * Export document to Google Drive
  */
 async function exportToGoogleDrive(
-  documentId: string,
+  _documentId: string,
   title: string,
   content: string,
   documentType: string,
-  destination: any,
+  destination: DriveDestination,
   context: ActionContext
 ): Promise<{
   fileId: string;
@@ -117,7 +152,7 @@ async function exportToGoogleDrive(
   sharedWith?: string[];
 }> {
   // Get appropriate client based on available credentials
-  let client;
+  let client: GoogleWorkspaceClient | null;
   const hasServiceAccount = env.GOOGLE_CREDENTIALS_PATH;
 
   if (hasServiceAccount) {
@@ -140,7 +175,7 @@ async function exportToGoogleDrive(
   }
 
   // Create the document as a Google Doc
-  const fileMetadata: any = {
+  const fileMetadata: { name: string; mimeType: string; parents?: string[] } = {
     name: title,
     mimeType: 'application/vnd.google-apps.document',
   };
@@ -271,7 +306,8 @@ export const documentHandler: ActionHandler<CreateDocumentPayload> = {
       if (!hasServiceAccount && !hasOAuth) {
         warnings.push({
           field: 'destination',
-          message: 'Google Workspace credentials not configured. Document will be saved to database only.',
+          message:
+            'Google Workspace credentials not configured. Document will be saved to database only.',
         });
       }
     }
@@ -339,7 +375,24 @@ export const documentHandler: ActionHandler<CreateDocumentPayload> = {
       const documentUrl = `/documents/${document.id}`;
 
       // Initialize output
-      const output: any = {
+      const output: {
+        documentId: string;
+        url: string;
+        title: string;
+        documentType: string;
+        status: string;
+        format: string;
+        size: number;
+        createdAt: Date;
+        message: string;
+        googleDrive?: {
+          fileId: string;
+          webViewLink: string;
+          folderId?: string;
+          sharedWith?: string[];
+        };
+        googleDriveError?: string;
+      } = {
         documentId: document.id,
         url: documentUrl,
         title: document.title,
@@ -365,10 +418,11 @@ export const documentHandler: ActionHandler<CreateDocumentPayload> = {
 
           output.googleDrive = driveResult;
           output.message = `Document "${payload.title}" created and exported to Google Drive`;
-        } catch (driveError: any) {
+        } catch (driveError: unknown) {
           // Don't fail the entire action if Drive export fails
-          output.googleDriveError = driveError.message;
-          output.message = `Document "${payload.title}" created but Google Drive export failed: ${driveError.message}`;
+          const driveMsg = driveError instanceof Error ? driveError.message : 'Unknown error';
+          output.googleDriveError = driveMsg;
+          output.message = `Document "${payload.title}" created but Google Drive export failed: ${driveMsg}`;
         }
       }
 
@@ -386,7 +440,7 @@ export const documentHandler: ActionHandler<CreateDocumentPayload> = {
           googleDriveFileId: output.googleDrive?.fileId,
         },
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
         actionId: action.id,
@@ -394,7 +448,7 @@ export const documentHandler: ActionHandler<CreateDocumentPayload> = {
         duration: Date.now() - startTime,
         error: {
           code: 'document_creation_failed',
-          message: error.message || 'Failed to create document',
+          message: error instanceof Error ? error.message : 'Failed to create document',
           details: error,
         },
       };
@@ -409,10 +463,22 @@ export const documentHandler: ActionHandler<CreateDocumentPayload> = {
   },
 };
 
+/** Action executor interface for registration */
+interface ActionExecutor {
+  registerHandler(
+    handler: ActionHandler<CreateDocumentPayload>,
+    options: {
+      enabled: boolean;
+      requiredPermissions: string[];
+      rateLimitPerHour: number;
+    }
+  ): void;
+}
+
 /**
  * Register document handler with executor
  */
-export function registerDocumentHandler(executor: any) {
+export function registerDocumentHandler(executor: ActionExecutor) {
   executor.registerHandler(documentHandler, {
     enabled: true,
     requiredPermissions: ['documents:write'],

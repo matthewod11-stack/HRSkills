@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
-import { createDemoToken, generateToken } from '@/lib/auth/middleware';
 import { handleApiError } from '@/lib/api-helpers';
-import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter';
+import { createDemoToken, generateToken } from '@/lib/auth/middleware';
 import { verifyPassword } from '@/lib/auth/password';
+import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter';
 
 /**
  * POST /api/auth/login
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { email, password, role = 'hr_admin' } = body;
+    const { email, password, role: _role = 'hr_admin' } = body;
 
     // Validate email
     if (!email || !email.includes('@')) {
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     if (env.NODE_ENV !== 'production') {
       // Generate JWT token (role is always 'admin' for single-user system)
       const token = await createDemoToken(email);
-      
+
       return NextResponse.json({
         success: true,
         token,
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
     if (!adminEmail || !adminPasswordHash) {
       // Generate JWT token without validation (allows setup without credentials)
       const token = await createDemoToken(email);
-      
+
       return NextResponse.json({
         success: true,
         token,

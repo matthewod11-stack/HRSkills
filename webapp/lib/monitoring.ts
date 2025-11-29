@@ -60,8 +60,7 @@ async function sendMetric(metric: Metric): Promise<void> {
   try {
     // Only send in production
     if (process.env.NODE_ENV !== 'production') {
-      const formattedMetric =
-        typeof metric === 'string' ? metric : JSON.stringify(metric, null, 2);
+      const formattedMetric = typeof metric === 'string' ? metric : JSON.stringify(metric, null, 2);
       console.debug('[Monitoring]', formattedMetric);
       return;
     }
@@ -88,8 +87,7 @@ async function sendError(error: ErrorLog): Promise<void> {
   try {
     // Only send in production
     if (process.env.NODE_ENV !== 'production') {
-      const formattedError =
-        typeof error === 'string' ? error : JSON.stringify(error, null, 2);
+      const formattedError = typeof error === 'string' ? error : JSON.stringify(error, null, 2);
       console.error('[Error]', formattedError);
       return;
     }
@@ -131,7 +129,7 @@ export function trackLCP(): void {
 
   try {
     observer.observe({ entryTypes: ['largest-contentful-paint'] });
-  } catch (e) {
+  } catch (_e) {
     // Browser doesn't support LCP
   }
 }
@@ -158,7 +156,7 @@ export function trackFID(): void {
 
   try {
     observer.observe({ entryTypes: ['first-input'] });
-  } catch (e) {
+  } catch (_e) {
     // Browser doesn't support FID
   }
 }
@@ -182,7 +180,7 @@ export function trackCLS(): void {
 
   try {
     observer.observe({ entryTypes: ['layout-shift'] });
-  } catch (e) {
+  } catch (_e) {
     // Browser doesn't support CLS
   }
 
@@ -229,7 +227,7 @@ export function trackFCP(): void {
 
   try {
     observer.observe({ entryTypes: ['paint'] });
-  } catch (e) {
+  } catch (_e) {
     // Browser doesn't support FCP
   }
 }
@@ -258,7 +256,7 @@ export function trackTTFB(): void {
 
   try {
     observer.observe({ entryTypes: ['navigation'] });
-  } catch (e) {
+  } catch (_e) {
     // Browser doesn't support Navigation Timing
   }
 }

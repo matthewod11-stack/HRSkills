@@ -20,9 +20,9 @@
  * - Below 0: Poor (critical)
  */
 
+import { and, desc, eq, isNotNull, sql } from 'drizzle-orm';
+import { employeeMetrics, employees } from '@/db/schema';
 import { db } from '@/lib/db';
-import { employees, employeeMetrics } from '@/db/schema';
-import { eq, and, gte, lte, sql, desc, isNotNull } from 'drizzle-orm';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -93,11 +93,7 @@ export interface ENPSAnalytics {
 /**
  * Calculate eNPS score from counts
  */
-function calculateScore(
-  promoters: number,
-  passives: number,
-  detractors: number
-): number {
+function calculateScore(promoters: number, passives: number, detractors: number): number {
   const total = promoters + passives + detractors;
   if (total === 0) return 0;
 
@@ -170,10 +166,7 @@ export async function calculateENPS(): Promise<ENPSAnalytics> {
     .orderBy(desc(employeeMetrics.surveyQuarter));
 
   // Group by quarter
-  const quarterMap = new Map<
-    string,
-    { promoters: number; passives: number; detractors: number }
-  >();
+  const quarterMap = new Map<string, { promoters: number; passives: number; detractors: number }>();
 
   results.forEach((row) => {
     if (!row.quarter || !row.category) return;
@@ -222,15 +215,9 @@ export async function calculateENPS(): Promise<ENPSAnalytics> {
         passives: currentData.passives,
         detractors: currentData.detractors,
         total: currentData.total,
-        promoterPercentage: Math.round(
-          (currentData.promoters / currentData.total) * 100
-        ),
-        passivePercentage: Math.round(
-          (currentData.passives / currentData.total) * 100
-        ),
-        detractorPercentage: Math.round(
-          (currentData.detractors / currentData.total) * 100
-        ),
+        promoterPercentage: Math.round((currentData.promoters / currentData.total) * 100),
+        passivePercentage: Math.round((currentData.passives / currentData.total) * 100),
+        detractorPercentage: Math.round((currentData.detractors / currentData.total) * 100),
       }
     : null;
 
@@ -248,28 +235,18 @@ export async function calculateENPS(): Promise<ENPSAnalytics> {
     passives: totalPassives,
     detractors: totalDetractors,
     promoterPercentage:
-      totalResponses > 0
-        ? Math.round((totalPromoters / totalResponses) * 100)
-        : 0,
-    passivePercentage:
-      totalResponses > 0
-        ? Math.round((totalPassives / totalResponses) * 100)
-        : 0,
+      totalResponses > 0 ? Math.round((totalPromoters / totalResponses) * 100) : 0,
+    passivePercentage: totalResponses > 0 ? Math.round((totalPassives / totalResponses) * 100) : 0,
     detractorPercentage:
-      totalResponses > 0
-        ? Math.round((totalDetractors / totalResponses) * 100)
-        : 0,
+      totalResponses > 0 ? Math.round((totalDetractors / totalResponses) * 100) : 0,
     total: totalResponses,
   };
 
   // Calculate summary statistics
   const averageScore =
-    trends.length > 0
-      ? Math.round(trends.reduce((sum, t) => sum + t.score, 0) / trends.length)
-      : 0;
+    trends.length > 0 ? Math.round(trends.reduce((sum, t) => sum + t.score, 0) / trends.length) : 0;
 
-  const longTermTrend =
-    trends.length >= 2 ? trends[0].score - trends[trends.length - 1].score : 0;
+  const longTermTrend = trends.length >= 2 ? trends[0].score - trends[trends.length - 1].score : 0;
 
   let trendDirection: 'up' | 'down' | 'stable' = 'stable';
   if (longTermTrend > 5) trendDirection = 'up';
@@ -293,9 +270,7 @@ export async function calculateENPS(): Promise<ENPSAnalytics> {
 /**
  * Calculate eNPS by department
  */
-export async function calculateENPSByDepartment(
-  quarter?: string
-): Promise<ENPSByDepartment[]> {
+export async function calculateENPSByDepartment(quarter?: string): Promise<ENPSByDepartment[]> {
   const whereConditions = [
     isNotNull(employeeMetrics.enpsScore),
     isNotNull(employeeMetrics.surveyCategory),
@@ -317,10 +292,7 @@ export async function calculateENPSByDepartment(
     .groupBy(employees.department, employeeMetrics.surveyCategory);
 
   // Group by department
-  const deptMap = new Map<
-    string,
-    { promoters: number; passives: number; detractors: number }
-  >();
+  const deptMap = new Map<string, { promoters: number; passives: number; detractors: number }>();
 
   results.forEach((row) => {
     if (!row.department || !row.category) return;
@@ -380,9 +352,7 @@ export async function calculateENPSTrends(
 /**
  * Get overall distribution of Promoters/Passives/Detractors
  */
-export async function getENPSDistribution(
-  quarter?: string
-): Promise<ENPSDistribution> {
+export async function getENPSDistribution(quarter?: string): Promise<ENPSDistribution> {
   const whereConditions = [
     isNotNull(employeeMetrics.enpsScore),
     isNotNull(employeeMetrics.surveyCategory),

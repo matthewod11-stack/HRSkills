@@ -1,17 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { loadDataFileByType } from '@/lib/analytics/utils';
-import { requireAuth, authErrorResponse } from '@/lib/auth/middleware';
-import { handleApiError } from '@/lib/api-helpers';
-import { CACHE_TTL, responseCache } from '@/lib/analytics/chat/config';
+import { type NextRequest, NextResponse } from 'next/server';
+import { generateSQLAndAnalysis } from '@/lib/analytics/chat/claude-client';
+import { CACHE_TTL, responseCache, type SQLAnalysisResult } from '@/lib/analytics/chat/config';
+import { executeQuery, getQueryMetadata, hasResults } from '@/lib/analytics/chat/sql-executor';
 import {
-  validateSQL,
-  normalizeSQLColumnNames,
   generateChartConfig,
   generateFollowUps,
+  normalizeSQLColumnNames,
   populateAnalysisTemplate,
+  validateSQL,
 } from '@/lib/analytics/chat/utils';
-import { executeQuery, hasResults, getQueryMetadata } from '@/lib/analytics/chat/sql-executor';
-import { generateSQLAndAnalysis } from '@/lib/analytics/chat/claude-client';
+import { loadDataFileByType } from '@/lib/analytics/utils';
+import { handleApiError } from '@/lib/api-helpers';
+import { authErrorResponse, requireAuth } from '@/lib/auth/middleware';
 import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter';
 
 /**
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { message, sessionId, conversationHistory } = body;
+    const { message, sessionId: _sessionId, conversationHistory } = body;
 
     // Validate request
     if (!message || !message.trim()) {
@@ -75,12 +75,12 @@ export async function POST(req: NextRequest) {
 
     // Generate SQL query and analysis template using Claude
     const startTime = Date.now();
-    let sqlResult;
+    let sqlResult: SQLAnalysisResult;
 
     try {
       sqlResult = await generateSQLAndAnalysis(message, ['employees'], conversationHistory);
-    } catch (error: any) {
-      if (error.message === 'NO_SQL_GENERATED') {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.message === 'NO_SQL_GENERATED') {
         return NextResponse.json(
           {
             success: false,
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
       throw error;
     }
 
-    let { sql, intent, explanation, analysis_template } = sqlResult;
+    let { sql, intent, explanation: _explanation, analysis_template } = sqlResult;
 
     // Normalize SQL column names (fix display names with spaces to actual column names)
     sql = normalizeSQLColumnNames(sql);

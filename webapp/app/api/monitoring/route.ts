@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
+import { handleApiError } from '@/lib/api-helpers';
+import { authErrorResponse, requireAuth } from '@/lib/auth/middleware';
 import {
-  getAggregatedMetrics,
-  formatMetricsSummary,
   checkThresholds,
-  exportMetrics,
   clearMetrics,
+  exportMetrics,
+  formatMetricsSummary,
+  getAggregatedMetrics,
 } from '@/lib/performance-monitor';
-import { requireAuth, authErrorResponse } from '@/lib/auth/middleware';
-import { handleApiError, validationError, notFoundError } from '@/lib/api-helpers';
 
 /**
  * GET /api/monitoring
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const url = new URL(request.url);
-    const periodMinutes = parseInt(url.searchParams.get('period') || '60');
+    const periodMinutes = parseInt(url.searchParams.get('period') || '60', 10);
     const format = url.searchParams.get('format') || 'json';
 
     const metrics = getAggregatedMetrics(periodMinutes);
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
         },
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return handleApiError(error, {
       endpoint: '/api/monitoring',
       method: 'GET',
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
       { success: false, error: 'Invalid action. Use "export" or "clear"' },
       { status: 400 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     return handleApiError(error, {
       endpoint: '/api/monitoring',
       method: 'POST',

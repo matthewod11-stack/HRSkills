@@ -1,11 +1,11 @@
+import { act, renderHook } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import { vi } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { ReactNode } from 'react';
 import {
   ChatProvider,
+  type Message,
   useChatContext,
-  Message,
-  WorkflowState,
+  type WorkflowState,
 } from '@/components/custom/chat/ChatContext';
 
 /**
@@ -193,9 +193,7 @@ describe('ChatContext', () => {
 
   describe('updateMessage', () => {
     it('should update a specific message by ID', () => {
-      const initialMessages = [
-        createMockMessage({ id: 1, content: 'Original' }),
-      ];
+      const initialMessages = [createMockMessage({ id: 1, content: 'Original' })];
       const { result } = renderHook(() => useChatContext(), {
         wrapper: createWrapper(initialMessages),
       });
@@ -227,9 +225,7 @@ describe('ChatContext', () => {
     });
 
     it('should support partial updates', () => {
-      const initialMessages = [
-        createMockMessage({ id: 1, content: 'Original', role: 'user' }),
-      ];
+      const initialMessages = [createMockMessage({ id: 1, content: 'Original', role: 'user' })];
       const { result } = renderHook(() => useChatContext(), {
         wrapper: createWrapper(initialMessages),
       });
@@ -280,9 +276,7 @@ describe('ChatContext', () => {
 
   describe('deleteMessage', () => {
     it('should remove a message by ID', () => {
-      const initialMessages = [
-        createMockMessage({ id: 1, content: 'To delete' }),
-      ];
+      const initialMessages = [createMockMessage({ id: 1, content: 'To delete' })];
       const { result } = renderHook(() => useChatContext(), {
         wrapper: createWrapper(initialMessages),
       });
@@ -395,9 +389,7 @@ describe('ChatContext', () => {
 
   describe('toggleEdit', () => {
     it('should set isEditing to true when false', () => {
-      const initialMessages = [
-        createMockMessage({ id: 1, content: 'Edit me' }),
-      ];
+      const initialMessages = [createMockMessage({ id: 1, content: 'Edit me' })];
       const { result } = renderHook(() => useChatContext(), {
         wrapper: createWrapper(initialMessages),
       });
@@ -410,9 +402,7 @@ describe('ChatContext', () => {
     });
 
     it('should set isEditing to false when true', () => {
-      const initialMessages = [
-        createMockMessage({ id: 1, content: 'Edit me', isEditing: true }),
-      ];
+      const initialMessages = [createMockMessage({ id: 1, content: 'Edit me', isEditing: true })];
       const { result } = renderHook(() => useChatContext(), {
         wrapper: createWrapper(initialMessages),
       });
@@ -425,9 +415,7 @@ describe('ChatContext', () => {
     });
 
     it('should set editedContent to current content when entering edit mode', () => {
-      const initialMessages = [
-        createMockMessage({ id: 1, content: 'Original content' }),
-      ];
+      const initialMessages = [createMockMessage({ id: 1, content: 'Original content' })];
       const { result } = renderHook(() => useChatContext(), {
         wrapper: createWrapper(initialMessages),
       });
@@ -480,9 +468,7 @@ describe('ChatContext', () => {
 
   describe('updateEdit', () => {
     it('should update editedContent for a message', () => {
-      const initialMessages = [
-        createMockMessage({ id: 1, content: 'Original', isEditing: true }),
-      ];
+      const initialMessages = [createMockMessage({ id: 1, content: 'Original', isEditing: true })];
       const { result } = renderHook(() => useChatContext(), {
         wrapper: createWrapper(initialMessages),
       });
@@ -495,9 +481,7 @@ describe('ChatContext', () => {
     });
 
     it('should not change the original content', () => {
-      const initialMessages = [
-        createMockMessage({ id: 1, content: 'Original', isEditing: true }),
-      ];
+      const initialMessages = [createMockMessage({ id: 1, content: 'Original', isEditing: true })];
       const { result } = renderHook(() => useChatContext(), {
         wrapper: createWrapper(initialMessages),
       });
@@ -528,9 +512,7 @@ describe('ChatContext', () => {
     });
 
     it('should handle empty string', () => {
-      const initialMessages = [
-        createMockMessage({ id: 1, content: 'Original', isEditing: true }),
-      ];
+      const initialMessages = [createMockMessage({ id: 1, content: 'Original', isEditing: true })];
       const { result } = renderHook(() => useChatContext(), {
         wrapper: createWrapper(initialMessages),
       });
@@ -646,8 +628,18 @@ describe('ChatContext', () => {
 
     it('should only save the targeted message', () => {
       const initialMessages = [
-        createMockMessage({ id: 1, content: 'Message 1', isEditing: true, editedContent: 'Edit 1' }),
-        createMockMessage({ id: 2, content: 'Message 2', isEditing: true, editedContent: 'Edit 2' }),
+        createMockMessage({
+          id: 1,
+          content: 'Message 1',
+          isEditing: true,
+          editedContent: 'Edit 1',
+        }),
+        createMockMessage({
+          id: 2,
+          content: 'Message 2',
+          isEditing: true,
+          editedContent: 'Edit 2',
+        }),
       ];
       const { result } = renderHook(() => useChatContext(), {
         wrapper: createWrapper(initialMessages),
@@ -789,9 +781,7 @@ describe('ChatContext', () => {
 
   describe('Integration scenarios', () => {
     it('should handle complete edit workflow', () => {
-      const initialMessages = [
-        createMockMessage({ id: 1, content: 'Original message' }),
-      ];
+      const initialMessages = [createMockMessage({ id: 1, content: 'Original message' })];
       const { result } = renderHook(() => useChatContext(), {
         wrapper: createWrapper(initialMessages),
       });
@@ -819,9 +809,7 @@ describe('ChatContext', () => {
     });
 
     it('should handle cancel edit workflow', () => {
-      const initialMessages = [
-        createMockMessage({ id: 1, content: 'Original message' }),
-      ];
+      const initialMessages = [createMockMessage({ id: 1, content: 'Original message' })];
       const { result } = renderHook(() => useChatContext(), {
         wrapper: createWrapper(initialMessages),
       });
@@ -858,7 +846,9 @@ describe('ChatContext', () => {
 
       // Assistant responds
       act(() => {
-        result.current.addMessage(createMockMessage({ id: 2, role: 'assistant', content: 'Hi there!' }));
+        result.current.addMessage(
+          createMockMessage({ id: 2, role: 'assistant', content: 'Hi there!' })
+        );
         result.current.setIsTyping(false);
       });
 

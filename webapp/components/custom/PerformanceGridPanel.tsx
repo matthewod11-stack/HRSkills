@@ -81,17 +81,17 @@ export function PerformanceGridPanel({
   const getCellColor = (performance: string, potential: string): string => {
     const key = `${performance}-${potential}`;
     const colorMap: Record<string, string> = {
-      'High-High': 'from-green-500/30 to-emerald-500/30 border-green-500/60',
-      'High-Medium': 'from-green-500/20 to-blue-500/20 border-green-500/50',
-      'High-Low': 'from-blue-500/30 to-cyan-500/30 border-blue-500/60',
-      'Medium-High': 'from-blue-500/30 to-purple-500/30 border-blue-500/60',
-      'Medium-Medium': 'from-gray-500/20 to-gray-500/20 border-gray-500/40',
-      'Medium-Low': 'from-yellow-500/20 to-orange-500/20 border-yellow-500/50',
-      'Low-High': 'from-orange-500/30 to-red-500/30 border-orange-500/60',
-      'Low-Medium': 'from-red-500/20 to-orange-500/20 border-red-500/50',
-      'Low-Low': 'from-red-500/30 to-pink-500/30 border-red-500/60',
+      'High-High': 'from-success/30 to-sage/30 border-success/60',
+      'High-Medium': 'from-success/20 to-sage/20 border-success/50',
+      'High-Low': 'from-sage/30 to-sage-light/30 border-sage/60',
+      'Medium-High': 'from-sage/30 to-sage-light/30 border-sage/60',
+      'Medium-Medium': 'from-sage-soft/30 to-sage-soft/20 border-sage/40',
+      'Medium-Low': 'from-amber/20 to-amber-light/20 border-amber/50',
+      'Low-High': 'from-terracotta/30 to-amber/30 border-terracotta/60',
+      'Low-Medium': 'from-error/20 to-terracotta/20 border-error/50',
+      'Low-Low': 'from-error/30 to-error/20 border-error/60',
     };
-    return colorMap[key] || 'from-gray-500/20 to-gray-500/20 border-gray-500/40';
+    return colorMap[key] || 'from-sage-soft/20 to-sage-soft/20 border-sage/40';
   };
 
   const isHighlighted = (performance: string, potential: string): boolean => {
@@ -108,79 +108,49 @@ export function PerformanceGridPanel({
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <RefreshCw className="w-8 h-8 animate-spin text-purple-400" />
+        <RefreshCw className="w-8 h-8 animate-spin text-terracotta" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full text-red-400">
+      <div className="flex items-center justify-center h-full text-error">
         <p>Error: {error}</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="flex-shrink-0 flex items-center justify-between mb-4 pb-4 border-b border-white/10">
-        <div className="flex items-center gap-2">
-          <Grid3x3 className="w-4 h-4" />
-          <div>
-            <h4 className="font-medium">9-Box Performance Grid</h4>
-            <p className="text-xs text-gray-400">
-              {department || 'All Departments'} • {summary?.totalAnalyzed || 0} employees
-            </p>
-          </div>
-        </div>
-      </div>
+    <div className="flex flex-col h-full p-5">
+      {/* Subtitle */}
+      <p className="text-xs text-charcoal-light mb-4">
+        {department || 'All Departments'} • {summary?.totalAnalyzed || 0} employees
+      </p>
 
       {/* Summary Stats */}
-      <div className="flex-shrink-0 grid grid-cols-3 gap-3 mb-4">
-        <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3">
-          <div className="flex items-center gap-2 mb-1">
-            <TrendingUp className="w-4 h-4 text-green-400" />
-            <span className="text-xs text-gray-400">High Performers</span>
-          </div>
-          <p className="text-2xl font-bold text-green-400">{summary?.highPerformers || 0}</p>
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="bg-success/10 border border-success/30 rounded-lg p-3 text-center">
+          <p className="text-2xl font-bold text-success">{summary?.highPerformers || 0}</p>
+          <p className="text-[10px] text-charcoal-light mt-1">High Performers</p>
         </div>
 
-        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
-          <div className="flex items-center gap-2 mb-1">
-            <Users className="w-4 h-4 text-blue-400" />
-            <span className="text-xs text-gray-400">Core Team</span>
-          </div>
-          <p className="text-2xl font-bold text-blue-400">{summary?.coreEmployees || 0}</p>
+        <div className="bg-sage/10 border border-sage/30 rounded-lg p-3 text-center">
+          <p className="text-2xl font-bold text-sage">{summary?.coreEmployees || 0}</p>
+          <p className="text-[10px] text-charcoal-light mt-1">Core Team</p>
         </div>
 
-        <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-3">
-          <div className="flex items-center gap-2 mb-1">
-            <TrendingDown className="w-4 h-4 text-orange-400" />
-            <span className="text-xs text-gray-400">Dev Needed</span>
-          </div>
-          <p className="text-2xl font-bold text-orange-400">{summary?.developmentNeeded || 0}</p>
+        <div className="bg-terracotta/10 border border-terracotta/30 rounded-lg p-3 text-center">
+          <p className="text-2xl font-bold text-terracotta">{summary?.developmentNeeded || 0}</p>
+          <p className="text-[10px] text-charcoal-light mt-1">Dev Needed</p>
         </div>
       </div>
 
-      {/* 9-Box Grid */}
-      <div className="flex-1 overflow-hidden">
-        <div className="grid grid-cols-4 gap-2 text-xs">
-          {/* Header Row */}
-          <div></div>
-          <div className="text-center text-gray-400 font-medium">Low Potential</div>
-          <div className="text-center text-gray-400 font-medium">Med Potential</div>
-          <div className="text-center text-gray-400 font-medium">High Potential</div>
-
-          {/* Grid Rows */}
+      {/* 9-Box Grid - Centered */}
+      <div className="flex-1 flex items-start justify-center">
+        <div className="grid grid-cols-3 gap-2 w-full max-w-[300px]">
           {(['High', 'Medium', 'Low'] as const).map((perf) => (
             <div key={perf} className="contents">
-              {/* Row Label */}
-              <div className="flex items-center justify-end pr-2 text-gray-400 font-medium text-right">
-                {perf} Perf
-              </div>
-
-              {/* Cells */}
               {(['Low', 'Medium', 'High'] as const).map((pot) => {
                 const cell = getCellData(perf, pot);
                 const colorClass = getCellColor(perf, pot);
@@ -189,18 +159,18 @@ export function PerformanceGridPanel({
                 return (
                   <motion.div
                     key={`${perf}-${pot}`}
-                    whileHover={{ scale: cell && cell.count > 0 ? 1.05 : 1 }}
+                    whileHover={{ scale: cell && cell.count > 0 ? 1.03 : 1 }}
                     onClick={() => handleCellClick(cell)}
                     className={`
                       bg-gradient-to-br ${colorClass}
-                      rounded-lg p-3 cursor-pointer transition-all
-                      ${cell && cell.count > 0 ? 'hover:shadow-lg' : 'opacity-50'}
-                      ${highlighted ? 'ring-2 ring-yellow-400 ring-offset-2 ring-offset-black' : ''}
+                      rounded-lg p-3 cursor-pointer transition-all border aspect-square flex items-center justify-center
+                      ${cell && cell.count > 0 ? 'hover:shadow-warm' : 'opacity-50'}
+                      ${highlighted ? 'ring-2 ring-amber ring-offset-1 ring-offset-cream-white' : ''}
                     `}
                   >
                     <div className="text-center">
-                      <div className="text-xl font-bold mb-0.5">{cell?.count || 0}</div>
-                      <div className="text-[10px] text-gray-300 leading-tight">
+                      <div className="text-lg font-bold text-charcoal">{cell?.count || 0}</div>
+                      <div className="text-[9px] text-charcoal-light leading-tight mt-0.5">
                         {cell?.category}
                       </div>
                     </div>
@@ -213,14 +183,9 @@ export function PerformanceGridPanel({
       </div>
 
       {/* Footer */}
-      <div className="flex-shrink-0 mt-4 pt-4 border-t border-white/10">
-        <div className="text-xs text-gray-400">
-          <p className="mb-1">Performance based on AI analysis + manager ratings</p>
-          {highlights.length > 0 && (
-            <p className="text-yellow-400">Highlighting: {highlights.join(', ')}</p>
-          )}
-        </div>
-      </div>
+      <p className="text-[10px] text-charcoal-light text-center mt-4">
+        Based on AI analysis + manager ratings
+      </p>
     </div>
   );
 }

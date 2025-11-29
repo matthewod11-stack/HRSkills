@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, authErrorResponse } from '@/lib/auth/middleware';
-import { handleApiError, createSuccessResponse } from '@/lib/api-helpers';
-import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter';
+import { type NextRequest, NextResponse } from 'next/server';
 import { analyzeWithAI } from '@/lib/ai/router';
 import type { AnalysisTask } from '@/lib/ai/types';
+import { createSuccessResponse, handleApiError } from '@/lib/api-helpers';
+import { authErrorResponse, requireAuth } from '@/lib/auth/middleware';
+import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter';
 
 /**
  * POST /api/ai/analyze

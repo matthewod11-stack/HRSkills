@@ -1,9 +1,8 @@
+import { act, renderHook } from '@testing-library/react';
 import { vi } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { vi } from 'vitest';
+import type { ContextPanelData } from '@/components/custom/ContextPanel';
 import { useContextPanelDetection } from '@/lib/hooks/useContextPanelDetection';
 import { detectContext } from '@/lib/workflows/context-detector';
-import type { ContextPanelData } from '@/components/custom/ContextPanel';
 
 // Mock the context detector
 vi.mock('@/lib/workflows/context-detector', () => ({
@@ -444,7 +443,11 @@ Once you provide the details, I can help you further.`;
       };
 
       act(() => {
-        result.current.detectAndUpdatePanel('Show headcount by month', 'Here is the data', analyticsPanel);
+        result.current.detectAndUpdatePanel(
+          'Show headcount by month',
+          'Here is the data',
+          analyticsPanel
+        );
       });
 
       expect(mockOnPanelChange).toHaveBeenCalledWith(

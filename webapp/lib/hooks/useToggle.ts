@@ -1,4 +1,4 @@
-import { useState, useCallback, Dispatch, SetStateAction } from 'react';
+import { type Dispatch, type SetStateAction, useCallback, useState } from 'react';
 
 /**
  * useToggle Hook

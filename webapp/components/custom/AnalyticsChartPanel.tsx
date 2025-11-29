@@ -1,12 +1,13 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { BarChart3, Download, LineChart, PieChart, RefreshCw } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { BarChart3, Download, LineChart, PieChart, RefreshCw, ScatterChart } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   SimpleBarChart,
   SimpleLineChart,
   SimplePieChart,
+  SimpleScatterChart,
 } from '@/components/charts/RechartsWrappers';
 import { useAuth } from '@/lib/auth/auth-context';
 import { chartJsToRecharts } from '@/lib/charts/recharts-helpers';
@@ -86,7 +87,8 @@ export function AnalyticsChartPanel({
   const [data, setData] = useState<AnalyticsApiData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [chartConfigState, setChartConfigState] = useState<ChartConfig | null>(chartConfig || null);
-  const [analysis, setAnalysis] = useState<string>(analysisSummary || '');
+  const [displayMode, setDisplayMode] = useState<'line' | 'scatter' | 'bar'>('line');
+  const chartContainerRef = useRef<HTMLDivElement>(null);
 
   const fetchAnalyticsData = useCallback(async () => {
     setLoading(true);
@@ -118,34 +120,53 @@ export function AnalyticsChartPanel({
   useEffect(() => {
     if (chartConfig) {
       setChartConfigState(chartConfig);
-      setAnalysis(analysisSummary || '');
       setLoading(false);
       setError(null);
       return;
     }
     setChartConfigState(null);
-    setAnalysis('');
     fetchAnalyticsData();
-  }, [chartConfig, analysisSummary, fetchAnalyticsData]);
+  }, [chartConfig, fetchAnalyticsData]);
 
-  const handleExportCSV = async () => {
-    const params = new URLSearchParams({ metric, format: 'csv' });
-    if (department) params.set('department', department);
-    if (dateRange) params.set('dateRange', dateRange);
+  const handleDownloadChart = () => {
+    const chartSvg = chartContainerRef.current?.querySelector('svg');
+    if (!chartSvg) {
+      console.error("Couldn't find chart SVG to download");
+      return;
+    }
 
-    const response = await fetch(`/api/analytics?${params}`, {
-      headers: getAuthHeaders(),
-    });
+    const svgString = new XMLSerializer().serializeToString(chartSvg);
+    const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
 
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${metric}_${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      // Add a small border for better aesthetics
+      const border = 20;
+      canvas.width = img.width + border * 2;
+      canvas.height = img.height + border * 2;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.fillStyle = 'white'; // Or your desired background color
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, border, border);
+        const pngUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = pngUrl;
+        link.download = `${metric}_chart.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(pngUrl);
+      }
+      URL.revokeObjectURL(url);
+    };
+    img.onerror = (err) => {
+      console.error('Failed to load SVG image for download', err);
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
   };
 
   const getChartData = () => {
@@ -247,28 +268,6 @@ export function AnalyticsChartPanel({
     return chartJsToRecharts(chartJsData);
   };
 
-  const getChartIcon = () => {
-    switch (chartType) {
-      case 'line':
-        return <LineChart className="w-4 h-4" />;
-      case 'pie':
-        return <PieChart className="w-4 h-4" />;
-      default:
-        return <BarChart3 className="w-4 h-4" />;
-    }
-  };
-
-  const getMetricTitle = () => {
-    const titles: Record<string, string> = {
-      headcount: 'Headcount Analytics',
-      attrition: 'Attrition Rate',
-      diversity: 'Diversity Metrics',
-      performance: 'Performance Distribution',
-      compensation: 'Compensation Analysis',
-    };
-    return titles[metric] || 'Analytics';
-  };
-
   const chartJsData = chartConfigState ? chartConfigState.data : getChartData();
   const rechartsData = transformDataForRecharts(chartJsData);
   const resolvedChartType = chartConfigState?.type || chartType;
@@ -276,147 +275,138 @@ export function AnalyticsChartPanel({
   // Get the dataKey for Recharts (first dataset label or default)
   const dataKey = chartJsData?.datasets?.[0]?.label || 'value';
 
+  const chartColor = metric === 'attrition' ? '#C87F5D' : metric === 'performance' ? '#6B8E6F' : '#8B9D83';
+
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full p-5">
       {/* Header */}
-      <div className="flex-shrink-0 flex items-center justify-between mb-4 pb-4 border-b border-white/10">
-        <div className="flex items-center gap-2">
-          {getChartIcon()}
-          <div>
-            <h4 className="font-medium">{getMetricTitle()}</h4>
-            <p className="text-xs text-gray-400">
-              {department && `${department} • `}
-              {dateRange?.replace(/_/g, ' ')}
-            </p>
-          </div>
-        </div>
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-xs text-charcoal-light">
+          {department && `${department} • `}
+          {dateRange?.replace(/_/g, ' ')}
+        </p>
 
-        <div className="flex items-center gap-2">
-          {/* Refresh Button */}
-          {!chartConfigState && (
-            <button
-              onClick={fetchAnalyticsData}
-              disabled={loading}
-              className="px-3 py-1.5 bg-terracotta/10 hover:bg-terracotta hover:text-cream-white border border-warm hover:border-terracotta rounded-xl text-xs transition-all flex items-center gap-1 disabled:opacity-50 font-medium shadow-soft hover:shadow-warm"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
-            </button>
-          )}
-
-          {/* Export CSV */}
-          {!chartConfigState && (
-            <button
-              onClick={handleExportCSV}
-              className="px-3 py-1.5 bg-sage/10 hover:bg-sage hover:text-cream-white border border-warm hover:border-sage rounded-xl text-xs transition-all flex items-center gap-1 font-medium shadow-soft hover:shadow-warm"
-            >
-              <Download className="w-3.5 h-3.5" />
-              Export CSV
-            </button>
-          )}
-        </div>
+        {/* Download Button */}
+        <button
+          onClick={handleDownloadChart}
+          className="px-3 py-1.5 bg-sage/10 hover:bg-sage hover:text-cream-white border border-sage/20 hover:border-sage rounded-lg text-xs transition-all flex items-center gap-1.5 font-medium"
+        >
+          <Download className="w-3.5 h-3.5" />
+          Download
+        </button>
       </div>
 
-      {/* Chart Area */}
-      <div className="flex-1 overflow-hidden">
+      {/* Chart Type Toggle */}
+      <div className="flex items-center justify-center gap-1 mb-4">
+        <button
+          onClick={() => setDisplayMode('line')}
+          className={`p-2 rounded-lg transition-all ${
+            displayMode === 'line'
+              ? 'bg-sage/20 text-sage border border-sage/40'
+              : 'bg-cream hover:bg-sage/10 text-charcoal-light border border-transparent'
+          }`}
+          title="Line chart"
+        >
+          <LineChart className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => setDisplayMode('scatter')}
+          className={`p-2 rounded-lg transition-all ${
+            displayMode === 'scatter'
+              ? 'bg-sage/20 text-sage border border-sage/40'
+              : 'bg-cream hover:bg-sage/10 text-charcoal-light border border-transparent'
+          }`}
+          title="Scatter chart"
+        >
+          <ScatterChart className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => setDisplayMode('bar')}
+          className={`p-2 rounded-lg transition-all ${
+            displayMode === 'bar'
+              ? 'bg-sage/20 text-sage border border-sage/40'
+              : 'bg-cream hover:bg-sage/10 text-charcoal-light border border-transparent'
+          }`}
+          title="Bar chart"
+        >
+          <BarChart3 className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Chart Area - fills available space */}
+      <div className="flex-1 min-h-[200px]" ref={chartContainerRef}>
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <RefreshCw className="w-8 h-8 animate-spin text-terracotta" />
           </div>
         ) : error ? (
-          <div className="flex items-center justify-center h-full text-red-400">
+          <div className="flex items-center justify-center h-full text-error">
             <p>Error: {error}</p>
           </div>
         ) : rechartsData.length > 0 ? (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            key={displayMode}
+            initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="h-full"
+            transition={{ duration: 0.2 }}
+            className="w-full h-full"
           >
-            {resolvedChartType === 'line' && (
-              <SimpleLineChart data={rechartsData} dataKey={dataKey} color="#3b82f6" />
+            {displayMode === 'line' && (
+              <SimpleLineChart data={rechartsData} dataKey={dataKey} color={chartColor} />
             )}
-            {resolvedChartType === 'pie' && (
-              <SimplePieChart data={rechartsData} dataKey={dataKey} />
+            {displayMode === 'scatter' && (
+              <SimpleScatterChart data={rechartsData} dataKey={dataKey} color={chartColor} />
             )}
-            {(resolvedChartType === 'bar' || !resolvedChartType) && (
-              <SimpleBarChart
-                data={rechartsData}
-                dataKey={dataKey}
-                color={
-                  metric === 'attrition'
-                    ? '#ef4444'
-                    : metric === 'performance'
-                      ? '#22c55e'
-                      : '#3b82f6'
-                }
-              />
+            {displayMode === 'bar' && (
+              <SimpleBarChart data={rechartsData} dataKey={dataKey} color={chartColor} />
             )}
           </motion.div>
         ) : (
-          <div className="flex items-center justify-center h-full text-gray-400">
-            <p>No data available for visualization</p>
+          <div className="flex items-center justify-center h-full text-charcoal-soft">
+            <p>No data available</p>
           </div>
         )}
       </div>
 
-      {/* Summary Stats */}
+      {/* Summary Stats - Only for direct API data, not AI responses */}
       {!loading && !chartConfigState && data && (
-        <div className="flex-shrink-0 mt-4 pt-4 border-t border-white/10">
-          <div className="grid grid-cols-3 gap-4 text-center">
-            {metric === 'headcount' && (
-              <>
-                <div>
-                  <p className="text-2xl font-bold text-blue-400">{data.total}</p>
-                  <p className="text-xs text-gray-400">Total Employees</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-purple-400">
-                    {Object.keys(data.byDepartment || {}).length}
-                  </p>
-                  <p className="text-xs text-gray-400">Departments</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-green-400">
-                    {data.spanOfControl?.average?.toFixed(1) || 'N/A'}
-                  </p>
-                  <p className="text-xs text-gray-400">Avg Span of Control</p>
-                </div>
-              </>
-            )}
-            {metric === 'attrition' && data.overall && (
-              <>
-                <div>
-                  <p className="text-2xl font-bold text-red-400">{data.overall.attritionRate}%</p>
-                  <p className="text-xs text-gray-400">Attrition Rate</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-orange-400">
-                    {data.overall.voluntaryRate}%
-                  </p>
-                  <p className="text-xs text-gray-400">Voluntary</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-yellow-400">
-                    {data.overall.involuntaryRate}%
-                  </p>
-                  <p className="text-xs text-gray-400">Involuntary</p>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
-      {!loading && chartConfigState && analysis && (
-        <div className="mt-4 pt-4 border-t border-white/10 text-sm text-gray-200 whitespace-pre-line">
-          {analysis}
-        </div>
-      )}
-
-      {!loading && chartConfigState && metadata && (
-        <div className="mt-3 text-xs text-gray-400">
-          Rows returned: {metadata.rowsReturned ?? metadata?.metadata?.rowsReturned ?? '—'}
+        <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-sage/20">
+          {metric === 'headcount' && (
+            <>
+              <div className="text-center">
+                <p className="text-xl font-bold text-sage">{data.total}</p>
+                <p className="text-[10px] text-charcoal-light">Total</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xl font-bold text-sage-light">
+                  {Object.keys(data.byDepartment || {}).length}
+                </p>
+                <p className="text-[10px] text-charcoal-light">Depts</p>
+              </div>
+              <div className="text-center">
+                <p className={`text-xl font-bold ${data.spanOfControl?.average ? 'text-sage' : 'text-charcoal-soft'}`}>
+                  {data.spanOfControl?.average?.toFixed(1) ?? '—'}
+                </p>
+                <p className="text-[10px] text-charcoal-light">Span</p>
+              </div>
+            </>
+          )}
+          {metric === 'attrition' && data.overall && (
+            <>
+              <div className="text-center">
+                <p className="text-xl font-bold text-error">{data.overall.attritionRate}%</p>
+                <p className="text-[10px] text-charcoal-light">Attrition</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xl font-bold text-terracotta">{data.overall.voluntaryRate}%</p>
+                <p className="text-[10px] text-charcoal-light">Voluntary</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xl font-bold text-amber">{data.overall.involuntaryRate}%</p>
+                <p className="text-[10px] text-charcoal-light">Involuntary</p>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

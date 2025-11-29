@@ -12,9 +12,9 @@
  * Or: npx tsx scripts/apply-performance-indexes.ts
  */
 
+import fs from 'node:fs';
+import path from 'node:path';
 import Database from 'better-sqlite3';
-import path from 'path';
-import fs from 'fs';
 import { env } from '../env.mjs';
 
 const DB_DIR = env.DB_DIR;
@@ -31,10 +31,14 @@ const sqlite = new Database(DB_PATH);
 
 // Check current indexes
 console.log('\n[DB] Current indexes:');
-const currentIndexes = sqlite.prepare(`
+const currentIndexes = sqlite
+  .prepare(`
   SELECT name FROM sqlite_master WHERE type='index' ORDER BY name
-`).all() as Array<{ name: string }>;
-currentIndexes.forEach(idx => console.log(`  - ${idx.name}`));
+`)
+  .all() as Array<{ name: string }>;
+currentIndexes.forEach((idx) => {
+  console.log(`  - ${idx.name}`);
+});
 
 console.log('\n[DB] Applying performance optimization indexes...\n');
 
@@ -64,7 +68,9 @@ try {
 
     // Add missing metrics indexes
     if (!indexNames.has('idx_metrics_performance_rating')) {
-      sqlite.exec(`CREATE INDEX IF NOT EXISTS idx_metrics_performance_rating ON employee_metrics(performance_rating);`);
+      sqlite.exec(
+        `CREATE INDEX IF NOT EXISTS idx_metrics_performance_rating ON employee_metrics(performance_rating);`
+      );
       console.log('✅ Created index: idx_metrics_performance_rating (9-box grid)');
       addedIndexes.push('idx_metrics_performance_rating');
     } else {

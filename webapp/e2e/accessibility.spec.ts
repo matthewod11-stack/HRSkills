@@ -3,8 +3,8 @@
  * Tests WCAG 2.1 Level AA compliance across all pages
  */
 
-import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { expect, test } from '@playwright/test';
 
 test.describe('Accessibility E2E Tests', () => {
   test('homepage should not have accessibility violations', async ({ page }) => {

@@ -64,7 +64,7 @@ function isRetryableStatus(status: number): boolean {
  * });
  * ```
  */
-export async function fetchWithRetry<T = any>(
+export async function fetchWithRetry<T = unknown>(
   url: string,
   init?: RequestInit,
   options: RetryOptions = {}
@@ -106,8 +106,10 @@ export async function fetchWithRetry<T = any>(
 
       // Don't retry client errors (4xx)
       const errorData = await response.json().catch(() => ({}));
-      throw new NonRetryableError(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-    } catch (error: any) {
+      throw new NonRetryableError(
+        errorData.error || `HTTP ${response.status}: ${response.statusText}`
+      );
+    } catch (error: unknown) {
       clearTimeout(timeoutId);
 
       // Network errors and timeouts should be retried
@@ -119,7 +121,7 @@ export async function fetchWithRetry<T = any>(
         throw error;
       }
 
-      const backoff = Math.min(opts.retryDelay * Math.pow(2, attempt), opts.retryDelay * 8);
+      const backoff = Math.min(opts.retryDelay * 2 ** attempt, opts.retryDelay * 8);
       opts.onRetry(attempt + 1);
 
       if (process.env.NODE_ENV === 'development') {
@@ -128,7 +130,6 @@ export async function fetchWithRetry<T = any>(
 
       attempt++;
       await sleep(backoff);
-      continue;
     }
   }
 
@@ -138,14 +139,14 @@ export async function fetchWithRetry<T = any>(
 /**
  * Convenience wrapper for GET requests
  */
-export async function get<T = any>(url: string, options?: RetryOptions): Promise<T> {
+export async function get<T = unknown>(url: string, options?: RetryOptions): Promise<T> {
   return fetchWithRetry<T>(url, { method: 'GET' }, options);
 }
 
 /**
  * Convenience wrapper for POST requests
  */
-export async function post<T = any>(url: string, data: any, options?: RetryOptions): Promise<T> {
+export async function post<T = unknown>(url: string, data: unknown, options?: RetryOptions): Promise<T> {
   return fetchWithRetry<T>(
     url,
     {
@@ -160,7 +161,7 @@ export async function post<T = any>(url: string, data: any, options?: RetryOptio
 /**
  * Convenience wrapper for PUT requests
  */
-export async function put<T = any>(url: string, data: any, options?: RetryOptions): Promise<T> {
+export async function put<T = unknown>(url: string, data: unknown, options?: RetryOptions): Promise<T> {
   return fetchWithRetry<T>(
     url,
     {
@@ -175,6 +176,6 @@ export async function put<T = any>(url: string, data: any, options?: RetryOption
 /**
  * Convenience wrapper for DELETE requests
  */
-export async function del<T = any>(url: string, options?: RetryOptions): Promise<T> {
+export async function del<T = unknown>(url: string, options?: RetryOptions): Promise<T> {
   return fetchWithRetry<T>(url, { method: 'DELETE' }, options);
 }

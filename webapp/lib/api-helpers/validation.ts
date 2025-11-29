@@ -5,14 +5,14 @@
  * and common data patterns.
  */
 
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { validationError } from './error-handler';
 
 /**
  * Validate required fields in request body
  */
 export function validateRequiredFields(
-  body: Record<string, any>,
+  body: Record<string, unknown>,
   requiredFields: string[]
 ): { valid: boolean; missing: string[] } {
   const missing: string[] = [];
@@ -40,21 +40,21 @@ export function isValidEmail(email: string): boolean {
 /**
  * Validate that value is a positive number
  */
-export function isPositiveNumber(value: any): boolean {
-  return typeof value === 'number' && value > 0 && !isNaN(value);
+export function isPositiveNumber(value: unknown): boolean {
+  return typeof value === 'number' && value > 0 && !Number.isNaN(value);
 }
 
 /**
  * Validate that value is a non-negative number
  */
-export function isNonNegativeNumber(value: any): boolean {
-  return typeof value === 'number' && value >= 0 && !isNaN(value);
+export function isNonNegativeNumber(value: unknown): boolean {
+  return typeof value === 'number' && value >= 0 && !Number.isNaN(value);
 }
 
 /**
  * Validate array field
  */
-export function isValidArray(value: any, minLength: number = 0): boolean {
+export function isValidArray(value: unknown, minLength: number = 0): boolean {
   return Array.isArray(value) && value.length >= minLength;
 }
 
@@ -63,7 +63,7 @@ export function isValidArray(value: any, minLength: number = 0): boolean {
  */
 export function isValidDate(dateString: string): boolean {
   const date = new Date(dateString);
-  return date instanceof Date && !isNaN(date.getTime());
+  return date instanceof Date && !Number.isNaN(date.getTime());
 }
 
 /**
@@ -76,7 +76,7 @@ export function isOneOf(value: string, allowedValues: string[]): boolean {
 /**
  * Parse and validate JSON request body
  */
-export async function parseRequestBody<T = any>(
+export async function parseRequestBody<T = unknown>(
   request: NextRequest
 ): Promise<
   { success: true; data: T } | { success: false; error: ReturnType<typeof validationError> }
@@ -84,7 +84,7 @@ export async function parseRequestBody<T = any>(
   try {
     const body = await request.json();
     return { success: true, data: body };
-  } catch (error) {
+  } catch (_error) {
     return {
       success: false,
       error: validationError('Invalid JSON in request body'),
@@ -149,11 +149,11 @@ export function validatePaginationParams(
   const pageNum = parseInt(page || '1', 10);
   const limitNum = parseInt(limit || '20', 10);
 
-  if (isNaN(pageNum) || pageNum < 1) {
+  if (Number.isNaN(pageNum) || pageNum < 1) {
     throw new Error('Invalid page number');
   }
 
-  if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
+  if (Number.isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
     throw new Error('Invalid limit (must be between 1 and 100)');
   }
 

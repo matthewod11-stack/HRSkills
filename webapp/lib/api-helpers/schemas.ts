@@ -326,7 +326,7 @@ export async function validateRequestBody<T>(
       valid: false,
       error: formatZodError(result.error),
     };
-  } catch (error) {
+  } catch (_error) {
     return {
       valid: false,
       error: { message: 'Invalid JSON in request body' },

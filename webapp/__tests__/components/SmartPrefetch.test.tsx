@@ -4,8 +4,8 @@
  * Tests intelligent route prefetching functionality.
  */
 
-import { vi } from 'vitest';
 import { render } from '@testing-library/react';
+import { vi } from 'vitest';
 
 // Use vi.hoisted() to create mocks that can be referenced in vi.mock()
 const { usePathnameMock } = vi.hoisted(() => ({
@@ -32,10 +32,11 @@ describe('SmartPrefetch Component', () => {
     usePathnameMock.mockReturnValue('/');
 
     // Mock requestIdleCallback
-    (global as any).requestIdleCallback = vi.fn((cb) => {
-      cb();
-      return 1;
-    });
+    (global as unknown as { requestIdleCallback: (cb: () => void) => number }).requestIdleCallback =
+      vi.fn((cb) => {
+        cb();
+        return 1;
+      });
 
     // Mock setTimeout
     vi.useFakeTimers();
@@ -75,7 +76,7 @@ describe('SmartPrefetch Component', () => {
   it('should not prefetch in development mode', async () => {
     // Override env mock for this test
     const { env } = await import('@/env.mjs');
-    vi.mocked(env).NODE_ENV = 'development' as any;
+    (vi.mocked(env) as { NODE_ENV: string }).NODE_ENV = 'development';
 
     usePathnameMock.mockReturnValue('/');
 
@@ -90,7 +91,7 @@ describe('SmartPrefetch Component', () => {
     querySelectorSpy.mockRestore();
 
     // Reset for other tests
-    vi.mocked(env).NODE_ENV = 'production' as any;
+    (vi.mocked(env) as { NODE_ENV: string }).NODE_ENV = 'production';
   });
 
   it('should handle different pathnames', () => {

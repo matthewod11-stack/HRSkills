@@ -1,9 +1,8 @@
+import { act, renderHook } from '@testing-library/react';
 import { vi } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { vi } from 'vitest';
+import type { Message } from '@/components/custom/chat/ChatContext';
 import { useChatAPI } from '@/lib/hooks/useChatAPI';
 import { detectContext } from '@/lib/workflows/context-detector';
-import type { Message } from '@/components/custom/chat/ChatContext';
 
 // Mock dependencies
 vi.mock('@/lib/workflows/context-detector');
@@ -544,10 +543,7 @@ describe('useChatAPI', () => {
       });
 
       expect(mockDetectContext).toHaveBeenCalledWith('Show metrics');
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/api/analytics/chat',
-        expect.any(Object)
-      );
+      expect(global.fetch).toHaveBeenCalledWith('/api/analytics/chat', expect.any(Object));
     });
 
     it('should route to general chat when analytics detection fails', async () => {
@@ -700,7 +696,10 @@ describe('useChatAPI', () => {
       };
 
       await act(async () => {
-        await result.current.sendMessage('Create an offer letter for Software Engineer', userMessage);
+        await result.current.sendMessage(
+          'Create an offer letter for Software Engineer',
+          userMessage
+        );
       });
 
       expect(mockAddMessage).toHaveBeenCalledWith(

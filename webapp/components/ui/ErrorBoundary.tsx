@@ -1,7 +1,7 @@
 'use client';
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
 import * as Sentry from '@sentry/nextjs';
+import React, { Component, type ErrorInfo, type ReactNode } from 'react';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -175,6 +175,7 @@ function DefaultErrorFallback({
         {/* Action Buttons */}
         <div className="flex gap-4 justify-center">
           <button
+            type="button"
             onClick={onReset}
             className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
           >
@@ -183,7 +184,10 @@ function DefaultErrorFallback({
 
           {level === 'app' && (
             <button
-              onClick={() => (window.location.href = '/')}
+              type="button"
+              onClick={() => {
+                window.location.href = '/';
+              }}
               className="px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
             >
               Go to Home

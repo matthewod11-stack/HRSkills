@@ -5,12 +5,12 @@
  * Logs authentication attempts, data access, modifications, and security events
  */
 
-import { NextRequest } from 'next/server';
-import { AuthUser } from '@/lib/auth/types';
-import { writeFile, appendFile, mkdir } from 'fs/promises';
-import path from 'path';
-import { validateNoPii, DLP_INFO_TYPE_PRESETS } from './dlp-service';
+import { appendFile, mkdir } from 'node:fs/promises';
+import path from 'node:path';
+import type { NextRequest } from 'next/server';
 import { env } from '@/env.mjs';
+import type { AuthUser } from '@/lib/auth/types';
+import { validateNoPii } from './dlp-service';
 
 export type AuditEventType =
   | 'auth.login.success'
@@ -49,7 +49,7 @@ export interface AuditLogEntry {
   statusCode?: number;
   success: boolean;
   message?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   sessionId?: string;
 }
 
@@ -81,7 +81,7 @@ function getLogFilePath(type: 'audit' | 'security'): string {
  * Format log entry as JSON string
  */
 function formatLogEntry(entry: AuditLogEntry): string {
-  return JSON.stringify(entry) + '\n';
+  return `${JSON.stringify(entry)}\n`;
 }
 
 /**
@@ -359,7 +359,7 @@ export async function logAudit(params: {
  * Query audit logs (for admin dashboard)
  * In production, this should query a database or log aggregation service
  */
-export async function queryAuditLogs(filters: {
+export async function queryAuditLogs(_filters: {
   startDate?: Date;
   endDate?: Date;
   userId?: string;

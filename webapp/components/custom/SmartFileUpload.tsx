@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { AlertCircle, CheckCircle, Loader2, Upload } from 'lucide-react';
+import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, FileText, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
-import { UploadPreview, ColumnMapping } from '@/lib/types/master-employee';
-import { MappingPreviewModal } from './MappingPreviewModal';
-import { useEmployeesData } from '@/lib/hooks/use-employees';
 import { useAuth } from '@/lib/auth/auth-context';
+import { useEmployeesData } from '@/lib/hooks/use-employees';
+import type { ColumnMapping, UploadPreview } from '@/lib/types/master-employee';
+import { MappingPreviewModal } from './MappingPreviewModal';
 
 interface SmartFileUploadProps {
   onUploadSuccess: () => void;

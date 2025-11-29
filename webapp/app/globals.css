@@ -7,7 +7,7 @@
 :root {
   --font-size: 16px;
   --font-family:
-    var(--font-roboto), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+    var(--font-roboto), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
     Arial, sans-serif;
   --background: #ffffff;
   --foreground: oklch(0.145 0 0);
@@ -51,44 +51,52 @@
 .dark,
 :root {
   /* Warm Earth-Tone Design System */
-  --background: #F5F1E8;
-  --foreground: #2C2C2C;
-  --card: #FEFDFB;
-  --card-foreground: #2C2C2C;
-  --popover: #FEFDFB;
-  --popover-foreground: #2C2C2C;
-  --primary: #E07856;
-  --primary-foreground: #FEFDFB;
-  --secondary: #8B9D83;
-  --secondary-foreground: #FEFDFB;
-  --muted: #EDE7DC;
-  --muted-foreground: #6B6B6B;
-  --accent: #E6A852;
-  --accent-foreground: #FEFDFB;
-  --accent-highlight: #F5C98E;
-  --destructive: #C87F5D;
-  --destructive-foreground: #FEFDFB;
-  --success: #6B8E6F;
-  --warning: #E6A852;
+  --background: #f5f1e8;
+  --foreground: #2c2c2c;
+  --card: #fefdfb;
+  --card-foreground: #2c2c2c;
+  --popover: #fefdfb;
+  --popover-foreground: #2c2c2c;
+  --primary: #e07856;
+  --primary-foreground: #fefdfb;
+  --secondary: #8b9d83;
+  --secondary-foreground: #fefdfb;
+  --muted: #ede7dc;
+  --muted-foreground: #6b6b6b;
+  --accent: #e6a852;
+  --accent-foreground: #fefdfb;
+  --accent-highlight: #f5c98e;
+  --destructive: #c87f5d;
+  --destructive-foreground: #fefdfb;
+  --success: #6b8e6f;
+  --warning: #e6a852;
   --border: rgba(44, 44, 44, 0.12);
   --input: rgba(44, 44, 44, 0.08);
-  --ring: #E07856;
+  --ring: #e07856;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
   /* Warm earth-tone chart colors */
-  --chart-1: #C87F5D;
-  --chart-2: #6B8E6F;
-  --chart-3: #D4B05E;
-  --chart-4: #9C6B5A;
-  --chart-5: #8A9A7B;
-  --sidebar: #FEFDFB;
-  --sidebar-foreground: #2C2C2C;
-  --sidebar-primary: #E07856;
-  --sidebar-primary-foreground: #FEFDFB;
-  --sidebar-accent: #F0A58F;
-  --sidebar-accent-foreground: #2C2C2C;
+  --chart-1: #c87f5d;
+  --chart-2: #6b8e6f;
+  --chart-3: #d4b05e;
+  --chart-4: #9c6b5a;
+  --chart-5: #8a9a7b;
+  --sidebar: #fefdfb;
+  --sidebar-foreground: #2c2c2c;
+  --sidebar-primary: #e07856;
+  --sidebar-primary-foreground: #fefdfb;
+  --sidebar-accent: #f0a58f;
+  --sidebar-accent-foreground: #2c2c2c;
   --sidebar-border: rgba(44, 44, 44, 0.12);
-  --sidebar-ring: #E07856;
+  --sidebar-ring: #e07856;
+
+  /* Dashboard Grid System Variables */
+  --grid-gap: 1rem;
+  --header-height: 80px;
+  --metrics-height: 280px;  /* Accounts for title, cards, and spacing above chat */
+  --content-padding: 2rem;
+  --content-height-z: calc(100vh - var(--header-height) - var(--metrics-height) - var(--content-padding) - 1.5rem);
+  --module-min-width: 320px;
 }
 
 @theme inline {
@@ -173,7 +181,7 @@
  * Base typography. This is not applied to elements which have an ancestor with a Tailwind text class.
  */
 @layer base {
-  :where(:not(:has([class*=' text-']), :not(:has([class^='text-'])))) {
+  :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) {
     h1 {
       font-size: var(--text-2xl);
       font-weight: var(--font-weight-medium);
@@ -245,7 +253,7 @@ html {
   /* Enhanced focus for buttons and interactive elements */
   button:focus-visible,
   a:focus-visible,
-  [role='button']:focus-visible {
+  [role="button"]:focus-visible {
     outline: 3px solid hsl(217 91% 60%);
     outline-offset: 3px;
     box-shadow: 0 0 0 5px hsl(217 91% 60% / 0.2);
@@ -355,6 +363,45 @@ html {
   margin: 1rem 0;
 }
 
+/* Panel Typography System */
+@layer components {
+  .panel-title {
+    @apply text-lg font-bold text-charcoal;
+  }
+
+  .panel-subtitle {
+    @apply text-xs font-medium text-charcoal-light;
+  }
+
+  .panel-body {
+    @apply text-sm text-charcoal;
+  }
+
+  .panel-caption {
+    @apply text-xs text-charcoal-soft;
+  }
+
+  .panel-stat-value {
+    @apply text-2xl font-bold;
+  }
+
+  .panel-stat-label {
+    @apply text-xs text-charcoal-light uppercase tracking-wide;
+  }
+
+  .panel-card {
+    @apply border border-warm bg-cream-white rounded-xl shadow-soft;
+  }
+
+  .panel-section {
+    @apply border-t border-sage/20 pt-4 mt-4;
+  }
+
+  .panel-header {
+    @apply flex items-center justify-between mb-4 pb-4 border-b border-sage/20;
+  }
+}
+
 /* Warm Earth-Tone Design System Utilities */
 @layer utilities {
   .shadow-soft {
@@ -378,15 +425,15 @@ html {
   }
 
   .bg-radial-warm {
-    background: radial-gradient(circle at center, #F5F1E8 0%, #EDE7DC 100%);
+    background: radial-gradient(circle at center, #f5f1e8 0%, #ede7dc 100%);
   }
 
   .bg-radial-cream {
-    background: radial-gradient(ellipse at top, #FEFDFB 0%, #F5F1E8 50%, #EDE7DC 100%);
+    background: radial-gradient(ellipse at top, #fefdfb 0%, #f5f1e8 50%, #ede7dc 100%);
   }
 
   .text-warm-gradient {
-    background: linear-gradient(135deg, #E07856 0%, #D4A855 100%);
+    background: linear-gradient(135deg, #e07856 0%, #d4a855 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

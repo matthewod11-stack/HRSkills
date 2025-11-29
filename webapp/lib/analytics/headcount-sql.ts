@@ -5,9 +5,9 @@
  * Uses Drizzle ORM with SQLite for type-safe, indexed queries.
  */
 
-import { db } from '@/lib/db';
+import { and, eq, sql } from 'drizzle-orm';
 import { employees } from '@/db/schema';
-import { eq, and, sql, gte } from 'drizzle-orm';
+import { db } from '@/lib/db';
 
 export interface HeadcountResult {
   totalHeadcount: number;
@@ -298,10 +298,7 @@ export async function calculateSpanOfControl(): Promise<{
       directReportCount: sql<number>`COUNT(*)`,
     })
     .from(sql`employees AS reports`)
-    .innerJoin(
-      sql`employees AS managers`,
-      sql`reports.manager_id = managers.id`
-    )
+    .innerJoin(sql`employees AS managers`, sql`reports.manager_id = managers.id`)
     .where(
       sql`reports.status = 'active' AND reports.manager_id IS NOT NULL AND reports.manager_id != ''`
     )

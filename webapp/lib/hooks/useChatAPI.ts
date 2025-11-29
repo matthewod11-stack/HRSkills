@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
-import { detectContext } from '@/lib/workflows/context-detector';
-import type { Message, WorkflowState } from '@/components/custom/chat/ChatContext';
 import type { ContextPanelData } from '@/components/custom/ContextPanel';
+import type { Message, WorkflowState } from '@/components/custom/chat/ChatContext';
+import { detectContext } from '@/lib/workflows/context-detector';
 
 /**
  * Options for useChatAPI hook
@@ -35,7 +35,11 @@ export interface UseChatAPIOptions {
   /**
    * Update context panel after response
    */
-  onPanelUpdate: (userMessage: string, assistantReply: string, serverPanel?: ContextPanelData) => void;
+  onPanelUpdate: (
+    userMessage: string,
+    assistantReply: string,
+    serverPanel?: ContextPanelData
+  ) => void;
 }
 
 /**
@@ -120,7 +124,11 @@ export function useChatAPI(options: UseChatAPIOptions): UseChatAPIReturn {
    * Send message to analytics chat API
    */
   const sendAnalyticsMessage = useCallback(
-    async (message: string, userMessage: Message, contextDetection: ReturnType<typeof detectContext>) => {
+    async (
+      message: string,
+      userMessage: Message,
+      contextDetection: ReturnType<typeof detectContext>
+    ) => {
       // Prepare conversation history (last 4 messages including current)
       const historyWithCurrent = [...messages, userMessage];
       const historyPayload = historyWithCurrent.slice(-4).map((m) => ({
@@ -156,9 +164,9 @@ export function useChatAPI(options: UseChatAPIOptions): UseChatAPIReturn {
         throw new Error(result.error?.message || 'Analytics assistant error');
       }
 
-      // Create assistant message
+      // Create assistant message with unique ID
       const assistantMessage: Message = {
-        id: messages.length + 2,
+        id: `assistant_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
         role: 'assistant',
         content: result.data.content,
         timestamp: new Date(),
@@ -235,9 +243,9 @@ export function useChatAPI(options: UseChatAPIOptions): UseChatAPIReturn {
         throw new Error(data.error);
       }
 
-      // Create assistant message
+      // Create assistant message with unique ID
       const assistantMessage: Message = {
-        id: messages.length + 2,
+        id: `assistant_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
         role: 'assistant',
         content: data.reply,
         timestamp: new Date(),

@@ -11,7 +11,7 @@
  * @see https://web.dev/vitals/
  */
 
-import { onCLS, onLCP, onINP, onTTFB, type Metric } from 'web-vitals';
+import { type Metric, onCLS, onINP, onLCP, onTTFB } from 'web-vitals';
 // NODE_ENV is available via process.env in both server and client contexts
 
 /**
@@ -44,9 +44,7 @@ export const WEB_VITALS_THRESHOLDS = {
 /**
  * Get rating for a metric value
  */
-function getRating(
-  metric: Metric
-): 'good' | 'needs-improvement' | 'poor' {
+function getRating(metric: Metric): 'good' | 'needs-improvement' | 'poor' {
   const thresholds = WEB_VITALS_THRESHOLDS[metric.name as keyof typeof WEB_VITALS_THRESHOLDS];
 
   if (!thresholds) return 'good';
@@ -140,10 +138,7 @@ export function initWebVitals() {
   onTTFB(handleMetric);
 
   if (process.env.NODE_ENV === 'development') {
-    console.log(
-      '%cWeb Vitals monitoring initialized',
-      'color: #0CCE6B; font-weight: bold'
-    );
+    console.log('%cWeb Vitals monitoring initialized', 'color: #0CCE6B; font-weight: bold');
   }
 }
 

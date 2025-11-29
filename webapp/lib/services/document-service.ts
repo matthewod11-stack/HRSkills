@@ -5,10 +5,10 @@
  * and soft delete capabilities.
  */
 
-import { db } from '@/lib/db';
-import { documents, type Document, type NewDocument } from '@/db/schema';
-import { eq, and, desc, like, or, sql, SQL } from 'drizzle-orm';
+import { and, desc, eq, like, or, type SQL, sql } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
+import { type Document, documents, type NewDocument } from '@/db/schema';
+import { db } from '@/lib/db';
 
 export interface CreateDocumentInput {
   type: string;
@@ -130,10 +130,7 @@ export async function listDocuments(filters: DocumentFilters = {}): Promise<Docu
       .orderBy(desc(documents.createdAt))
       .limit(limit)
       .offset(offset),
-    db
-      .select({ count: sql<number>`count(*)` })
-      .from(documents)
-      .where(whereClause),
+    db.select({ count: sql<number>`count(*)` }).from(documents).where(whereClause),
   ]);
 
   const total = countResult[0]?.count || 0;
@@ -177,7 +174,7 @@ export async function finalizeDocument(id: string): Promise<Document> {
  * Soft delete a document
  * In the future, we could add a 'deleted' status instead of hard delete
  * For now, we'll use hard delete with audit logging
- * 
+ *
  * Note: Audit logging is handled in the API route layer to ensure
  * complete request context (user, IP, user agent, etc.) is captured
  */

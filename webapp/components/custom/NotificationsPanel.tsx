@@ -1,8 +1,8 @@
 'use client';
 
+import { AnimatePresence, motion } from 'framer-motion';
+import { AlertCircle, CheckCircle, FileText, UserPlus, X } from 'lucide-react';
 import { memo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, UserPlus, FileText, AlertCircle, CheckCircle, LucideIcon } from 'lucide-react';
 
 interface NotificationsPanelProps {
   isOpen: boolean;
@@ -123,6 +123,7 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
                 </p>
               </div>
               <button
+                type="button"
                 onClick={onClose}
                 className="w-10 h-10 rounded-lg bg-white/5 hover:bg-white/10 border-2 border-white/30 hover:border-white/50 flex items-center justify-center transition-all"
               >

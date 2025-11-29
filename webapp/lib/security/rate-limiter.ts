@@ -9,7 +9,7 @@
  * - false: Use in-memory (default, recommended for local dev)
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
 import { applyUpstashRateLimit } from './upstash-rate-limiter';
 
@@ -65,8 +65,9 @@ export function rateLimit(config: RateLimitConfig) {
     windowMs,
     maxRequests,
     message = 'Too many requests, please try again later',
-    skipSuccessfulRequests = false,
-    skipFailedRequests = false,
+    // Reserved for future implementation (e.g., conditional counting)
+    skipSuccessfulRequests: _skipSuccessfulRequests = false,
+    skipFailedRequests: _skipFailedRequests = false,
   } = config;
 
   return async (request: NextRequest): Promise<NextResponse | null> => {

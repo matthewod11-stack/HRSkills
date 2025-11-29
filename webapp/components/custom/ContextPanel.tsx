@@ -48,7 +48,7 @@ export function ContextPanel({ panelData, onClose, children, alignmentStyle }: C
         return {
           glow: 'from-sage/20 via-sage-light/15 to-sage/10',
           containerBg: 'bg-cream-white/95',
-          containerBorder: 'border-sage/30 hover:border-sage/50',
+          containerBorder: 'border-sage/20 hover:border-sage/40',
           headerGradient: 'from-sage/10 to-sage-light/8',
           iconBg: 'from-sage to-sage-light',
           closeButtonBorder: 'border-sage/30 hover:border-sage/50',
@@ -58,7 +58,7 @@ export function ContextPanel({ panelData, onClose, children, alignmentStyle }: C
         return {
           glow: 'from-terracotta/15 via-amber/12 to-terracotta/8',
           containerBg: 'bg-cream-white/95',
-          containerBorder: 'border-terracotta/30 hover:border-terracotta/50',
+          containerBorder: 'border-sage/20 hover:border-sage/40',
           headerGradient: 'from-terracotta/10 to-amber/8',
           iconBg: 'from-terracotta to-amber',
           closeButtonBorder: 'border-terracotta/30 hover:border-terracotta/50',
@@ -68,7 +68,7 @@ export function ContextPanel({ panelData, onClose, children, alignmentStyle }: C
         return {
           glow: 'from-amber/18 via-terracotta/15 to-amber/10',
           containerBg: 'bg-cream-white/95',
-          containerBorder: 'border-amber/30 hover:border-amber/50',
+          containerBorder: 'border-sage/20 hover:border-sage/40',
           headerGradient: 'from-amber/10 to-terracotta/8',
           iconBg: 'from-amber to-terracotta-dark',
           closeButtonBorder: 'border-amber/30 hover:border-amber/50',
@@ -78,7 +78,7 @@ export function ContextPanel({ panelData, onClose, children, alignmentStyle }: C
         return {
           glow: 'from-sage/18 via-terracotta/12 to-sage/10',
           containerBg: 'bg-cream-white/95',
-          containerBorder: 'border-sage/30 hover:border-sage/50',
+          containerBorder: 'border-sage/20 hover:border-sage/40',
           headerGradient: 'from-sage/10 to-terracotta/8',
           iconBg: 'from-sage to-terracotta',
           closeButtonBorder: 'border-sage/30 hover:border-sage/50',
@@ -88,7 +88,7 @@ export function ContextPanel({ panelData, onClose, children, alignmentStyle }: C
         return {
           glow: 'from-terracotta/12 via-amber/10 to-sage/8',
           containerBg: 'bg-cream-white/95',
-          containerBorder: 'border-warm hover:border-terracotta/40',
+          containerBorder: 'border-sage/20 hover:border-sage/40',
           headerGradient: 'from-terracotta/8 to-amber/6',
           iconBg: 'from-terracotta to-amber',
           closeButtonBorder: 'border-warm hover:border-terracotta/40',

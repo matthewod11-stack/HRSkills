@@ -2,16 +2,15 @@
  * Unit tests for analytics parser functions
  * Tests CSV and Excel parsing with focus on date handling
  */
+
+import * as XLSX from 'xlsx';
 import {
+  detectPIIColumns,
+  maskPII,
   parseCSV,
   parseExcel,
   validateSchema,
-  detectPIIColumns,
-  maskPII,
 } from '@/lib/analytics/parser';
-import * as XLSX from 'xlsx';
-import * as fs from 'fs';
-import * as path from 'path';
 
 describe('Analytics Parser', () => {
   describe('parseCSV', () => {

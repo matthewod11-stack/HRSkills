@@ -1,22 +1,22 @@
 'use client';
 
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
-  FolderOpen,
-  Upload,
-  Search,
-  Filter,
-  FileText,
+  Calendar,
   Download,
   Eye,
-  Trash2,
-  Calendar,
-  User,
+  FileText,
+  Filter,
+  FolderOpen,
+  Search,
   Tag,
+  Trash2,
+  Upload,
+  User,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useState } from 'react';
 
 interface Document {
   id: string;
@@ -103,7 +103,7 @@ export default function DocumentLibraryPage() {
     return colors[category] || 'from-gray-500 to-gray-600';
   };
 
-  const getCategoryIcon = (category: string) => {
+  const getCategoryIcon = (_category: string) => {
     return <FileText className="w-5 h-5" />;
   };
 
@@ -127,6 +127,7 @@ export default function DocumentLibraryPage() {
               <div className="flex items-center gap-4">
                 <Link href="/">
                   <motion.button
+                    type="button"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     aria-label="Back to home"
@@ -145,6 +146,7 @@ export default function DocumentLibraryPage() {
               </div>
 
               <motion.button
+                type="button"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 border-2 border-emerald-400/50 rounded-xl hover:shadow-lg hover:shadow-emerald-500/50 transition-all flex items-center gap-2"
@@ -191,6 +193,7 @@ export default function DocumentLibraryPage() {
 
                   {/* Filter Button */}
                   <motion.button
+                    type="button"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className="px-6 py-3 bg-white/5 hover:bg-white/10 border-2 border-white/30 rounded-xl transition-all flex items-center gap-2"
@@ -280,6 +283,7 @@ export default function DocumentLibraryPage() {
                   {/* Actions */}
                   <div className="flex gap-2 mt-4 pt-4 border-t border-white/20">
                     <motion.button
+                      type="button"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       className="flex-1 p-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-lg transition-colors flex items-center justify-center gap-2"
@@ -289,6 +293,7 @@ export default function DocumentLibraryPage() {
                       <Eye className="w-4 h-4 text-blue-300" aria-hidden="true" />
                     </motion.button>
                     <motion.button
+                      type="button"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       className="flex-1 p-2 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 rounded-lg transition-colors flex items-center justify-center gap-2"
@@ -298,6 +303,7 @@ export default function DocumentLibraryPage() {
                       <Download className="w-4 h-4 text-emerald-300" aria-hidden="true" />
                     </motion.button>
                     <motion.button
+                      type="button"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       className="p-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg transition-colors flex items-center justify-center"
@@ -328,6 +334,7 @@ export default function DocumentLibraryPage() {
                   Upload your first policy, handbook, or template to get started
                 </p>
                 <motion.button
+                  type="button"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 border-2 border-emerald-400/50 rounded-xl hover:shadow-lg hover:shadow-emerald-500/50 transition-all flex items-center gap-2 mx-auto"

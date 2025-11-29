@@ -1,4 +1,4 @@
-import { useState, useCallback, RefObject } from 'react';
+import { type RefObject, useCallback, useState } from 'react';
 import { detectSensitivePII } from '@/lib/pii-detector';
 
 /**
@@ -159,7 +159,7 @@ export function usePIIDetection(options?: UsePIIDetectionOptions): UsePIIDetecti
       show: false,
       types: [],
       message: '',
-      pendingText: ''
+      pendingText: '',
     });
 
     // Call optional callback (to update parent input state)
@@ -183,7 +183,7 @@ export function usePIIDetection(options?: UsePIIDetectionOptions): UsePIIDetecti
       show: false,
       types: [],
       message: '',
-      pendingText: ''
+      pendingText: '',
     });
 
     // Trigger send with bypass flag
@@ -200,7 +200,7 @@ export function usePIIDetection(options?: UsePIIDetectionOptions): UsePIIDetecti
       show: false,
       types: [],
       message: '',
-      pendingText: ''
+      pendingText: '',
     });
   }, []);
 
@@ -212,7 +212,7 @@ export function usePIIDetection(options?: UsePIIDetectionOptions): UsePIIDetecti
       show: false,
       types: [],
       message: '',
-      pendingText: ''
+      pendingText: '',
     });
   }, []);
 

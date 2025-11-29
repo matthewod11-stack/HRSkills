@@ -8,8 +8,8 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
-import pRetry, { AbortError } from 'p-retry';
 import CircuitBreaker from 'opossum';
+import pRetry, { AbortError } from 'p-retry';
 import { env } from '@/env.mjs';
 
 const apiKey = env.ANTHROPIC_API_KEY;
@@ -66,19 +66,20 @@ async function createMessageWithRetry(
         stream: false, // Explicitly disable streaming
       });
       return response as Anthropic.Message;
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Log error for debugging
+      const err = error as { status?: number; message?: string; code?: string };
       if (env.NODE_ENV === 'development') {
         console.error('Anthropic API error:', {
-          status: error.status,
-          message: error.message,
-          code: error.code,
+          status: err.status,
+          message: err.message,
+          code: err.code,
         });
       }
 
       // Don't retry if error is not retryable
       if (!isRetryableError(error)) {
-        throw new AbortError(error.message || 'Anthropic API error');
+        throw new AbortError(err.message || 'Anthropic API error');
       }
 
       // Retry for transient errors
@@ -121,7 +122,7 @@ breaker.on('close', () => {
  * @example
  * ```typescript
  * const response = await createMessage({
- *   model: 'claude-sonnet-4-20250514',
+ *   model: 'claude-opus-4-5-20251101',
  *   max_tokens: 1000,
  *   messages: [{ role: 'user', content: 'Hello!' }]
  * });
@@ -139,9 +140,10 @@ export async function createMessage(
     }
 
     return response;
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Enhance error message
-    if (error.message?.includes('Breaker is open')) {
+    const message = error instanceof Error ? error.message : '';
+    if (message.includes('Breaker is open')) {
       throw new Error('Anthropic API is currently unavailable. Please try again in a moment.');
     }
 

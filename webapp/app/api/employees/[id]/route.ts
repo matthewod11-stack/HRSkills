@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { eq } from 'drizzle-orm';
+import { type NextRequest, NextResponse } from 'next/server';
+import { employeeMetrics, employees, performanceReviews } from '@/db/schema';
 import { handleApiError } from '@/lib/api-helpers';
 import { db } from '@/lib/db';
-import { employees, employeeMetrics, performanceReviews } from '@/db/schema';
-import { eq } from 'drizzle-orm';
 
 /**
  * GET /api/employees/[id]
  *
  * Get single employee by ID with metrics and reviews
  */
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const employeeId = (await params).id;
 
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         performanceReviews: reviews,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return handleApiError(error, {
       endpoint: `/api/employees/${(await params).id}`,
       method: 'GET',
@@ -99,7 +99,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       success: true,
       employee: updatedEmployee,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return handleApiError(error, {
       endpoint: `/api/employees/${(await params).id}`,
       method: 'PATCH',
@@ -112,7 +112,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
  *
  * Soft delete employee (set status to terminated)
  */
-export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const employeeId = (await params).id;
 
@@ -149,7 +152,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       message: 'Employee marked as terminated',
       employee: deletedEmployee,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return handleApiError(error, {
       endpoint: `/api/employees/${(await params).id}`,
       method: 'DELETE',

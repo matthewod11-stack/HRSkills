@@ -1,13 +1,12 @@
 /**
  */
 
-import { render, screen, waitFor } from '@testing-library/react';
-import { act } from 'react';
+import { render } from '@testing-library/react';
 import {
-  MetricCardSkeleton,
+  ChartSkeleton,
   ChatMessageSkeleton,
   DialogSkeleton,
-  ChartSkeleton,
+  MetricCardSkeleton,
   TableSkeleton,
 } from '@/components/ui/skeletons';
 
@@ -207,7 +206,7 @@ describe('Code Splitting & Lazy Loading Tests', () => {
         <TableSkeleton key="table" />,
       ];
 
-      skeletons.forEach((skeleton, index) => {
+      skeletons.forEach((skeleton, _index) => {
         const { container } = render(skeleton);
         const pulseElement = container.querySelector('.animate-pulse');
         expect(pulseElement).toBeInTheDocument();

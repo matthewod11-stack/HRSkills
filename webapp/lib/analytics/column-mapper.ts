@@ -1,5 +1,5 @@
 import stringSimilarity from 'string-similarity';
-import { CANONICAL_FIELDS, ColumnMapping, FieldMetadata } from '../types/master-employee';
+import { CANONICAL_FIELDS, type ColumnMapping } from '../types/master-employee';
 
 /**
  * Normalize column name for matching
@@ -15,7 +15,7 @@ function normalizeColumnName(name: string): string {
 /**
  * Detect data type from sample values
  */
-function detectDataType(values: any[]): string {
+function detectDataType(values: unknown[]): string {
   if (values.length === 0) return 'string';
 
   // Remove null/undefined values
@@ -23,7 +23,7 @@ function detectDataType(values: any[]): string {
   if (validValues.length === 0) return 'string';
 
   // Check if all values are numbers
-  const allNumbers = validValues.every((v) => !isNaN(Number(v)));
+  const allNumbers = validValues.every((v) => !Number.isNaN(Number(v)));
   if (allNumbers) return 'number';
 
   // Check if all values are booleans
@@ -48,7 +48,7 @@ function detectDataType(values: any[]): string {
  */
 export function mapColumnsToCanonical(
   uploadColumns: string[],
-  sampleData: Record<string, any>[]
+  sampleData: Record<string, unknown>[]
 ): ColumnMapping[] {
   const mappings: ColumnMapping[] = [];
 

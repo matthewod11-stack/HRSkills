@@ -330,7 +330,7 @@ export function calculateBatchRatings(
     });
 
     // Calculate ratings per department
-    byDepartment.forEach((deptEmployees, dept) => {
+    byDepartment.forEach((deptEmployees, _dept) => {
       const deptStats = calculateDepartmentStats(deptEmployees);
 
       deptEmployees.forEach((emp) => {

@@ -8,9 +8,9 @@
  * - Unused dependencies are not included
  */
 
-import { describe, it, expect } from 'vitest';
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
+import { describe, expect, it } from 'vitest';
 
 const buildPath = path.join(__dirname, '../../.next');
 const chunksPath = path.join(buildPath, 'static/chunks');
@@ -26,10 +26,9 @@ if (!hasBuildArtifacts) {
 const suite = hasBuildArtifacts ? describe : describe.skip;
 
 suite('Bundle Performance', () => {
-
   describe('Bundle Size Budgets', () => {
     it('should keep main bundle under 150KB', () => {
-      const mainChunks = fs.readdirSync(chunksPath).filter(file => file.startsWith('main-'));
+      const mainChunks = fs.readdirSync(chunksPath).filter((file) => file.startsWith('main-'));
 
       // Skip if Next.js uses different chunk naming (Next.js 15+)
       if (mainChunks.length === 0) {
@@ -37,7 +36,7 @@ suite('Bundle Performance', () => {
         return;
       }
 
-      mainChunks.forEach(chunk => {
+      mainChunks.forEach((chunk) => {
         const stats = fs.statSync(path.join(chunksPath, chunk));
         const sizeKB = stats.size / 1024;
 
@@ -46,9 +45,9 @@ suite('Bundle Performance', () => {
     });
 
     it('should keep framework bundle under 200KB', () => {
-      const frameworkChunks = fs.readdirSync(chunksPath).filter(file =>
-        file.startsWith('framework-')
-      );
+      const frameworkChunks = fs
+        .readdirSync(chunksPath)
+        .filter((file) => file.startsWith('framework-'));
 
       // Skip if Next.js uses different chunk naming (Next.js 15+)
       if (frameworkChunks.length === 0) {
@@ -56,7 +55,7 @@ suite('Bundle Performance', () => {
         return;
       }
 
-      frameworkChunks.forEach(chunk => {
+      frameworkChunks.forEach((chunk) => {
         const stats = fs.statSync(path.join(chunksPath, chunk));
         const sizeKB = stats.size / 1024;
 
@@ -65,7 +64,7 @@ suite('Bundle Performance', () => {
     });
 
     it('should keep total chunk count reasonable', () => {
-      const allChunks = fs.readdirSync(chunksPath).filter(file => file.endsWith('.js'));
+      const allChunks = fs.readdirSync(chunksPath).filter((file) => file.endsWith('.js'));
 
       // Should have code splitting (multiple chunks) but not excessive
       expect(allChunks.length).toBeGreaterThan(10);
@@ -75,7 +74,7 @@ suite('Bundle Performance', () => {
 
   describe('Lazy Loading Verification', () => {
     it('should create separate chunks for lazy loaded panels', () => {
-      const allChunks = fs.readdirSync(chunksPath).filter(file => file.endsWith('.js'));
+      const allChunks = fs.readdirSync(chunksPath).filter((file) => file.endsWith('.js'));
 
       // After lazy loading implementation, we should have multiple chunks
       // (exact chunk numbers vary by build, but should be >15 with lazy loading)
@@ -99,10 +98,7 @@ suite('Bundle Performance', () => {
   describe('Tree Shaking Verification', () => {
     it('should use named imports for lucide-react (tree-shakeable)', () => {
       // This tests the source code pattern
-      const pageSource = fs.readFileSync(
-        path.join(__dirname, '../../app/page.tsx'),
-        'utf-8'
-      );
+      const pageSource = fs.readFileSync(path.join(__dirname, '../../app/page.tsx'), 'utf-8');
 
       // Should use: import { Icon1, Icon2 } from 'lucide-react'
       const hasNamedImports = /import\s*{[^}]+}\s*from\s*['"]lucide-react['"]/.test(pageSource);
@@ -116,10 +112,7 @@ suite('Bundle Performance', () => {
     });
 
     it('should use named imports for framer-motion (tree-shakeable)', () => {
-      const pageSource = fs.readFileSync(
-        path.join(__dirname, '../../app/page.tsx'),
-        'utf-8'
-      );
+      const pageSource = fs.readFileSync(path.join(__dirname, '../../app/page.tsx'), 'utf-8');
 
       // Should use: import { motion } from 'framer-motion'
       const hasNamedImports = /import\s*{[^}]+}\s*from\s*['"]framer-motion['"]/.test(pageSource);
@@ -135,10 +128,7 @@ suite('Bundle Performance', () => {
 
   describe('Dynamic Imports', () => {
     it('should use dynamic imports for DocumentEditorPanel', () => {
-      const pageSource = fs.readFileSync(
-        path.join(__dirname, '../../app/page.tsx'),
-        'utf-8'
-      );
+      const pageSource = fs.readFileSync(path.join(__dirname, '../../app/page.tsx'), 'utf-8');
 
       // Should have dynamic import
       const hasDynamicImport = /dynamic\s*\(\s*\(\)\s*=>\s*import.*DocumentEditorPanel/.test(
@@ -148,10 +138,7 @@ suite('Bundle Performance', () => {
     });
 
     it('should use dynamic imports for PerformanceGridPanel', () => {
-      const pageSource = fs.readFileSync(
-        path.join(__dirname, '../../app/page.tsx'),
-        'utf-8'
-      );
+      const pageSource = fs.readFileSync(path.join(__dirname, '../../app/page.tsx'), 'utf-8');
 
       const hasDynamicImport = /dynamic\s*\(\s*\(\)\s*=>\s*import.*PerformanceGridPanel/.test(
         pageSource
@@ -160,20 +147,14 @@ suite('Bundle Performance', () => {
     });
 
     it('should use dynamic imports for ENPSPanel', () => {
-      const pageSource = fs.readFileSync(
-        path.join(__dirname, '../../app/page.tsx'),
-        'utf-8'
-      );
+      const pageSource = fs.readFileSync(path.join(__dirname, '../../app/page.tsx'), 'utf-8');
 
       const hasDynamicImport = /dynamic\s*\(\s*\(\)\s*=>\s*import.*ENPSPanel/.test(pageSource);
       expect(hasDynamicImport).toBe(true);
     });
 
     it('should use ssr: false for heavy client components', () => {
-      const pageSource = fs.readFileSync(
-        path.join(__dirname, '../../app/page.tsx'),
-        'utf-8'
-      );
+      const pageSource = fs.readFileSync(path.join(__dirname, '../../app/page.tsx'), 'utf-8');
 
       // Dynamic imports for panels should have ssr: false
       const dynamicImportBlock = /dynamic\s*\([^)]+DocumentEditorPanel[^)]+\)/.exec(pageSource);
@@ -201,10 +182,7 @@ suite('Bundle Performance', () => {
     });
 
     it('should have ENPSSkeleton component', () => {
-      const skeletonPath = path.join(
-        __dirname,
-        '../../components/ui/skeletons/ENPSSkeleton.tsx'
-      );
+      const skeletonPath = path.join(__dirname, '../../components/ui/skeletons/ENPSSkeleton.tsx');
       expect(fs.existsSync(skeletonPath)).toBe(true);
     });
 

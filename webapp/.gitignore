@@ -1,0 +1,23 @@
+# Build directories
+.next/
+out/
+dist/
+coverage/
+
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Vercel
+.vercel/
+
+# Testing
+*.tsbuildinfo
+
+# Misc
+.DS_Store
+*.log

@@ -1,7 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { handleApiError } from '@/lib/api-helpers';
 import * as Sentry from '@sentry/nextjs';
+import { type NextRequest, NextResponse } from 'next/server';
+import { handleApiError } from '@/lib/api-helpers';
 import { logAuditEvent } from '@/lib/security/audit-logger';
+
+interface ErrorPayload {
+  message: string;
+  type?: string;
+  url?: string;
+  timestamp: number;
+  stack?: string;
+  userAgent?: string;
+  source?: string;
+}
 
 /**
  * POST /api/analytics/errors
@@ -17,7 +27,7 @@ import { logAuditEvent } from '@/lib/security/audit-logger';
  * For now, this is a simple logging endpoint.
  */
 export async function POST(request: NextRequest) {
-  let error: any;
+  let error: ErrorPayload | undefined;
   try {
     error = await request.json();
 
@@ -69,7 +79,7 @@ export async function POST(request: NextRequest) {
       // Log critical errors to audit log for compliance
       if (isCritical) {
         console.error('🚨 CRITICAL ERROR DETECTED:', error.message);
-        
+
         // Log to security audit log
         await logAuditEvent({
           eventType: 'api.error',
@@ -106,13 +116,13 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const limit = parseInt(searchParams.get('limit') || '50');
+    const limit = parseInt(searchParams.get('limit') || '50', 10);
     const type = searchParams.get('type'); // 'error' or 'unhandledrejection'
 
     // Note: Errors are stored in Sentry, not in our database
     // For retrieving errors, use Sentry's API or dashboard
     // This endpoint returns a message indicating where to find errors
-    
+
     return NextResponse.json({
       errors: [],
       count: 0,

@@ -1,20 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
+  AlertCircle,
   ArrowLeft,
   Grid3x3,
-  TrendingUp,
-  TrendingDown,
-  AlertCircle,
-  Download,
-  Upload,
   Sparkles,
-  X,
+  TrendingDown,
+  TrendingUp,
+  Upload,
   Users as UsersIcon,
+  X,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth/auth-context';
 
 interface Employee {
@@ -52,15 +51,11 @@ export default function NineBoxPage() {
   const [nineBoxData, setNineBoxData] = useState<NineBoxData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedCell, setSelectedCell] = useState<NineBoxCell | null>(null);
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [_selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [departments, setDepartments] = useState<string[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
 
-  useEffect(() => {
-    loadNineBoxData();
-  }, []);
-
-  const loadNineBoxData = async () => {
+  const loadNineBoxData = useCallback(async () => {
     try {
       // Use unified analytics endpoint with metric parameter
       const response = await fetch('/api/analytics?metric=nine-box', {
@@ -85,7 +80,11 @@ export default function NineBoxPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getAuthHeaders]);
+
+  useEffect(() => {
+    loadNineBoxData();
+  }, [loadNineBoxData]);
 
   const getCellData = (
     performance: 'High' | 'Medium' | 'Low',
@@ -159,7 +158,10 @@ export default function NineBoxPage() {
           <AlertCircle className="w-16 h-16 mx-auto mb-4 text-red-400" />
           <p className="text-lg">No data available. Please upload performance reviews first.</p>
           <Link href="/data-sources">
-            <button className="mt-4 px-6 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors">
+            <button
+              type="button"
+              className="mt-4 px-6 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors"
+            >
               Upload Data
             </button>
           </Link>
@@ -188,6 +190,7 @@ export default function NineBoxPage() {
               <div className="flex items-center gap-4">
                 <Link href="/">
                   <motion.button
+                    type="button"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className="w-12 h-12 bg-white/5 hover:bg-white/10 border-2 border-white/20 hover:border-white/40 rounded-xl flex items-center justify-center transition-all"
@@ -220,6 +223,7 @@ export default function NineBoxPage() {
 
                 <Link href="/data-sources">
                   <motion.button
+                    type="button"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 border-2 border-blue-500/50 rounded-lg transition-all flex items-center gap-2"
@@ -341,7 +345,7 @@ export default function NineBoxPage() {
                 </div>
 
                 {/* Grid Rows */}
-                {['High', 'Medium', 'Low'].map((perf, rowIdx) => (
+                {['High', 'Medium', 'Low'].map((perf, _rowIdx) => (
                   <div key={perf} className="contents">
                     {/* Row Label */}
                     <div className="flex items-center justify-end pr-4">
@@ -354,8 +358,8 @@ export default function NineBoxPage() {
                     </div>
 
                     {/* Cells */}
-                    {(['Low', 'Medium', 'High'] as const).map((pot, colIdx) => {
-                      const cell = getCellData(perf as any, pot);
+                    {(['Low', 'Medium', 'High'] as const).map((pot, _colIdx) => {
+                      const cell = getCellData(perf as 'High' | 'Medium' | 'Low', pot);
                       const colorClass = getCellColor(perf, pot);
                       const category = getCategoryName(perf, pot);
 
@@ -425,6 +429,7 @@ export default function NineBoxPage() {
               className="relative backdrop-blur-2xl bg-black/80 border-2 border-white/30 rounded-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-hidden"
             >
               <button
+                type="button"
                 onClick={() => setSelectedCell(null)}
                 className="absolute top-4 right-4 w-8 h-8 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center transition-colors"
               >

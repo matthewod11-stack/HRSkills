@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ArrowLeft, CheckCircle2, Mail, Phone, MessageSquare } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Mail, MessageSquare, Phone } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AccessibilityStatement() {

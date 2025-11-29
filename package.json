@@ -8,6 +8,7 @@
     "build": "cd webapp && npm run build",
     "start": "cd webapp && npm run start",
     "lint": "cd webapp && npm run lint",
+    "validate": "cd webapp && npm run validate",
     "agent:onboarding": "python3 agents/new-hire-onboarding/agent.py",
     "agent:metrics": "python3 agents/hr-metrics-dashboard/agent.py",
     "setup": "npm install && cd webapp && npm install",

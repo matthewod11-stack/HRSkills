@@ -1,34 +1,30 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
+import type { LucideIcon } from 'lucide-react';
 import {
-  ArrowLeft,
-  Key,
-  Mail,
-  CreditCard,
-  Brain,
-  Bell,
-  Shield,
-  User,
-  Building,
-  Save,
-  Plug,
   Activity,
-  CheckCircle2,
-  XCircle,
   AlertCircle,
-  Loader2,
-  Zap,
+  ArrowLeft,
+  Bell,
+  Building,
+  CheckCircle2,
   Database,
-  Upload,
+  Loader2,
+  Plug,
+  Save,
+  Shield,
   TrendingUp,
+  User,
+  XCircle,
+  Zap,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { AIMetricsDashboard } from '@/components/custom/AIMetricsDashboard';
 import { QuotaBanner } from '@/components/custom/QuotaBanner';
 import { getDaysSinceFirstRun } from '@/lib/first-run-client';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query-keys';
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -36,7 +32,7 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json());
 interface SettingSection {
   id: string;
   title: string;
-  icon: any;
+  icon: LucideIcon;
   settings: Setting[];
 }
 
@@ -98,7 +94,7 @@ export default function SettingsPage() {
     }
 
     // Check if user has personal API key (from quota data)
-    if (quotaData && quotaData.hasPersonalKey) {
+    if (quotaData?.hasPersonalKey) {
       setHasPersonalApiKey(true);
     }
   }, [firstRunData, quotaData]);
@@ -270,7 +266,7 @@ export default function SettingsPage() {
 
       setSaveMessage('Settings saved successfully!');
       setTimeout(() => setSaveMessage(''), 3000);
-    } catch (error) {
+    } catch (_error) {
       setSaveMessage('Error saving settings');
     } finally {
       setIsSaving(false);
@@ -288,17 +284,19 @@ export default function SettingsPage() {
       if (data.success) {
         alert(
           'Provider test complete!\n\n' +
-            data.results.map((r: any) => `${r.provider}: ${r.message}`).join('\n')
+            data.results
+              .map((r: { provider: string; message: string }) => `${r.provider}: ${r.message}`)
+              .join('\n')
         );
       }
-    } catch (error) {
+    } catch (_error) {
       alert('Error testing providers');
     } finally {
       setIsTesting(false);
     }
   };
 
-  const handleUpdateAIProvider = async (field: string, value: any) => {
+  const handleUpdateAIProvider = async (field: string, value: string | boolean | null) => {
     try {
       const response = await fetch('/api/ai/config', {
         method: 'PATCH',
@@ -339,6 +337,7 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
+                type="button"
                 onClick={() => router.push('/')}
                 className="w-10 h-10 bg-cream hover:bg-terracotta/10 border-2 border-warm hover:border-terracotta/40 rounded-xl flex items-center justify-center transition-all hover-lift shadow-soft"
               >
@@ -346,13 +345,16 @@ export default function SettingsPage() {
               </button>
               <div>
                 <h1 className="text-xl font-bold text-charcoal">Settings</h1>
-                <p className="text-sm text-charcoal-light">Manage your HR Command Center preferences</p>
+                <p className="text-sm text-charcoal-light">
+                  Manage your HR Command Center preferences
+                </p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
               {saveMessage && <span className="text-sm text-sage font-medium">{saveMessage}</span>}
               <button
+                type="button"
                 onClick={handleSave}
                 disabled={isSaving}
                 className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-terracotta to-amber hover:shadow-warm disabled:opacity-50 rounded-xl transition-all text-cream-white font-medium hover-lift"
@@ -399,7 +401,9 @@ export default function SettingsPage() {
                     <Database className="w-4 h-4 text-sage" />
                     <span className="text-xs text-charcoal-light font-medium">Employees</span>
                   </div>
-                  <p className="text-2xl font-bold text-charcoal">{firstRunData?.employeeCount || 0}</p>
+                  <p className="text-2xl font-bold text-charcoal">
+                    {firstRunData?.employeeCount || 0}
+                  </p>
                   <p className="text-xs text-charcoal-soft mt-1">
                     {hasUploadedData ? 'Your data' : 'Demo data'}
                   </p>
@@ -410,7 +414,9 @@ export default function SettingsPage() {
                     <TrendingUp className="w-4 h-4 text-amber" />
                     <span className="text-xs text-charcoal-light font-medium">Analytics</span>
                   </div>
-                  <p className="text-2xl font-bold text-charcoal">{firstRunData?.progress?.percentage || 0}%</p>
+                  <p className="text-2xl font-bold text-charcoal">
+                    {firstRunData?.progress?.percentage || 0}%
+                  </p>
                   <p className="text-xs text-charcoal-soft mt-1">Setup complete</p>
                 </div>
 
@@ -438,6 +444,7 @@ export default function SettingsPage() {
                       </p>
                     </div>
                     <button
+                      type="button"
                       onClick={() => router.push('/data-sources')}
                       className="flex items-center gap-2 px-4 py-2 bg-sage hover:bg-sage-light text-cream-white rounded-xl text-sm transition-all whitespace-nowrap font-medium hover-lift shadow-soft hover:shadow-warm"
                     >
@@ -473,6 +480,7 @@ export default function SettingsPage() {
               </div>
 
               <button
+                type="button"
                 onClick={handleTestProviders}
                 disabled={isTesting}
                 className="flex items-center gap-2 px-3 py-2 bg-amber hover:bg-amber-dark disabled:opacity-50 rounded-xl text-sm transition-all text-cream-white font-medium hover-lift shadow-soft hover:shadow-warm"
@@ -496,7 +504,9 @@ export default function SettingsPage() {
                 {/* Provider Selection */}
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-bold mb-2 text-charcoal">Primary AI Provider</label>
+                    <label className="block text-sm font-bold mb-2 text-charcoal">
+                      Primary AI Provider
+                    </label>
                     <select
                       value={aiConfigData.config.primary}
                       onChange={(e) => handleUpdateAIProvider('primary', e.target.value)}
@@ -515,7 +525,9 @@ export default function SettingsPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-bold mb-2 text-charcoal">Fallback Provider</label>
+                    <label className="block text-sm font-bold mb-2 text-charcoal">
+                      Fallback Provider
+                    </label>
                     <select
                       value={aiConfigData.config.fallback || ''}
                       onChange={(e) => handleUpdateAIProvider('fallback', e.target.value || null)}
@@ -531,7 +543,9 @@ export default function SettingsPage() {
                         GPT (OpenAI)
                       </option>
                     </select>
-                    <p className="text-xs text-charcoal-light mt-1">Used if primary provider fails</p>
+                    <p className="text-xs text-charcoal-light mt-1">
+                      Used if primary provider fails
+                    </p>
                   </div>
                 </div>
 
@@ -544,6 +558,7 @@ export default function SettingsPage() {
                     </p>
                   </div>
                   <button
+                    type="button"
                     onClick={() =>
                       handleUpdateAIProvider(
                         'enableAutoFallback',
@@ -574,12 +589,16 @@ export default function SettingsPage() {
                           className={`p-3 bg-cream border-2 ${getHealthColor(health)} rounded-2xl shadow-soft`}
                         >
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-bold capitalize text-charcoal">{provider}</span>
+                            <span className="text-sm font-bold capitalize text-charcoal">
+                              {provider}
+                            </span>
                             {getHealthIcon(health)}
                           </div>
                           {health && (
                             <>
-                              <p className="text-xs text-charcoal-light">Latency: {health.latency}ms</p>
+                              <p className="text-xs text-charcoal-light">
+                                Latency: {health.latency}ms
+                              </p>
                               <p className="text-xs text-charcoal-light">
                                 Status: {health.healthy ? 'Operational' : 'Unavailable'}
                               </p>
@@ -593,14 +612,18 @@ export default function SettingsPage() {
 
                 {/* Optional API Keys */}
                 <div className="border-t-2 border-warm pt-6">
-                  <h3 className="text-sm font-bold mb-3 text-charcoal">Custom API Keys (Optional)</h3>
+                  <h3 className="text-sm font-bold mb-3 text-charcoal">
+                    Custom API Keys (Optional)
+                  </h3>
                   <p className="text-xs text-charcoal-light mb-4">
                     Add your own API keys to bypass shared limits. Your keys are encrypted and
                     stored securely.
                   </p>
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-xs font-bold mb-1 text-charcoal">Anthropic API Key</label>
+                      <label className="block text-xs font-bold mb-1 text-charcoal">
+                        Anthropic API Key
+                      </label>
                       <input
                         type="password"
                         placeholder="sk-ant-..."
@@ -608,7 +631,9 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold mb-1 text-charcoal">OpenAI API Key</label>
+                      <label className="block text-xs font-bold mb-1 text-charcoal">
+                        OpenAI API Key
+                      </label>
                       <input
                         type="password"
                         placeholder="sk-..."
@@ -642,12 +667,15 @@ export default function SettingsPage() {
             <div className="space-y-4 mb-6">
               <div className="flex items-start justify-between gap-4 border-b-2 border-warm pb-4">
                 <div className="flex-1">
-                  <label className="block text-sm font-bold mb-1 text-charcoal">Prompt Caching</label>
+                  <label className="block text-sm font-bold mb-1 text-charcoal">
+                    Prompt Caching
+                  </label>
                   <p className="text-xs text-charcoal-light">
                     Cache static prompts to reduce token costs by 90%
                   </p>
                 </div>
                 <button
+                  type="button"
                   onClick={() => updateSetting('ai-monitoring', 'promptCaching', true)}
                   className="relative w-12 h-6 rounded-full bg-terracotta"
                 >
@@ -657,12 +685,15 @@ export default function SettingsPage() {
 
               <div className="flex items-start justify-between gap-4 border-b-2 border-warm pb-4">
                 <div className="flex-1">
-                  <label className="block text-sm font-bold mb-1 text-charcoal">Smart Data Filtering</label>
+                  <label className="block text-sm font-bold mb-1 text-charcoal">
+                    Smart Data Filtering
+                  </label>
                   <p className="text-xs text-charcoal-light">
                     Use semantic analysis to include only relevant employee fields
                   </p>
                 </div>
                 <button
+                  type="button"
                   onClick={() => updateSetting('ai-monitoring', 'semanticFiltering', true)}
                   className="relative w-12 h-6 rounded-full bg-terracotta"
                 >
@@ -672,12 +703,15 @@ export default function SettingsPage() {
 
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
-                  <label className="block text-sm font-bold mb-1 text-charcoal">Dynamic Token Limits</label>
+                  <label className="block text-sm font-bold mb-1 text-charcoal">
+                    Dynamic Token Limits
+                  </label>
                   <p className="text-xs text-charcoal-light">
                     Automatically adjust max_tokens based on query type
                   </p>
                 </div>
                 <button
+                  type="button"
                   onClick={() => updateSetting('ai-monitoring', 'dynamicTokens', true)}
                   className="relative w-12 h-6 rounded-full bg-terracotta"
                 >
@@ -730,9 +764,13 @@ export default function SettingsPage() {
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                          <label className="block text-sm font-bold mb-1 text-charcoal">{setting.label}</label>
+                          <label className="block text-sm font-bold mb-1 text-charcoal">
+                            {setting.label}
+                          </label>
                           {setting.description && (
-                            <p className="text-xs text-charcoal-light mb-2">{setting.description}</p>
+                            <p className="text-xs text-charcoal-light mb-2">
+                              {setting.description}
+                            </p>
                           )}
                         </div>
 
@@ -768,6 +806,7 @@ export default function SettingsPage() {
 
                           {setting.type === 'toggle' && (
                             <button
+                              type="button"
                               onClick={() => updateSetting(section.id, setting.id, !setting.value)}
                               className={`relative w-12 h-6 rounded-full transition-colors ${
                                 setting.value ? 'bg-sage' : 'bg-charcoal-soft'

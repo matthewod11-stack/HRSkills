@@ -4,16 +4,16 @@
  * Comprehensive test suite to validate 95%+ accuracy target for workflow detection
  */
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, expect, it } from '@jest/globals';
 import {
-  detectWorkflow,
+  buildDetectionContext,
+  detectDepartmentMention,
   detectDocumentType,
   detectEmployeeMention,
-  detectDepartmentMention,
+  detectWorkflow,
   isActionIntent,
   isAnalysisIntent,
   validateDetection,
-  buildDetectionContext,
 } from '../detection';
 import type { WorkflowId } from '../types';
 
@@ -452,7 +452,7 @@ describe('Workflow Detection', () => {
     });
 
     it('should handle very long messages', () => {
-      const longMessage = 'I need help with ' + 'creating a job description '.repeat(50);
+      const longMessage = `I need help with ${'creating a job description '.repeat(50)}`;
       const context = buildDetectionContext(longMessage);
       const result = detectWorkflow(context);
       expect(result.workflowId).toBe('hiring');

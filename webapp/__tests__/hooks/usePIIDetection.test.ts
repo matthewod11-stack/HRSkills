@@ -1,5 +1,4 @@
-import { vi } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import { vi } from 'vitest';
 import { usePIIDetection } from '@/lib/hooks/usePIIDetection';
 import { detectSensitivePII } from '@/lib/pii-detector';
@@ -47,14 +46,18 @@ describe('usePIIDetection', () => {
 
       let isBlocked: boolean = false;
       act(() => {
-        isBlocked = result.current.checkForPII('My SSN is 123-45-6789 and email is test@example.com');
+        isBlocked = result.current.checkForPII(
+          'My SSN is 123-45-6789 and email is test@example.com'
+        );
       });
 
       expect(isBlocked).toBe(true);
       expect(result.current.piiWarning.show).toBe(true);
       expect(result.current.piiWarning.types).toEqual(['SSN', 'Email']);
       expect(result.current.piiWarning.message).toBe('Social Security Number and Email detected');
-      expect(result.current.piiWarning.pendingText).toBe('My SSN is 123-45-6789 and email is test@example.com');
+      expect(result.current.piiWarning.pendingText).toBe(
+        'My SSN is 123-45-6789 and email is test@example.com'
+      );
       expect(result.current.hasPendingPII).toBe(true);
       expect(result.current.piiTypes).toEqual(['SSN', 'Email']);
     });
@@ -88,7 +91,9 @@ describe('usePIIDetection', () => {
 
       let isBlocked: boolean = false;
       act(() => {
-        isBlocked = result.current.checkForPII('SSN: 123-45-6789, Phone: 555-1234, DOB: 01/01/1990, Address: 123 Main St');
+        isBlocked = result.current.checkForPII(
+          'SSN: 123-45-6789, Phone: 555-1234, DOB: 01/01/1990, Address: 123 Main St'
+        );
       });
 
       expect(isBlocked).toBe(true);
@@ -190,7 +195,9 @@ describe('usePIIDetection', () => {
       });
 
       const mockOnSendWithBypass = vi.fn();
-      const { result } = renderHook(() => usePIIDetection({ onSendWithBypass: mockOnSendWithBypass }));
+      const { result } = renderHook(() =>
+        usePIIDetection({ onSendWithBypass: mockOnSendWithBypass })
+      );
 
       // Detect PII
       act(() => {
@@ -324,7 +331,10 @@ describe('usePIIDetection', () => {
     });
 
     it('should handle very long text with multiple PII types', () => {
-      const longText = 'Lorem ipsum dolor sit amet... SSN: 123-45-6789... more text... Email: test@example.com... even more text...'.repeat(10);
+      const longText =
+        'Lorem ipsum dolor sit amet... SSN: 123-45-6789... more text... Email: test@example.com... even more text...'.repeat(
+          10
+        );
 
       mockDetectSensitivePII.mockReturnValue({
         detected: true,

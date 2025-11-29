@@ -6,7 +6,7 @@
  * to continue working seamlessly.
  */
 
-import type { WorkflowId, SkillToWorkflowMapping } from './types';
+import type { SkillToWorkflowMapping, WorkflowId } from './types';
 
 /**
  * Complete mapping of legacy skill IDs to new workflow IDs

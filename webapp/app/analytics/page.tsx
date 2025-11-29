@@ -1,31 +1,44 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
-  Send,
-  Bot,
-  User,
-  Sparkles,
-  TrendingUp,
-  Copy,
+  ArrowLeft,
   BarChart3,
+  Bot,
+  Copy,
   LineChart,
   PieChart,
-  ArrowLeft,
+  Send,
+  Sparkles,
+  TrendingUp,
+  User,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import {
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Scatter,
+  ScatterChart,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import remarkGfm from 'remark-gfm';
+import {
+  SimpleBarChart,
+  SimpleLineChart,
+  SimplePieChart,
+} from '@/components/charts/RechartsWrappers';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
-import { logComponentError } from '@/lib/errorLogging';
 import { useAuth } from '@/lib/auth/auth-context';
-import { SimpleBarChart, SimpleLineChart, SimplePieChart } from '@/components/charts/RechartsWrappers';
 import { chartJsToRecharts } from '@/lib/charts/recharts-helpers';
-import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { logComponentError } from '@/lib/errorLogging';
 
 interface Message {
-  id: number;
+  id: string | number;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
@@ -35,8 +48,8 @@ interface Message {
 
 interface ChartConfig {
   type: 'bar' | 'line' | 'scatter' | 'pie';
-  data: any;
-  options: any;
+  data: Record<string, unknown>;
+  options: Record<string, unknown>;
   canPin?: boolean;
 }
 
@@ -63,12 +76,12 @@ export default function AnalyticsPage() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   };
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [scrollToBottom]);
 
   useEffect(() => {
     // Generate session ID on mount
@@ -80,7 +93,7 @@ export default function AnalyticsPage() {
     if (!messageText || isTyping) return;
 
     const userMessage: Message = {
-      id: messages.length + 1,
+      id: `user_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
       role: 'user',
       content: messageText,
       timestamp: new Date(),
@@ -116,7 +129,7 @@ export default function AnalyticsPage() {
       }
 
       const assistantMessage: Message = {
-        id: messages.length + 2,
+        id: `assistant_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
         role: 'assistant',
         content: result.data.content,
         chartConfig: result.data.chartConfig || null,
@@ -129,12 +142,13 @@ export default function AnalyticsPage() {
       if (result.data.chartConfig) {
         setCurrentChart(result.data.chartConfig);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Analytics error:', error);
+      const message = error instanceof Error ? error.message : 'Unknown error';
       const errorMessage: Message = {
-        id: messages.length + 2,
+        id: `error_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
         role: 'assistant',
-        content: `Sorry, I encountered an error: ${error.message}. Please try rephrasing your question.`,
+        content: `Sorry, I encountered an error: ${message}. Please try rephrasing your question.`,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -344,6 +358,7 @@ export default function AnalyticsPage() {
                                       <div className="space-y-1">
                                         {message.suggestedFollowUps.map((followUp, idx) => (
                                           <button
+                                            type="button"
                                             key={idx}
                                             onClick={() => handleSend(followUp)}
                                             className="block w-full text-left px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 rounded-lg text-xs transition-colors"
@@ -364,6 +379,7 @@ export default function AnalyticsPage() {
                                   </p>
                                   {message.role === 'assistant' && (
                                     <button
+                                      type="button"
                                       onClick={() => copyToClipboard(message.content)}
                                       className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
                                       aria-label="Copy message to clipboard"
@@ -491,7 +507,9 @@ export default function AnalyticsPage() {
                       <div className="flex flex-col items-center justify-center h-full text-gray-400">
                         <TrendingUp className="w-24 h-24 mb-4 opacity-30" aria-hidden="true" />
                         <p className="text-lg">Ask a question to see visualizations</p>
-                        <p className="text-sm mt-2">Try: &ldquo;What&apos;s our department distribution?&rdquo;</p>
+                        <p className="text-sm mt-2">
+                          Try: &ldquo;What&apos;s our department distribution?&rdquo;
+                        </p>
                       </div>
                     )}
                   </div>

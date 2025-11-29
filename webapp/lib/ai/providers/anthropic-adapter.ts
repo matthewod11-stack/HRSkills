@@ -7,16 +7,15 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import CircuitBreaker from 'opossum';
-import pRetry, { AbortError } from 'p-retry';
 import { env } from '@/env.mjs';
-import {
+import type {
   AIProvider,
   AIProviderType,
+  AnalysisResult,
+  AnalysisTask,
   ChatMessage,
   ChatOptions,
   ChatResponse,
-  AnalysisTask,
-  AnalysisResult,
   ProviderHealth,
 } from '../types';
 
@@ -65,6 +64,15 @@ export class AnthropicAdapter implements AIProvider {
   }
 
   /**
+   * Make raw request to Anthropic API (wrapped by circuit breaker)
+   */
+  private async makeRequest(
+    params: Anthropic.MessageCreateParamsNonStreaming
+  ): Promise<Anthropic.Messages.Message> {
+    return this.client.messages.create(params);
+  }
+
+  /**
    * Send chat completion request
    */
   async chat(messages: ChatMessage[], options?: ChatOptions): Promise<ChatResponse> {
@@ -85,13 +93,13 @@ export class AnthropicAdapter implements AIProvider {
       options?.systemPrompt || messages.find((m) => m.role === 'system')?.content || undefined;
 
     try {
-      const response = await this.breaker.fire({
+      const response = (await this.breaker.fire({
         model,
         max_tokens: maxTokens,
         temperature,
         system: systemPrompt,
         messages: anthropicMessages,
-      }) as Anthropic.Messages.Message;
+      })) as Anthropic.Messages.Message;
 
       const cost = this.calculateCost(
         model,
@@ -110,9 +118,10 @@ export class AnthropicAdapter implements AIProvider {
         },
         cost,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[AnthropicAdapter] Chat request failed:', error);
-      throw new Error(`Anthropic chat failed: ${error.message}`);
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Anthropic chat failed: ${message}`);
     }
   }
 
@@ -201,7 +210,7 @@ export class AnthropicAdapter implements AIProvider {
         lastChecked: now,
         errorRate: 0,
       };
-    } catch (error) {
+    } catch (_error) {
       this.healthStatus = {
         provider: 'anthropic',
         healthy: false,
@@ -216,37 +225,6 @@ export class AnthropicAdapter implements AIProvider {
   }
 
   /**
-   * Internal: Make request with retry logic
-   */
-  private async makeRequest(params: any): Promise<Anthropic.Message> {
-    return pRetry(
-      async () => {
-        try {
-          return await this.client.messages.create(params);
-        } catch (error: any) {
-          // Retry on rate limits and server errors
-          if (error.status === 429 || error.status >= 500) {
-            throw error; // Will be retried by p-retry
-          }
-          // Don't retry on client errors
-          throw new AbortError(error.message);
-        }
-      },
-      {
-        retries: 3,
-        factor: 2, // Exponential backoff: 1s, 2s, 4s
-        minTimeout: 1000,
-        maxTimeout: 8000,
-        onFailedAttempt: (error) => {
-          console.warn(
-            `[AnthropicAdapter] Attempt ${error.attemptNumber} failed. ${error.retriesLeft} retries left.`
-          );
-        },
-      }
-    );
-  }
-
-  /**
    * Build analysis prompt based on task type
    */
   private buildAnalysisPrompt(task: AnalysisTask): string {
@@ -257,17 +235,20 @@ export class AnthropicAdapter implements AIProvider {
       case 'entities':
         return `Extract named entities from this text. Return JSON only with format: {"entities": [{"text": "entity", "type": "PERSON"|"ORGANIZATION"|"LOCATION"|"DATE", "confidence": 0.0-1.0}]}\n\nText: "${task.text}"`;
 
-      case 'classification':
+      case 'classification': {
         const categories = task.options?.categories || [];
         return `Classify this text into one of these categories: ${categories.join(', ')}. Return JSON only with format: {"category": "chosen_category", "confidence": 0.0-1.0}\n\nText: "${task.text}"`;
+      }
 
-      case 'summarization':
+      case 'summarization': {
         const maxLength = task.options?.maxLength || 100;
         return `Summarize this text in ${maxLength} words or less:\n\n${task.text}`;
+      }
 
-      case 'translation':
+      case 'translation': {
         const targetLang = task.options?.targetLanguage || 'English';
         return `Translate this text to ${targetLang}:\n\n${task.text}`;
+      }
 
       default:
         return task.text;

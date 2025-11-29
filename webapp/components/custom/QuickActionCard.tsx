@@ -1,9 +1,8 @@
 'use client';
 
-import { memo } from 'react';
-import { motion } from 'framer-motion';
-import { LucideIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
+import { memo } from 'react';
 
 interface QuickActionCardProps {
   title: string;

@@ -7,14 +7,14 @@
  * Phase 5: Simplified to Anthropic + OpenAI only
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, authErrorResponse } from '@/lib/auth/middleware';
-import { handleApiError } from '@/lib/api-helpers';
-import { getAIHealth, getAIConfig, configureAI } from '@/lib/ai/router';
-import { db } from '@/lib/db';
-import { userPreferences } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { type NextRequest, NextResponse } from 'next/server';
+import { userPreferences } from '@/db/schema';
+import { configureAI, getAIConfig, getAIHealth } from '@/lib/ai/router';
 import type { AIProviderConfig, UserAIPreferences } from '@/lib/ai/types';
+import { handleApiError } from '@/lib/api-helpers';
+import { authErrorResponse, requireAuth } from '@/lib/auth/middleware';
+import { db } from '@/lib/db';
 
 /**
  * GET /api/ai/config

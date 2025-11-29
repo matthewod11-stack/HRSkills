@@ -1,5 +1,23 @@
 # HR Command Center Desktop App – Electron Implementation Plan (macOS First)
 
+> **This document has been reorganized.** For easier implementation, use these focused documents:
+>
+> | Document | Purpose |
+> |----------|---------|
+> | **[ROADMAP.md](./desktop/ROADMAP.md)** | Actionable checklist with reordered phases |
+> | **[ARCHITECTURE.md](./desktop/ARCHITECTURE.md)** | Technical specification & concepts |
+> | **[CODE_EXAMPLES.md](./desktop/CODE_EXAMPLES.md)** | Copy-paste ready implementation code |
+>
+> **Key improvements in the split docs:**
+> - Phases reordered for better testability (Electron working before licensing)
+> - Critical gaps filled: port detection, API key storage (Keychain), Next.js crash handling
+> - Linear checklist extracted for tracking
+> - Realistic timeline: 12-16 weeks (not 8-10)
+>
+> This original document is preserved as the comprehensive reference.
+
+---
+
 This document describes, step by step, how to turn this repository into a **desktop application with a local backend** using **Electron**, targeting **macOS first** (Windows optional later).
 
 It assumes:
@@ -62,70 +80,163 @@ You can treat this as a checklist you work through in order.
 
 Transform the HRSkills web application into a production-ready macOS desktop application using Electron, with local SQLite storage and multi-provider AI failover intact.
 
-**Estimated Timeline:** 6-8 weeks (assuming full-time focus)
-**Critical Path Items:** 7 manual pause points requiring your action
+**Estimated Timeline:** 8-10 weeks (assuming full-time focus)
+**Critical Path Items:** 9 manual pause points requiring your action
 **Risk Level:** Medium (PII handling + code signing complexity)
+
+---
+
+## Distribution Model: Direct Sales (NOT App Store)
+
+> **Decision:** We are selling direct from our website, NOT through the Mac App Store.
+
+### Why Direct Sales?
+
+| Factor | Direct Sales ✓ | Mac App Store ✗ |
+|--------|----------------|-----------------|
+| **Revenue** | Keep ~97% (Stripe 2.9% + $0.30) | Keep 70-85% (Apple takes 15-30%) |
+| **Control** | Full pricing/licensing control | Apple approval required |
+| **Updates** | Ship instantly via GitHub | Review delays (1-7 days) |
+| **User Data** | Never touches our servers | Same |
+| **Requirements** | Code signing + notarization | Same + App Store guidelines |
+
+### Architecture: Local-First Privacy Model
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  CUSTOMER'S COMPUTER                                            │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │  HR Command Center Desktop App                            │  │
+│  │  ├── Electron shell                                       │  │
+│  │  ├── Next.js (runs locally on localhost:3000)             │  │
+│  │  ├── SQLite database (all HR data stays HERE)             │  │
+│  │  └── License key (validated once, stored locally)         │  │
+│  └───────────────────────────────────────────────────────────┘  │
+│                           │                                     │
+│                           ▼ (AI API calls only)                 │
+└───────────────────────────┼─────────────────────────────────────┘
+                            │
+                 ┌──────────▼──────────┐
+                 │  Anthropic/OpenAI   │
+                 │  (Customer's own    │
+                 │   API keys)         │
+                 └─────────────────────┘
+
+WE MANAGE: License key validation (simple API), app updates
+CUSTOMER OWNS: All their HR data, their AI API keys, runs on their machine
+WE NEVER SEE: Employee names, salaries, PII, chat history, documents
+```
+
+### Customer Journey: Purchase to First Use
+
+```
+1. DISCOVER
+   └── Customer visits hrcommandcenter.com
+
+2. PURCHASE
+   └── Click "Buy Now" → Stripe Checkout ($X one-time or subscription)
+   └── Stripe webhook generates license key
+   └── Customer receives email with:
+       - Download link (.dmg)
+       - License key
+       - Quick start guide PDF
+
+3. INSTALL
+   └── Download .dmg from our CDN (or GitHub Releases)
+   └── Drag to /Applications (standard macOS install)
+   └── First launch → Gatekeeper allows (we're signed + notarized)
+
+4. ACTIVATE (First-Run Wizard - Step 1)
+   └── Welcome screen explains local-first privacy
+   └── Enter license key (validates against our simple API)
+   └── License stored locally (works offline after activation)
+
+5. AI SETUP (First-Run Wizard - Step 2) ⭐ CRITICAL FOR NON-TECHNICAL USERS
+   └── Guided walkthrough with screenshots
+   └── "Get your AI key" button → opens Anthropic signup in browser
+   └── Copy/paste key into app
+   └── Test connection → green checkmark
+   └── Optional: Add backup OpenAI key
+
+6. READY
+   └── Optional: Import existing data or start fresh with demo data
+   └── Dashboard loads → customer is ready to use
+
+Total time: ~10 minutes from purchase to first chat
+```
+
+### What We Host vs. What's Local
+
+| Component | Location | Notes |
+|-----------|----------|-------|
+| Product website | Our hosting (Vercel) | Sales, docs, support |
+| License validation API | Our hosting (single endpoint) | Called once on activation |
+| App downloads (.dmg) | GitHub Releases or S3 | Free via GitHub |
+| Update server | GitHub Releases | electron-updater checks here |
+| Customer's HR data | Customer's Mac | Never leaves their machine |
+| Customer's AI keys | Customer's Mac (encrypted) | We never see these |
+| Chat history | Customer's Mac | SQLite database |
 
 ---
 
 ## Critical Gaps in This Plan
 
-The technical specification below is comprehensive but missing key implementation details:
+The technical specification below is comprehensive but some items need attention:
 
-### 1. **Pre-Flight Validation** (MISSING)
-- No webapp production-readiness checklist
-- No performance baseline measurements
-- No feature inventory for parity verification
+### ✅ RESOLVED
+
+### 1. **Distribution Model** → RESOLVED (see above)
+- Direct sales via website, NOT App Store
+- Customer journey documented
+- Architecture clarified
+
+### 4. **First-Run Experience** → RESOLVED (see Phase 8)
+- Comprehensive onboarding wizard with API key setup
+- Non-technical user focus with guided walkthrough
+- License activation + AI setup in single flow
+
+### 11. **Legal & Licensing** → RESOLVED (see Phase 0.5)
+- Payment infrastructure (Stripe)
+- License key generation and validation
+- EULA and privacy policy requirements documented
+
+### ⚠️ STILL NEEDS ATTENTION
 
 ### 2. **Icon Assets** (MISSING)
 - Plan mentions `desktop/icons/icon.icns` but no creation guide
 - Need 1024x1024 source image → .icns conversion process
-- Windows .ico files if planning future support
 
 ### 3. **Port Conflict Resolution** (MISSING)
 - Assumes port 3000 is always available
 - No dynamic port allocation strategy
 - No graceful fallback if Next.js fails to start
 
-### 4. **First-Run Experience** (MISSING)
-- No onboarding flow for API key setup
-- No data migration from web version (if users have existing accounts)
-- No welcome screen or setup wizard
+### 5. **Beta Testing Phase** (IN PLAN - Phase 11)
+- Plan exists but needs beta tester recruitment strategy
+- Feedback collection mechanism needed
 
-### 5. **Beta Testing Phase** (MISSING)
-- No plan for internal testing before public release
-- No dogfooding period with real users
-- No feedback collection mechanism
-
-### 6. **User Documentation** (MISSING)
-- No installation guide for end users
-- No troubleshooting documentation
-- No FAQ for common issues
+### 6. **User Documentation** (IN PLAN - Phase 12)
+- Installation guide template needed
+- FAQ based on beta feedback
 
 ### 7. **Offline Mode Strategy** (INCOMPLETE)
 - Plan mentions "graceful degradation" but no implementation details
 - Need UI feedback when AI providers are unreachable
 - Need local-only features that work without internet
 
-### 8. **Multi-User macOS Support** (MISSING)
-- Can multiple macOS users run the app simultaneously?
-- Database file locking strategy
-- Per-user data isolation
+### 8. **Multi-User macOS Support** (LOW PRIORITY)
+- Single user per machine assumed for v1.0
+- Can revisit if enterprise customers request
 
 ### 9. **Resource Limits & Monitoring** (MISSING)
 - No memory limits for Next.js child process
 - No CPU usage monitoring
 - No automatic restart on memory leaks
 
-### 10. **Windows Support Timeline** (VAGUE)
-- Mentioned as "optional later" but no concrete decision tree
-- If yes: When? What's different?
-- If no: Remove references to reduce confusion
-
-### 11. **Legal & Licensing** (MISSING)
-- End-user license agreement (EULA)
-- Privacy policy for desktop app
-- Terms of service for AI API usage
+### 10. **Windows Support Timeline** (DEFERRED)
+- macOS only for v1.0
+- Windows support based on customer demand post-launch
+- Decision point: 3 months after macOS launch
 
 ### 12. **Rollback Strategy** (INCOMPLETE)
 - Update rollback covered, but not initial deployment rollback
@@ -139,15 +250,16 @@ The technical specification below is comprehensive but missing key implementatio
 | Phase | Timeline | Focus | Manual Pause Points |
 |-------|----------|-------|---------------------|
 | 0 | Week 1 | Pre-flight validation & planning | 0A: Review baseline |
-| 1 | Week 1 | Branch setup & Electron scaffolding | 1A: Verify Electron works |
-| 2 | Week 1 | Icon creation & branding | — |
-| 3 | Week 2 | Next.js integration | — |
-| 4 | Week 2-3 | Secure IPC implementation | 4A: Security audit |
-| 5 | Week 3 | Database backup & recovery | — |
-| 6 | Week 3 | Crash reporting & monitoring | 6A: Sentry config |
-| 7 | Week 4 | Auto-update infrastructure | 7A: GitHub secrets |
-| 8 | Week 4 | First-run experience & onboarding | — |
-| 9 | Week 5 | Feature parity validation | 9A: Feature sign-off |
+| **0.5** | **Week 1-2** | **Payment & Licensing Infrastructure** | **0.5A: Stripe setup** |
+| 1 | Week 2 | Branch setup & Electron scaffolding | 1A: Verify Electron works |
+| 2 | Week 2 | Icon creation & branding | — |
+| 3 | Week 3 | Next.js integration | — |
+| 4 | Week 3-4 | Secure IPC implementation | 4A: Security audit |
+| 5 | Week 4 | Database backup & recovery | — |
+| 6 | Week 4 | Crash reporting & monitoring | 6A: Sentry config |
+| 7 | Week 5 | Auto-update infrastructure | 7A: GitHub secrets |
+| 8 | Week 5-6 | **First-run wizard & API key setup** | 8A: UX review |
+| 9 | Week 6 | Feature parity validation | 9A: Feature sign-off |
 | 10 | Week 5-6 | macOS code signing & notarization | 10A: Apple setup, 10B: Verify |
 | 11 | Week 6 | Beta testing | 11A: Beta retrospective |
 | 12 | Week 6-7 | User documentation | — |
@@ -160,14 +272,15 @@ The technical specification below is comprehensive but missing key implementatio
 **Goal:** Ensure webapp is production-ready before any desktop work begins
 
 ### Tasks:
-- [ ] Run full validation suite: `npm run validate`
+- [ ] Run core validation suite: `cd webapp && npm run type-check` and `npm run format:check`
+- [ ] Verify production build completes successfully: `cd webapp && npm run build`
 - [ ] Document current webapp performance baselines
   - Chat response times (p50, p95, p99)
   - Database query performance
   - Bundle size metrics
 - [ ] Create feature inventory spreadsheet (all 25 skills + UI features)
 - [ ] Verify all environment variables work in production mode
-- [ ] Test multi-provider AI failover chain (Anthropic → OpenAI → Gemini)
+- [ ] Test multi-provider AI failover chain (Anthropic → OpenAI)
 - [ ] Run security audit on auth/PII handling paths
 - [ ] Document known issues in webapp (technical debt tracker)
 
@@ -181,7 +294,315 @@ The technical specification below is comprehensive but missing key implementatio
 
 ---
 
-## Phase 1: Branch Setup & Desktop Scaffolding (Week 1)
+## Phase 0.5: Payment & Licensing Infrastructure (Week 1-2)
+
+**Goal:** Set up direct sales infrastructure before building the app
+
+> **Why before Electron work?** You want the purchase → download → activate flow designed first. This influences the first-run experience (Phase 8) and ensures you're not retrofitting licensing later.
+
+### 0.5.1 Stripe Setup
+
+#### Tasks:
+- [ ] Create Stripe account (if not exists): https://dashboard.stripe.com
+- [ ] Create product in Stripe Dashboard
+  - Product name: "HR Command Center"
+  - Pricing: One-time purchase OR subscription (decide)
+  - Price: $X (decide based on market research)
+- [ ] Configure Stripe Checkout
+  - Success URL: `https://hrcommandcenter.com/purchase/success?session_id={CHECKOUT_SESSION_ID}`
+  - Cancel URL: `https://hrcommandcenter.com/purchase/cancelled`
+- [ ] Set up Stripe webhook endpoint
+  - Event: `checkout.session.completed`
+  - Endpoint: `https://hrcommandcenter.com/api/webhooks/stripe`
+
+#### Stripe Webhook Handler (Serverless Function)
+
+```typescript
+// pages/api/webhooks/stripe.ts (or app/api/webhooks/stripe/route.ts)
+import Stripe from 'stripe'
+import { generateLicenseKey, storeLicense, sendPurchaseEmail } from '@/lib/licensing'
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+
+export async function POST(request: Request) {
+  const body = await request.text()
+  const signature = request.headers.get('stripe-signature')!
+
+  let event: Stripe.Event
+
+  try {
+    event = stripe.webhooks.constructEvent(
+      body,
+      signature,
+      process.env.STRIPE_WEBHOOK_SECRET!
+    )
+  } catch (err) {
+    return new Response('Webhook signature verification failed', { status: 400 })
+  }
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object as Stripe.Checkout.Session
+
+    // Generate unique license key
+    const licenseKey = generateLicenseKey()
+
+    // Store in database
+    await storeLicense({
+      key: licenseKey,
+      customerEmail: session.customer_email!,
+      stripeCustomerId: session.customer as string,
+      stripeSessionId: session.id,
+      createdAt: new Date(),
+      activatedAt: null, // Set when user activates in app
+      machineId: null,   // Set when user activates in app
+    })
+
+    // Send purchase confirmation email
+    await sendPurchaseEmail({
+      to: session.customer_email!,
+      licenseKey,
+      downloadUrl: 'https://hrcommandcenter.com/download',
+    })
+  }
+
+  return new Response('OK', { status: 200 })
+}
+```
+
+### 0.5.2 License Key System
+
+#### License Key Format
+
+```
+HRCC-XXXX-XXXX-XXXX-XXXX
+
+Where:
+- HRCC = Product prefix
+- Each X = Alphanumeric (A-Z, 0-9, excluding confusing chars like O/0, I/1)
+- Example: HRCC-A3B7-K9M2-P4N8-Q6R1
+```
+
+#### License Key Generation
+
+```typescript
+// lib/licensing/generate.ts
+import { randomBytes } from 'crypto'
+
+const CHARSET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // No O/0, I/1, L
+
+export function generateLicenseKey(): string {
+  const segments: string[] = []
+
+  for (let i = 0; i < 4; i++) {
+    let segment = ''
+    for (let j = 0; j < 4; j++) {
+      const randomIndex = randomBytes(1)[0] % CHARSET.length
+      segment += CHARSET[randomIndex]
+    }
+    segments.push(segment)
+  }
+
+  return `HRCC-${segments.join('-')}`
+}
+```
+
+#### License Validation API (Single Endpoint)
+
+```typescript
+// app/api/license/validate/route.ts
+import { db } from '@/lib/db'
+import { licensesTable } from '@/db/schema'
+import { eq, and, isNull } from 'drizzle-orm'
+import { z } from 'zod'
+
+const validateSchema = z.object({
+  licenseKey: z.string().regex(/^HRCC-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/),
+  machineId: z.string().min(10).max(100),
+})
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json()
+    const { licenseKey, machineId } = validateSchema.parse(body)
+
+    // Find license
+    const license = await db.select()
+      .from(licensesTable)
+      .where(eq(licensesTable.key, licenseKey))
+      .limit(1)
+
+    if (license.length === 0) {
+      return Response.json({ valid: false, error: 'Invalid license key' }, { status: 400 })
+    }
+
+    const existingLicense = license[0]
+
+    // Check if already activated on different machine
+    if (existingLicense.machineId && existingLicense.machineId !== machineId) {
+      return Response.json({
+        valid: false,
+        error: 'License already activated on another device',
+        hint: 'Contact support@hrcommandcenter.com to transfer your license'
+      }, { status: 400 })
+    }
+
+    // Activate if first time
+    if (!existingLicense.activatedAt) {
+      await db.update(licensesTable)
+        .set({
+          activatedAt: new Date(),
+          machineId: machineId,
+        })
+        .where(eq(licensesTable.key, licenseKey))
+    }
+
+    return Response.json({
+      valid: true,
+      customerEmail: existingLicense.customerEmail,
+      activatedAt: existingLicense.activatedAt || new Date().toISOString(),
+    })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return Response.json({ valid: false, error: 'Invalid request format' }, { status: 400 })
+    }
+    return Response.json({ valid: false, error: 'Validation failed' }, { status: 500 })
+  }
+}
+```
+
+### 0.5.3 Database Schema for Licenses
+
+```typescript
+// Add to webapp/db/schema.ts
+
+export const licensesTable = sqliteTable('licenses', {
+  id: text('id').primaryKey().$defaultFn(() => `lic_${Date.now()}`),
+  key: text('key').notNull().unique(),
+  customerEmail: text('customer_email').notNull(),
+  stripeCustomerId: text('stripe_customer_id'),
+  stripeSessionId: text('stripe_session_id'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  activatedAt: integer('activated_at', { mode: 'timestamp' }),
+  machineId: text('machine_id'),
+  deactivatedAt: integer('deactivated_at', { mode: 'timestamp' }),
+  notes: text('notes'),
+})
+```
+
+### 0.5.4 Purchase Success Page
+
+```typescript
+// app/purchase/success/page.tsx
+export default async function PurchaseSuccessPage({
+  searchParams,
+}: {
+  searchParams: { session_id?: string }
+}) {
+  // Fetch session details from Stripe (optional, for display)
+
+  return (
+    <div className="max-w-2xl mx-auto py-16 px-4">
+      <div className="text-center">
+        <div className="text-6xl mb-4">🎉</div>
+        <h1 className="text-3xl font-bold mb-4">Thank You for Your Purchase!</h1>
+        <p className="text-lg text-gray-600 mb-8">
+          Check your email for your license key and download instructions.
+        </p>
+
+        <div className="bg-blue-50 rounded-lg p-6 mb-8">
+          <h2 className="font-semibold mb-2">What happens next?</h2>
+          <ol className="text-left text-sm space-y-2">
+            <li>1. Check your email for your license key</li>
+            <li>2. Download HR Command Center for macOS</li>
+            <li>3. Open the app and enter your license key</li>
+            <li>4. Follow the setup wizard to connect your AI provider</li>
+          </ol>
+        </div>
+
+        <a
+          href="/download"
+          className="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700"
+        >
+          Download Now
+        </a>
+      </div>
+    </div>
+  )
+}
+```
+
+### 0.5.5 Email Templates
+
+#### Purchase Confirmation Email
+
+```
+Subject: Your HR Command Center License Key 🔑
+
+Hi there!
+
+Thank you for purchasing HR Command Center. Here's everything you need to get started:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+YOUR LICENSE KEY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+HRCC-A3B7-K9M2-P4N8-Q6R1
+
+Keep this email safe - you'll need this key to activate the app.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GETTING STARTED (5 minutes)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. DOWNLOAD
+   → https://hrcommandcenter.com/download
+
+2. INSTALL
+   → Open the .dmg file
+   → Drag HR Command Center to your Applications folder
+
+3. ACTIVATE
+   → Open the app
+   → Enter your license key when prompted
+
+4. CONNECT AI
+   → The app will guide you through setting up your AI provider
+   → We recommend Anthropic Claude for best results
+   → Don't have an API key? The app will help you get one!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NEED HELP?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📖 Setup Guide: https://hrcommandcenter.com/docs/getting-started
+❓ FAQ: https://hrcommandcenter.com/faq
+📧 Support: support@hrcommandcenter.com
+
+Your data stays on YOUR computer. We never see your HR information.
+
+Welcome aboard!
+The HR Command Center Team
+```
+
+### Deliverables:
+- [ ] Stripe product and checkout configured
+- [ ] Webhook endpoint deployed and tested
+- [ ] License validation API deployed
+- [ ] Database schema updated with licenses table
+- [ ] Purchase success page live
+- [ ] Email template configured (use SendGrid, Resend, or Postmark)
+- [ ] Test full purchase flow with Stripe test mode
+
+### 🔴 PAUSE POINT 0.5A: Stripe Configuration
+**You must:**
+1. Complete Stripe account setup
+2. Test full purchase flow in test mode
+3. Verify webhook receives events
+4. Verify email sends with license key
+
+---
+
+## Phase 1: Branch Setup & Desktop Scaffolding (Week 2)
 
 **Goal:** Create isolated development environment with basic Electron shell
 
@@ -449,29 +870,882 @@ iconutil -c icns icon.iconset -o desktop/icons/icon.icns
 
 ---
 
-## Phase 8: First-Run Experience & Onboarding (Week 4)
+## Phase 8: First-Run Wizard & API Key Setup (Week 5-6)
 
-**Goal:** Handle new user setup (NEW - not in original plan)
+**Goal:** Create a seamless onboarding experience for NON-TECHNICAL users
 
-### Tasks:
-- [ ] Create first-run detection (check if DB exists)
-- [ ] Implement onboarding flow in webapp
-  - Welcome screen
-  - API key setup for Anthropic/OpenAI
-  - Optional: Import data from JSON file
-  - Optional: Demo mode with sample data
-- [ ] Implement data migration from web version
-  - Detect if `~/.hrskills/web-data.json` exists
-  - Offer to import
-  - Run `migrate:json-to-sqlite` with imported data
-- [ ] Add "Getting Started" documentation to app
-  - In-app help system
-  - Link to full docs
-- [ ] Test first-run on clean macOS user account
+> **⭐ CRITICAL:** This is the make-or-break moment. A confused user during setup = refund request. The wizard must be foolproof with clear visual guidance at every step.
+
+### 8.1 Design Principles
+
+1. **Zero jargon** - Say "your AI assistant connection" not "API key"
+2. **Visual guidance** - Screenshots showing exactly where to click
+3. **One action per screen** - Don't overwhelm
+4. **Instant feedback** - Green checkmarks, progress indicators
+5. **Graceful errors** - Helpful messages, not technical errors
+6. **Skip nothing** - Guide through EVERY step, assume nothing
+
+### 8.2 First-Run Detection
+
+```typescript
+// desktop/src/electron-main.ts
+import { app } from 'electron'
+import fs from 'fs-extra'
+import path from 'path'
+
+async function isFirstRun(): Promise<boolean> {
+  const configPath = path.join(app.getPath('userData'), 'config.json')
+  return !(await fs.pathExists(configPath))
+}
+
+async function checkLicenseStatus(): Promise<'none' | 'valid' | 'expired'> {
+  const configPath = path.join(app.getPath('userData'), 'config.json')
+
+  if (!(await fs.pathExists(configPath))) {
+    return 'none'
+  }
+
+  const config = await fs.readJson(configPath)
+
+  if (!config.licenseKey) {
+    return 'none'
+  }
+
+  // Check if license is still valid (optional: re-validate with server)
+  return 'valid'
+}
+```
+
+### 8.3 Wizard Flow (5 Steps)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  STEP 1: WELCOME                                            │
+│                                                             │
+│  [App Logo]                                                 │
+│                                                             │
+│  Welcome to HR Command Center!                              │
+│                                                             │
+│  Your AI-powered HR assistant that keeps                    │
+│  all your data private on this computer.                    │
+│                                                             │
+│  Setup takes about 5 minutes.                               │
+│                                                             │
+│  ○───○───○───○───○  Step 1 of 5                             │
+│                                                             │
+│              [ Get Started → ]                              │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│  STEP 2: ACTIVATE LICENSE                                   │
+│                                                             │
+│  Enter your license key                                     │
+│                                                             │
+│  You received this in your purchase confirmation email.     │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  HRCC-____-____-____-____                           │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  [Can't find your key? Check email from                     │
+│   noreply@hrcommandcenter.com]                              │
+│                                                             │
+│  ●───○───○───○───○  Step 2 of 5                             │
+│                                                             │
+│  [ ← Back ]              [ Activate → ]                     │
+│                                                             │
+│  ✓ Valid license!  (or)  ✗ Invalid key - check for typos   │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│  STEP 3: CONNECT YOUR AI ASSISTANT                          │
+│                                                             │
+│  HR Command Center uses Claude AI to help you.              │
+│  You'll need your own AI account (takes 2 minutes).         │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  [Anthropic Logo]                                   │   │
+│  │                                                     │   │
+│  │  Claude by Anthropic                                │   │
+│  │  ★★★★★ Recommended - Best for HR tasks              │   │
+│  │                                                     │   │
+│  │  [ Set up Claude → ]                                │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  [OpenAI Logo]                                      │   │
+│  │                                                     │   │
+│  │  ChatGPT by OpenAI                                  │   │
+│  │  Alternative option                                 │   │
+│  │                                                     │   │
+│  │  [ Set up ChatGPT → ]                               │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  ●───●───○───○───○  Step 3 of 5                             │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│  STEP 3A: GET YOUR CLAUDE KEY (Sub-wizard)                  │
+│                                                             │
+│  Let's connect Claude AI. Follow these steps:               │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │ STEP A: Create an Anthropic account                 │   │
+│  │                                                     │   │
+│  │ Click the button below. A browser window will open. │   │
+│  │                                                     │   │
+│  │ [ Open Anthropic Sign Up ↗ ]                        │   │
+│  │                                                     │   │
+│  │ Already have an account? [ Skip to Step B ]         │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │ STEP B: Add payment method                          │   │
+│  │                                                     │   │
+│  │ Anthropic requires a credit card for API access.    │   │
+│  │ You only pay for what you use (~$5-15/month typical)│   │
+│  │                                                     │   │
+│  │ 1. Go to console.anthropic.com                      │   │
+│  │ 2. Click "Billing" in the left menu                 │   │
+│  │ 3. Add your payment method                          │   │
+│  │                                                     │   │
+│  │ [SCREENSHOT: Anthropic billing page]                │   │
+│  │                                                     │   │
+│  │ [ Open Billing Page ↗ ]                             │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │ STEP C: Create your API key                         │   │
+│  │                                                     │   │
+│  │ 1. Go to console.anthropic.com/settings/keys        │   │
+│  │ 2. Click "Create Key"                               │   │
+│  │ 3. Name it "HR Command Center"                      │   │
+│  │ 4. Click "Create"                                   │   │
+│  │ 5. COPY the key (starts with sk-ant-)               │   │
+│  │                                                     │   │
+│  │ [SCREENSHOT: API keys page with arrow pointing to   │   │
+│  │  "Create Key" button]                               │   │
+│  │                                                     │   │
+│  │ [ Open API Keys Page ↗ ]                            │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │ STEP D: Paste your key here                         │   │
+│  │                                                     │   │
+│  │ ┌─────────────────────────────────────────────┐     │   │
+│  │ │ sk-ant-api03-________________________      │     │   │
+│  │ └─────────────────────────────────────────────┘     │   │
+│  │                                                     │   │
+│  │ [ Test Connection ]                                 │   │
+│  │                                                     │   │
+│  │ ✓ Connected successfully!                           │   │
+│  │   Model: Claude 3.5 Sonnet                          │   │
+│  │   Status: Ready                                     │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│              [ ← Back ]        [ Continue → ]               │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│  STEP 4: CHOOSE YOUR DATA                                   │
+│                                                             │
+│  How would you like to start?                               │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  [ ] Start Fresh                                    │   │
+│  │      Begin with an empty database                   │   │
+│  │      Perfect if you're importing your own data      │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  [●] Try Demo Mode                                  │   │
+│  │      Explore with 50 sample employees               │   │
+│  │      You can clear this data anytime                │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  [ ] Import Existing Data                           │   │
+│  │      Have a spreadsheet? Import your employee list  │   │
+│  │      Supports: Excel (.xlsx), CSV                   │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  ●───●───●───○───○  Step 4 of 5                             │
+│                                                             │
+│              [ ← Back ]        [ Continue → ]               │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│  STEP 5: YOU'RE ALL SET!                                    │
+│                                                             │
+│  [Celebration animation / confetti]                         │
+│                                                             │
+│  🎉 HR Command Center is ready!                             │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  ✓ License activated                                │   │
+│  │  ✓ Claude AI connected                              │   │
+│  │  ✓ Demo data loaded                                 │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  Quick tips to get started:                                 │
+│                                                             │
+│  💬 "Show me employees at risk of leaving"                  │
+│  📊 "What's our turnover rate this quarter?"                │
+│  📝 "Draft a performance review for Sarah Chen"             │
+│                                                             │
+│  ●───●───●───●───●  Complete!                               │
+│                                                             │
+│              [ Open HR Command Center → ]                   │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 8.4 Implementation: Wizard Components
+
+```typescript
+// webapp/components/onboarding/SetupWizard.tsx
+'use client'
+
+import { useState } from 'react'
+import { WelcomeStep } from './steps/WelcomeStep'
+import { LicenseStep } from './steps/LicenseStep'
+import { AIProviderStep } from './steps/AIProviderStep'
+import { DataStep } from './steps/DataStep'
+import { CompleteStep } from './steps/CompleteStep'
+
+type WizardStep = 'welcome' | 'license' | 'ai-provider' | 'data' | 'complete'
+
+export function SetupWizard({ onComplete }: { onComplete: () => void }) {
+  const [step, setStep] = useState<WizardStep>('welcome')
+  const [config, setConfig] = useState({
+    licenseKey: '',
+    aiProvider: '' as 'anthropic' | 'openai' | '',
+    aiApiKey: '',
+    dataMode: '' as 'fresh' | 'demo' | 'import' | '',
+  })
+
+  const steps: WizardStep[] = ['welcome', 'license', 'ai-provider', 'data', 'complete']
+  const currentIndex = steps.indexOf(step)
+
+  const goNext = () => {
+    const nextIndex = currentIndex + 1
+    if (nextIndex < steps.length) {
+      setStep(steps[nextIndex])
+    }
+  }
+
+  const goBack = () => {
+    const prevIndex = currentIndex - 1
+    if (prevIndex >= 0) {
+      setStep(steps[prevIndex])
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center p-4">
+      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl p-8">
+        {/* Progress indicator */}
+        <div className="flex justify-center mb-8">
+          {steps.map((s, i) => (
+            <div key={s} className="flex items-center">
+              <div
+                className={`w-3 h-3 rounded-full ${
+                  i <= currentIndex ? 'bg-blue-600' : 'bg-gray-200'
+                }`}
+              />
+              {i < steps.length - 1 && (
+                <div
+                  className={`w-12 h-0.5 ${
+                    i < currentIndex ? 'bg-blue-600' : 'bg-gray-200'
+                  }`}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Step content */}
+        {step === 'welcome' && <WelcomeStep onNext={goNext} />}
+        {step === 'license' && (
+          <LicenseStep
+            value={config.licenseKey}
+            onChange={(key) => setConfig({ ...config, licenseKey: key })}
+            onNext={goNext}
+            onBack={goBack}
+          />
+        )}
+        {step === 'ai-provider' && (
+          <AIProviderStep
+            config={config}
+            onChange={(updates) => setConfig({ ...config, ...updates })}
+            onNext={goNext}
+            onBack={goBack}
+          />
+        )}
+        {step === 'data' && (
+          <DataStep
+            value={config.dataMode}
+            onChange={(mode) => setConfig({ ...config, dataMode: mode })}
+            onNext={goNext}
+            onBack={goBack}
+          />
+        )}
+        {step === 'complete' && <CompleteStep onComplete={onComplete} />}
+      </div>
+    </div>
+  )
+}
+```
+
+### 8.5 API Key Setup Sub-Wizard (Critical for Non-Technical Users)
+
+```typescript
+// webapp/components/onboarding/steps/AIProviderStep.tsx
+'use client'
+
+import { useState } from 'react'
+import Image from 'next/image'
+
+interface Props {
+  config: { aiProvider: string; aiApiKey: string }
+  onChange: (updates: Partial<{ aiProvider: string; aiApiKey: string }>) => void
+  onNext: () => void
+  onBack: () => void
+}
+
+type SubStep = 'choose' | 'anthropic-guide' | 'openai-guide' | 'test'
+
+export function AIProviderStep({ config, onChange, onNext, onBack }: Props) {
+  const [subStep, setSubStep] = useState<SubStep>('choose')
+  const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle')
+  const [errorMessage, setErrorMessage] = useState('')
+
+  const testConnection = async () => {
+    setTestStatus('testing')
+    setErrorMessage('')
+
+    try {
+      const response = await fetch('/api/ai/test-connection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          provider: config.aiProvider,
+          apiKey: config.aiApiKey,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setTestStatus('success')
+        // Save to local config
+        await saveApiKey(config.aiProvider, config.aiApiKey)
+      } else {
+        setTestStatus('error')
+        setErrorMessage(friendlyErrorMessage(result.error))
+      }
+    } catch {
+      setTestStatus('error')
+      setErrorMessage('Could not connect. Check your internet connection.')
+    }
+  }
+
+  // Render based on sub-step
+  if (subStep === 'choose') {
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Connect Your AI Assistant
+          </h2>
+          <p className="text-gray-600">
+            HR Command Center uses AI to help you. Choose your provider below.
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          {/* Anthropic Option - Recommended */}
+          <button
+            onClick={() => {
+              onChange({ aiProvider: 'anthropic' })
+              setSubStep('anthropic-guide')
+            }}
+            className="w-full p-6 border-2 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all text-left"
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                {/* Anthropic logo */}
+                <span className="text-2xl">🔶</span>
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-lg">Claude by Anthropic</h3>
+                  <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">
+                    Recommended
+                  </span>
+                </div>
+                <p className="text-gray-600 text-sm mt-1">
+                  Best for HR tasks. Excellent at writing, analysis, and understanding context.
+                </p>
+                <p className="text-gray-500 text-xs mt-2">
+                  ~$5-15/month for typical HR usage
+                </p>
+              </div>
+              <span className="text-gray-400">→</span>
+            </div>
+          </button>
+
+          {/* OpenAI Option */}
+          <button
+            onClick={() => {
+              onChange({ aiProvider: 'openai' })
+              setSubStep('openai-guide')
+            }}
+            className="w-full p-6 border-2 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all text-left"
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">🟢</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg">ChatGPT by OpenAI</h3>
+                <p className="text-gray-600 text-sm mt-1">
+                  Alternative option if you already have an OpenAI account.
+                </p>
+                <p className="text-gray-500 text-xs mt-2">
+                  ~$5-20/month for typical HR usage
+                </p>
+              </div>
+              <span className="text-gray-400">→</span>
+            </div>
+          </button>
+        </div>
+
+        <div className="flex justify-between pt-4">
+          <button onClick={onBack} className="text-gray-600 hover:text-gray-900">
+            ← Back
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (subStep === 'anthropic-guide') {
+    return (
+      <AnthropicSetupGuide
+        apiKey={config.aiApiKey}
+        onApiKeyChange={(key) => onChange({ aiApiKey: key })}
+        testStatus={testStatus}
+        errorMessage={errorMessage}
+        onTest={testConnection}
+        onBack={() => setSubStep('choose')}
+        onNext={testStatus === 'success' ? onNext : undefined}
+      />
+    )
+  }
+
+  // Similar for openai-guide...
+  return null
+}
+
+// Detailed Anthropic setup guide with screenshots
+function AnthropicSetupGuide({
+  apiKey,
+  onApiKeyChange,
+  testStatus,
+  errorMessage,
+  onTest,
+  onBack,
+  onNext,
+}: {
+  apiKey: string
+  onApiKeyChange: (key: string) => void
+  testStatus: 'idle' | 'testing' | 'success' | 'error'
+  errorMessage: string
+  onTest: () => void
+  onBack: () => void
+  onNext?: () => void
+}) {
+  const [expandedStep, setExpandedStep] = useState<'A' | 'B' | 'C' | 'D'>('A')
+
+  const openInBrowser = (url: string) => {
+    // In Electron, this opens the user's default browser
+    if (typeof window !== 'undefined' && window.electronAPI) {
+      window.electronAPI.openExternal(url)
+    } else {
+      window.open(url, '_blank')
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          Set Up Claude AI
+        </h2>
+        <p className="text-gray-600">
+          Follow these steps to connect Claude. Takes about 2 minutes.
+        </p>
+      </div>
+
+      {/* Step A: Create Account */}
+      <div className={`border rounded-xl overflow-hidden ${expandedStep === 'A' ? 'border-blue-500' : ''}`}>
+        <button
+          onClick={() => setExpandedStep('A')}
+          className="w-full p-4 flex items-center justify-between bg-gray-50 hover:bg-gray-100"
+        >
+          <div className="flex items-center gap-3">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+              expandedStep === 'A' ? 'bg-blue-600 text-white' : 'bg-gray-200'
+            }`}>
+              A
+            </div>
+            <span className="font-medium">Create an Anthropic account</span>
+          </div>
+          <span>{expandedStep === 'A' ? '−' : '+'}</span>
+        </button>
+
+        {expandedStep === 'A' && (
+          <div className="p-4 space-y-4">
+            <p className="text-gray-600">
+              Click the button below to create a free Anthropic account.
+              A browser window will open.
+            </p>
+
+            <button
+              onClick={() => openInBrowser('https://console.anthropic.com/signup')}
+              className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
+            >
+              Open Anthropic Sign Up
+              <span>↗</span>
+            </button>
+
+            <p className="text-sm text-gray-500">
+              Already have an account?{' '}
+              <button
+                onClick={() => setExpandedStep('B')}
+                className="text-blue-600 hover:underline"
+              >
+                Skip to Step B
+              </button>
+            </p>
+
+            <button
+              onClick={() => setExpandedStep('B')}
+              className="w-full py-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+            >
+              I've created my account →
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Step B: Add Payment */}
+      <div className={`border rounded-xl overflow-hidden ${expandedStep === 'B' ? 'border-blue-500' : ''}`}>
+        <button
+          onClick={() => setExpandedStep('B')}
+          className="w-full p-4 flex items-center justify-between bg-gray-50 hover:bg-gray-100"
+        >
+          <div className="flex items-center gap-3">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+              expandedStep === 'B' ? 'bg-blue-600 text-white' : 'bg-gray-200'
+            }`}>
+              B
+            </div>
+            <span className="font-medium">Add a payment method</span>
+          </div>
+          <span>{expandedStep === 'B' ? '−' : '+'}</span>
+        </button>
+
+        {expandedStep === 'B' && (
+          <div className="p-4 space-y-4">
+            <p className="text-gray-600">
+              Anthropic requires a credit card for API access.
+              <span className="font-medium"> You only pay for what you use </span>
+              (~$5-15/month for typical HR tasks).
+            </p>
+
+            {/* Screenshot placeholder - you'd add actual screenshot */}
+            <div className="bg-gray-100 rounded-lg p-4 text-center text-gray-500">
+              [Screenshot: Anthropic billing page]
+            </div>
+
+            <ol className="text-sm text-gray-600 space-y-2">
+              <li>1. Go to console.anthropic.com</li>
+              <li>2. Click "Settings" → "Billing" in the menu</li>
+              <li>3. Add your credit card</li>
+            </ol>
+
+            <button
+              onClick={() => openInBrowser('https://console.anthropic.com/settings/billing')}
+              className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
+            >
+              Open Billing Settings
+              <span>↗</span>
+            </button>
+
+            <button
+              onClick={() => setExpandedStep('C')}
+              className="w-full py-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+            >
+              I've added my payment method →
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Step C: Create API Key */}
+      <div className={`border rounded-xl overflow-hidden ${expandedStep === 'C' ? 'border-blue-500' : ''}`}>
+        <button
+          onClick={() => setExpandedStep('C')}
+          className="w-full p-4 flex items-center justify-between bg-gray-50 hover:bg-gray-100"
+        >
+          <div className="flex items-center gap-3">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+              expandedStep === 'C' ? 'bg-blue-600 text-white' : 'bg-gray-200'
+            }`}>
+              C
+            </div>
+            <span className="font-medium">Create your API key</span>
+          </div>
+          <span>{expandedStep === 'C' ? '−' : '+'}</span>
+        </button>
+
+        {expandedStep === 'C' && (
+          <div className="p-4 space-y-4">
+            <p className="text-gray-600">
+              Now create your API key. This is like a password that lets HR Command Center
+              talk to Claude.
+            </p>
+
+            {/* Screenshot placeholder */}
+            <div className="bg-gray-100 rounded-lg p-4 text-center text-gray-500">
+              [Screenshot: API keys page with "Create Key" button highlighted]
+            </div>
+
+            <ol className="text-sm text-gray-600 space-y-2">
+              <li>1. Click the button below to open the API keys page</li>
+              <li>2. Click the <span className="font-medium">"Create Key"</span> button</li>
+              <li>3. Name it <span className="font-mono bg-gray-100 px-1">HR Command Center</span></li>
+              <li>4. Click "Create"</li>
+              <li>5. <span className="font-medium text-orange-600">COPY the key</span> (it starts with sk-ant-)</li>
+            </ol>
+
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
+              ⚠️ Important: You can only see the key once! Make sure to copy it before closing.
+            </div>
+
+            <button
+              onClick={() => openInBrowser('https://console.anthropic.com/settings/keys')}
+              className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
+            >
+              Open API Keys Page
+              <span>↗</span>
+            </button>
+
+            <button
+              onClick={() => setExpandedStep('D')}
+              className="w-full py-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+            >
+              I've copied my key →
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Step D: Paste Key */}
+      <div className={`border rounded-xl overflow-hidden ${expandedStep === 'D' ? 'border-blue-500' : ''}`}>
+        <button
+          onClick={() => setExpandedStep('D')}
+          className="w-full p-4 flex items-center justify-between bg-gray-50 hover:bg-gray-100"
+        >
+          <div className="flex items-center gap-3">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+              expandedStep === 'D' ? 'bg-blue-600 text-white' : 'bg-gray-200'
+            }`}>
+              D
+            </div>
+            <span className="font-medium">Paste your key here</span>
+          </div>
+          <span>{expandedStep === 'D' ? '−' : '+'}</span>
+        </button>
+
+        {expandedStep === 'D' && (
+          <div className="p-4 space-y-4">
+            <p className="text-gray-600">
+              Paste the API key you just copied:
+            </p>
+
+            <input
+              type="password"
+              value={apiKey}
+              onChange={(e) => onApiKeyChange(e.target.value)}
+              placeholder="sk-ant-api03-..."
+              className="w-full px-4 py-3 border rounded-lg font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+
+            {testStatus === 'error' && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+                ✗ {errorMessage}
+              </div>
+            )}
+
+            {testStatus === 'success' && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-700">
+                ✓ Connected successfully! Claude is ready.
+              </div>
+            )}
+
+            <button
+              onClick={onTest}
+              disabled={!apiKey || testStatus === 'testing'}
+              className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {testStatus === 'testing' ? (
+                <>
+                  <span className="animate-spin">⏳</span>
+                  Testing connection...
+                </>
+              ) : (
+                'Test Connection'
+              )}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Navigation */}
+      <div className="flex justify-between pt-4">
+        <button onClick={onBack} className="text-gray-600 hover:text-gray-900">
+          ← Back
+        </button>
+        {onNext && (
+          <button
+            onClick={onNext}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Continue →
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// Helper function to convert technical errors to friendly messages
+function friendlyErrorMessage(error: string): string {
+  if (error.includes('401') || error.includes('invalid_api_key')) {
+    return "That key doesn't seem to work. Please check you copied the full key (starts with sk-ant-)."
+  }
+  if (error.includes('insufficient_funds') || error.includes('402')) {
+    return "Your Anthropic account needs a payment method. Go back to Step B to add one."
+  }
+  if (error.includes('rate_limit')) {
+    return "Too many requests. Please wait a moment and try again."
+  }
+  return "Could not connect. Please check the key and try again."
+}
+```
+
+### 8.6 Screenshots Required
+
+Create these screenshots for the setup wizard:
+
+| Screenshot | Description | Location |
+|------------|-------------|----------|
+| `anthropic-signup.png` | Anthropic signup page | Step A |
+| `anthropic-billing.png` | Billing settings with "Add payment" highlighted | Step B |
+| `anthropic-api-keys.png` | API keys page with "Create Key" button highlighted | Step C |
+| `anthropic-create-key.png` | Create key modal with name field | Step C |
+| `anthropic-copy-key.png` | Key created, showing copy button | Step C |
+| `openai-signup.png` | OpenAI signup page | OpenAI flow |
+| `openai-api-keys.png` | OpenAI API keys page | OpenAI flow |
+
+**Image dimensions:** 600x400px, PNG format
+**Location:** `webapp/public/onboarding/`
+
+### 8.7 Test Connection API
+
+```typescript
+// webapp/app/api/ai/test-connection/route.ts
+import { NextRequest } from 'next/server'
+import Anthropic from '@anthropic-ai/sdk'
+import OpenAI from 'openai'
+import { z } from 'zod'
+
+const requestSchema = z.object({
+  provider: z.enum(['anthropic', 'openai']),
+  apiKey: z.string().min(10),
+})
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { provider, apiKey } = requestSchema.parse(body)
+
+    if (provider === 'anthropic') {
+      const client = new Anthropic({ apiKey })
+
+      // Simple test message
+      const response = await client.messages.create({
+        model: 'claude-3-5-sonnet-20241022',
+        max_tokens: 10,
+        messages: [{ role: 'user', content: 'Say "connected" in one word.' }],
+      })
+
+      return Response.json({
+        success: true,
+        model: response.model,
+        message: 'Connected to Claude successfully',
+      })
+    }
+
+    if (provider === 'openai') {
+      const client = new OpenAI({ apiKey })
+
+      const response = await client.chat.completions.create({
+        model: 'gpt-4o',
+        max_tokens: 10,
+        messages: [{ role: 'user', content: 'Say "connected" in one word.' }],
+      })
+
+      return Response.json({
+        success: true,
+        model: response.model,
+        message: 'Connected to OpenAI successfully',
+      })
+    }
+  } catch (error: any) {
+    return Response.json({
+      success: false,
+      error: error.message || 'Connection test failed',
+    }, { status: 400 })
+  }
+}
+```
 
 ### Deliverables:
-- Smooth onboarding for new users
-- Data migration path for existing web users
+- [ ] First-run detection implemented in Electron main process
+- [ ] Complete 5-step wizard UI
+- [ ] API key setup sub-wizard with step-by-step guidance
+- [ ] Screenshots created for all guided steps
+- [ ] Test connection API endpoint
+- [ ] Friendly error messages (no technical jargon)
+- [ ] Demo data option working
+- [ ] Config saved to local storage after completion
+- [ ] Test full flow on clean macOS account (no dev tools)
+
+### 🔴 PAUSE POINT 8A: UX Review
+**You must:**
+1. Run through the entire wizard as a non-technical user would
+2. Have someone unfamiliar with the product test the flow
+3. Verify all external links open correctly in browser
+4. Confirm error messages are helpful and non-technical
 
 ---
 

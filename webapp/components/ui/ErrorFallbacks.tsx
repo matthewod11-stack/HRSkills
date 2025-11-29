@@ -1,7 +1,6 @@
 'use client';
 
-import React from 'react';
-import { AlertCircle, RefreshCw, Home, Mail } from 'lucide-react';
+import { AlertCircle, Home, Mail, RefreshCw } from 'lucide-react';
 
 /**
  * Specialized error fallback components for different scenarios
@@ -34,6 +33,7 @@ export function DataLoadingError({ error, onRetry }: ErrorFallbackProps) {
       </p>
 
       <button
+        type="button"
         onClick={onRetry}
         className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
       >
@@ -60,12 +60,13 @@ export function ChartRenderError({ error, onReset }: ErrorFallbackProps) {
       </h3>
 
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 max-w-md">
-        The chart couldn&apos;t be displayed. This might be due to invalid data format or a rendering
-        issue.
+        The chart couldn&apos;t be displayed. This might be due to invalid data format or a
+        rendering issue.
       </p>
 
       <div className="flex gap-3">
         <button
+          type="button"
           onClick={onReset}
           className="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 font-medium rounded-lg transition-colors"
         >
@@ -111,6 +112,7 @@ export function FormSubmissionError({ error, onRetry }: ErrorFallbackProps) {
           </p>
 
           <button
+            type="button"
             onClick={onRetry}
             className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors"
           >
@@ -146,14 +148,20 @@ export function AuthenticationError({ error }: ErrorFallbackProps) {
 
         <div className="space-y-3">
           <button
-            onClick={() => (window.location.href = '/api/auth/signin')}
+            type="button"
+            onClick={() => {
+              window.location.href = '/api/auth/signin';
+            }}
             className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
           >
             Sign In
           </button>
 
           <button
-            onClick={() => (window.location.href = '/')}
+            type="button"
+            onClick={() => {
+              window.location.href = '/';
+            }}
             className="w-full px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 font-medium rounded-lg transition-colors inline-flex items-center justify-center gap-2"
           >
             <Home className="w-4 h-4" />
@@ -193,11 +201,12 @@ export function NetworkError({ onRetry }: ErrorFallbackProps) {
       </h3>
 
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 max-w-md">
-        It looks like you&apos;re offline or experiencing network issues. Please check your connection
-        and try again.
+        It looks like you&apos;re offline or experiencing network issues. Please check your
+        connection and try again.
       </p>
 
       <button
+        type="button"
         onClick={onRetry}
         className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
       >
@@ -229,6 +238,7 @@ export function SectionError({ error, onReset }: ErrorFallbackProps) {
           </p>
 
           <button
+            type="button"
             onClick={onReset}
             className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium inline-flex items-center gap-1"
           >

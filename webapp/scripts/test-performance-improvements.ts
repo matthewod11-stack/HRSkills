@@ -12,13 +12,13 @@
  * - Email lookups: 50-100ms → 1-2ms (50-100x faster)
  */
 
-import { db } from '../lib/db';
-import { employees, employeeMetrics } from '../db/schema';
 import { eq } from 'drizzle-orm';
+import { employeeMetrics, employees } from '../db/schema';
 import { calculateSpanOfControl } from '../lib/analytics/headcount-sql';
+import { db } from '../lib/db';
 
 console.log('🧪 Phase 1, Week 1 - Performance Test Suite\n');
-console.log('=' .repeat(60));
+console.log('='.repeat(60));
 
 interface TestResult {
   name: string;
@@ -29,11 +29,7 @@ interface TestResult {
 
 const results: TestResult[] = [];
 
-async function runTest(
-  name: string,
-  targetMs: number,
-  testFn: () => Promise<void>
-): Promise<void> {
+async function runTest(name: string, targetMs: number, testFn: () => Promise<void>): Promise<void> {
   console.log(`\n📊 Test: ${name}`);
   console.log(`   Target: <${targetMs}ms`);
 
@@ -45,7 +41,9 @@ async function runTest(
   results.push({ name, duration, passed, target: targetMs });
 
   const status = passed ? '✅ PASS' : '❌ FAIL';
-  const improvement = passed ? `(${Math.round((targetMs / duration) * 100) / 100}x faster than baseline)` : '';
+  const improvement = passed
+    ? `(${Math.round((targetMs / duration) * 100) / 100}x faster than baseline)`
+    : '';
   console.log(`   Result: ${duration}ms ${status} ${improvement}`);
 }
 
@@ -56,7 +54,9 @@ async function main() {
     50, // Target: <50ms (was 250-500ms)
     async () => {
       const result = await calculateSpanOfControl();
-      console.log(`   Found ${result.totalManagers} managers with avg span of ${result.averageSpan}`);
+      console.log(
+        `   Found ${result.totalManagers} managers with avg span of ${result.averageSpan}`
+      );
     }
   );
 
@@ -107,7 +107,7 @@ async function main() {
   );
 
   // Summary
-  console.log('\n' + '='.repeat(60));
+  console.log(`\n${'='.repeat(60)}`);
   console.log('📈 Performance Test Summary\n');
 
   const passed = results.filter((r) => r.passed).length;
@@ -124,7 +124,7 @@ async function main() {
     );
   });
 
-  console.log('\n' + '='.repeat(60));
+  console.log(`\n${'='.repeat(60)}`);
 
   if (failed > 0) {
     console.log('\n⚠️  Some tests failed. Performance may need further optimization.');

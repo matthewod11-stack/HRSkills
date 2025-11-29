@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { handleApiError } from '@/lib/api-helpers';
 import { env } from '@/env.mjs';
+import { handleApiError } from '@/lib/api-helpers';
 
 /**
  * Health Check Endpoint

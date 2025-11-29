@@ -267,7 +267,7 @@ export function generateEmployeeContext(employees: Employee[], query: string): s
         .map((f) => `${f}: ${emp[f]}`)
         .join(', ');
 
-      return `- ${fullName} (${emp.employee_id})${fields ? ': ' + fields : ''}`;
+      return `- ${fullName} (${emp.employee_id})${fields ? `: ${fields}` : ''}`;
     })
     .join('\n');
 

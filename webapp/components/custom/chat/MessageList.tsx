@@ -1,8 +1,8 @@
 'use client';
 
-import { memo, useEffect, useRef, useCallback } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { useChatContext, Message } from './ChatContext';
+import { memo, useCallback, useEffect, useRef } from 'react';
+import { useChatContext } from './ChatContext';
 import { MessageItem } from './MessageItem';
 
 /**
@@ -13,8 +13,6 @@ export interface MessageListProps {
   conversationId: string;
   /** Callback to copy message content to clipboard */
   onCopy: (content: string) => void;
-  /** Async callback to export message to Google Docs */
-  onExportToGoogleDocs: (message: Message) => Promise<void>;
   /** Callback when a suggested follow-up is clicked */
   onFollowUp: (text: string) => void;
 }
@@ -37,7 +35,6 @@ export interface MessageListProps {
  * <MessageList
  *   conversationId="conv_123"
  *   onCopy={(content) => navigator.clipboard.writeText(content)}
- *   onExportToGoogleDocs={async (msg) => await exportToGoogleDocs(msg)}
  *   onFollowUp={(text) => handleFollowUp(text)}
  * />
  * ```
@@ -45,7 +42,6 @@ export interface MessageListProps {
 export const MessageList = memo(function MessageList({
   conversationId,
   onCopy,
-  onExportToGoogleDocs,
   onFollowUp,
 }: MessageListProps) {
   const { messages, toggleEdit, updateEdit, saveEdit } = useChatContext();
@@ -55,7 +51,7 @@ export const MessageList = memo(function MessageList({
    * Scroll to the bottom of the message list
    */
   const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, []);
 
   /**
@@ -63,7 +59,7 @@ export const MessageList = memo(function MessageList({
    */
   useEffect(() => {
     scrollToBottom();
-  }, [messages.length, scrollToBottom]);
+  }, [scrollToBottom]);
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-4">
@@ -77,7 +73,6 @@ export const MessageList = memo(function MessageList({
             onUpdateEdit={updateEdit}
             onSaveEdit={saveEdit}
             onCopy={onCopy}
-            onExportToGoogleDocs={onExportToGoogleDocs}
             onFollowUp={onFollowUp}
           />
         ))}

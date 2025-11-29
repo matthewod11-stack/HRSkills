@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, authErrorResponse } from '@/lib/auth/middleware';
-import { handleApiError } from '@/lib/api-helpers';
-import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter';
+import { type NextRequest, NextResponse } from 'next/server';
 import { analyzeWithAI } from '@/lib/ai/router';
 import type { AnalysisTask } from '@/lib/ai/types';
 import { loadDataFileByType } from '@/lib/analytics/utils';
+import { handleApiError } from '@/lib/api-helpers';
+import { authErrorResponse, requireAuth } from '@/lib/auth/middleware';
+import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter';
 
 interface SurveyResponse {
   employee_id: string;
@@ -21,6 +21,45 @@ interface ThemeInsight {
   avgSentiment: number;
   examples: string[];
   entities: Array<{ name: string; frequency: number }>;
+}
+
+/** Sentiment analysis result from AI */
+interface SentimentResult {
+  sentiment: string;
+  score: number;
+  reasoning?: string;
+}
+
+/** Response with attached sentiment for processing */
+interface ResponseWithSentiment {
+  text: string;
+  sentiment: SentimentResult;
+}
+
+/** Department aggregation during processing */
+interface DepartmentAggregate {
+  count: number;
+  totalSentiment: number;
+  avgSentiment?: number;
+  responses: ResponseWithSentiment[];
+  topConcerns?: string[];
+}
+
+/** Final department result for API response */
+interface DepartmentResult {
+  count: number;
+  avgSentiment: number;
+  topConcerns: string[];
+}
+
+/** Employee data row from master file */
+interface EmployeeDataRow {
+  employee_id: string;
+  status?: string;
+  termination_reason?: string;
+  department?: string;
+  termination_date?: string;
+  regrettable_loss?: boolean | string;
 }
 
 interface SurveyAnalysisResult {
@@ -75,7 +114,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       surveyResponses,
-      surveyType = 'general',
+      surveyType: _surveyType = 'general',
       analyzeDepartments = true,
       maxResponses = 500,
     } = body;
@@ -83,7 +122,7 @@ export async function POST(request: NextRequest) {
     // Validate input
     if (!surveyResponses || !Array.isArray(surveyResponses)) {
       return NextResponse.json(
-        { success: false, error: '\"surveyResponses\" must be an array' },
+        { success: false, error: '"surveyResponses" must be an array' },
         { status: 400 }
       );
     }
@@ -140,7 +179,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Group by department if requested
-    let byDepartment: Record<string, any> | undefined;
+    let byDepartment: Record<string, DepartmentAggregate> | undefined;
     if (analyzeDepartments) {
       byDepartment = {};
 
@@ -172,22 +211,24 @@ export async function POST(request: NextRequest) {
 
         // Top concerns = most negative responses
         const topConcerns = byDepartment[dept].responses
-          .filter((r: any) => (r.sentiment.score || 0) < -0.3)
-          .sort((a: any, b: any) => (a.sentiment.score || 0) - (b.sentiment.score || 0))
+          .filter((r: ResponseWithSentiment) => (r.sentiment.score || 0) < -0.3)
+          .sort(
+            (a: ResponseWithSentiment, b: ResponseWithSentiment) =>
+              (a.sentiment.score || 0) - (b.sentiment.score || 0)
+          )
           .slice(0, 3)
-          .map((r: any) => r.text.substring(0, 100) + (r.text.length > 100 ? '...' : ''));
+          .map(
+            (r: ResponseWithSentiment) =>
+              r.text.substring(0, 100) + (r.text.length > 100 ? '...' : '')
+          );
 
-        byDepartment[dept] = {
-          count: byDepartment[dept].count,
-          avgSentiment: byDepartment[dept].avgSentiment,
-          topConcerns,
-        };
+        byDepartment[dept].topConcerns = topConcerns;
       }
     }
 
     // Extract themes using entity extraction on negative responses
     const negativeResponses = limitedResponses.filter(
-      (r: SurveyResponse, i: number) => (sentimentAnalyses[i].score || 0) < -0.25
+      (_r: SurveyResponse, i: number) => (sentimentAnalyses[i].score || 0) < -0.25
     );
 
     const themes: ThemeInsight[] = [];
@@ -281,8 +322,11 @@ export async function POST(request: NextRequest) {
 
     if (byDepartment) {
       const deptIssues = Object.entries(byDepartment)
-        .filter(([_, data]: [string, any]) => data.avgSentiment < -0.3)
-        .sort(([_, a]: [string, any], [__, b]: [string, any]) => a.avgSentiment - b.avgSentiment);
+        .filter(([_, data]: [string, DepartmentAggregate]) => (data.avgSentiment ?? 0) < -0.3)
+        .sort(
+          ([_, a]: [string, DepartmentAggregate], [__, b]: [string, DepartmentAggregate]) =>
+            (a.avgSentiment ?? 0) - (b.avgSentiment ?? 0)
+        );
 
       if (deptIssues.length > 0) {
         actionableInsights.push(
@@ -296,13 +340,27 @@ export async function POST(request: NextRequest) {
 
     const processingTime = Date.now() - startTime;
 
+    // Transform byDepartment to expected output format
+    const byDepartmentResult = byDepartment
+      ? Object.fromEntries(
+          Object.entries(byDepartment).map(([dept, data]) => [
+            dept,
+            {
+              count: data.count,
+              avgSentiment: data.avgSentiment ?? 0,
+              topConcerns: data.topConcerns ?? [],
+            },
+          ])
+        )
+      : undefined;
+
     const analysis: SurveyAnalysisResult = {
       overall: {
         totalResponses: limitedResponses.length,
         avgSentiment,
         sentimentDistribution,
       },
-      byDepartment,
+      byDepartment: byDepartmentResult,
       themes,
       sentiments: sentimentAnalyses,
       topConcerns,
@@ -363,12 +421,12 @@ export async function GET(request: NextRequest) {
 
     // Extract terminated employees with termination reasons
     const exitData = employees
-      .filter((emp: any) => emp.status === 'Terminated' && emp.termination_reason)
-      .map((emp: any) => ({
-        employee_id: emp.employee_id,
-        response: emp.termination_reason,
-        department: emp.department,
-        termination_date: emp.termination_date,
+      .filter((emp) => emp.status === 'Terminated' && emp.termination_reason)
+      .map((emp) => ({
+        employee_id: String(emp.employee_id ?? ''),
+        response: String(emp.termination_reason ?? ''),
+        department: emp.department ? String(emp.department) : undefined,
+        termination_date: emp.termination_date ? String(emp.termination_date) : undefined,
         regrettable_loss: emp.regrettable_loss,
       }));
 

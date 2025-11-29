@@ -1,8 +1,8 @@
 'use client';
 
-import { memo, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { LucideIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { memo, useMemo } from 'react';
 
 interface MetricCardProps {
   title: string;
@@ -53,7 +53,7 @@ export const MetricCard = memo(function MetricCard({
     >
       <div className="absolute inset-0 bg-gradient-to-br from-terracotta/10 to-amber/10 rounded-2xl blur-xl group-hover:blur-2xl transition-premium opacity-0 group-hover:opacity-100" />
 
-      <div className="relative backdrop-blur-xl bg-cream-white border-2 border-cream-light rounded-2xl p-6 hover:border-terracotta/30 shadow-soft hover:shadow-warm transition-premium h-full flex flex-col">
+      <div className="relative backdrop-blur-xl bg-gradient-to-br from-sage/12 to-sage/6 border-2 border-sage/20 rounded-2xl p-6 hover:border-sage/40 shadow-soft hover:shadow-warm transition-premium h-full flex flex-col">
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             <p className="text-charcoal-light text-sm mb-2 font-medium">{title}</p>
@@ -109,6 +109,7 @@ export const MetricCard = memo(function MetricCard({
           initial={{ opacity: 0 }}
         >
           <button
+            type="button"
             onClick={onClick}
             className="flex-1 py-2 px-3 bg-terracotta/10 hover:bg-terracotta hover:text-cream-white border border-warm hover:border-terracotta hover:shadow-warm rounded-xl text-xs font-semibold transition-premium cursor-pointer"
           >

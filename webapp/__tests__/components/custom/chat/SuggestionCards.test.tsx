@@ -1,5 +1,4 @@
-import { vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { vi } from 'vitest';
 import { SuggestionCards } from '@/components/custom/chat/SuggestionCards';
 
@@ -10,14 +9,27 @@ import { SuggestionCards } from '@/components/custom/chat/SuggestionCards';
  */
 
 // Mock Framer Motion
+interface MotionDivProps {
+  children?: React.ReactNode;
+  className?: string;
+  [key: string]: unknown;
+}
+
+interface MotionButtonProps {
+  children?: React.ReactNode;
+  onClick?: () => void;
+  className?: string;
+  [key: string]: unknown;
+}
+
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, className, ...props }: any) => (
+    div: ({ children, className, ...props }: MotionDivProps) => (
       <div className={className} {...props}>
         {children}
       </div>
     ),
-    button: ({ children, onClick, className, ...props }: any) => (
+    button: ({ children, onClick, className, ...props }: MotionButtonProps) => (
       <button onClick={onClick} className={className} {...props}>
         {children}
       </button>

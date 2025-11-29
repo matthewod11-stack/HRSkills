@@ -81,7 +81,7 @@ export function ColorPaletteReference() {
             className="text-5xl font-bold mb-4"
             style={{
               color: '#2C2C2C',
-              fontFamily: 'Georgia, "Times New Roman", serif'
+              fontFamily: 'Georgia, "Times New Roman", serif',
             }}
           >
             HR Command Center
@@ -90,15 +90,12 @@ export function ColorPaletteReference() {
             className="text-xl mb-2"
             style={{
               color: '#E07856',
-              fontWeight: 600
+              fontWeight: 600,
             }}
           >
             Warm & Human-Centric Design System
           </p>
-          <p
-            className="text-base"
-            style={{ color: '#6B6B6B' }}
-          >
+          <p className="text-base" style={{ color: '#6B6B6B' }}>
             A welcoming, approachable aesthetic designed for HR professionals
           </p>
         </motion.div>
@@ -112,30 +109,30 @@ export function ColorPaletteReference() {
           style={{
             backgroundColor: '#FEFDFB',
             border: '2px solid #EDE7DC',
-            boxShadow: '0 4px 20px rgba(224, 120, 86, 0.08)'
+            boxShadow: '0 4px 20px rgba(224, 120, 86, 0.08)',
           }}
         >
-          <h2
-            className="text-2xl font-semibold mb-6"
-            style={{ color: '#2C2C2C' }}
-          >
+          <h2 className="text-2xl font-semibold mb-6" style={{ color: '#2C2C2C' }}>
             Design Principles
           </h2>
           <div className="grid md:grid-cols-3 gap-6">
             {[
               {
                 title: 'Warm & Inviting',
-                description: 'Earth tones create a welcoming atmosphere that feels human and approachable',
+                description:
+                  'Earth tones create a welcoming atmosphere that feels human and approachable',
                 icon: '🌿',
               },
               {
                 title: 'Generous Spacing',
-                description: 'Breathable layouts with 12-16px rounded corners for organic, soft edges',
+                description:
+                  'Breathable layouts with 12-16px rounded corners for organic, soft edges',
                 icon: '✨',
               },
               {
                 title: 'Soft Shadows',
-                description: 'Warm-tinted shadows that feel natural rather than harsh digital overlays',
+                description:
+                  'Warm-tinted shadows that feel natural rather than harsh digital overlays',
                 icon: '☀️',
               },
             ].map((principle, index) => (
@@ -146,10 +143,7 @@ export function ColorPaletteReference() {
                 transition={{ delay: 0.2 + index * 0.1 }}
               >
                 <div className="text-3xl mb-3">{principle.icon}</div>
-                <h3
-                  className="text-lg font-semibold mb-2"
-                  style={{ color: '#E07856' }}
-                >
+                <h3 className="text-lg font-semibold mb-2" style={{ color: '#E07856' }}>
                   {principle.title}
                 </h3>
                 <p style={{ color: '#6B6B6B', fontSize: '14px', lineHeight: '1.6' }}>
@@ -172,19 +166,13 @@ export function ColorPaletteReference() {
               style={{
                 backgroundColor: '#FEFDFB',
                 border: '2px solid #EDE7DC',
-                boxShadow: '0 2px 12px rgba(140, 157, 131, 0.06)'
+                boxShadow: '0 2px 12px rgba(140, 157, 131, 0.06)',
               }}
             >
-              <h2
-                className="text-2xl font-semibold mb-2"
-                style={{ color: '#2C2C2C' }}
-              >
+              <h2 className="text-2xl font-semibold mb-2" style={{ color: '#2C2C2C' }}>
                 {group.name}
               </h2>
-              <p
-                className="text-sm mb-6"
-                style={{ color: '#6B6B6B' }}
-              >
+              <p className="text-sm mb-6" style={{ color: '#6B6B6B' }}>
                 {group.description}
               </p>
 
@@ -208,22 +196,13 @@ export function ColorPaletteReference() {
 
                     {/* Color Info */}
                     <div>
-                      <h3
-                        className="text-lg font-semibold mb-1"
-                        style={{ color: '#2C2C2C' }}
-                      >
+                      <h3 className="text-lg font-semibold mb-1" style={{ color: '#2C2C2C' }}>
                         {color.name}
                       </h3>
-                      <p
-                        className="font-mono text-sm mb-2"
-                        style={{ color: '#9A9A9A' }}
-                      >
+                      <p className="font-mono text-sm mb-2" style={{ color: '#9A9A9A' }}>
                         {color.value}
                       </p>
-                      <p
-                        className="text-xs"
-                        style={{ color: '#6B6B6B', lineHeight: '1.5' }}
-                      >
+                      <p className="text-xs" style={{ color: '#6B6B6B', lineHeight: '1.5' }}>
                         {color.usage}
                       </p>
                     </div>
@@ -245,18 +224,18 @@ export function ColorPaletteReference() {
             border: '2px solid #EDE7DC',
           }}
         >
-          <h2
-            className="text-2xl font-semibold mb-6"
-            style={{ color: '#2C2C2C' }}
-          >
+          <h2 className="text-2xl font-semibold mb-6" style={{ color: '#2C2C2C' }}>
             Component Previews
           </h2>
 
           {/* Button Examples */}
           <div className="space-y-4 mb-8">
-            <h3 className="text-lg font-semibold" style={{ color: '#6B6B6B' }}>Buttons</h3>
+            <h3 className="text-lg font-semibold" style={{ color: '#6B6B6B' }}>
+              Buttons
+            </h3>
             <div className="flex flex-wrap gap-4">
               <button
+                type="button"
                 className="px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-105"
                 style={{
                   backgroundColor: '#E07856',
@@ -268,6 +247,7 @@ export function ColorPaletteReference() {
               </button>
 
               <button
+                type="button"
                 className="px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-105"
                 style={{
                   backgroundColor: '#8B9D83',
@@ -279,6 +259,7 @@ export function ColorPaletteReference() {
               </button>
 
               <button
+                type="button"
                 className="px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-105"
                 style={{
                   backgroundColor: '#FEFDFB',
@@ -293,7 +274,9 @@ export function ColorPaletteReference() {
 
           {/* Card Example */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold" style={{ color: '#6B6B6B' }}>Card</h3>
+            <h3 className="text-lg font-semibold" style={{ color: '#6B6B6B' }}>
+              Card
+            </h3>
             <div
               className="p-6 rounded-2xl transition-all duration-300 hover:scale-102"
               style={{
@@ -348,10 +331,7 @@ export function ColorPaletteReference() {
           transition={{ delay: 1.4 }}
           className="mt-12 text-center"
         >
-          <p
-            className="text-sm"
-            style={{ color: '#9A9A9A' }}
-          >
+          <p className="text-sm" style={{ color: '#9A9A9A' }}>
             Designed for human connection • Built with warmth and purpose
           </p>
         </motion.div>

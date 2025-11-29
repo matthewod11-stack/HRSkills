@@ -1,0 +1,79 @@
+{
+  "$schema": "./features.schema.json",
+  "_meta": {
+    "description": "Feature tracking for desktop app implementation. Status: not-started | in-progress | pass | fail | blocked",
+    "lastUpdated": "2025-11-27",
+    "totalFeatures": 45,
+    "passing": 0,
+    "failing": 0,
+    "inProgress": 0
+  },
+  "phase-0": {
+    "webapp-builds": { "status": "not-started", "notes": "npm run build in webapp/" },
+    "webapp-tests-pass": { "status": "not-started", "notes": "npm test in webapp/" },
+    "webapp-type-check": { "status": "not-started", "notes": "npm run type-check in webapp/" },
+    "webapp-starts": { "status": "not-started", "notes": "npm run dev serves on localhost:3000" }
+  },
+  "phase-1": {
+    "desktop-package-json": { "status": "not-started", "notes": "desktop/package.json with Electron deps" },
+    "desktop-tsconfig": { "status": "not-started", "notes": "desktop/tsconfig.json for Electron" },
+    "electron-main-scaffold": { "status": "not-started", "notes": "desktop/src/electron-main.ts basic structure" },
+    "preload-scaffold": { "status": "not-started", "notes": "desktop/src/preload.ts with contextBridge" },
+    "npm-install-works": { "status": "not-started", "notes": "npm install in desktop/ succeeds" },
+    "type-check-passes": { "status": "not-started", "notes": "npm run type-check in desktop/ passes" }
+  },
+  "phase-2": {
+    "icon-source-created": { "status": "not-started", "notes": "1024x1024 PNG source icon" },
+    "icns-generated": { "status": "not-started", "notes": "desktop/icons/icon.icns for macOS" },
+    "icon-visible-in-app": { "status": "not-started", "notes": "Icon shows in Dock and Finder" }
+  },
+  "phase-3": {
+    "next-server-starts": { "status": "not-started", "notes": "Next.js starts as child process" },
+    "port-detection-works": { "status": "not-started", "notes": "findAvailablePort() handles conflicts" },
+    "browser-window-opens": { "status": "not-started", "notes": "BrowserWindow loads localhost" },
+    "server-shutdown-on-quit": { "status": "not-started", "notes": "Next.js stops when app quits" },
+    "crash-handling-works": { "status": "not-started", "notes": "handleServerCrash() shows dialog" },
+    "app-launches-standalone": { "status": "not-started", "notes": "npm run dev in desktop/ works end-to-end" }
+  },
+  "phase-0.5": {
+    "stripe-webhook-setup": { "status": "not-started", "notes": "Webhook generates license keys" },
+    "license-validation-api": { "status": "not-started", "notes": "API endpoint validates keys" },
+    "license-storage-local": { "status": "not-started", "notes": "License stored in config.json" },
+    "offline-grace-period": { "status": "not-started", "notes": "Works offline after initial validation" }
+  },
+  "phase-4": {
+    "ipc-handlers-implemented": { "status": "not-started", "notes": "All handlers in electron-main.ts" },
+    "keychain-storage-works": { "status": "not-started", "notes": "keytar stores/retrieves API keys" },
+    "electron-types-defined": { "status": "not-started", "notes": "webapp/lib/types/electron.d.ts" },
+    "webapp-uses-electron-api": { "status": "not-started", "notes": "window.electronAPI calls work" },
+    "input-validation-zod": { "status": "not-started", "notes": "All IPC inputs validated" }
+  },
+  "phase-5": {
+    "db-path-configurable": { "status": "not-started", "notes": "DB_DIR points to userData" },
+    "daily-backup-works": { "status": "not-started", "notes": "Backups created on schedule" },
+    "integrity-check-runs": { "status": "not-started", "notes": "PRAGMA integrity_check on startup" },
+    "corruption-recovery-works": { "status": "not-started", "notes": "Corrupt DB restored from backup" },
+    "gdpr-export-works": { "status": "not-started", "notes": "Full data export to JSON" }
+  },
+  "phase-6": {
+    "setup-route-exists": { "status": "not-started", "notes": "webapp/app/setup/page.tsx" },
+    "first-run-detection": { "status": "not-started", "notes": "getStartUrl() routes correctly" },
+    "license-step-works": { "status": "not-started", "notes": "License key validation in wizard" },
+    "ai-setup-step-works": { "status": "not-started", "notes": "API key setup with screenshots" },
+    "test-connection-works": { "status": "not-started", "notes": "API validates entered key" },
+    "wizard-completes": { "status": "not-started", "notes": "Full flow end-to-end" }
+  },
+  "phase-7": {
+    "electron-builder-config": { "status": "not-started", "notes": "electron-builder.yml complete" },
+    "dmg-builds": { "status": "not-started", "notes": "npm run dist creates .dmg" },
+    "app-signed": { "status": "not-started", "notes": "Code signing with Apple cert" },
+    "app-notarized": { "status": "not-started", "notes": "Notarization passes" },
+    "gatekeeper-allows": { "status": "not-started", "notes": "App opens without warning" }
+  },
+  "phase-8": {
+    "auto-update-checks": { "status": "not-started", "notes": "Checks GitHub Releases" },
+    "update-downloads": { "status": "not-started", "notes": "Downloads new version" },
+    "update-installs": { "status": "not-started", "notes": "Installs on restart" },
+    "rollback-possible": { "status": "not-started", "notes": "Can revert to previous" }
+  }
+}

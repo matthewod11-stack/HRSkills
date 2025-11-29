@@ -1,14 +1,14 @@
 /**
  * Web Vitals Metrics Service
- * 
+ *
  * Handles storage and retrieval of Core Web Vitals metrics.
  * Provides functions for storing metrics, querying with filters, and aggregating data.
  */
 
+import { randomUUID } from 'node:crypto';
+import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
+import { type NewWebVitalsMetric, type WebVitalsMetric, webVitalsMetrics } from '@/db/schema';
 import { db } from '@/lib/db';
-import { webVitalsMetrics, type WebVitalsMetric, type NewWebVitalsMetric } from '@/db/schema';
-import { eq, and, gte, lte, desc, sql } from 'drizzle-orm';
-import { randomUUID } from 'crypto';
 
 export interface WebVitalsMetricInput {
   name: string; // 'LCP' | 'FID' | 'CLS' | 'FCP' | 'TTFB'
@@ -202,4 +202,3 @@ export async function getMetricCount(filters: MetricFilters = {}): Promise<numbe
 
   return result[0]?.count || 0;
 }
-

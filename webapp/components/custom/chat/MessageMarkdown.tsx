@@ -16,17 +16,18 @@ import { memo } from 'react';
 
 // Dynamically import ReactMarkdown with remarkGfm
 const DynamicReactMarkdown = dynamic(
-  () => import('react-markdown').then((mod) => {
-    // Also load remarkGfm
-    return import('remark-gfm').then((gfm) => {
-      // Return a component that uses both
-      const MarkdownWithPlugins = ({ content }: { content: string }) => {
-        const ReactMarkdown = mod.default;
-        return <ReactMarkdown remarkPlugins={[gfm.default]}>{content}</ReactMarkdown>;
-      };
-      return MarkdownWithPlugins;
-    });
-  }),
+  () =>
+    import('react-markdown').then((mod) => {
+      // Also load remarkGfm
+      return import('remark-gfm').then((gfm) => {
+        // Return a component that uses both
+        const MarkdownWithPlugins = ({ content }: { content: string }) => {
+          const ReactMarkdown = mod.default;
+          return <ReactMarkdown remarkPlugins={[gfm.default]}>{content}</ReactMarkdown>;
+        };
+        return MarkdownWithPlugins;
+      });
+    }),
   {
     loading: () => (
       <div className="prose prose-invert prose-sm max-w-none">

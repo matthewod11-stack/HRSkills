@@ -11,17 +11,22 @@
  * - Phase 4: ActionButtons useReducer optimization
  */
 
-import { vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import ChatInput from '@/components/custom/chat/ChatInput';
+import { vi } from 'vitest';
 import { ActionButtons } from '@/components/custom/ActionButtons';
+import ChatInput from '@/components/custom/chat/ChatInput';
 import type { BaseAction } from '@/lib/workflows/actions/types';
 
 // Mock next/dynamic for MessageMarkdown lazy loading
+interface DynamicOptions {
+  loading?: () => React.ReactNode;
+  ssr?: boolean;
+}
+
 vi.mock('next/dynamic', () => ({
   __esModule: true,
-  default: (fn: any, options?: any) => {
+  default: (_fn: () => Promise<unknown>, _options?: DynamicOptions) => {
     const Component = ({ content }: { content: string }) => {
       // Return a simple div with the content for testing
       // In real app, this would be ReactMarkdown
@@ -273,13 +278,7 @@ describe('ChatInterface Performance Optimizations', () => {
     });
 
     it('should render action buttons', () => {
-      render(
-        <ActionButtons
-          actions={mockActions}
-          conversationId="conv-1"
-          workflowId="hiring"
-        />
-      );
+      render(<ActionButtons actions={mockActions} conversationId="conv-1" workflowId="hiring" />);
 
       expect(screen.getByText('Create Offer Letter')).toBeInTheDocument();
       expect(screen.getByText('Send Email')).toBeInTheDocument();
@@ -287,13 +286,7 @@ describe('ChatInterface Performance Optimizations', () => {
     });
 
     it('should show execute buttons for each action', () => {
-      render(
-        <ActionButtons
-          actions={mockActions}
-          conversationId="conv-1"
-          workflowId="hiring"
-        />
-      );
+      render(<ActionButtons actions={mockActions} conversationId="conv-1" workflowId="hiring" />);
 
       const executeButtons = screen.getAllByRole('button', { name: /execute$/i });
       // Should have 2 individual execute buttons + 1 "Execute All" button
@@ -315,13 +308,7 @@ describe('ChatInterface Performance Optimizations', () => {
         }),
       });
 
-      render(
-        <ActionButtons
-          actions={mockActions}
-          conversationId="conv-1"
-          workflowId="hiring"
-        />
-      );
+      render(<ActionButtons actions={mockActions} conversationId="conv-1" workflowId="hiring" />);
 
       const executeButton = screen.getAllByRole('button', { name: /execute$/i })[0];
       await userEvent.click(executeButton);
@@ -359,13 +346,7 @@ describe('ChatInterface Performance Optimizations', () => {
           )
       );
 
-      render(
-        <ActionButtons
-          actions={mockActions}
-          conversationId="conv-1"
-          workflowId="hiring"
-        />
-      );
+      render(<ActionButtons actions={mockActions} conversationId="conv-1" workflowId="hiring" />);
 
       const executeButton = screen.getAllByRole('button', { name: /execute$/i })[0];
       await userEvent.click(executeButton);
@@ -391,13 +372,7 @@ describe('ChatInterface Performance Optimizations', () => {
         }),
       });
 
-      render(
-        <ActionButtons
-          actions={mockActions}
-          conversationId="conv-1"
-          workflowId="hiring"
-        />
-      );
+      render(<ActionButtons actions={mockActions} conversationId="conv-1" workflowId="hiring" />);
 
       const executeButton = screen.getAllByRole('button', { name: /execute$/i })[0];
       await userEvent.click(executeButton);
@@ -421,13 +396,7 @@ describe('ChatInterface Performance Optimizations', () => {
         }),
       });
 
-      render(
-        <ActionButtons
-          actions={mockActions}
-          conversationId="conv-1"
-          workflowId="hiring"
-        />
-      );
+      render(<ActionButtons actions={mockActions} conversationId="conv-1" workflowId="hiring" />);
 
       const executeButton = screen.getAllByRole('button', { name: /execute$/i })[0];
       await userEvent.click(executeButton);
@@ -485,13 +454,7 @@ describe('ChatInterface Performance Optimizations', () => {
     });
 
     it('should render execute all button', () => {
-      render(
-        <ActionButtons
-          actions={mockActions}
-          conversationId="conv-1"
-          workflowId="hiring"
-        />
-      );
+      render(<ActionButtons actions={mockActions} conversationId="conv-1" workflowId="hiring" />);
 
       expect(screen.getByRole('button', { name: /execute all/i })).toBeInTheDocument();
     });
@@ -510,13 +473,7 @@ describe('ChatInterface Performance Optimizations', () => {
         }),
       });
 
-      render(
-        <ActionButtons
-          actions={mockActions}
-          conversationId="conv-1"
-          workflowId="hiring"
-        />
-      );
+      render(<ActionButtons actions={mockActions} conversationId="conv-1" workflowId="hiring" />);
 
       const executeButton = screen.getAllByRole('button', { name: /execute$/i })[0];
       await userEvent.click(executeButton);
@@ -561,7 +518,7 @@ describe('ChatInterface Performance Optimizations', () => {
     it('should not recreate MessageMarkdown on parent re-render', () => {
       let renderCount = 0;
 
-      function TestWrapper({ trigger }: { trigger: number }) {
+      function TestWrapper() {
         renderCount++;
         return <MessageMarkdown content="# Test" />;
       }

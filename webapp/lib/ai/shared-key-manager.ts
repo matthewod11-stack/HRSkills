@@ -12,10 +12,10 @@
  * - Clear upgrade prompts when limits reached
  */
 
+import { and, eq, gte, sql } from 'drizzle-orm';
+import { aiQuotaUsage, userPreferences } from '@/db/schema';
 import { env } from '@/env.mjs';
 import { db } from '@/lib/db';
-import { aiQuotaUsage, userPreferences } from '@/db/schema';
-import { eq, and, gte, sql } from 'drizzle-orm';
 
 export interface QuotaStatus {
   hasPersonalKey: boolean;
@@ -47,9 +47,11 @@ export async function getAnthropicKey(userId?: string): Promise<{
 }> {
   // Check if user has personal key configured
   if (userId) {
-    const userPrefs = await (db as any).query.userPreferences.findFirst({
-      where: (prefs: any, { eq }: any) => eq(prefs.userId, userId),
-    });
+    const [userPrefs] = await db
+      .select({ anthropicApiKey: userPreferences.anthropicApiKey })
+      .from(userPreferences)
+      .where(eq(userPreferences.userId, userId))
+      .limit(1);
 
     if (userPrefs?.anthropicApiKey) {
       return {
@@ -72,7 +74,7 @@ export async function getAnthropicKey(userId?: string): Promise<{
  * Check if a request is allowed under the current quota
  */
 export async function checkQuota(userId: string = 'shared-demo'): Promise<QuotaCheckResult> {
-  const { apiKey, isSharedKey } = await getAnthropicKey(userId);
+  const { apiKey: _apiKey, isSharedKey } = await getAnthropicKey(userId);
 
   // Personal API keys have unlimited quota
   if (!isSharedKey) {
@@ -95,14 +97,14 @@ export async function checkQuota(userId: string = 'shared-demo'): Promise<QuotaC
   today.setUTCHours(0, 0, 0, 0);
 
   const quotaLimit = parseInt(env.SHARED_KEY_DAILY_LIMIT, 10);
+  const todayStr = today.toISOString().split('T')[0];
 
   // Get today's usage
-  const usage = await (db as any).query.aiQuotaUsage.findFirst({
-    where: (quota: any, { and, eq, gte }: any) => and(
-      eq(quota.userId, userId),
-      gte(quota.date, today.toISOString().split('T')[0])
-    ),
-  });
+  const [usage] = await db
+    .select()
+    .from(aiQuotaUsage)
+    .where(and(eq(aiQuotaUsage.userId, userId), gte(aiQuotaUsage.date, todayStr)))
+    .limit(1);
 
   const requestsToday = usage?.requestCount || 0;
   const requestsRemaining = Math.max(0, quotaLimit - requestsToday);
@@ -146,9 +148,11 @@ export async function trackQuotaUsage(
   const today = new Date().toISOString().split('T')[0];
 
   // Check if record exists for today
-  const existing = await (db as any).query.aiQuotaUsage.findFirst({
-    where: (quota: any, { and, eq }: any) => and(eq(quota.userId, userId), eq(quota.date, today)),
-  });
+  const [existing] = await db
+    .select()
+    .from(aiQuotaUsage)
+    .where(and(eq(aiQuotaUsage.userId, userId), eq(aiQuotaUsage.date, today)))
+    .limit(1);
 
   if (existing) {
     // Increment existing record

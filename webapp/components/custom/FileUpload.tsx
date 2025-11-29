@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { AlertCircle, CheckCircle, FileText, Upload, X } from 'lucide-react';
+import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, FileText, AlertCircle, CheckCircle, X } from 'lucide-react';
-import { FileType, FILE_TYPE_LABELS, UploadResponse } from '@/lib/types/data-sources';
 import { useAuth } from '@/lib/auth/auth-context';
+import { FILE_TYPE_LABELS, type FileType, type UploadResponse } from '@/lib/types/data-sources';
 
 interface FileUploadProps {
   onUploadSuccess: () => void;
@@ -53,7 +53,7 @@ export function FileUpload({ onUploadSuccess }: FileUploadProps) {
         setUploading(false);
       }
     },
-    [fileType, onUploadSuccess]
+    [fileType, onUploadSuccess, getAuthHeaders]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({

@@ -1,8 +1,7 @@
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { vi } from 'vitest';
+import type { Message } from '@/components/custom/chat/ChatContext';
 import { MessageActions } from '@/components/custom/chat/MessageActions';
-import { Message } from '@/components/custom/chat/ChatContext';
 
 /**
  * Test suite for MessageActions component
@@ -49,7 +48,7 @@ describe('MessageActions', () => {
     it('should not render for user messages', () => {
       const message = createMessage({ role: 'user' });
 
-      const { container } = render(
+      render(
         <MessageActions
           message={message}
           onCopy={mockOnCopy}
@@ -83,7 +82,7 @@ describe('MessageActions', () => {
     it('should have three action buttons', () => {
       const message = createMessage();
 
-      const { container } = render(
+      render(
         <MessageActions
           message={message}
           onCopy={mockOnCopy}
@@ -136,7 +135,7 @@ describe('MessageActions', () => {
     it('should render Copy icon', () => {
       const message = createMessage();
 
-      const { container } = render(
+      render(
         <MessageActions
           message={message}
           onCopy={mockOnCopy}

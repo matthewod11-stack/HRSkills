@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
-import { detectContext } from '@/lib/workflows/context-detector';
 import type { ContextPanelData } from '@/components/custom/ContextPanel';
+import { detectContext } from '@/lib/workflows/context-detector';
 
 /**
  * Options for useContextPanelDetection hook
@@ -30,11 +30,7 @@ export interface UseContextPanelDetectionReturn {
    * @param response - Assistant response
    * @param serverPanel - Server-detected panel data (optional)
    */
-  detectAndUpdatePanel: (
-    message: string,
-    response: string,
-    serverPanel?: ContextPanelData
-  ) => void;
+  detectAndUpdatePanel: (message: string, response: string, serverPanel?: ContextPanelData) => void;
 
   /**
    * Enhance panel data with timestamp and sanitization

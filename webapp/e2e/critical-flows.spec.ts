@@ -4,7 +4,7 @@
  * Tests the complete user journeys through the HR Command Center application.
  */
 
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 test.describe('Homepage', () => {
   test('should load homepage successfully', async ({ page }) => {

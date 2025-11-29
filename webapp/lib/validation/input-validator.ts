@@ -42,15 +42,15 @@ export function isValidEmployeeId(id: string): boolean {
  */
 export function isValidDate(dateString: string): boolean {
   const date = new Date(dateString);
-  return !isNaN(date.getTime());
+  return !Number.isNaN(date.getTime());
 }
 
 /**
  * Validate number within range
  */
-export function isValidNumber(value: any, min?: number, max?: number): boolean {
+export function isValidNumber(value: unknown, min?: number, max?: number): boolean {
   const num = Number(value);
-  if (isNaN(num)) return false;
+  if (Number.isNaN(num)) return false;
   if (min !== undefined && num < min) return false;
   if (max !== undefined && num > max) return false;
   return true;
@@ -69,7 +69,7 @@ export function isValidEnum<T extends string>(
 /**
  * Sanitize object by removing dangerous properties
  */
-export function sanitizeObject<T extends Record<string, any>>(
+export function sanitizeObject<T extends Record<string, unknown>>(
   obj: T,
   allowedKeys: string[]
 ): Partial<T> {

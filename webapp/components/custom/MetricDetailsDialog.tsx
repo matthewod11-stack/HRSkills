@@ -1,14 +1,14 @@
 'use client';
 
+import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from '@/components/ui/dialog';
-import { Loader2 } from 'lucide-react';
 import { get } from '@/lib/api-helpers/fetch-with-retry';
 
 interface MetricDetail {

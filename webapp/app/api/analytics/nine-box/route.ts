@@ -8,7 +8,7 @@
  * This redirect will be removed in 6 months (May 2025).
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   // Extract query parameters from original request

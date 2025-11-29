@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 // TODO: Implement Drive templates integration
 // import { loadSkillTemplatesFromDrive } from './templates-drive';
 
@@ -139,7 +139,7 @@ export function buildSkillSystemPrompt(skill: SkillContext): string {
   let prompt = `# Active Skill: ${skill.name}\n\n`;
 
   // Add main skill instructions
-  prompt += skill.skillContent + '\n\n';
+  prompt += `${skill.skillContent}\n\n`;
 
   // Add reference materials
   if (Object.keys(skill.references).length > 0) {

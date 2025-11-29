@@ -1,8 +1,8 @@
 'use client';
 
-import { memo, useState } from 'react';
-import { Copy, Edit3, FileUp } from 'lucide-react';
-import { Message } from './ChatContext';
+import { Copy, Edit3 } from 'lucide-react';
+import { memo } from 'react';
+import type { Message } from './ChatContext';
 
 /**
  * Props for the MessageActions component
@@ -14,18 +14,13 @@ export interface MessageActionsProps {
   onCopy: (content: string) => void;
   /** Callback to toggle edit mode */
   onToggleEdit: (id: number) => void;
-  /** Async callback to export message to Google Docs */
-  onExportToGoogleDocs: (message: Message) => Promise<void>;
 }
 
 /**
  * MessageActions - Action buttons for assistant messages
  *
- * Provides Copy, Edit, and Export to Google Docs actions
- * for AI assistant messages. Only shown for assistant role messages.
- *
- * Handles export loading state internally to show spinner during
- * async Google Docs export operation.
+ * Provides Copy and Edit actions for AI assistant messages.
+ * Only shown for assistant role messages.
  *
  * Memoized to prevent re-renders when parent updates.
  *
@@ -35,7 +30,6 @@ export interface MessageActionsProps {
  *   message={message}
  *   onCopy={(content) => navigator.clipboard.writeText(content)}
  *   onToggleEdit={(id) => toggleEditMode(id)}
- *   onExportToGoogleDocs={async (msg) => await exportToGoogleDocs(msg)}
  * />
  * ```
  */
@@ -43,19 +37,7 @@ export const MessageActions = memo(function MessageActions({
   message,
   onCopy,
   onToggleEdit,
-  onExportToGoogleDocs
 }: MessageActionsProps) {
-  const [isExporting, setIsExporting] = useState(false);
-
-  const handleExport = async () => {
-    setIsExporting(true);
-    try {
-      await onExportToGoogleDocs(message);
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
   // Only show actions for assistant messages
   if (message.role !== 'assistant') {
     return null;
@@ -75,6 +57,7 @@ export const MessageActions = memo(function MessageActions({
       <div className="flex gap-2">
         {/* Copy to Clipboard */}
         <button
+          type="button"
           onClick={() => onCopy(message.content)}
           className="p-1.5 hover:bg-white/10 rounded-lg transition-premium"
           title="Copy to clipboard"
@@ -85,27 +68,13 @@ export const MessageActions = memo(function MessageActions({
 
         {/* Edit Document */}
         <button
+          type="button"
           onClick={() => onToggleEdit(message.id)}
           className="p-1.5 hover:bg-white/10 rounded-lg transition-premium"
           title="Edit document"
           aria-label="Edit message"
         >
           <Edit3 className="w-4 h-4" />
-        </button>
-
-        {/* Export to Google Docs */}
-        <button
-          onClick={handleExport}
-          disabled={isExporting}
-          className="p-1.5 hover:bg-white/10 rounded-lg transition-premium disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Export to Google Docs"
-          aria-label="Export to Google Docs"
-        >
-          {isExporting ? (
-            <div className="w-4 h-4 border-2 border-violet border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <FileUp className="w-4 h-4" />
-          )}
         </button>
       </div>
     </div>

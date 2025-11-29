@@ -1,5 +1,4 @@
-import { vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { vi } from 'vitest';
 import { ChatHeader } from '@/components/custom/chat/ChatHeader';
 
@@ -9,10 +8,18 @@ import { ChatHeader } from '@/components/custom/chat/ChatHeader';
  * Tests the header section with conversation ID display and reset button.
  */
 
+// Mock types for Framer Motion
+interface MotionButtonProps {
+  children?: React.ReactNode;
+  onClick?: () => void;
+  className?: string;
+  [key: string]: unknown;
+}
+
 // Mock Framer Motion
 vi.mock('framer-motion', () => ({
   motion: {
-    button: ({ children, onClick, className, ...props }: any) => (
+    button: ({ children, onClick, className, ...props }: MotionButtonProps) => (
       <button onClick={onClick} className={className} {...props}>
         {children}
       </button>
@@ -50,9 +57,7 @@ describe('ChatHeader', () => {
     });
 
     it('should render RotateCcw icon', () => {
-      const { container } = render(
-        <ChatHeader conversationId="conv_test" onReset={mockOnReset} />
-      );
+      const { container } = render(<ChatHeader conversationId="conv_test" onReset={mockOnReset} />);
 
       // Check for SVG element (RotateCcw icon from lucide-react)
       const svg = container.querySelector('svg');
@@ -91,34 +96,28 @@ describe('ChatHeader', () => {
 
   describe('Conversation ID display', () => {
     it('should display conversation ID with monospace font', () => {
-      const { container } = render(
-        <ChatHeader conversationId="conv_123_xyz" onReset={mockOnReset} />
-      );
+      render(<ChatHeader conversationId="conv_123_xyz" onReset={mockOnReset} />);
 
       const convIdElement = screen.getByText('conv_123_xyz');
       expect(convIdElement).toHaveClass('font-mono');
     });
 
     it('should display conversation ID with muted color', () => {
-      const { container } = render(
-        <ChatHeader conversationId="conv_123_xyz" onReset={mockOnReset} />
-      );
+      render(<ChatHeader conversationId="conv_123_xyz" onReset={mockOnReset} />);
 
       const convIdElement = screen.getByText('conv_123_xyz');
       expect(convIdElement).toHaveClass('text-secondary/50');
     });
 
     it('should display conversation ID in small text', () => {
-      const { container } = render(
-        <ChatHeader conversationId="conv_123_xyz" onReset={mockOnReset} />
-      );
+      render(<ChatHeader conversationId="conv_123_xyz" onReset={mockOnReset} />);
 
       const convIdElement = screen.getByText('conv_123_xyz');
       expect(convIdElement).toHaveClass('text-xs');
     });
 
     it('should handle very long conversation IDs', () => {
-      const longId = 'conv_' + 'x'.repeat(100);
+      const longId = `conv_${'x'.repeat(100)}`;
 
       render(<ChatHeader conversationId={longId} onReset={mockOnReset} />);
 
@@ -134,9 +133,7 @@ describe('ChatHeader', () => {
     it('should handle empty conversation ID', () => {
       render(<ChatHeader conversationId="" onReset={mockOnReset} />);
 
-      const { container } = render(
-        <ChatHeader conversationId="" onReset={mockOnReset} />
-      );
+      const { container } = render(<ChatHeader conversationId="" onReset={mockOnReset} />);
       // Empty string still renders the div
       const convIdElement = container.querySelector('.font-mono');
       expect(convIdElement).toBeInTheDocument();
@@ -145,18 +142,14 @@ describe('ChatHeader', () => {
 
   describe('Styling and layout', () => {
     it('should have flex layout with space-between', () => {
-      const { container } = render(
-        <ChatHeader conversationId="conv_test" onReset={mockOnReset} />
-      );
+      const { container } = render(<ChatHeader conversationId="conv_test" onReset={mockOnReset} />);
 
       const headerContainer = container.firstChild as HTMLElement;
       expect(headerContainer).toHaveClass('flex', 'items-center', 'justify-between');
     });
 
     it('should have bottom margin', () => {
-      const { container } = render(
-        <ChatHeader conversationId="conv_test" onReset={mockOnReset} />
-      );
+      const { container } = render(<ChatHeader conversationId="conv_test" onReset={mockOnReset} />);
 
       const headerContainer = container.firstChild as HTMLElement;
       expect(headerContainer).toHaveClass('mb-4');

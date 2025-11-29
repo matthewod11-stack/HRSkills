@@ -22,22 +22,22 @@
  *   }
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth/middleware';
+import { type NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import {
-  handleApiError,
   createSuccessResponse,
-  validationError,
   HttpStatus,
+  handleApiError,
+  validationError,
 } from '@/lib/api-helpers/error-handler';
+import { requireAuth } from '@/lib/auth/middleware';
 import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter';
 import {
-  createDocument,
-  listDocuments,
   type CreateDocumentInput,
+  createDocument,
   type DocumentFilters,
+  listDocuments,
 } from '@/lib/services/document-service';
-import { z } from 'zod';
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -79,8 +79,8 @@ export async function GET(request: NextRequest) {
       type: searchParams.get('type') || undefined,
       status: (searchParams.get('status') as 'draft' | 'final') || undefined,
       search: searchParams.get('search') || undefined,
-      limit: parseInt(searchParams.get('limit') || '20'),
-      offset: parseInt(searchParams.get('offset') || '0'),
+      limit: parseInt(searchParams.get('limit') || '20', 10),
+      offset: parseInt(searchParams.get('offset') || '0', 10),
     };
 
     // 4. Fetch documents

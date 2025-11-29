@@ -5,18 +5,18 @@
  * Provides cleaner, easier-to-understand permission checks.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify, SignJWT } from 'jose';
+import { type NextRequest, NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
 import {
-  SimpleAuthUser,
-  SimpleAuthResult,
-  ROLES,
   getRoleByName,
   hasPermission,
   hasRole,
+  ROLES,
+  type RoleName,
   requireAdmin,
-  RoleName,
+  type SimpleAuthResult,
+  type SimpleAuthUser,
 } from './roles-v2';
 
 const JWT_SECRET = new TextEncoder().encode(env.JWT_SECRET);
@@ -57,7 +57,7 @@ export async function verifyToken(token: string): Promise<SimpleAuthResult> {
         exp: user.exp,
       },
     };
-  } catch (error) {
+  } catch (_error) {
     return {
       success: false,
       error: 'Invalid or expired token',

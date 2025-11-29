@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 /**
  * Pagination configuration options

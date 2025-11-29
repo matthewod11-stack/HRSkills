@@ -1,4 +1,4 @@
-import { TABLE_SCHEMAS, ChartType, QueryIntent } from './config';
+import { type ChartType, type QueryIntent, TABLE_SCHEMAS } from './config';
 
 /**
  * Build schema context string for Claude prompt
@@ -260,7 +260,7 @@ export function generateChartConfig(intent: QueryIntent, rows: any[]): any {
 /**
  * Generate contextual follow-up question suggestions
  */
-export function generateFollowUps(intent: QueryIntent, query: string): string[] {
+export function generateFollowUps(intent: QueryIntent, _query: string): string[] {
   const followUps: Record<string, string[]> = {
     simple_metric: [
       'Show me the trend over time',

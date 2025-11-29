@@ -1,8 +1,8 @@
 'use client';
 
-import { memo } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, LucideIcon } from 'lucide-react';
+import { Calendar, Clock } from 'lucide-react';
+import { memo } from 'react';
 
 const events = [
   {

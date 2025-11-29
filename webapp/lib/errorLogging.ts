@@ -1,5 +1,5 @@
-import { ErrorInfo } from 'react';
 import * as Sentry from '@sentry/nextjs';
+import type { ErrorInfo } from 'react';
 
 /**
  * Error severity levels for categorization and prioritization

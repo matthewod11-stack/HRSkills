@@ -5,19 +5,19 @@
  * Uses @testing-library/react's renderHook with proper React context.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  useDebounce,
-  useDebouncedCallback,
-  useLocalStorage,
-  usePagination,
-  useInfinitePagination,
-  useToggle,
+  useArray,
   useBoolean,
   useCounter,
-  useArray,
+  useDebounce,
+  useDebouncedCallback,
+  useInfinitePagination,
+  useLocalStorage,
+  usePagination,
   useSet,
+  useToggle,
 } from '@/lib/hooks';
 
 // Cleanup after each test
@@ -39,12 +39,9 @@ describe('useDebounce', () => {
   });
 
   it('should debounce value changes', () => {
-    const { result, rerender } = renderHook(
-      ({ value, delay }) => useDebounce(value, delay),
-      {
-        initialProps: { value: 'initial', delay: 500 },
-      }
-    );
+    const { result, rerender } = renderHook(({ value, delay }) => useDebounce(value, delay), {
+      initialProps: { value: 'initial', delay: 500 },
+    });
 
     expect(result.current).toBe('initial');
 
@@ -61,12 +58,9 @@ describe('useDebounce', () => {
   });
 
   it('should cancel previous timeout on rapid changes', () => {
-    const { result, rerender } = renderHook(
-      ({ value }) => useDebounce(value, 500),
-      {
-        initialProps: { value: 'initial' },
-      }
-    );
+    const { result, rerender } = renderHook(({ value }) => useDebounce(value, 500), {
+      initialProps: { value: 'initial' },
+    });
 
     expect(result.current).toBe('initial');
 
@@ -86,12 +80,9 @@ describe('useDebounce', () => {
   });
 
   it('should handle different delay values', () => {
-    const { result, rerender } = renderHook(
-      ({ value, delay }) => useDebounce(value, delay),
-      {
-        initialProps: { value: 'initial', delay: 300 },
-      }
-    );
+    const { result, rerender } = renderHook(({ value, delay }) => useDebounce(value, delay), {
+      initialProps: { value: 'initial', delay: 300 },
+    });
 
     rerender({ value: 'updated', delay: 300 });
 
@@ -106,12 +97,9 @@ describe('useDebounce', () => {
     const initialObj = { id: 1, name: 'initial' };
     const updatedObj = { id: 2, name: 'updated' };
 
-    const { result, rerender } = renderHook(
-      ({ value }) => useDebounce(value, 300),
-      {
-        initialProps: { value: initialObj },
-      }
-    );
+    const { result, rerender } = renderHook(({ value }) => useDebounce(value, 300), {
+      initialProps: { value: initialObj },
+    });
 
     expect(result.current).toEqual(initialObj);
 
@@ -204,12 +192,9 @@ describe('useDebouncedCallback', () => {
     const callback1 = vi.fn();
     const callback2 = vi.fn();
 
-    const { result, rerender } = renderHook(
-      ({ cb }) => useDebouncedCallback(cb, 300),
-      {
-        initialProps: { cb: callback1 },
-      }
-    );
+    const { result, rerender } = renderHook(({ cb }) => useDebouncedCallback(cb, 300), {
+      initialProps: { cb: callback1 },
+    });
 
     act(() => {
       result.current('test');
@@ -322,9 +307,7 @@ describe('useLocalStorage', () => {
 
 describe('usePagination', () => {
   it('should initialize with correct values', () => {
-    const { result } = renderHook(() =>
-      usePagination({ totalItems: 100, itemsPerPage: 10 })
-    );
+    const { result } = renderHook(() => usePagination({ totalItems: 100, itemsPerPage: 10 }));
 
     expect(result.current.currentPage).toBe(1);
     expect(result.current.totalPages).toBe(10);
@@ -336,9 +319,7 @@ describe('usePagination', () => {
   });
 
   it('should navigate to next page', () => {
-    const { result } = renderHook(() =>
-      usePagination({ totalItems: 100, itemsPerPage: 10 })
-    );
+    const { result } = renderHook(() => usePagination({ totalItems: 100, itemsPerPage: 10 }));
 
     act(() => {
       result.current.nextPage();
@@ -363,9 +344,7 @@ describe('usePagination', () => {
   });
 
   it('should go to specific page', () => {
-    const { result } = renderHook(() =>
-      usePagination({ totalItems: 100, itemsPerPage: 10 })
-    );
+    const { result } = renderHook(() => usePagination({ totalItems: 100, itemsPerPage: 10 }));
 
     act(() => {
       result.current.goToPage(7);
@@ -387,9 +366,7 @@ describe('usePagination', () => {
   });
 
   it('should not go before first page', () => {
-    const { result } = renderHook(() =>
-      usePagination({ totalItems: 100, itemsPerPage: 10 })
-    );
+    const { result } = renderHook(() => usePagination({ totalItems: 100, itemsPerPage: 10 }));
 
     act(() => {
       result.current.previousPage();
@@ -400,9 +377,7 @@ describe('usePagination', () => {
 
   it('should slice items correctly', () => {
     const items = Array.from({ length: 100 }, (_, i) => i + 1);
-    const { result } = renderHook(() =>
-      usePagination({ totalItems: 100, itemsPerPage: 10 })
-    );
+    const { result } = renderHook(() => usePagination({ totalItems: 100, itemsPerPage: 10 }));
 
     const pageItems = result.current.getCurrentPageItems(items);
 
@@ -410,9 +385,7 @@ describe('usePagination', () => {
   });
 
   it('should update when page size changes', () => {
-    const { result } = renderHook(() =>
-      usePagination({ totalItems: 100, itemsPerPage: 10 })
-    );
+    const { result } = renderHook(() => usePagination({ totalItems: 100, itemsPerPage: 10 }));
 
     act(() => {
       result.current.goToPage(5);
@@ -459,18 +432,14 @@ describe('usePagination', () => {
   });
 
   it('should handle edge case with 0 items', () => {
-    const { result } = renderHook(() =>
-      usePagination({ totalItems: 0, itemsPerPage: 10 })
-    );
+    const { result } = renderHook(() => usePagination({ totalItems: 0, itemsPerPage: 10 }));
 
     expect(result.current.totalPages).toBe(1);
     expect(result.current.currentPage).toBe(1);
   });
 
   it('should handle partial last page', () => {
-    const { result } = renderHook(() =>
-      usePagination({ totalItems: 95, itemsPerPage: 10 })
-    );
+    const { result } = renderHook(() => usePagination({ totalItems: 95, itemsPerPage: 10 }));
 
     act(() => {
       result.current.lastPage();

@@ -1,8 +1,8 @@
-import { vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import { vi } from 'vitest';
+import { ChatProvider, type Message } from '@/components/custom/chat/ChatContext';
 import { MessageList } from '@/components/custom/chat/MessageList';
-import { ChatProvider, Message } from '@/components/custom/chat/ChatContext';
 
 /**
  * Test suite for MessageList component
@@ -17,11 +17,13 @@ vi.mock('framer-motion', () => ({
 }));
 
 // Mock MessageItem
+interface MockMessageItemProps {
+  message: { id: number; content: string };
+}
+
 vi.mock('@/components/custom/chat/MessageItem', () => ({
-  MessageItem: ({ message }: any) => (
-    <div data-testid={`message-item-${message.id}`}>
-      {message.content}
-    </div>
+  MessageItem: ({ message }: MockMessageItemProps) => (
+    <div data-testid={`message-item-${message.id}`}>{message.content}</div>
   ),
 }));
 
@@ -200,7 +202,7 @@ describe('MessageList', () => {
       );
 
       await waitFor(() => {
-        expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth' });
+        expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth', block: 'nearest' });
       });
     });
 
@@ -532,7 +534,7 @@ describe('MessageList', () => {
       expect(screen.getByText('Message 2')).toBeInTheDocument();
 
       // Re-render with one message removed
-      const updatedMessages = [createMessage({ id: 1, content: 'Message 1' })];
+      const _updatedMessages = [createMessage({ id: 1, content: 'Message 1' })];
 
       rerender(
         <MessageList

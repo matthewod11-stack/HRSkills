@@ -1,9 +1,9 @@
 /**
  */
 
-import { vi } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { vi } from 'vitest';
 import '@testing-library/jest-dom';
 import { ErrorBoundary, useErrorHandler } from '@/components/ui/ErrorBoundary';
 
@@ -30,7 +30,9 @@ function ResettableErrorDemo() {
 
   return (
     <>
-      <button onClick={() => setShouldThrow(false)}>Resolve Error</button>
+      <button type="button" onClick={() => setShouldThrow(false)}>
+        Resolve Error
+      </button>
       <ErrorBoundary>
         <ThrowError shouldThrow={shouldThrow} />
       </ErrorBoundary>
@@ -221,7 +223,11 @@ describe('ErrorBoundary', () => {
 describe('useErrorHandler hook', () => {
   function TestComponent() {
     const throwError = useErrorHandler();
-    return <button onClick={() => throwError(new Error('Manual error'))}>Throw Error</button>;
+    return (
+      <button type="button" onClick={() => throwError(new Error('Manual error'))}>
+        Throw Error
+      </button>
+    );
   }
 
   it('should allow manual error triggering', () => {

@@ -1,8 +1,4 @@
 {
-  "*.{ts,tsx,js,jsx,json,md}": [
-    "biome check --write --unsafe --files-ignore-unknown=true"
-  ],
-  "*.{ts,tsx}": [
-    "bash -c 'tsc --noEmit'"
-  ]
+  "*.{ts,tsx,js,jsx,json,md}": ["biome check --write --unsafe --files-ignore-unknown=true"],
+  "*.{ts,tsx}": ["bash -c 'tsc --noEmit'"]
 }

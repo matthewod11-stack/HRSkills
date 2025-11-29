@@ -32,12 +32,11 @@ describe('Performance Monitoring System', () => {
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
 
     // Mock PerformanceObserver
-    global.PerformanceObserver = vi.fn().mockImplementation(function() {
-      return {
+    (global as unknown as { PerformanceObserver: ReturnType<typeof vi.fn> }).PerformanceObserver =
+      vi.fn().mockImplementation(() => ({
         observe: vi.fn(),
         disconnect: vi.fn(),
-      };
-    }) as any;
+      }));
 
     // Set NODE_ENV to development for testing
     process.env.NODE_ENV = 'development';
@@ -56,7 +55,7 @@ describe('Performance Monitoring System', () => {
     });
 
     it('should not throw when PerformanceObserver is not available', () => {
-      delete (global as any).PerformanceObserver;
+      delete (global as unknown as { PerformanceObserver?: unknown }).PerformanceObserver;
       expect(() => initMonitoring()).not.toThrow();
     });
 
@@ -82,7 +81,7 @@ describe('Performance Monitoring System', () => {
     it('should send metrics to API in production mode', async () => {
       // Dynamically import and override env for this test
       const { env } = await import('@/env.mjs');
-      vi.mocked(env).NODE_ENV = 'production' as any;
+      (vi.mocked(env) as { NODE_ENV: string }).NODE_ENV = 'production';
 
       reportCustomMetric('custom_metric', 456);
 
@@ -99,13 +98,13 @@ describe('Performance Monitoring System', () => {
       );
 
       // Reset for other tests
-      vi.mocked(env).NODE_ENV = 'development' as any;
+      (vi.mocked(env) as { NODE_ENV: string }).NODE_ENV = 'development';
     });
 
     it('should handle fetch errors silently', async () => {
       // Dynamically import and override env for this test
       const { env } = await import('@/env.mjs');
-      vi.mocked(env).NODE_ENV = 'production' as any;
+      (vi.mocked(env) as { NODE_ENV: string }).NODE_ENV = 'production';
 
       fetchSpy.mockRejectedValueOnce(new Error('Network error'));
 
@@ -117,7 +116,7 @@ describe('Performance Monitoring System', () => {
       expect(consoleErrorSpy).toHaveBeenCalled();
 
       // Reset for other tests
-      vi.mocked(env).NODE_ENV = 'development' as any;
+      (vi.mocked(env) as { NODE_ENV: string }).NODE_ENV = 'development';
     });
   });
 

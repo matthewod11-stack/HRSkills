@@ -8,19 +8,20 @@
  * - POST: Trigger batch sentiment analysis
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, authErrorResponse } from '@/lib/auth/middleware';
-import { handleApiError, createSuccessResponse } from '@/lib/api-helpers';
-import { db } from '@/lib/db';
+import { and, eq, isNotNull, sql } from 'drizzle-orm';
+import type { NextRequest } from 'next/server';
 import { employeeMetrics, employees } from '@/db/schema';
-import { eq, and, isNotNull, sql } from 'drizzle-orm';
 import {
-  getSentimentDistribution,
-  getTopPositiveComments,
-  getTopNegativeComments,
-  analyzeUnclassifiedComments,
   analyzeQuarterComments,
+  analyzeUnclassifiedComments,
+  getSentimentDistribution,
+  getTopNegativeComments,
+  getTopPositiveComments,
+  type SentimentAnalysisProgress,
 } from '@/lib/ai/enps-sentiment';
+import { createSuccessResponse, handleApiError } from '@/lib/api-helpers';
+import { authErrorResponse, requireAuth } from '@/lib/auth/middleware';
+import { db } from '@/lib/db';
 
 // ============================================================================
 // GET - Retrieve Sentiment Analysis Data
@@ -48,7 +49,17 @@ export async function GET(request: NextRequest) {
     ]);
 
     // Get department breakdown if requested
-    let byDepartment: any[] = [];
+    interface DepartmentSentiment {
+      department: string;
+      positive: number;
+      neutral: number;
+      negative: number;
+      total: number;
+      positivePercentage: number;
+      neutralPercentage: number;
+      negativePercentage: number;
+    }
+    let byDepartment: DepartmentSentiment[] = [];
     if (!department) {
       // Get sentiment by department
       const whereConditions = [isNotNull(employeeMetrics.sentiment)];
@@ -68,10 +79,7 @@ export async function GET(request: NextRequest) {
         .groupBy(employees.department, employeeMetrics.sentiment);
 
       // Group by department
-      const deptMap = new Map<
-        string,
-        { positive: number; neutral: number; negative: number }
-      >();
+      const deptMap = new Map<string, { positive: number; neutral: number; negative: number }>();
 
       deptResults.forEach((row) => {
         if (!row.department) return;
@@ -109,20 +117,12 @@ export async function GET(request: NextRequest) {
         count: sql<number>`count(*)`,
       })
       .from(employeeMetrics)
-      .where(
-        and(
-          isNotNull(employeeMetrics.surveyQuarter),
-          isNotNull(employeeMetrics.sentiment)
-        )
-      )
+      .where(and(isNotNull(employeeMetrics.surveyQuarter), isNotNull(employeeMetrics.sentiment)))
       .groupBy(employeeMetrics.surveyQuarter, employeeMetrics.sentiment)
       .orderBy(sql`${employeeMetrics.surveyQuarter} DESC`);
 
     // Group by quarter
-    const trendMap = new Map<
-      string,
-      { positive: number; neutral: number; negative: number }
-    >();
+    const trendMap = new Map<string, { positive: number; neutral: number; negative: number }>();
 
     trendResults.forEach((row) => {
       if (!row.quarter) return;
@@ -187,19 +187,22 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { quarter, mode } = body;
 
-    let result;
+    let progress: SentimentAnalysisProgress;
 
     if (mode === 'quarter' && quarter) {
       // Analyze specific quarter
-      result = await analyzeQuarterComments(quarter);
+      progress = await analyzeQuarterComments(quarter);
     } else {
       // Analyze all unclassified comments
-      result = await analyzeUnclassifiedComments();
+      progress = await analyzeUnclassifiedComments();
     }
 
     return createSuccessResponse({
       message: 'Sentiment analysis completed',
-      analysis: result,
+      analysis: {
+        success: true,
+        data: progress,
+      },
     });
   } catch (error) {
     return handleApiError(error, {

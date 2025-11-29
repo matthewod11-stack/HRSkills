@@ -7,14 +7,14 @@
 
 import OpenAI from 'openai';
 import { env } from '@/env.mjs';
-import {
+import type {
   AIProvider,
   AIProviderType,
+  AnalysisResult,
+  AnalysisTask,
   ChatMessage,
   ChatOptions,
   ChatResponse,
-  AnalysisTask,
-  AnalysisResult,
   ProviderHealth,
 } from '../types';
 
@@ -104,15 +104,17 @@ export class OpenAIAdapter implements AIProvider {
         },
         cost,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[OpenAIAdapter] Chat request failed:', error);
 
       // Handle rate limits
-      if (error.status === 429) {
+      const status = (error as { status?: number })?.status;
+      if (status === 429) {
         throw new Error('OpenAI rate limit exceeded - try again later');
       }
 
-      throw new Error(`OpenAI chat failed: ${error.message}`);
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`OpenAI chat failed: ${message}`);
     }
   }
 
@@ -211,7 +213,7 @@ export class OpenAIAdapter implements AIProvider {
         lastChecked: now,
         errorRate: 0,
       };
-    } catch (error) {
+    } catch (_error) {
       this.healthStatus = {
         provider: 'openai',
         healthy: false,
@@ -236,17 +238,20 @@ export class OpenAIAdapter implements AIProvider {
       case 'entities':
         return `Extract named entities from this text. Return JSON only with format: {"entities": [{"text": "entity", "type": "PERSON"|"ORGANIZATION"|"LOCATION"|"DATE", "confidence": 0.0-1.0}]}\n\nText: "${task.text}"`;
 
-      case 'classification':
+      case 'classification': {
         const categories = task.options?.categories || [];
         return `Classify this text into one of these categories: ${categories.join(', ')}. Return JSON only with format: {"category": "chosen_category", "confidence": 0.0-1.0}\n\nText: "${task.text}"`;
+      }
 
-      case 'summarization':
+      case 'summarization': {
         const maxLength = task.options?.maxLength || 100;
         return `Summarize this text in ${maxLength} words or less:\n\n${task.text}`;
+      }
 
-      case 'translation':
+      case 'translation': {
         const targetLang = task.options?.targetLanguage || 'English';
         return `Translate this text to ${targetLang}:\n\n${task.text}`;
+      }
 
       default:
         return task.text;

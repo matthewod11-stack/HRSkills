@@ -59,14 +59,9 @@ export function PerformanceGridSkeleton() {
               {/* Employee avatars skeleton */}
               <div className="flex flex-wrap gap-2 mt-auto">
                 {Array.from({ length: employeeCount }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-8 h-8 bg-white/10 rounded-full"
-                  />
+                  <div key={i} className="w-8 h-8 bg-white/10 rounded-full" />
                 ))}
-                {employeeCount === 0 && (
-                  <div className="h-4 bg-white/10 rounded w-16 mx-auto" />
-                )}
+                {employeeCount === 0 && <div className="h-4 bg-white/10 rounded w-16 mx-auto" />}
               </div>
             </div>
           );

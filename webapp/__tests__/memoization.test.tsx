@@ -1,13 +1,13 @@
 /**
  */
 
-import { vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { TrendingUp, Users } from 'lucide-react';
+import { vi } from 'vitest';
 import { MetricCard } from '@/components/custom/MetricCard';
 import { QuickActionCard } from '@/components/custom/QuickActionCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, Users } from 'lucide-react';
 
 describe('Component Memoization Tests', () => {
   describe('MetricCard Memoization', () => {

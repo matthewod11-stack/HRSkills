@@ -1,7 +1,10 @@
 import Database from 'better-sqlite3';
 
-import { groupByCount, resolveDataPath } from '@/lib/analytics/utils';
+import { type DataRow, groupByCount, resolveDataPath } from '@/lib/analytics/utils';
 import { TABLE_SCHEMAS } from './config';
+
+/** SQL query result row */
+type QueryRow = Record<string, string | number | boolean | null | undefined>;
 
 type SqliteDatabase = InstanceType<typeof Database>;
 
@@ -48,7 +51,11 @@ function toTitleCase(value: string): string {
     .join(' ');
 }
 
-function coerceValueByType(value: any, type: string, columnName: string) {
+function coerceValueByType(
+  value: string | number | boolean | null | undefined,
+  type: string,
+  columnName: string
+): string | number | null {
   if (value === null || value === undefined || value === '') {
     return null;
   }
@@ -64,10 +71,10 @@ function coerceValueByType(value: any, type: string, columnName: string) {
     }
     return trimmed;
   }
-  return value;
+  return typeof value === 'number' ? value : String(value);
 }
 
-function buildInMemoryDatabase(employeeData: any[]): SqliteDatabase | null {
+function buildInMemoryDatabase(employeeData: DataRow[]): SqliteDatabase | null {
   const schema = TABLE_SCHEMAS.employees;
   if (!schema || !employeeData || employeeData.length === 0) {
     return null;
@@ -85,7 +92,7 @@ function buildInMemoryDatabase(employeeData: any[]): SqliteDatabase | null {
   const insert = db.prepare(
     `INSERT INTO ${schema.name} (${columnNames.join(', ')}) VALUES (${placeholders})`
   );
-  const insertMany = db.transaction((rows: any[]) => {
+  const insertMany = db.transaction((rows: DataRow[]) => {
     for (const row of rows) {
       insert.run(
         columnNames.map((columnName, index) =>
@@ -99,7 +106,7 @@ function buildInMemoryDatabase(employeeData: any[]): SqliteDatabase | null {
   return db;
 }
 
-function executeSqlAgainstDatabase(sql: string, employeeData: any[]): any[] | null {
+function executeSqlAgainstDatabase(sql: string, employeeData: DataRow[]): QueryRow[] | null {
   const persistentDb = getPersistentDatabase();
   if (persistentDb) {
     try {
@@ -135,14 +142,14 @@ function executeSqlAgainstDatabase(sql: string, employeeData: any[]): any[] | nu
 export async function executeQuery(
   sql: string,
   message: string,
-  employeeData: any[]
-): Promise<any[]> {
+  employeeData: DataRow[]
+): Promise<QueryRow[]> {
   const rowsFromDb = executeSqlAgainstDatabase(sql, employeeData);
   if (Array.isArray(rowsFromDb)) {
     return rowsFromDb;
   }
 
-  let rows: any[] = [];
+  let rows: QueryRow[] = [];
 
   // Simple query parsing (can be expanded to use actual SQL parser/executor)
   // For now, we'll use keyword matching to determine which aggregation to run
@@ -179,14 +186,14 @@ export async function executeQuery(
 /**
  * Check if query execution returned any results
  */
-export function hasResults(rows: any[]): boolean {
+export function hasResults(rows: QueryRow[]): boolean {
   return rows.length > 0;
 }
 
 /**
  * Get metadata about query execution
  */
-export function getQueryMetadata(rows: any[], startTime: number) {
+export function getQueryMetadata(rows: QueryRow[], startTime: number) {
   return {
     rowsReturned: rows.length,
     executionTime: Date.now() - startTime,

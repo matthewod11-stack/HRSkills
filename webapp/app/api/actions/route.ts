@@ -1,15 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, authErrorResponse } from '@/lib/auth/middleware';
-import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter';
+import { type NextRequest, NextResponse } from 'next/server';
 import { handleApiError, validateRequiredFields } from '@/lib/api-helpers';
+import { authErrorResponse, requireAuth } from '@/lib/auth/middleware';
+import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter';
 import { actionExecutor } from '@/lib/workflows/actions/executor';
+import { registerDocumentHandler } from '@/lib/workflows/actions/handlers/document-handler';
 import type {
-  BaseAction,
   ActionContext,
   ActionExecutionOptions,
+  ActionType,
+  BaseAction,
   BatchActionRequest,
 } from '@/lib/workflows/actions/types';
-import { registerDocumentHandler } from '@/lib/workflows/actions/handlers/document-handler';
 
 // Register handlers on module load
 registerDocumentHandler(actionExecutor);
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
       success: result.success,
       result,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return handleApiError(error, {
       endpoint: '/api/actions',
       method: 'POST',
@@ -139,7 +140,7 @@ export async function PUT(request: NextRequest) {
       success: result.failureCount === 0,
       result,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return handleApiError(error, {
       endpoint: '/api/actions/batch',
       method: 'PUT',
@@ -170,7 +171,7 @@ export async function GET(request: NextRequest) {
 
     // Get history with filters
     const history = actionExecutor.getHistory({
-      actionType: actionType as any,
+      actionType: (actionType as ActionType) || undefined,
       userId: authResult.user.userId,
       workflowId: workflowId || undefined,
       status: status || undefined,
@@ -180,7 +181,7 @@ export async function GET(request: NextRequest) {
       success: true,
       history,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return handleApiError(error, {
       endpoint: '/api/actions/history',
       method: 'GET',

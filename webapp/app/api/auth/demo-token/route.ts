@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
+import { handleApiError } from '@/lib/api-helpers';
 import { createDemoToken } from '@/lib/auth/middleware';
-import { handleApiError, validationError, notFoundError } from '@/lib/api-helpers';
 import { applyRateLimit, RateLimitPresets } from '@/lib/security/rate-limiter';
 
 /**
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       expiresIn: '8h',
       usage: `curl -H "Authorization: Bearer ${token}" http://localhost:3000/api/employees`,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return handleApiError(error, {
       endpoint: '/api/auth/demo-token',
       method: 'POST',
@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
       expiresIn: '8h',
       usage: `curl -H "Authorization: Bearer ${token}" http://localhost:3000/api/employees`,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return handleApiError(error, {
       endpoint: '/api/auth/demo-token',
       method: 'GET',

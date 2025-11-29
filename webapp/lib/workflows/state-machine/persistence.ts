@@ -6,19 +6,19 @@
  * and creates snapshots in workflowSnapshots table for history.
  */
 
-import { db } from '@/lib/db';
+import { and, desc, eq } from 'drizzle-orm';
+import { nanoid } from 'nanoid';
 import { conversations, workflowSnapshots } from '@/db/schema';
-import { eq, and, desc } from 'drizzle-orm';
-import type { WorkflowState, WorkflowId } from '../types';
+import { db } from '@/lib/db';
+import type { WorkflowId, WorkflowState } from '../types';
 import type {
-  WorkflowStateSnapshot,
-  StateQueryOptions,
-  StateUpdateOptions,
-  StateTransitionEvent,
   HybridStateConfig,
   StateModeInfo,
+  StateQueryOptions,
+  StateTransitionEvent,
+  StateUpdateOptions,
+  WorkflowStateSnapshot,
 } from './types';
-import { nanoid } from 'nanoid';
 
 // ============================================================================
 // Configuration
@@ -221,7 +221,7 @@ export async function queryStateSnapshots(
 export async function saveConversationState(
   conversationId: string,
   state: WorkflowState,
-  options: StateUpdateOptions = {}
+  _options: StateUpdateOptions = {}
 ): Promise<boolean> {
   try {
     const stateJson = JSON.stringify(state);
@@ -252,7 +252,7 @@ export async function saveConversationState(
 export async function createStateSnapshot(
   conversationId: string,
   state: WorkflowState,
-  event?: StateTransitionEvent
+  _event?: StateTransitionEvent
 ): Promise<string | null> {
   try {
     const snapshotId = nanoid();

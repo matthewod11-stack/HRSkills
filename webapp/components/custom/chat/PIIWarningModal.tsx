@@ -1,8 +1,8 @@
 'use client';
 
+import { AnimatePresence, motion } from 'framer-motion';
+import { AlertTriangle, Edit3, Send, Shield } from 'lucide-react';
 import { memo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, Shield, Edit3, Send } from 'lucide-react';
 
 /**
  * Props for the PIIWarningModal component
@@ -55,7 +55,7 @@ export const PIIWarningModal = memo(function PIIWarningModal({
   message,
   onEdit,
   onSendAnyway,
-  onClose
+  onClose,
 }: PIIWarningModalProps) {
   return (
     <AnimatePresence>
@@ -97,8 +97,7 @@ export const PIIWarningModal = memo(function PIIWarningModal({
                 {/* Detected Types */}
                 <div className="bg-card border border-error/30 rounded-lg p-3 mb-3">
                   <p className="text-sm font-semibold text-error">
-                    Detected:{' '}
-                    <span className="text-foreground">{detectedTypes.join(', ')}</span>
+                    Detected: <span className="text-foreground">{detectedTypes.join(', ')}</span>
                   </p>
                 </div>
 

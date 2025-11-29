@@ -1,11 +1,11 @@
 'use client';
 
 import { memo } from 'react';
-import { WorkflowProgress } from '../WorkflowProgress';
 import { ActionButtons } from '../ActionButtons';
+import { WorkflowProgress } from '../WorkflowProgress';
+import type { Message } from './ChatContext';
 import MessageMarkdown from './MessageMarkdown';
 import { WorkflowBadge } from './WorkflowBadge';
-import { Message, WorkflowState } from './ChatContext';
 
 /**
  * Props for the MessageContent component
@@ -43,7 +43,7 @@ export interface MessageContentProps {
 export const MessageContent = memo(function MessageContent({
   message,
   conversationId,
-  onFollowUp
+  onFollowUp,
 }: MessageContentProps) {
   return (
     <>
@@ -85,6 +85,7 @@ export const MessageContent = memo(function MessageContent({
             <div className="flex flex-wrap gap-2">
               {message.suggestedFollowUps.map((followUp, index) => (
                 <button
+                  type="button"
                   key={index}
                   onClick={() => onFollowUp(followUp)}
                   className="px-3 py-1 bg-white/5 hover:bg-white/10 border border-white/20 rounded-lg text-xs transition-premium"

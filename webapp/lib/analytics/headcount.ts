@@ -1,4 +1,4 @@
-import { groupByCount, groupBy, percentage } from './utils';
+import { type DataRow, groupBy, groupByCount, percentage } from './utils';
 
 export interface HeadcountResult {
   totalHeadcount: number;
@@ -15,10 +15,13 @@ export interface HeadcountResult {
 /**
  * Calculate headcount metrics from employee data
  */
-export function calculateHeadcount(employees: any[], demographics?: any[]): HeadcountResult {
+export function calculateHeadcount(
+  employees: DataRow[],
+  demographics?: DataRow[]
+): HeadcountResult {
   // Filter to active employees only
   const activeEmployees = employees.filter(
-    (emp) => emp.status && emp.status.toLowerCase() === 'active'
+    (emp) => typeof emp.status === 'string' && emp.status.toLowerCase() === 'active'
   );
 
   const result: HeadcountResult = {
@@ -48,10 +51,10 @@ export function calculateHeadcount(employees: any[], demographics?: any[]): Head
  * Calculate headcount by department and level (cross-tab)
  */
 export function calculateHeadcountByDeptAndLevel(
-  employees: any[]
+  employees: DataRow[]
 ): Record<string, Record<string, number>> {
   const activeEmployees = employees.filter(
-    (emp) => emp.status && emp.status.toLowerCase() === 'active'
+    (emp) => typeof emp.status === 'string' && emp.status.toLowerCase() === 'active'
   );
 
   const grouped = groupBy(activeEmployees, 'department');
@@ -68,8 +71,8 @@ export function calculateHeadcountByDeptAndLevel(
  * Calculate headcount growth/trends
  */
 export function calculateHeadcountTrends(
-  employees: any[],
-  turnoverData?: any[]
+  employees: DataRow[],
+  turnoverData?: DataRow[]
 ): {
   currentHeadcount: number;
   hires?: number;
@@ -78,7 +81,7 @@ export function calculateHeadcountTrends(
   growthRate?: number;
 } {
   const activeEmployees = employees.filter(
-    (emp) => emp.status && emp.status.toLowerCase() === 'active'
+    (emp) => typeof emp.status === 'string' && emp.status.toLowerCase() === 'active'
   );
 
   const result = {
@@ -120,21 +123,21 @@ export function calculateHeadcountTrends(
 /**
  * Calculate manager-to-employee ratios (span of control)
  */
-export function calculateSpanOfControl(employees: any[]): {
+export function calculateSpanOfControl(employees: DataRow[]): {
   averageSpan: number;
   byManager: Record<string, { manager: string; directReports: number }>;
   totalManagers: number;
 } {
   const activeEmployees = employees.filter(
-    (emp) => emp.status && emp.status.toLowerCase() === 'active'
+    (emp) => typeof emp.status === 'string' && emp.status.toLowerCase() === 'active'
   );
 
   // Group by manager
   const byManager = groupBy(activeEmployees, 'manager_id');
 
   // Remove entries without manager (likely executives)
-  delete byManager['Unknown'];
-  delete byManager['null'];
+  delete byManager.Unknown;
+  delete byManager.null;
   delete byManager[''];
 
   const managerDetails: Record<string, { manager: string; directReports: number }> = {};

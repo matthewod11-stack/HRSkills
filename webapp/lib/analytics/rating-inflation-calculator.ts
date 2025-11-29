@@ -6,9 +6,9 @@
  * rate themselves higher than their managers do.
  */
 
-import { db } from '@/lib/db';
+import { and, desc, eq } from 'drizzle-orm';
 import { performanceReviews } from '@/db/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { db } from '@/lib/db';
 
 /**
  * Rating inflation result
@@ -37,18 +37,13 @@ export interface RatingInflation {
  *   // Inflation: 0.5 (employee rated 0.5 points higher than manager)
  * }
  */
-export async function calculateRatingInflation(
-  employeeId: string
-): Promise<RatingInflation> {
+export async function calculateRatingInflation(employeeId: string): Promise<RatingInflation> {
   // Get most recent self-review
   const selfReviews = await db
     .select()
     .from(performanceReviews)
     .where(
-      and(
-        eq(performanceReviews.employeeId, employeeId),
-        eq(performanceReviews.reviewType, 'self')
-      )
+      and(eq(performanceReviews.employeeId, employeeId), eq(performanceReviews.reviewType, 'self'))
     )
     .orderBy(desc(performanceReviews.reviewDate))
     .limit(1);
@@ -164,9 +159,7 @@ export async function calculateRatingInflationBatch(
  * @param inflationMap - Map of employee inflations (from calculateRatingInflationBatch)
  * @returns Average inflation (only includes employees with both ratings)
  */
-export function calculateAverageInflation(
-  inflationMap: Map<string, RatingInflation>
-): number {
+export function calculateAverageInflation(inflationMap: Map<string, RatingInflation>): number {
   let totalInflation = 0;
   let count = 0;
 

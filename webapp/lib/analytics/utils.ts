@@ -1,9 +1,12 @@
-import { readFile } from 'fs/promises';
-import { existsSync } from 'fs';
-import path from 'path';
-import { parseCSV, parseExcel, getFileExtension } from './parser';
-import { DataFile, DataMetadata } from '@/lib/types/data-sources';
+import { existsSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import { env } from '@/env.mjs';
+import type { DataMetadata } from '@/lib/types/data-sources';
+import { getFileExtension, parseCSV, parseExcel } from './parser';
+
+/** Generic data row type for analytics operations */
+export type DataRow = Record<string, string | number | boolean | null | undefined>;
 
 const DEFAULT_DATA_DIRECTORIES = [
   env.ANALYTICS_DATA_DIR,
@@ -34,7 +37,7 @@ export async function readMetadata(): Promise<DataMetadata> {
   try {
     const content = await readFile(METADATA_PATH, 'utf-8');
     return JSON.parse(content);
-  } catch (error) {
+  } catch (_error) {
     return { files: [], lastUpdated: null };
   }
 }
@@ -42,7 +45,7 @@ export async function readMetadata(): Promise<DataMetadata> {
 /**
  * Load and parse a data file by ID
  */
-export async function loadDataFile(fileId: string): Promise<any[]> {
+export async function loadDataFile(fileId: string): Promise<DataRow[]> {
   const metadata = await readMetadata();
   const file = metadata.files.find((f) => f.fileId === fileId);
 
@@ -54,7 +57,7 @@ export async function loadDataFile(fileId: string): Promise<any[]> {
   const fileBuffer = await readFile(filePath);
   const ext = getFileExtension(file.filePath);
 
-  let parseResult;
+  let parseResult: ReturnType<typeof parseCSV>;
   if (ext === '.csv') {
     const content = fileBuffer.toString('utf-8');
     parseResult = parseCSV(content);
@@ -81,7 +84,7 @@ export async function loadDataFile(fileId: string): Promise<any[]> {
  * const employeeData = await db.select().from(employees)
  * ```
  */
-export async function loadDataFileByType(fileType: string): Promise<any[] | null> {
+export async function loadDataFileByType(fileType: string): Promise<DataRow[] | null> {
   // DEPRECATED: For employee_master, use SQLite instead
   if (fileType === 'employee_master') {
     console.warn(
@@ -129,13 +132,17 @@ export async function loadDataFileByType(fileType: string): Promise<any[] | null
 /**
  * Join two datasets on employee_id
  */
-export function joinData(data1: any[], data2: any[], key: string = 'employee_id'): any[] {
+export function joinData(
+  data1: DataRow[],
+  data2: DataRow[],
+  key: string = 'employee_id'
+): DataRow[] {
   const map2 = new Map(data2.map((row) => [row[key], row]));
 
   return data1
     .map((row1) => ({
       ...row1,
-      ...map2.get(row1[key]),
+      ...map2.get(row1[key] as string),
     }))
     .filter((row) => row[key]); // Filter out rows without matching key
 }
@@ -143,13 +150,13 @@ export function joinData(data1: any[], data2: any[], key: string = 'employee_id'
 /**
  * Group data by a field and count
  */
-export function groupByCount(data: any[], field: string): Record<string, number> {
+export function groupByCount(data: DataRow[], field: string): Record<string, number> {
   const grouped: Record<string, number> = {};
 
-  data.forEach((row) => {
-    const value = row[field] || 'Unknown';
+  for (const row of data) {
+    const value = String(row[field] ?? 'Unknown');
     grouped[value] = (grouped[value] || 0) + 1;
-  });
+  }
 
   return grouped;
 }
@@ -157,16 +164,16 @@ export function groupByCount(data: any[], field: string): Record<string, number>
 /**
  * Group data by a field and return rows
  */
-export function groupBy(data: any[], field: string): Record<string, any[]> {
-  const grouped: Record<string, any[]> = {};
+export function groupBy(data: DataRow[], field: string): Record<string, DataRow[]> {
+  const grouped: Record<string, DataRow[]> = {};
 
-  data.forEach((row) => {
-    const value = row[field] || 'Unknown';
+  for (const row of data) {
+    const value = String(row[field] ?? 'Unknown');
     if (!grouped[value]) {
       grouped[value] = [];
     }
     grouped[value].push(row);
-  });
+  }
 
   return grouped;
 }
@@ -183,14 +190,16 @@ export function percentage(numerator: number, denominator: number, decimals: num
  * Filter data by date range
  */
 export function filterByDateRange(
-  data: any[],
+  data: DataRow[],
   dateField: string,
   startDate?: Date,
   endDate?: Date
-): any[] {
+): DataRow[] {
   return data.filter((row) => {
-    const rowDate = new Date(row[dateField]);
-    if (isNaN(rowDate.getTime())) return false;
+    const dateValue = row[dateField];
+    if (!dateValue) return false;
+    const rowDate = new Date(String(dateValue));
+    if (Number.isNaN(rowDate.getTime())) return false;
 
     if (startDate && rowDate < startDate) return false;
     if (endDate && rowDate > endDate) return false;

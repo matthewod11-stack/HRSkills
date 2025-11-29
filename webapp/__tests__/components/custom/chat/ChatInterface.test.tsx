@@ -1,5 +1,4 @@
-import { vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import { ChatInterface } from '@/components/custom/ChatInterface';
 
@@ -56,29 +55,64 @@ vi.mock('@/lib/workflows/context-detector', () => ({
   }),
 }));
 
+// Mock types for components
+interface MotionDivProps {
+  children?: React.ReactNode;
+  className?: string;
+  [key: string]: unknown;
+}
+
+interface MotionButtonProps {
+  children?: React.ReactNode;
+  onClick?: () => void;
+  className?: string;
+  [key: string]: unknown;
+}
+
+interface ChatHeaderMockProps {
+  conversationId: string;
+  onReset: () => void;
+}
+
+interface MessageListMockProps {
+  conversationId: string;
+}
+
+interface SuggestionCardsMockProps {
+  onSuggestionClick: (suggestion: string) => void;
+}
+
+interface ChatInputMockProps {
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSend: () => void;
+  onKeyPress: (e: React.KeyboardEvent) => void;
+  disabled?: boolean;
+}
+
 // Mock Framer Motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, className, ...props }: any) => (
+    div: ({ children, className, ...props }: MotionDivProps) => (
       <div className={className} {...props}>
         {children}
       </div>
     ),
-    button: ({ children, onClick, className, ...props }: any) => (
+    button: ({ children, onClick, className, ...props }: MotionButtonProps) => (
       <button onClick={onClick} className={className} {...props}>
         {children}
       </button>
     ),
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
+  AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
 }));
 
 // Mock child components to simplify testing
 vi.mock('@/components/custom/chat/ChatHeader', () => ({
-  ChatHeader: ({ conversationId, onReset }: any) => (
+  ChatHeader: ({ conversationId, onReset }: ChatHeaderMockProps) => (
     <div data-testid="chat-header">
       <span>{conversationId}</span>
-      <button onClick={onReset} data-testid="reset-button">
+      <button type="button" onClick={onReset} data-testid="reset-button">
         Reset
       </button>
     </div>
@@ -86,23 +120,27 @@ vi.mock('@/components/custom/chat/ChatHeader', () => ({
 }));
 
 vi.mock('@/components/custom/chat/MessageList', () => ({
-  MessageList: ({ conversationId }: any) => (
+  MessageList: ({ conversationId }: MessageListMockProps) => (
     <div data-testid="message-list">Messages for {conversationId}</div>
   ),
 }));
 
 vi.mock('@/components/custom/chat/SuggestionCards', () => ({
-  SuggestionCards: ({ onSuggestionClick }: any) => (
+  SuggestionCards: ({ onSuggestionClick }: SuggestionCardsMockProps) => (
     <div data-testid="suggestion-cards">
-      <button onClick={() => onSuggestionClick('Generate an offer')}>Generate an offer</button>
-      <button onClick={() => onSuggestionClick('Create a PIP')}>Create a PIP</button>
+      <button type="button" onClick={() => onSuggestionClick('Generate an offer')}>
+        Generate an offer
+      </button>
+      <button type="button" onClick={() => onSuggestionClick('Create a PIP')}>
+        Create a PIP
+      </button>
     </div>
   ),
 }));
 
 vi.mock('@/components/custom/chat/ChatInput', () => ({
   __esModule: true,
-  default: ({ value, onChange, onSend, onKeyPress, disabled }: any) => (
+  default: ({ value, onChange, onSend, onKeyPress, disabled }: ChatInputMockProps) => (
     <div data-testid="chat-input">
       <input
         data-testid="message-input"
@@ -111,24 +149,31 @@ vi.mock('@/components/custom/chat/ChatInput', () => ({
         onKeyPress={onKeyPress}
         disabled={disabled}
       />
-      <button data-testid="send-button" onClick={onSend} disabled={disabled}>
+      <button type="button" data-testid="send-button" onClick={onSend} disabled={disabled}>
         Send
       </button>
     </div>
   ),
 }));
 
+interface PIIWarningModalMockProps {
+  isOpen: boolean;
+  onEdit: () => void;
+  onSendAnyway: () => void;
+  onClose: () => void;
+}
+
 vi.mock('@/components/custom/chat/PIIWarningModal', () => ({
-  PIIWarningModal: ({ isOpen, onEdit, onSendAnyway, onClose }: any) =>
+  PIIWarningModal: ({ isOpen, onEdit, onSendAnyway, onClose }: PIIWarningModalMockProps) =>
     isOpen ? (
       <div data-testid="pii-warning-modal">
-        <button data-testid="pii-edit" onClick={onEdit}>
+        <button type="button" data-testid="pii-edit" onClick={onEdit}>
           Edit
         </button>
-        <button data-testid="pii-send-anyway" onClick={onSendAnyway}>
+        <button type="button" data-testid="pii-send-anyway" onClick={onSendAnyway}>
           Send Anyway
         </button>
-        <button data-testid="pii-close" onClick={onClose}>
+        <button type="button" data-testid="pii-close" onClick={onClose}>
           Close
         </button>
       </div>
@@ -487,10 +532,7 @@ describe('ChatInterface', () => {
       fireEvent.click(sendButton);
 
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
-          '/api/analytics/chat',
-          expect.any(Object)
-        );
+        expect(global.fetch).toHaveBeenCalledWith('/api/analytics/chat', expect.any(Object));
       });
     });
 
@@ -509,10 +551,7 @@ describe('ChatInterface', () => {
       fireEvent.click(sendButton);
 
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
-          '/api/chat',
-          expect.any(Object)
-        );
+        expect(global.fetch).toHaveBeenCalledWith('/api/chat', expect.any(Object));
       });
     });
   });
@@ -633,7 +672,7 @@ describe('ChatInterface', () => {
 
   describe('Typing indicator', () => {
     it('should show typing indicator while waiting for response', async () => {
-      let resolveResponse: any;
+      let resolveResponse: ((value: unknown) => void) | undefined;
       const responsePromise = new Promise((resolve) => {
         resolveResponse = resolve;
       });

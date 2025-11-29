@@ -1,11 +1,11 @@
 'use client';
 
-import { memo } from 'react';
 import { motion } from 'framer-motion';
-import { User, Bot, Check } from 'lucide-react';
-import { Message } from './ChatContext';
-import { MessageContent } from './MessageContent';
+import { Bot, Check, User } from 'lucide-react';
+import { memo } from 'react';
+import type { Message } from './ChatContext';
 import { MessageActions } from './MessageActions';
+import { MessageContent } from './MessageContent';
 
 /**
  * Props for the MessageItem component
@@ -23,8 +23,6 @@ export interface MessageItemProps {
   onSaveEdit: (id: number) => void;
   /** Callback to copy message content to clipboard */
   onCopy: (content: string) => void;
-  /** Async callback to export message to Google Docs */
-  onExportToGoogleDocs: (message: Message) => Promise<void>;
   /** Callback when a suggested follow-up is clicked */
   onFollowUp: (text: string) => void;
 }
@@ -51,7 +49,6 @@ export interface MessageItemProps {
  *   onUpdateEdit={(id, content) => updateEdit(id, content)}
  *   onSaveEdit={(id) => saveEdit(id)}
  *   onCopy={(content) => navigator.clipboard.writeText(content)}
- *   onExportToGoogleDocs={async (msg) => await exportToGoogleDocs(msg)}
  *   onFollowUp={(text) => handleFollowUp(text)}
  * />
  * ```
@@ -63,7 +60,6 @@ export const MessageItem = memo(function MessageItem({
   onUpdateEdit,
   onSaveEdit,
   onCopy,
-  onExportToGoogleDocs,
   onFollowUp,
 }: MessageItemProps) {
   return (
@@ -105,6 +101,7 @@ export const MessageItem = memo(function MessageItem({
               />
               <div className="flex gap-2">
                 <button
+                  type="button"
                   onClick={() => onSaveEdit(message.id)}
                   className="px-3 py-1 bg-violet hover:bg-violet-light rounded-lg text-sm transition-premium flex items-center gap-1 font-medium shadow-glow-accent"
                   aria-label="Save changes"
@@ -113,6 +110,7 @@ export const MessageItem = memo(function MessageItem({
                   Save
                 </button>
                 <button
+                  type="button"
                   onClick={() => onToggleEdit(message.id)}
                   className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-sm transition-premium font-medium"
                   aria-label="Cancel editing"
@@ -133,7 +131,6 @@ export const MessageItem = memo(function MessageItem({
                 message={message}
                 onCopy={onCopy}
                 onToggleEdit={onToggleEdit}
-                onExportToGoogleDocs={onExportToGoogleDocs}
               />
             </>
           )}

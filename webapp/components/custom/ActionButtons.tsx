@@ -12,21 +12,22 @@
  * - Removed authHeaders state duplication (use directly from localStorage)
  */
 
-import React, { useReducer, useCallback } from 'react';
+import type { LucideIcon } from 'lucide-react';
 import {
-  CheckCircle2,
-  XCircle,
-  Loader2,
   AlertCircle,
+  Calendar,
+  CheckCircle2,
+  Database,
   FileText,
+  Loader2,
   Mail,
   MessageSquare,
-  Calendar,
-  Database,
+  XCircle,
   Zap,
 } from 'lucide-react';
-import type { BaseAction, ActionResult } from '@/lib/workflows/actions/types';
+import { useCallback, useReducer } from 'react';
 import { useAuth } from '@/lib/auth/auth-context';
+import type { ActionResult, BaseAction } from '@/lib/workflows/actions/types';
 
 interface ActionButtonsProps {
   actions: BaseAction[];
@@ -90,7 +91,7 @@ function actionButtonsReducer(
  * Get icon for action type
  */
 function getActionIcon(type: string) {
-  const icons: Record<string, any> = {
+  const icons: Record<string, LucideIcon> = {
     create_document: FileText,
     send_email: Mail,
     send_slack_message: MessageSquare,
@@ -186,7 +187,7 @@ export function ActionButtons({
         if (onActionComplete) {
           onActionComplete(action.id, data.result);
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Action execution error:', error);
 
         // Record error result
@@ -197,7 +198,7 @@ export function ActionButtons({
           duration: 0,
           error: {
             code: 'execution_error',
-            message: error.message || 'Unknown error',
+            message: error instanceof Error ? error.message : 'Unknown error',
           },
         };
 
@@ -334,6 +335,7 @@ export function ActionButtons({
                     {/* Action button */}
                     {!isCompleted && (
                       <button
+                        type="button"
                         onClick={() => executeAction(action)}
                         disabled={isExecuting}
                         className={`flex-shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
@@ -386,6 +388,7 @@ export function ActionButtons({
       {actions.length > 1 && state.completedActions.size === 0 && (
         <div className="mt-3 flex gap-2">
           <button
+            type="button"
             onClick={() => actions.forEach(executeAction)}
             disabled={state.executingActions.size > 0}
             className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
@@ -403,7 +406,8 @@ export function ActionButtons({
               {state.completedActions.size} of {actions.length} completed
             </span>
             <span>
-              {Array.from(state.completedActions.values()).filter((r) => r.success).length} successful
+              {Array.from(state.completedActions.values()).filter((r) => r.success).length}{' '}
+              successful
             </span>
           </div>
         </div>

@@ -109,10 +109,10 @@ module.exports = {
         '3xl': '1.5rem',
       },
       boxShadow: {
-        'warm': '0 4px 20px rgba(224, 120, 86, 0.12)',
+        warm: '0 4px 20px rgba(224, 120, 86, 0.12)',
         'warm-lg': '0 8px 32px rgba(224, 120, 86, 0.18)',
-        'sage': '0 4px 20px rgba(139, 157, 131, 0.12)',
-        'soft': '0 2px 12px rgba(140, 157, 131, 0.08)',
+        sage: '0 4px 20px rgba(139, 157, 131, 0.12)',
+        soft: '0 2px 12px rgba(140, 157, 131, 0.08)',
       },
       scale: {
         102: '1.02',

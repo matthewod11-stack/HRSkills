@@ -5,13 +5,13 @@
  * This is used by the chat endpoint to suggest follow-up actions after AI responses.
  */
 
+import type { WorkflowId } from '../types';
 import type {
   BaseAction,
   CreateDocumentPayload,
   SendEmailPayload,
   SendSlackMessagePayload,
 } from './types';
-import type { WorkflowId } from '../types';
 
 // ============================================================================
 // Suggestion Context
@@ -626,7 +626,7 @@ function extractMetric(message: string): string {
  * Generate contextual suggestions based on extracted entities
  */
 export function generateContextualSuggestions(
-  context: SuggestionContext,
+  _context: SuggestionContext,
   entities?: {
     employees?: string[];
     documents?: string[];

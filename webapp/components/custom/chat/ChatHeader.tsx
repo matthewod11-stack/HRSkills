@@ -1,8 +1,8 @@
 'use client';
 
-import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { RotateCcw } from 'lucide-react';
+import { memo } from 'react';
 
 /**
  * Props for the ChatHeader component
@@ -30,10 +30,7 @@ export interface ChatHeaderProps {
  * />
  * ```
  */
-export const ChatHeader = memo(function ChatHeader({
-  conversationId,
-  onReset
-}: ChatHeaderProps) {
+export const ChatHeader = memo(function ChatHeader({ conversationId, onReset }: ChatHeaderProps) {
   return (
     <div className="flex items-center justify-end mb-4">
       {/* Reset Chat Button */}
