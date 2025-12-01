@@ -191,34 +191,34 @@ Add issue to [KNOWN_ISSUES.md](./KNOWN_ISSUES.md) and move to next independent t
 
 ### Tasks
 
-- [ ] Implement port conflict detection (see CODE_EXAMPLES.md)
-- [ ] Implement Next.js process spawning
-  - [ ] Use `child_process.spawn`
-  - [ ] Set `DB_DIR` environment variable
-  - [ ] Forward stdout/stderr to Electron console
-  - [ ] Store PID for cleanup
-- [ ] Implement server readiness polling
-  - [ ] Poll localhost every 500ms
-  - [ ] Timeout after 30 seconds
-  - [ ] Show loading screen while waiting
-- [ ] Implement graceful shutdown
-  - [ ] Kill Next.js on app quit
-  - [ ] Handle Next.js crashes (auto-restart or error dialog)
-- [ ] Test full startup sequence
+- [x] Implement port conflict detection (see CODE_EXAMPLES.md) *(completed 2025-12-01)*
+- [x] Implement Next.js process spawning *(completed 2025-12-01)*
+  - [x] Use `child_process.spawn`
+  - [x] Set `DB_DIR` environment variable
+  - [x] Forward stdout/stderr to Electron console
+  - [x] Store PID for cleanup
+- [x] Implement server readiness polling *(completed 2025-12-01)*
+  - [x] Poll localhost every 500ms
+  - [x] Timeout after 30 seconds
+  - [ ] Show loading screen while waiting (deferred to UI polish)
+- [x] Implement graceful shutdown *(completed 2025-12-01)*
+  - [x] Kill Next.js on app quit
+  - [ ] Handle Next.js crashes (auto-restart or error dialog) *(deferred to crash handling task)*
+- [x] Test full startup sequence *(completed 2025-12-01 - all tests pass)*
 
 ### Deliverables
 
-- [ ] Electron loads webapp UI successfully
-- [ ] Database created at `~/Library/Application Support/HR Command Center/database/hrskills.db`
-- [ ] No zombie processes on quit
+- [x] Electron loads webapp UI successfully *(verified 2025-12-01)*
+- [x] Database created at `~/Library/Application Support/HR Command Center/database/hrskills.db` *(verified 2025-12-01)*
+- [x] No zombie processes on quit *(verified via Cmd+Q)*
 
 ### Testing Checklist
 
-- [ ] App loads on first launch
-- [ ] App loads on second launch (existing DB)
-- [ ] Port 3000 in use → fallback port works
-- [ ] Quitting app kills Next.js process
-- [ ] Next.js crash → appropriate error handling
+- [x] App loads on first launch *(verified 2025-12-01)*
+- [x] App loads on second launch (existing DB) *(verified 2025-12-01)*
+- [x] Port 3000 in use → fallback port works *(verified 2025-12-01 - used 3001)*
+- [x] Quitting app kills Next.js process *(verified via Cmd+Q)*
+- [ ] Next.js crash → appropriate error handling *(deferred to crash handling task)*
 
 ### Pause Point 3A
 **Action Required:** Full app working in Electron shell
@@ -644,16 +644,16 @@ PHASE 2 - ICONS
 [ ] Test icon appears in app
 
 PHASE 3 - NEXT.JS INTEGRATION
-[ ] Implement findAvailablePort()
-[ ] Implement startNextServer()
-[ ] Set DB_DIR environment variable
-[ ] Implement waitForServer() polling
-[ ] Implement graceful shutdown
+[x] Implement findAvailablePort()
+[x] Implement startNextServer()
+[x] Set DB_DIR environment variable
+[x] Implement waitForServer() polling
+[x] Implement graceful shutdown
 [ ] Implement Next.js crash handling
-[ ] Test first launch
-[ ] Test second launch (existing DB)
-[ ] Test port fallback
-[ ] Test clean quit
+[x] Test first launch
+[x] Test second launch (existing DB)
+[x] Test port fallback
+[x] Test clean quit
 [ ] PAUSE 3A: Full app working in Electron
 
 PHASE 0.5 - PAYMENT & LICENSING

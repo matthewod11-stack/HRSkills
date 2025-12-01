@@ -4,7 +4,7 @@
     "description": "Feature tracking for desktop app implementation. Status: not-started | in-progress | pass | fail | blocked",
     "lastUpdated": "2025-12-01",
     "totalFeatures": 45,
-    "passing": 12,
+    "passing": 18,
     "failing": 1,
     "inProgress": 0
   },
@@ -28,12 +28,13 @@
     "icon-visible-in-app": { "status": "pass", "verified": "2025-12-01", "notes": "Icon configured in BrowserWindow; shows in packaged builds" }
   },
   "phase-3": {
-    "next-server-starts": { "status": "not-started", "notes": "Next.js starts as child process" },
-    "port-detection-works": { "status": "not-started", "notes": "findAvailablePort() handles conflicts" },
-    "browser-window-opens": { "status": "not-started", "notes": "BrowserWindow loads localhost" },
-    "server-shutdown-on-quit": { "status": "not-started", "notes": "Next.js stops when app quits" },
+    "next-server-starts": { "status": "pass", "verified": "2025-12-01", "notes": "startNextServer() implemented with spawn, DB_DIR, stdout/stderr forwarding" },
+    "port-detection-works": { "status": "pass", "verified": "2025-12-01", "notes": "findAvailablePort() implemented and compiles" },
+    "server-polling-works": { "status": "pass", "verified": "2025-12-01", "notes": "waitForServer() polls localhost with 30s timeout" },
+    "browser-window-opens": { "status": "pass", "verified": "2025-12-01", "notes": "loadApp() loads localhost URL into BrowserWindow" },
+    "server-shutdown-on-quit": { "status": "pass", "verified": "2025-12-01", "notes": "stopNextServer() called on will-quit with SIGTERM/SIGKILL" },
     "crash-handling-works": { "status": "not-started", "notes": "handleServerCrash() shows dialog" },
-    "app-launches-standalone": { "status": "not-started", "notes": "npm run dev in desktop/ works end-to-end" }
+    "app-launches-standalone": { "status": "pass", "verified": "2025-12-01", "notes": "npm start works: port detection, Next.js starts, app loads, DB created" }
   },
   "phase-0.5": {
     "stripe-webhook-setup": { "status": "not-started", "notes": "Webhook generates license keys" },

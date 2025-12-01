@@ -12,6 +12,187 @@ Most recent session should be first.
 Use the template from SESSION_PROTOCOL.md
 -->
 
+## Session 2025-12-01 (Phase 3 Task 5)
+
+**Phase:** 3 (Next.js Integration)
+**Focus:** End-to-end testing and bug fix
+
+### Completed
+- [x] Ran `npm start` to test full startup sequence
+- [x] Fixed bug: Changed `npm run start` → `npx next start -p ${port}` to use detected port
+- [x] Verified all startup sequence steps work:
+  - Window opens with amber loading screen
+  - Port detection works (3000 in use → switched to 3001)
+  - Next.js starts (Ready in 399ms)
+  - Database created at `~/Library/Application Support/HR Command Center/database/hrskills.db`
+  - App loads in BrowserWindow (HTTP 200)
+  - WAL mode enabled (hrskills.db-shm, hrskills.db-wal files present)
+
+### Test Results
+| Test | Result |
+|------|--------|
+| Window opens with loading screen | ✅ Pass |
+| Port detection (fallback to 3001) | ✅ Pass |
+| Next.js starts | ✅ Pass (399ms) |
+| App loads in BrowserWindow | ✅ Pass |
+| Database at correct path | ✅ Pass |
+| Graceful shutdown | ✅ Pass (via Cmd+Q) |
+
+### Bug Fixed
+- **Issue:** `npm run start` ignores PORT env var because webapp's package.json has `-p 3000` hardcoded
+- **Fix:** Use `npx next start -p ${serverPort}` for both dev and packaged modes
+
+### Notes
+- External `pkill` doesn't trigger `will-quit` event (expected behavior)
+- Normal quit via Cmd+Q or closing window works correctly
+- Next.js warning about "output: standalone" can be ignored for dev mode
+- Phase 3 core functionality complete — crash handling is separate task
+
+### Next Session Should
+- Start with: Phase 3, Task 6 - Implement crash handling (`handleServerCrash`)
+- Or proceed to Phase 0.5 (Payment & Licensing) if crash handling can wait
+
+---
+
+## Session 2025-12-01 (Phase 3 Task 4)
+
+**Phase:** 3 (Next.js Integration)
+**Focus:** Wire up app lifecycle and graceful shutdown
+
+### Completed
+- [x] Added `dialog` import from electron for error dialogs
+- [x] Implemented `stopNextServer()` function (SIGTERM → SIGKILL after 5s)
+- [x] Added `loadApp()` helper to load Next.js URL into window
+- [x] Rewrote `app.on('ready')` with full startup sequence:
+  - Creates window with loading screen
+  - Calls `startNextServer()` → `waitForServer()` → `loadApp()`
+  - Shows error dialog on failure and quits
+- [x] Added `app.on('will-quit')` to call `stopNextServer()`
+- [x] Updated `app.on('activate')` to reload app on macOS dock click
+- [x] Verified `npm run type-check` passes
+- [x] Verified `npm run build` compiles successfully
+
+### Verified
+- [x] Desktop type check passes
+- [x] Build compiles to `dist/electron-main.js`
+- [x] All functions exported for testing
+
+### Notes
+- Loading screen shows amber-themed "Starting server..." while Next.js boots
+- Error handling shows native dialog on startup failure
+- Server cleanup happens on `will-quit` event (before app fully quits)
+- Ready for end-to-end testing in next task
+
+### Next Session Should
+- Start with: Phase 3, Task 5 - Test full startup sequence end-to-end
+- Run `npm start` in desktop/ and verify:
+  1. Window opens with loading screen
+  2. Next.js starts and becomes ready
+  3. App loads in window
+  4. Quitting app stops Next.js process cleanly
+
+---
+
+## Session 2025-12-01 (Phase 3 Task 3)
+
+**Phase:** 3 (Next.js Integration)
+**Focus:** Implement server readiness polling
+
+### Completed
+- [x] Added `SERVER_STARTUP_TIMEOUT` (30 seconds) and `SERVER_POLL_INTERVAL` (500ms) constants
+- [x] Implemented `waitForServer()` function:
+  - Polls `http://localhost:{port}` with HEAD requests
+  - Returns `true` when server responds (200 or 404)
+  - Returns `false` after 30 second timeout
+  - Uses native `fetch` API
+- [x] Exported function and constants for testing
+- [x] Verified `npm run type-check` passes
+- [x] Verified `npm run build` compiles successfully
+
+### Verified
+- [x] Desktop type check passes
+- [x] Build compiles to `dist/electron-main.js`
+
+### Notes
+- `waitForServer()` not yet wired into app lifecycle - next task will integrate startup sequence
+- 30 second timeout is generous; Next.js typically starts in 5-10 seconds
+- Accepts 404 as "ready" since server is responding even if route doesn't exist
+
+### Next Session Should
+- Start with: Phase 3, Task 4 - Wire up app lifecycle (startNextServer → waitForServer → loadURL)
+- This will replace the data URL with actual Next.js app loading
+- Also implement graceful shutdown (stopNextServer on app quit)
+
+---
+
+## Session 2025-12-01 (Phase 3 Task 2)
+
+**Phase:** 3 (Next.js Integration)
+**Focus:** Implement Next.js process spawning
+
+### Completed
+- [x] Added imports for `spawn`, `ChildProcess`, and `fs-extra`
+- [x] Added `nextProcess` global state variable
+- [x] Implemented `getWebappPath()` helper (handles dev vs packaged paths)
+- [x] Implemented `startNextServer()` function:
+  - Creates database directory at `~/Library/Application Support/HR Command Center/database/`
+  - Calls `findAvailablePort()` to get available port
+  - Sets `DB_DIR`, `PORT`, and `NODE_ENV` environment variables
+  - Spawns Next.js via `npm run start` (dev) or `npx next start` (packaged)
+  - Forwards stdout/stderr to console
+  - Basic error and exit event handlers
+- [x] Verified `npm run type-check` passes
+- [x] Verified `npm run build` compiles successfully
+
+### Verified
+- [x] Desktop type check passes
+- [x] Build compiles to `dist/electron-main.js`
+- [x] Function exported for testing
+
+### Notes
+- `startNextServer()` not yet called in app lifecycle - will be wired up in waitForServer task
+- Crash handling (`handleServerCrash`) deferred to separate task per ROADMAP
+- Using `console.log` for now; will switch to `electron-log` in Phase 6
+
+### Next Session Should
+- Start with: Phase 3, Task 3 - Implement `waitForServer()` polling
+- This will poll localhost until Next.js is ready, then load the URL in BrowserWindow
+- Reference: `docs/desktop/CODE_EXAMPLES.md` section 2
+
+---
+
+## Session 2025-12-01 (Phase 3 Task 1)
+
+**Phase:** 3 (Next.js Integration)
+**Focus:** Implement port conflict detection
+
+### Completed
+- [x] Added `detectPort` import to electron-main.ts
+- [x] Added `DEFAULT_PORT` constant (3000)
+- [x] Added `serverPort` global state variable
+- [x] Implemented `findAvailablePort()` function
+- [x] Exported function for use in Phase 3 Next.js server startup
+- [x] Verified `npm run type-check` passes
+- [x] Verified `npm run build` compiles successfully
+
+### Verified
+- [x] Type declaration exists at `desktop/src/types/detect-port.d.ts`
+- [x] `detect-port` dependency already in package.json
+- [x] Compiled JS output correct in `dist/electron-main.js`
+- [x] Desktop type check passes
+
+### Notes
+- Function logs port availability to console (will switch to electron-log in later phase)
+- Function not yet called in app lifecycle - will be integrated in Phase 3 Task 2 (startNextServer)
+- Followed single-task-per-session protocol
+
+### Next Session Should
+- Start with: Phase 3, Task 2 - Implement `startNextServer()` (Next.js process spawning)
+- Reference: `docs/desktop/CODE_EXAMPLES.md` section 2 for full implementation
+- Will call `findAvailablePort()` before spawning Next.js
+
+---
+
 ## Session 2025-12-01 (Phase 2 Complete)
 
 **Phase:** 2 (Icon Creation)
