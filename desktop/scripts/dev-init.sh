@@ -15,12 +15,12 @@ NC='\033[0m' # No Color
 echo -e "${BLUE}=== HR Command Center Desktop - Session Init ===${NC}"
 echo ""
 
-# 1. Confirm we're in the right directory
-EXPECTED_DIR="HRSkills"
-CURRENT_DIR=$(basename "$PWD")
+# 1. Confirm we're in the right directory (case-insensitive check for macOS)
+EXPECTED_DIR="hrskills"
+CURRENT_DIR=$(basename "$PWD" | tr '[:upper:]' '[:lower:]')
 
 if [ "$CURRENT_DIR" != "$EXPECTED_DIR" ]; then
-    echo -e "${RED}ERROR: Expected to be in $EXPECTED_DIR directory${NC}"
+    echo -e "${RED}ERROR: Expected to be in HRSkills directory${NC}"
     echo "Current directory: $PWD"
     echo "Please cd to the HRSkills project root"
     exit 1

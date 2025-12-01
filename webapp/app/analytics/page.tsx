@@ -34,7 +34,7 @@ import {
 } from '@/components/charts/RechartsWrappers';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { useAuth } from '@/lib/auth/auth-context';
-import { chartJsToRecharts } from '@/lib/charts/recharts-helpers';
+import { chartJsToRecharts, type ChartJsData } from '@/lib/charts/recharts-helpers';
 import { logComponentError } from '@/lib/errorLogging';
 
 interface Message {
@@ -48,7 +48,7 @@ interface Message {
 
 interface ChartConfig {
   type: 'bar' | 'line' | 'scatter' | 'pie';
-  data: Record<string, unknown>;
+  data: ChartJsData;
   options: Record<string, unknown>;
   canPin?: boolean;
 }

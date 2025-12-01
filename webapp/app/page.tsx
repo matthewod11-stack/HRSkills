@@ -479,7 +479,7 @@ export default function Home() {
         },
       },
     });
-    triggerChatPrompt('Give me a snapshot of headcount trends over the last 12 months.');
+    triggerChatPrompt('Give me a snapshot of headcount trends across departments over the last 12 months.');
   };
 
   const handleENPSClick = () => {

@@ -27,14 +27,17 @@ interface ErrorPayload {
  * For now, this is a simple logging endpoint.
  */
 export async function POST(request: NextRequest) {
-  let error: ErrorPayload | undefined;
+  let rawError: ErrorPayload | undefined;
   try {
-    error = await request.json();
+    rawError = await request.json();
 
-    // Validate error structure
-    if (!error.message || !error.timestamp) {
+    // Validate error exists and has required structure
+    if (!rawError || !rawError.message || !rawError.timestamp) {
       return NextResponse.json({ error: 'Invalid error data' }, { status: 400 });
     }
+
+    // TypeScript narrowing: after validation, error is definitely ErrorPayload
+    const error: ErrorPayload = rawError;
 
     // Log to console (in production, send to error tracking service)
     console.error('[Analytics - Error]', {
@@ -103,7 +106,7 @@ export async function POST(request: NextRequest) {
     return handleApiError(err, {
       endpoint: '/api/analytics/errors',
       method: 'POST',
-      requestBody: { errorType: error?.type },
+      requestBody: { errorType: rawError?.type },
     });
   }
 }

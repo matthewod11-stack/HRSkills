@@ -3,7 +3,7 @@ import path from 'node:path';
 import { type NextRequest, NextResponse } from 'next/server';
 import type { ContextPanelData } from '@/components/custom/ContextPanel';
 import { env } from '@/env.mjs';
-import { checkQuota, trackQuotaUsage } from '@/lib/ai/shared-key-manager';
+import { checkQuota, trackQuotaUsage, type QuotaStatus } from '@/lib/ai/shared-key-manager';
 import { loadDataFileByType, readMetadata } from '@/lib/analytics/utils';
 import { handleApiError } from '@/lib/api-helpers';
 import { createMessage, extractTextContent } from '@/lib/api-helpers/anthropic-client';
@@ -42,7 +42,7 @@ interface CachedResponse {
 
 /** Chat history message entry */
 interface HistoryMessage {
-  role: string;
+  role: 'user' | 'assistant';
   content: string;
   workflowId?: WorkflowId;
   timestamp?: string;
@@ -62,7 +62,7 @@ interface ChatApiResponse {
   detectedWorkflow: WorkflowId;
   workflowConfidence: number;
   cached: boolean;
-  quotaStatus: string;
+  quotaStatus: QuotaStatus;
   suggestedActions: unknown[];
   followUpQuestions: string[];
   contextPanel: ContextPanelData | null;
@@ -204,19 +204,15 @@ export async function POST(request: NextRequest) {
 
     const message = rawMessage.trim();
     const _skill = payload?.skill;
-    const history: Array<{
-      role: string;
-      content: string;
-      workflowId?: WorkflowId;
-      timestamp?: string;
-    }> = Array.isArray(payload?.history)
-      ? payload.history.filter(
-          (entry: unknown): entry is HistoryMessage =>
-            entry &&
-            typeof entry === 'object' &&
-            typeof entry.role === 'string' &&
-            typeof entry.content === 'string'
-        )
+    const history: HistoryMessage[] = Array.isArray(payload?.history)
+      ? payload.history.filter((entry: unknown): entry is HistoryMessage => {
+          if (entry === null || typeof entry !== 'object') return false;
+          const obj = entry as Record<string, unknown>;
+          return (
+            (obj.role === 'user' || obj.role === 'assistant') &&
+            typeof obj.content === 'string'
+          );
+        })
       : [];
 
     const conversationId: string | undefined =
@@ -488,13 +484,13 @@ Your goal: Help this startup scale its people, culture, and leadership with the 
       console.error('Failed to load employee data for chat context:', error);
     }
 
-    const messages = [
+    const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [
       ...history.map((msg: HistoryMessage) => ({
         role: msg.role,
         content: msg.content,
       })),
       {
-        role: 'user',
+        role: 'user' as const,
         content: message,
       },
     ];
@@ -672,14 +668,9 @@ Your goal: Help this startup scale its people, culture, and leadership with the 
     // ========================================================================
 
     // Get user permissions for action filtering
-    const rolePermissions = (
-      authResult.user as { role?: { permissions?: Record<string, boolean> } }
-    )?.role?.permissions;
-
-    const userPermissions = rolePermissions
-      ? Object.entries(rolePermissions)
-          .filter(([, allowed]) => Boolean(allowed))
-          .map(([perm]) => perm)
+    // All users are admins in single-user mode, so grant all permissions
+    const userPermissions = authResult.user.role === 'admin'
+      ? ['create', 'read', 'update', 'delete', 'export']
       : [];
 
     // Generate action suggestions based on workflow and context

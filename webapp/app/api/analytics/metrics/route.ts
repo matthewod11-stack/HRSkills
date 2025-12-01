@@ -31,14 +31,17 @@ interface MetricPayload {
  * For now, this is a simple logging endpoint.
  */
 export async function POST(request: NextRequest) {
-  let metric: MetricPayload | undefined;
+  let rawMetric: MetricPayload | undefined;
   try {
-    metric = await request.json();
+    rawMetric = await request.json();
 
     // Validate metric structure
-    if (!metric.name || !metric.value || !metric.timestamp) {
+    if (!rawMetric || !rawMetric.name || !rawMetric.value || !rawMetric.timestamp) {
       return NextResponse.json({ error: 'Invalid metric data' }, { status: 400 });
     }
+
+    // TypeScript narrowing: after validation, metric is definitely MetricPayload
+    const metric: MetricPayload = rawMetric;
 
     // Log to console (in development)
     if (env.NODE_ENV === 'development') {
@@ -50,11 +53,11 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Store metric in database
+    // Store metric in database (default to 'good' rating if not provided)
     await storeMetric({
       name: metric.name,
       value: metric.value,
-      rating: metric.rating,
+      rating: metric.rating ?? 'good',
       timestamp: metric.timestamp,
       url: metric.url,
       userAgent: metric.userAgent,
@@ -66,7 +69,7 @@ export async function POST(request: NextRequest) {
     return handleApiError(error, {
       endpoint: '/api/analytics/metrics',
       method: 'POST',
-      requestBody: { metricName: metric?.name },
+      requestBody: { metricName: rawMetric?.name },
     });
   }
 }
