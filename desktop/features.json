@@ -4,7 +4,7 @@
     "description": "Feature tracking for desktop app implementation. Status: not-started | in-progress | pass | fail | blocked",
     "lastUpdated": "2025-12-01",
     "totalFeatures": 45,
-    "passing": 3,
+    "passing": 9,
     "failing": 1,
     "inProgress": 0
   },
@@ -15,12 +15,12 @@
     "webapp-starts": { "status": "pass", "notes": "npm run dev serves on localhost:3000" }
   },
   "phase-1": {
-    "desktop-package-json": { "status": "not-started", "notes": "desktop/package.json with Electron deps" },
-    "desktop-tsconfig": { "status": "not-started", "notes": "desktop/tsconfig.json for Electron" },
-    "electron-main-scaffold": { "status": "not-started", "notes": "desktop/src/electron-main.ts basic structure" },
-    "preload-scaffold": { "status": "not-started", "notes": "desktop/src/preload.ts with contextBridge" },
-    "npm-install-works": { "status": "not-started", "notes": "npm install in desktop/ succeeds" },
-    "type-check-passes": { "status": "not-started", "notes": "npm run type-check in desktop/ passes" }
+    "desktop-package-json": { "status": "pass", "verified": "2025-12-01", "notes": "Created with Electron deps and build config" },
+    "desktop-tsconfig": { "status": "pass", "verified": "2025-12-01", "notes": "TypeScript compiles successfully" },
+    "electron-main-scaffold": { "status": "pass", "verified": "2025-12-01", "notes": "Minimal window scaffold created" },
+    "preload-scaffold": { "status": "pass", "verified": "2025-12-01", "notes": "contextBridge with isElectron exposed" },
+    "npm-install-works": { "status": "pass", "verified": "2025-12-01", "notes": "365 packages installed, native deps rebuilt" },
+    "type-check-passes": { "status": "pass", "verified": "2025-12-01", "notes": "npm run type-check passes in desktop/" }
   },
   "phase-2": {
     "icon-source-created": { "status": "not-started", "notes": "1024x1024 PNG source icon" },

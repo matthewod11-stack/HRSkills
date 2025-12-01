@@ -107,3 +107,10 @@ playwright-report/
 # TypeScript incremental build artifacts
 *.tsbuildinfo
 tsconfig.tsbuildinfo
+
+# Electron
+desktop/dist/
+desktop/out/
+desktop/node_modules/
+desktop/*.dmg
+desktop/*.app
