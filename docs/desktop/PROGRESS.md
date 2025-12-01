@@ -12,6 +12,40 @@ Most recent session should be first.
 Use the template from SESSION_PROTOCOL.md
 -->
 
+## Session 2025-12-01 (Phase 2 Complete)
+
+**Phase:** 2 (Icon Creation)
+**Focus:** Create macOS app icon from source image
+
+### Completed
+- [x] Verified source icon is 1024x1024 (`HRC Icon.jpeg`)
+- [x] Converted JPEG to PNG format (`desktop/icons/icon-1024.png`)
+- [x] Generated icon.iconset with all 10 required sizes (16-1024px)
+- [x] Converted iconset to `icon.icns` (1.8MB)
+- [x] Added icon property to BrowserWindow in electron-main.ts
+- [x] Verified `npm run type-check` still passes
+
+### Verified
+- [x] `desktop/icons/icon-1024.png` exists (1MB source)
+- [x] `desktop/icons/icon.icns` exists (1.8MB macOS icon)
+- [x] `desktop/icons/icon.iconset/` has all sizes
+- [x] electron-builder config references `icons/icon.icns`
+- [x] Type check passes
+
+### Notes
+- macOS Dock icon only shows in packaged builds (not in dev mode)
+- Icon is configured in both BrowserWindow (for dev) and electron-builder (for .app)
+- Source JPEG kept in repo root (`HRC Icon.jpeg`) for reference
+- Created `desktop/src/types/detect-port.d.ts` as Phase 3 prep (type declaration)
+
+### Next Session Should
+- Start with: Phase 3, Task 1 - Implement `findAvailablePort()` in electron-main.ts
+- Reference: `docs/desktop/CODE_EXAMPLES.md` section 2 has full implementation
+- Type declaration already created at `desktop/src/types/detect-port.d.ts`
+- Be aware of: Go one task at a time per session protocol
+
+---
+
 ## Session 2025-12-01 (Phase 1 Complete)
 
 **Phase:** 1 (Electron Scaffolding)

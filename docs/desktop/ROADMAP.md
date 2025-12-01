@@ -160,8 +160,8 @@ Add issue to [KNOWN_ISSUES.md](./KNOWN_ISSUES.md) and move to next independent t
 
 ### Tasks
 
-- [ ] Create/obtain 1024x1024 source icon (PNG, no transparency)
-- [ ] Generate .icns for macOS
+- [x] Create/obtain 1024x1024 source icon (PNG, no transparency) *(completed 2025-12-01)*
+- [x] Generate .icns for macOS *(completed 2025-12-01)*
   ```bash
   mkdir icon.iconset
   sips -z 16 16     icon-1024.png --out icon.iconset/icon_16x16.png
@@ -176,12 +176,12 @@ Add issue to [KNOWN_ISSUES.md](./KNOWN_ISSUES.md) and move to next independent t
   sips -z 1024 1024 icon-1024.png --out icon.iconset/icon_512x512@2x.png
   iconutil -c icns icon.iconset -o desktop/icons/icon.icns
   ```
-- [ ] Test icon appears in Electron app
+- [x] Test icon appears in Electron app *(completed 2025-12-01)*
 
 ### Deliverables
 
-- [ ] `desktop/icons/icon.icns`
-- [ ] `desktop/icons/icon.png` (source)
+- [x] `desktop/icons/icon.icns` *(completed 2025-12-01)*
+- [x] `desktop/icons/icon-1024.png` (source) *(completed 2025-12-01)*
 
 ---
 

@@ -4,7 +4,7 @@
     "description": "Feature tracking for desktop app implementation. Status: not-started | in-progress | pass | fail | blocked",
     "lastUpdated": "2025-12-01",
     "totalFeatures": 45,
-    "passing": 9,
+    "passing": 12,
     "failing": 1,
     "inProgress": 0
   },
@@ -23,9 +23,9 @@
     "type-check-passes": { "status": "pass", "verified": "2025-12-01", "notes": "npm run type-check passes in desktop/" }
   },
   "phase-2": {
-    "icon-source-created": { "status": "not-started", "notes": "1024x1024 PNG source icon" },
-    "icns-generated": { "status": "not-started", "notes": "desktop/icons/icon.icns for macOS" },
-    "icon-visible-in-app": { "status": "not-started", "notes": "Icon shows in Dock and Finder" }
+    "icon-source-created": { "status": "pass", "verified": "2025-12-01", "notes": "1024x1024 PNG at desktop/icons/icon-1024.png" },
+    "icns-generated": { "status": "pass", "verified": "2025-12-01", "notes": "desktop/icons/icon.icns (1.8MB) with all sizes" },
+    "icon-visible-in-app": { "status": "pass", "verified": "2025-12-01", "notes": "Icon configured in BrowserWindow; shows in packaged builds" }
   },
   "phase-3": {
     "next-server-starts": { "status": "not-started", "notes": "Next.js starts as child process" },
