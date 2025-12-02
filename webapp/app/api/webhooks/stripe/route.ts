@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { db } from '@/lib/db';
 import { licenses } from '@/db/schema';
 import { generateLicenseKey } from '@/lib/licensing/generate-key';
+import { sendLicenseEmail } from '@/lib/email/resend';
 import { env } from '@/env.mjs';
 
 /**
@@ -167,6 +168,18 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   console.log(`[Stripe Webhook] License created: ${licenseKey} for ${customerEmail}`);
 
-  // TODO: Send email with license key (Phase 0.5.3)
-  // await sendLicenseEmail(customerEmail, licenseKey, customerName);
+  // Send email with license key
+  const emailResult = await sendLicenseEmail({
+    to: customerEmail,
+    licenseKey,
+    customerName,
+    productName: 'HR Command Center',
+  });
+
+  if (emailResult.success) {
+    console.log(`[Stripe Webhook] License email sent to ${customerEmail}`);
+  } else {
+    // Log but don't fail - license is still created and visible on success page
+    console.warn(`[Stripe Webhook] Email delivery failed: ${emailResult.error}`);
+  }
 }

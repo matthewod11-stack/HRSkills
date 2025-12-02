@@ -12,6 +12,69 @@ Most recent session should be first.
 Use the template from SESSION_PROTOCOL.md
 -->
 
+## Session 2025-12-02 (Phase 0.5 - Email Delivery Setup)
+
+**Phase:** 0.5 (Payment & Licensing)
+**Focus:** Set up email delivery for license keys after purchase
+
+### Completed
+- [x] Chose Resend as email provider (modern API, 100 emails/day free)
+- [x] Installed `resend` npm package
+- [x] Added `RESEND_API_KEY` to `env.mjs` (server schema + runtimeEnv)
+- [x] Created `lib/email/resend.ts` email service
+  - Professional HTML email template with amber branding
+  - Plain text fallback for email clients
+  - `sendLicenseEmail()` function with error handling
+- [x] Integrated email sending with Stripe webhook
+  - Sends license key email after successful checkout
+  - Non-blocking (logs warning if email fails, doesn't fail webhook)
+- [x] Tested Resend API connection (email sent successfully)
+- [x] Verified `npm run build` passes
+
+### Files Created
+- `webapp/lib/email/resend.ts` — Email service with license template
+
+### Files Modified
+- `webapp/env.mjs` — Added `RESEND_API_KEY` variable
+- `webapp/app/api/webhooks/stripe/route.ts` — Added email sending after license creation
+
+### Environment Variables Added
+```bash
+RESEND_API_KEY=re_...  # Resend API key
+```
+
+### Verification
+- [x] Resend SDK installed successfully
+- [x] Test email sent via Resend sandbox
+- [x] License email template renders correctly
+- [x] Build passes with all changes
+
+### Production Note
+For production email delivery, verify `foundryhr.com` domain in Resend Dashboard:
+1. Go to resend.com → Domains → Add Domain
+2. Add DNS records (DKIM, SPF)
+3. Update `FROM_EMAIL` in `lib/email/resend.ts` to use verified domain
+
+### Phase 0.5 Status
+**Email delivery complete!** Phase 0.5 remaining items:
+- [x] Email delivery for license keys ✅
+- [ ] Verify domain for production emails (foundryhr.com)
+- [ ] Client-side license storage (Phase 4/6 - desktop app)
+- [ ] Full webhook testing (deploy to Vercel or use Stripe CLI)
+
+### Next Session Should
+- **Check Resend domain verification** — SPF propagated but Resend cache delayed. Click Verify in Resend dashboard.
+- Once verified, test email sending: `npx tsx -e "...send test email..."`
+- **Proceed to Phase 4 (Secure IPC)** once email confirmed working
+- Note: MX record for `send` subdomain couldn't be added (Namecheap hides MX when Gmail configured) — not critical for sending
+
+### DNS Status at Session End
+- DKIM: ✅ Verified
+- SPF: Propagated (dig confirms) but Resend shows "Pending" — cache issue
+- MX (send subdomain): Not added — Namecheap limitation
+
+---
+
 ## Session 2025-12-02 (Phase 0.5 - Stripe Checkout Integration)
 
 **Phase:** 0.5 (Payment & Licensing)

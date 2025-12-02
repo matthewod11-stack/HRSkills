@@ -4,7 +4,7 @@
     "description": "Feature tracking for desktop app implementation. Status: not-started | in-progress | pass | fail | blocked",
     "lastUpdated": "2025-12-02",
     "totalFeatures": 52,
-    "passing": 28,
+    "passing": 29,
     "failing": 1,
     "inProgress": 0
   },
@@ -47,7 +47,7 @@
     "license-key-generation": { "status": "pass", "verified": "2025-12-02", "notes": "HRCC-XXXX-XXXX-XXXX-XXXX format" },
     "license-storage-local": { "status": "not-started", "notes": "License stored in config.json" },
     "offline-grace-period": { "status": "not-started", "notes": "Works offline after initial validation" },
-    "email-delivery": { "status": "not-started", "notes": "License key sent via email after purchase" }
+    "email-delivery": { "status": "pass", "verified": "2025-12-02", "notes": "Resend integration with HTML template, tested via sandbox" }
   },
   "phase-4": {
     "ipc-handlers-implemented": { "status": "not-started", "notes": "All handlers in electron-main.ts" },

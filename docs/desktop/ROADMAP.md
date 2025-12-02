@@ -254,9 +254,9 @@ Add issue to [KNOWN_ISSUES.md](./KNOWN_ISSUES.md) and move to next independent t
 
 ### 0.5.3 Email Setup
 
-- [ ] Choose email provider (SendGrid, Resend, or Postmark)
-- [ ] Create purchase confirmation email template
-- [ ] Test email delivery with license key
+- [x] Choose email provider (SendGrid, Resend, or Postmark) *(Resend - 2025-12-02)*
+- [x] Create purchase confirmation email template *(HTML + plain text - 2025-12-02)*
+- [x] Test email delivery with license key *(Resend sandbox test passed - 2025-12-02)*
 
 ### Deliverables
 
@@ -265,7 +265,7 @@ Add issue to [KNOWN_ISSUES.md](./KNOWN_ISSUES.md) and move to next independent t
 - [x] License validation API deployed *(code complete)*
 - [x] Purchase success page live *(completed 2025-12-02)*
 - [x] Purchase cancelled page live *(completed 2025-12-02)*
-- [ ] Email template working
+- [x] Email template working *(Resend integration - 2025-12-02)*
 
 ### Pause Point 0.5A
 **Action Required:** Complete test purchase flow end-to-end

@@ -97,6 +97,9 @@ export const env = createEnv({
     STRIPE_PRODUCT_ID: z.string().optional(), // prod_...
     STRIPE_PRICE_ID: z.string().optional(), // price_... (optional, can look up from product)
 
+    // Email (Resend for license delivery)
+    RESEND_API_KEY: z.string().optional(), // re_...
+
     // Build-time (also used in runtime)
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   },
@@ -250,6 +253,9 @@ export const env = createEnv({
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
     STRIPE_PRODUCT_ID: process.env.STRIPE_PRODUCT_ID,
     STRIPE_PRICE_ID: process.env.STRIPE_PRICE_ID,
+
+    // Email (Resend)
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
   },
 
   /**
