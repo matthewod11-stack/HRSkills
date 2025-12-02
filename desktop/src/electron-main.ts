@@ -1,11 +1,14 @@
-// Electron main process - minimal scaffold
-// Full implementation will be added in Phase 3
+// Electron main process
+// Phase 3: Next.js integration complete
+// Phase 4: Secure IPC implementation
 
-import { app, BrowserWindow, dialog } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
 import path from 'path'
 import { spawn, ChildProcess } from 'child_process'
 import fs from 'fs-extra'
 import detectPort from 'detect-port'
+import keytar from 'keytar'
+import { z } from 'zod'
 
 // ============================================================================
 // CONSTANTS
@@ -14,6 +17,14 @@ import detectPort from 'detect-port'
 const DEFAULT_PORT = 3000
 const SERVER_STARTUP_TIMEOUT = 30000 // 30 seconds
 const SERVER_POLL_INTERVAL = 500 // 500ms
+const SERVICE_NAME = 'HR Command Center' // For Keychain storage
+
+// ============================================================================
+// ZOD VALIDATION SCHEMAS (for IPC input validation)
+// ============================================================================
+
+const exportFormatSchema = z.enum(['json', 'csv'])
+const providerSchema = z.enum(['anthropic', 'openai'])
 
 // ============================================================================
 // GLOBAL STATE
@@ -222,6 +233,176 @@ export {
 }
 
 // ============================================================================
+// CONFIG MANAGEMENT
+// ============================================================================
+
+interface AppConfig {
+  licenseKey?: string
+  licenseValidated?: boolean
+  aiProviderConfigured?: boolean
+  setupComplete?: boolean
+}
+
+async function getConfig(): Promise<AppConfig> {
+  const configPath = path.join(app.getPath('userData'), 'config.json')
+
+  if (!await fs.pathExists(configPath)) {
+    return {}
+  }
+
+  try {
+    return await fs.readJson(configPath)
+  } catch {
+    return {}
+  }
+}
+
+async function saveConfig(updates: Partial<AppConfig>): Promise<void> {
+  const configPath = path.join(app.getPath('userData'), 'config.json')
+  const existing = await getConfig()
+  await fs.writeJson(configPath, { ...existing, ...updates }, { spaces: 2 })
+}
+
+// ============================================================================
+// IPC HANDLERS (Secure bridge between renderer and main process)
+// ============================================================================
+
+function setupIpcHandlers(): void {
+  console.log('[IPC] Setting up handlers...')
+
+  // --- App Info ---
+  ipcMain.handle('app:version', () => app.getVersion())
+  ipcMain.handle('app:dataPath', () => app.getPath('userData'))
+  ipcMain.handle('app:isPackaged', () => app.isPackaged)
+
+  // --- Config Operations ---
+  ipcMain.handle('config:get', async () => {
+    return await getConfig()
+  })
+
+  ipcMain.handle('config:set', async (_, updates: unknown) => {
+    // Basic validation - updates should be an object
+    if (typeof updates !== 'object' || updates === null) {
+      throw new Error('Invalid config updates')
+    }
+    await saveConfig(updates as Partial<AppConfig>)
+    return true
+  })
+
+  // --- Keychain Operations (secure API key storage) ---
+  ipcMain.handle('keychain:store', async (_, provider: unknown, key: unknown) => {
+    try {
+      const validatedProvider = providerSchema.parse(provider)
+      if (typeof key !== 'string' || key.length < 10) {
+        throw new Error('Invalid API key')
+      }
+      await keytar.setPassword(SERVICE_NAME, `${validatedProvider}-api-key`, key)
+      console.log(`[Keychain] Stored API key for ${validatedProvider}`)
+      return true
+    } catch (error) {
+      console.error('[Keychain] Store error:', error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('keychain:retrieve', async (_, provider: unknown) => {
+    try {
+      const validatedProvider = providerSchema.parse(provider)
+      const key = await keytar.getPassword(SERVICE_NAME, `${validatedProvider}-api-key`)
+      return key
+    } catch (error) {
+      console.error('[Keychain] Retrieve error:', error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('keychain:delete', async (_, provider: unknown) => {
+    try {
+      const validatedProvider = providerSchema.parse(provider)
+      const deleted = await keytar.deletePassword(SERVICE_NAME, `${validatedProvider}-api-key`)
+      console.log(`[Keychain] Deleted API key for ${validatedProvider}: ${deleted}`)
+      return deleted
+    } catch (error) {
+      console.error('[Keychain] Delete error:', error)
+      throw error
+    }
+  })
+
+  // --- Database Operations ---
+  ipcMain.handle('db:backup', async () => {
+    const dbPath = path.join(app.getPath('userData'), 'database', 'hrskills.db')
+    const backupDir = path.join(app.getPath('userData'), 'backups')
+
+    if (!await fs.pathExists(dbPath)) {
+      console.log('[Backup] No database to backup')
+      return null
+    }
+
+    try {
+      await fs.ensureDir(backupDir)
+      const timestamp = new Date().toISOString().replace(/:/g, '-').split('.')[0]
+      const backupPath = path.join(backupDir, `hrskills-backup-${timestamp}.db`)
+
+      await fs.copy(dbPath, backupPath)
+      console.log(`[Backup] Created: ${backupPath}`)
+      return backupPath
+    } catch (error) {
+      console.error('[Backup] Failed:', error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('db:export', async (_, format: unknown) => {
+    try {
+      const validatedFormat = exportFormatSchema.parse(format)
+
+      const result = await dialog.showSaveDialog({
+        title: 'Export HR Data',
+        defaultPath: `hrskills-export-${Date.now()}.${validatedFormat}`,
+        filters: [{ name: validatedFormat.toUpperCase(), extensions: [validatedFormat] }]
+      })
+
+      if (result.canceled || !result.filePath) {
+        return null
+      }
+
+      // Note: Actual export logic will be implemented in Phase 5
+      // For now, return the selected path
+      return result.filePath
+    } catch (error) {
+      console.error('[Export] Error:', error)
+      throw error
+    }
+  })
+
+  // --- Window Controls ---
+  ipcMain.on('window:minimize', () => mainWindow?.minimize())
+  ipcMain.on('window:maximize', () => {
+    if (mainWindow?.isMaximized()) {
+      mainWindow.unmaximize()
+    } else {
+      mainWindow?.maximize()
+    }
+  })
+  ipcMain.on('window:close', () => mainWindow?.close())
+
+  // --- External URLs (security: only allow https) ---
+  ipcMain.handle('shell:openExternal', async (_, url: unknown) => {
+    if (typeof url !== 'string') {
+      throw new Error('Invalid URL')
+    }
+    // Only allow HTTPS URLs for security
+    if (!url.startsWith('https://')) {
+      throw new Error('Only HTTPS URLs are allowed')
+    }
+    await shell.openExternal(url)
+    return true
+  })
+
+  console.log('[IPC] Handlers ready')
+}
+
+// ============================================================================
 // WINDOW MANAGEMENT
 // ============================================================================
 
@@ -234,9 +415,50 @@ function createWindow(): void {
     icon: path.join(__dirname, '..', 'icons', 'icon-1024.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: true,
-      nodeIntegration: false,
+      // Security settings (Phase 4)
+      contextIsolation: true,     // Isolate renderer from Node.js
+      nodeIntegration: false,      // No direct Node.js access in renderer
+      sandbox: true,               // Run renderer in sandbox
+      webSecurity: true,           // Enable web security
+      allowRunningInsecureContent: false,
+      webviewTag: false,           // Disable <webview> tag
     },
+  })
+
+  // Content Security Policy (Phase 4)
+  mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [
+          "default-src 'self'; " +
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +  // Next.js requires inline scripts
+          "style-src 'self' 'unsafe-inline'; " +                  // Tailwind uses inline styles
+          "connect-src 'self' http://localhost:* https://api.anthropic.com https://api.openai.com https://api.stripe.com; " +
+          "img-src 'self' data: https:; " +
+          "font-src 'self' data:; " +
+          "frame-ancestors 'none';"
+        ]
+      }
+    })
+  })
+
+  // Disable DevTools in production
+  if (app.isPackaged) {
+    mainWindow.webContents.on('devtools-opened', () => {
+      console.log('[Security] DevTools blocked in production')
+      mainWindow?.webContents.closeDevTools()
+    })
+  }
+
+  // Handle external links - open in system browser
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('http://localhost')) {
+      return { action: 'allow' }
+    }
+    // Open external links in system browser
+    shell.openExternal(url)
+    return { action: 'deny' }
   })
 
   mainWindow.on('closed', () => {
@@ -261,6 +483,9 @@ function loadApp(): void {
 
 app.on('ready', async () => {
   console.log('[App] Ready, starting initialization...')
+
+  // Setup IPC handlers before creating window (Phase 4)
+  setupIpcHandlers()
 
   // Create the window first (shows while server starts)
   createWindow()
