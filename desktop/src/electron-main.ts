@@ -22,6 +22,7 @@ const SERVER_POLL_INTERVAL = 500 // 500ms
 let mainWindow: BrowserWindow | null = null
 let nextProcess: ChildProcess | null = null
 let serverPort: number = DEFAULT_PORT
+let isQuitting: boolean = false
 
 // ============================================================================
 // PORT MANAGEMENT
@@ -109,13 +110,16 @@ async function startNextServer(): Promise<void> {
   // Handle process errors
   nextProcess.on('error', (error) => {
     console.error('[Next.js] Process error:', error)
-    // handleServerCrash will be implemented in a later task
+    handleServerCrash(error)
   })
 
   // Handle process exit
   nextProcess.on('exit', (code, signal) => {
     console.log(`[Next.js] Exited with code ${code}, signal ${signal}`)
-    // Crash handling will be implemented in a later task
+    // Only treat as crash if exit code is non-zero and not during intentional quit
+    if (code !== 0 && code !== null && !isQuitting) {
+      handleServerCrash(new Error(`Next.js exited with code ${code}`))
+    }
   })
 }
 
@@ -168,12 +172,48 @@ function stopNextServer(): void {
   }
 }
 
+/**
+ * Handle Next.js server crash.
+ * Shows a dialog allowing the user to restart or quit.
+ * Only triggers for unexpected exits (not during intentional quit).
+ */
+function handleServerCrash(error: Error): void {
+  // Don't show dialog if we're intentionally quitting
+  if (isQuitting) {
+    console.log('[Server] Ignoring crash during quit')
+    return
+  }
+
+  console.error('[Server] Crash detected:', error.message)
+
+  const result = dialog.showMessageBoxSync({
+    type: 'error',
+    title: 'Server Error',
+    message: 'The application server has stopped unexpectedly.',
+    detail: 'Would you like to restart the application?',
+    buttons: ['Restart', 'Quit'],
+    defaultId: 0,
+  })
+
+  if (result === 0) {
+    // User chose Restart
+    console.log('[Server] User requested restart')
+    app.relaunch()
+    app.quit()
+  } else {
+    // User chose Quit
+    console.log('[Server] User chose to quit')
+    app.quit()
+  }
+}
+
 // Export for testing
 export {
   findAvailablePort,
   startNextServer,
   waitForServer,
   stopNextServer,
+  handleServerCrash,
   getWebappPath,
   DEFAULT_PORT,
   SERVER_STARTUP_TIMEOUT,
@@ -267,6 +307,11 @@ app.on('activate', async () => {
     createWindow()
     loadApp()
   }
+})
+
+app.on('before-quit', () => {
+  console.log('[App] Before quit - setting isQuitting flag')
+  isQuitting = true
 })
 
 app.on('will-quit', () => {

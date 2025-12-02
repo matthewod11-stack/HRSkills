@@ -91,6 +91,11 @@ export const env = createEnv({
     // CORS
     ALLOWED_ORIGIN: z.string().url().default('http://localhost:3000'),
 
+    // Stripe (Desktop App Licensing)
+    STRIPE_SECRET_KEY: z.string().optional(), // sk_live_... or sk_test_...
+    STRIPE_WEBHOOK_SECRET: z.string().optional(), // whsec_...
+    STRIPE_PRODUCT_ID: z.string().optional(), // prod_...
+
     // Build-time (also used in runtime)
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   },

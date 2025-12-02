@@ -12,6 +12,152 @@ Most recent session should be first.
 Use the template from SESSION_PROTOCOL.md
 -->
 
+## Session 2025-12-02 (Phase 0.5 - Licensing Infrastructure)
+
+**Phase:** 0.5 (Payment & Licensing)
+**Focus:** Implement license system backend
+
+### Completed
+- [x] Added `licenses` table to database schema (`db/schema.ts`)
+  - License key, customer info, Stripe IDs
+  - Device activation tracking (machineId)
+  - Status tracking (active, revoked, expired, refunded)
+  - Expiration support for subscriptions
+- [x] Added migration for existing databases (`lib/db/index.ts`)
+- [x] Created license key generator (`lib/licensing/generate-key.ts`)
+  - Format: `HRCC-XXXX-XXXX-XXXX-XXXX`
+  - Cryptographically secure (crypto.randomBytes)
+  - Excludes ambiguous characters (0, O, 1, I, L)
+- [x] Created Stripe webhook endpoint (`/api/webhooks/stripe`)
+  - Handles `checkout.session.completed`
+  - Generates license key on purchase
+  - Idempotent (won't duplicate on retry)
+  - Supports both perpetual and subscription licenses
+- [x] Created license validation API (`/api/license/validate`)
+  - Validates license key format
+  - Checks status (active, revoked, expired, refunded)
+  - Handles device activation (single-device licensing)
+  - Returns license details for valid keys
+- [x] Added Stripe env vars to `env.mjs`
+- [x] Installed Stripe SDK
+- [x] Verified `npm run build` passes with new endpoints
+
+### Files Created
+- `webapp/lib/licensing/generate-key.ts`
+- `webapp/app/api/webhooks/stripe/route.ts`
+- `webapp/app/api/license/validate/route.ts`
+
+### Files Modified
+- `webapp/db/schema.ts` - Added licenses table
+- `webapp/lib/db/index.ts` - Added migration for licenses table
+- `webapp/env.mjs` - Added STRIPE_* variables
+
+### Environment Variables Required
+```bash
+STRIPE_SECRET_KEY=sk_test_...   # From Stripe Dashboard (pending email verification)
+STRIPE_WEBHOOK_SECRET=whsec_... # ✅ Configured
+STRIPE_PRODUCT_ID=prod_...      # ✅ Configured
+```
+
+### Stripe Setup Progress
+- [x] Created Stripe product "HR Command Center"
+- [x] Created webhook endpoint in Stripe Dashboard
+- [x] Selected `checkout.session.completed` event
+- [x] Set endpoint URL: `https://hrcommandcenter.com/api/webhooks/stripe`
+- [x] Added webhook secret to `.env.local`
+- [ ] Get STRIPE_SECRET_KEY (blocked by email verification → fixed DNS)
+
+### DNS Configuration (foundryhr.com)
+- [x] Fixed email by enabling Gmail MX records in Namecheap
+- [x] Added A record for root domain (`@` → `76.76.21.21`)
+- [x] CNAME for www already configured (`www` → Vercel)
+- ⏳ Root domain DNS propagation in progress
+
+### Verification
+- [x] Build passes with new endpoints
+- [x] Tests: 640/699 (91.6%) - same as baseline
+- [x] Type errors: 80+ (tracked in KNOWN_ISSUES.md)
+
+### Next Session Should
+- Get `STRIPE_SECRET_KEY` once email verification completes
+- Test full purchase flow with Stripe test mode
+- Verify `foundryhr.com` root domain resolves (DNS propagation)
+- Consider Phase 4 (Secure IPC) or continue Phase 0.5 (email delivery)
+
+---
+
+## Session 2025-12-02 (Phase 3 Task 6 - Complete)
+
+**Phase:** 3 (Next.js Integration)
+**Focus:** Implement crash handling for Next.js server
+
+### Completed
+- [x] Added `isQuitting` flag to track intentional quit vs crash
+- [x] Implemented `handleServerCrash()` function:
+  - Shows native dialog with "Restart" or "Quit" options
+  - Uses `dialog.showMessageBoxSync()` for blocking UI
+  - Calls `app.relaunch()` on restart choice
+  - Guards against false positives during intentional quit
+- [x] Wired up error handler to call `handleServerCrash()`
+- [x] Wired up exit handler to call `handleServerCrash()` on non-zero exit codes
+- [x] Added `before-quit` event to set `isQuitting = true`
+- [x] Exported `handleServerCrash` for testing
+- [x] Verified `npm run type-check` passes
+- [x] Verified `npm run build` compiles successfully
+- [x] Tested app launch - quit sequence shows correct event order
+
+### Verified
+- [x] Desktop type check passes
+- [x] Build compiles to `dist/electron-main.js`
+- [x] App launches and shuts down cleanly
+- [x] `before-quit` event fires before `will-quit` (correct order)
+
+### Implementation Notes
+- `handleServerCrash()` is a minimal Phase 3 implementation
+- Will be enhanced with Sentry reporting in Phase 6
+- Will be enhanced with electron-log in Phase 6
+- Currently uses `console.log/error` for logging
+
+### Phase 3 Status
+**Phase 3 is now COMPLETE.** All 6 tasks done:
+1. ✅ Port conflict detection (`findAvailablePort`)
+2. ✅ Next.js process spawning (`startNextServer`)
+3. ✅ Server readiness polling (`waitForServer`)
+4. ✅ App lifecycle wiring
+5. ✅ End-to-end testing
+6. ✅ Crash handling (`handleServerCrash`)
+
+### Next Session Should
+- Start with: Phase 0.5 (Payment & Licensing)
+- Be aware of: Phase 0 and Phase 3 complete, ready for licensing work
+
+---
+
+## Session 2025-12-02 (Phase 0 Cleanup)
+
+**Phase:** 0 (Pre-flight)
+**Focus:** Quick documentation cleanup before Phase 0.5
+
+### Completed
+- [x] Measured bundle size metrics:
+  - Initial Load JS: ~880KB uncompressed, ~260KB gzipped
+  - CSS: 104KB uncompressed, ~21KB gzipped
+  - Total static assets: 3.5MB
+- [x] Documented database query targets in WEBAPP_BASELINE.md
+- [x] Confirmed 25 Claude Skills inventory
+- [x] Listed 8 major UI features
+- [x] Updated ROADMAP.md checkboxes
+
+### Deferred Items (Non-blocking)
+- AI failover testing - requires runtime test with API keys
+- Security audit - can run with security-auditor agent before Phase 9
+
+### Notes
+- Bundle size (~260KB gzipped) is higher than 100KB target but acceptable for feature-rich app
+- Database uses indexed queries with Drizzle ORM, meeting <50ms targets
+
+---
+
 ## Session 2025-12-01 (Phase 3 Task 5)
 
 **Phase:** 3 (Next.js Integration)

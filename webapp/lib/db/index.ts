@@ -241,6 +241,28 @@ function initializeSchema(sqlite: InstanceType<typeof Database>) {
         user_agent TEXT,
         navigation_type TEXT
       );
+
+      -- Licenses table (desktop app licensing)
+      CREATE TABLE IF NOT EXISTS licenses (
+        id TEXT PRIMARY KEY,
+        license_key TEXT NOT NULL UNIQUE,
+        customer_email TEXT NOT NULL,
+        customer_name TEXT,
+        stripe_session_id TEXT UNIQUE,
+        stripe_customer_id TEXT,
+        stripe_payment_intent_id TEXT,
+        product_id TEXT NOT NULL,
+        price_id TEXT,
+        license_type TEXT NOT NULL DEFAULT 'perpetual',
+        status TEXT NOT NULL DEFAULT 'active',
+        activation_status TEXT NOT NULL DEFAULT 'not_activated',
+        machine_id TEXT,
+        activated_at TEXT,
+        expires_at TEXT,
+        metadata_json TEXT,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
     `);
 
     // Create indexes
@@ -291,6 +313,12 @@ function initializeSchema(sqlite: InstanceType<typeof Database>) {
       CREATE INDEX IF NOT EXISTS idx_web_vitals_timestamp ON web_vitals_metrics(timestamp DESC);
       CREATE INDEX IF NOT EXISTS idx_web_vitals_metric_name ON web_vitals_metrics(metric_name);
       CREATE INDEX IF NOT EXISTS idx_web_vitals_rating ON web_vitals_metrics(rating);
+
+      -- License indexes
+      CREATE INDEX IF NOT EXISTS idx_licenses_license_key ON licenses(license_key);
+      CREATE INDEX IF NOT EXISTS idx_licenses_customer_email ON licenses(customer_email);
+      CREATE INDEX IF NOT EXISTS idx_licenses_status ON licenses(status);
+      CREATE INDEX IF NOT EXISTS idx_licenses_stripe_session ON licenses(stripe_session_id);
     `);
 
     console.log('[DB] Schema initialization complete');
@@ -375,6 +403,46 @@ function runMigrations(sqlite: InstanceType<typeof Database>) {
           CREATE INDEX IF NOT EXISTS idx_web_vitals_rating ON web_vitals_metrics(rating);
         `);
         console.log('[DB] Created indexes for web_vitals_metrics');
+      }
+
+      // Migration: Create licenses table if it doesn't exist (Phase 0.5 - Desktop licensing)
+      const licensesTable = sqlite
+        .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='licenses'")
+        .get();
+
+      if (!licensesTable) {
+        sqlite.exec(`
+          CREATE TABLE IF NOT EXISTS licenses (
+            id TEXT PRIMARY KEY,
+            license_key TEXT NOT NULL UNIQUE,
+            customer_email TEXT NOT NULL,
+            customer_name TEXT,
+            stripe_session_id TEXT UNIQUE,
+            stripe_customer_id TEXT,
+            stripe_payment_intent_id TEXT,
+            product_id TEXT NOT NULL,
+            price_id TEXT,
+            license_type TEXT NOT NULL DEFAULT 'perpetual',
+            status TEXT NOT NULL DEFAULT 'active',
+            activation_status TEXT NOT NULL DEFAULT 'not_activated',
+            machine_id TEXT,
+            activated_at TEXT,
+            expires_at TEXT,
+            metadata_json TEXT,
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+          );
+        `);
+        console.log('[DB] Created table: licenses');
+
+        // Create indexes for licenses
+        sqlite.exec(`
+          CREATE INDEX IF NOT EXISTS idx_licenses_license_key ON licenses(license_key);
+          CREATE INDEX IF NOT EXISTS idx_licenses_customer_email ON licenses(customer_email);
+          CREATE INDEX IF NOT EXISTS idx_licenses_status ON licenses(status);
+          CREATE INDEX IF NOT EXISTS idx_licenses_stripe_session ON licenses(stripe_session_id);
+        `);
+        console.log('[DB] Created indexes for licenses');
       }
     }
 

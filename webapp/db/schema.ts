@@ -309,6 +309,46 @@ export const aiQuotaUsage = sqliteTable(
 );
 
 // ============================================================================
+// LICENSES TABLE (Desktop App Licensing)
+// ============================================================================
+export const licenses = sqliteTable('licenses', {
+  id: text('id').primaryKey(), // UUID
+  licenseKey: text('license_key').notNull().unique(), // HRCC-XXXX-XXXX-XXXX-XXXX format
+
+  // Customer information
+  customerEmail: text('customer_email').notNull(),
+  customerName: text('customer_name'),
+
+  // Stripe integration
+  stripeSessionId: text('stripe_session_id').unique(), // checkout.session.completed ID
+  stripeCustomerId: text('stripe_customer_id'),
+  stripePaymentIntentId: text('stripe_payment_intent_id'),
+
+  // License details
+  productId: text('product_id').notNull(), // Stripe product ID
+  priceId: text('price_id'), // Stripe price ID
+  licenseType: text('license_type').notNull().default('perpetual'), // perpetual, subscription
+
+  // Status tracking
+  status: text('status').notNull().default('active'), // active, revoked, expired, refunded
+  activationStatus: text('activation_status').notNull().default('not_activated'), // not_activated, activated
+
+  // Device activation (for single-device licensing)
+  machineId: text('machine_id'), // Hardware fingerprint from desktop app
+  activatedAt: text('activated_at'), // ISO timestamp when first activated
+
+  // Expiration (for subscriptions)
+  expiresAt: text('expires_at'), // ISO timestamp, null for perpetual
+
+  // Metadata
+  metadataJson: text('metadata_json'), // Additional info (purchase source, campaign, etc.)
+
+  // Timestamps
+  createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+// ============================================================================
 // INDEXES FOR QUERY PERFORMANCE
 // ============================================================================
 
@@ -383,6 +423,14 @@ export const webVitalsIndexes = {
   ratingIdx: sql`CREATE INDEX IF NOT EXISTS idx_web_vitals_rating ON web_vitals_metrics(rating)`,
 };
 
+// License indexes
+export const licensesIndexes = {
+  licenseKeyIdx: sql`CREATE INDEX IF NOT EXISTS idx_licenses_license_key ON licenses(license_key)`,
+  customerEmailIdx: sql`CREATE INDEX IF NOT EXISTS idx_licenses_customer_email ON licenses(customer_email)`,
+  statusIdx: sql`CREATE INDEX IF NOT EXISTS idx_licenses_status ON licenses(status)`,
+  stripeSessionIdx: sql`CREATE INDEX IF NOT EXISTS idx_licenses_stripe_session ON licenses(stripe_session_id)`,
+};
+
 // ============================================================================
 // TYPE EXPORTS (for TypeScript type inference)
 // ============================================================================
@@ -422,3 +470,6 @@ export type NewAIQuotaUsage = typeof aiQuotaUsage.$inferInsert;
 
 export type WebVitalsMetric = typeof webVitalsMetrics.$inferSelect;
 export type NewWebVitalsMetric = typeof webVitalsMetrics.$inferInsert;
+
+export type License = typeof licenses.$inferSelect;
+export type NewLicense = typeof licenses.$inferInsert;

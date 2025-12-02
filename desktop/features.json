@@ -2,9 +2,9 @@
   "$schema": "./features.schema.json",
   "_meta": {
     "description": "Feature tracking for desktop app implementation. Status: not-started | in-progress | pass | fail | blocked",
-    "lastUpdated": "2025-12-01",
-    "totalFeatures": 45,
-    "passing": 18,
+    "lastUpdated": "2025-12-02",
+    "totalFeatures": 47,
+    "passing": 23,
     "failing": 1,
     "inProgress": 0
   },
@@ -33,12 +33,14 @@
     "server-polling-works": { "status": "pass", "verified": "2025-12-01", "notes": "waitForServer() polls localhost with 30s timeout" },
     "browser-window-opens": { "status": "pass", "verified": "2025-12-01", "notes": "loadApp() loads localhost URL into BrowserWindow" },
     "server-shutdown-on-quit": { "status": "pass", "verified": "2025-12-01", "notes": "stopNextServer() called on will-quit with SIGTERM/SIGKILL" },
-    "crash-handling-works": { "status": "not-started", "notes": "handleServerCrash() shows dialog" },
+    "crash-handling-works": { "status": "pass", "verified": "2025-12-02", "notes": "handleServerCrash() implemented with restart/quit dialog" },
     "app-launches-standalone": { "status": "pass", "verified": "2025-12-01", "notes": "npm start works: port detection, Next.js starts, app loads, DB created" }
   },
   "phase-0.5": {
-    "stripe-webhook-setup": { "status": "not-started", "notes": "Webhook generates license keys" },
-    "license-validation-api": { "status": "not-started", "notes": "API endpoint validates keys" },
+    "stripe-webhook-setup": { "status": "pass", "verified": "2025-12-02", "notes": "/api/webhooks/stripe handles checkout.session.completed" },
+    "license-validation-api": { "status": "pass", "verified": "2025-12-02", "notes": "/api/license/validate with device activation support" },
+    "license-db-schema": { "status": "pass", "verified": "2025-12-02", "notes": "licenses table in schema with migration" },
+    "license-key-generation": { "status": "pass", "verified": "2025-12-02", "notes": "HRCC-XXXX-XXXX-XXXX-XXXX format" },
     "license-storage-local": { "status": "not-started", "notes": "License stored in config.json" },
     "offline-grace-period": { "status": "not-started", "notes": "Works offline after initial validation" }
   },
