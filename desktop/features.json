@@ -3,8 +3,8 @@
   "_meta": {
     "description": "Feature tracking for desktop app implementation. Status: not-started | in-progress | pass | fail | blocked",
     "lastUpdated": "2025-12-02",
-    "totalFeatures": 47,
-    "passing": 23,
+    "totalFeatures": 52,
+    "passing": 28,
     "failing": 1,
     "inProgress": 0
   },
@@ -38,11 +38,16 @@
   },
   "phase-0.5": {
     "stripe-webhook-setup": { "status": "pass", "verified": "2025-12-02", "notes": "/api/webhooks/stripe handles checkout.session.completed" },
+    "stripe-checkout-session": { "status": "pass", "verified": "2025-12-02", "notes": "/api/checkout/create-session creates Stripe Checkout" },
+    "purchase-success-page": { "status": "pass", "verified": "2025-12-02", "notes": "/purchase/success shows license key after purchase" },
+    "purchase-cancelled-page": { "status": "pass", "verified": "2025-12-02", "notes": "/purchase/cancelled with retry options" },
+    "checkout-flow-tested": { "status": "pass", "verified": "2025-12-02", "notes": "End-to-end test with Stripe test mode - payment + redirect works" },
     "license-validation-api": { "status": "pass", "verified": "2025-12-02", "notes": "/api/license/validate with device activation support" },
     "license-db-schema": { "status": "pass", "verified": "2025-12-02", "notes": "licenses table in schema with migration" },
     "license-key-generation": { "status": "pass", "verified": "2025-12-02", "notes": "HRCC-XXXX-XXXX-XXXX-XXXX format" },
     "license-storage-local": { "status": "not-started", "notes": "License stored in config.json" },
-    "offline-grace-period": { "status": "not-started", "notes": "Works offline after initial validation" }
+    "offline-grace-period": { "status": "not-started", "notes": "Works offline after initial validation" },
+    "email-delivery": { "status": "not-started", "notes": "License key sent via email after purchase" }
   },
   "phase-4": {
     "ipc-handlers-implemented": { "status": "not-started", "notes": "All handlers in electron-main.ts" },

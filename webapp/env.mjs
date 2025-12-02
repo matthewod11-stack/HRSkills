@@ -95,6 +95,7 @@ export const env = createEnv({
     STRIPE_SECRET_KEY: z.string().optional(), // sk_live_... or sk_test_...
     STRIPE_WEBHOOK_SECRET: z.string().optional(), // whsec_...
     STRIPE_PRODUCT_ID: z.string().optional(), // prod_...
+    STRIPE_PRICE_ID: z.string().optional(), // price_... (optional, can look up from product)
 
     // Build-time (also used in runtime)
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
@@ -243,6 +244,12 @@ export const env = createEnv({
     // Vercel Analytics
     NEXT_PUBLIC_VERCEL_ANALYTICS_ENABLED: process.env.NEXT_PUBLIC_VERCEL_ANALYTICS_ENABLED,
     NEXT_PUBLIC_SPEED_INSIGHTS_ENABLED: process.env.NEXT_PUBLIC_SPEED_INSIGHTS_ENABLED,
+
+    // Stripe (Desktop App Licensing)
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+    STRIPE_PRODUCT_ID: process.env.STRIPE_PRODUCT_ID,
+    STRIPE_PRICE_ID: process.env.STRIPE_PRICE_ID,
   },
 
   /**

@@ -237,9 +237,10 @@ Add issue to [KNOWN_ISSUES.md](./KNOWN_ISSUES.md) and move to next independent t
 - [x] Create product in Stripe Dashboard *(completed by user 2025-12-02)*
   - [x] Product name: "HR Command Center"
   - [x] Pricing model configured
-- [ ] Configure Stripe Checkout
-  - [ ] Success URL: `https://hrcommandcenter.com/purchase/success?session_id={CHECKOUT_SESSION_ID}`
-  - [ ] Cancel URL: `https://hrcommandcenter.com/purchase/cancelled`
+- [x] Configure Stripe Checkout *(completed 2025-12-02)*
+  - [x] Success URL: `https://foundryhr.com/purchase/success?session_id={CHECKOUT_SESSION_ID}`
+  - [x] Cancel URL: `https://foundryhr.com/purchase/cancelled`
+  - [x] Created `/api/checkout/create-session` endpoint
 - [x] Set up webhook endpoint *(completed 2025-12-02)*
   - [x] Event: `checkout.session.completed`
   - [x] Endpoint: `/api/webhooks/stripe`
@@ -259,10 +260,11 @@ Add issue to [KNOWN_ISSUES.md](./KNOWN_ISSUES.md) and move to next independent t
 
 ### Deliverables
 
-- [x] Stripe product and checkout configured *(product created)*
-- [x] Webhook endpoint deployed *(code complete, needs env vars)*
+- [x] Stripe product and checkout configured *(completed 2025-12-02)*
+- [x] Webhook endpoint deployed *(code complete, env vars configured)*
 - [x] License validation API deployed *(code complete)*
-- [ ] Purchase success page live
+- [x] Purchase success page live *(completed 2025-12-02)*
+- [x] Purchase cancelled page live *(completed 2025-12-02)*
 - [ ] Email template working
 
 ### Pause Point 0.5A

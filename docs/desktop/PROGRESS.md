@@ -12,6 +12,74 @@ Most recent session should be first.
 Use the template from SESSION_PROTOCOL.md
 -->
 
+## Session 2025-12-02 (Phase 0.5 - Stripe Checkout Integration)
+
+**Phase:** 0.5 (Payment & Licensing)
+**Focus:** Complete Stripe Checkout flow with success/cancel pages
+
+### Completed
+- [x] Added Stripe env vars to `runtimeEnv` in `env.mjs` (was defined but not mapped)
+- [x] Added `STRIPE_PRICE_ID` optional env var for direct price configuration
+- [x] Created `/api/checkout/create-session` endpoint
+  - Creates Stripe Checkout session
+  - Supports both POST (returns JSON) and GET (redirects)
+  - Dynamically looks up price from product if `STRIPE_PRICE_ID` not set
+  - Pre-fills customer email if provided
+- [x] Created `/purchase/success` page
+  - Server component that queries license by `session_id`
+  - Shows license key with copy button
+  - Shows "Processing" state if webhook hasn't completed yet
+  - Displays next steps and download link
+- [x] Created `/purchase/cancelled` page
+  - User-friendly cancel message
+  - "Try Again" button to restart checkout
+  - Support contact link
+- [x] Verified `npm run build` passes with all new routes
+
+### Files Created
+- `webapp/app/api/checkout/create-session/route.ts`
+- `webapp/app/purchase/success/page.tsx`
+- `webapp/app/purchase/success/CopyButton.tsx` (client component)
+- `webapp/app/purchase/success/RefreshButton.tsx` (client component)
+- `webapp/app/purchase/cancelled/page.tsx`
+
+### Files Modified
+- `webapp/env.mjs` - Added Stripe vars to runtimeEnv, added STRIPE_PRICE_ID
+
+### Stripe Configuration Status
+All Stripe env vars are now configured in `.env.local`:
+- [x] `STRIPE_SECRET_KEY` - Live key configured
+- [x] `STRIPE_WEBHOOK_SECRET` - Configured
+- [x] `STRIPE_PRODUCT_ID` - Configured (test: prod_TX5l3iVKqCsObo)
+- [x] `STRIPE_PRICE_ID` - Configured (price_1Sa1Zz85EbiHTzCllARN255E)
+
+### Verification
+- [x] Build passes with new endpoints
+- [x] New routes visible in build output:
+  - `/api/checkout/create-session` (dynamic)
+  - `/purchase/success` (dynamic)
+  - `/purchase/cancelled` (static)
+- [x] **Live test successful:**
+  - Checkout redirects to Stripe Checkout
+  - Test payment completes ($99 with test card 4242...)
+  - Success page renders correctly ("Processing Your Order")
+  - Fixed origin detection bug (was redirecting to foundryhr.com instead of localhost)
+
+### Phase 0.5 Status
+**Checkout flow complete.** Remaining items:
+- [x] Test full purchase flow with Stripe test mode ✅
+- [ ] Set up email delivery for license keys (SendGrid/Resend)
+- [ ] Client-side license storage (Phase 4/6 - desktop app)
+- [ ] Webhook testing (needs Stripe CLI or public URL deployment)
+
+### Next Session Should
+- Set up email delivery for license keys (so customers get their key via email)
+- OR deploy to Vercel to test webhooks end-to-end (license key appears on success page)
+- OR proceed to Phase 4 (Secure IPC) if email/webhook can wait
+- Consider installing Stripe CLI for local webhook testing: `brew install stripe/stripe-cli/stripe`
+
+---
+
 ## Session 2025-12-02 (Phase 0.5 - Licensing Infrastructure)
 
 **Phase:** 0.5 (Payment & Licensing)
