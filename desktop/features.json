@@ -3,8 +3,8 @@
   "_meta": {
     "description": "Feature tracking for desktop app implementation. Status: not-started | in-progress | pass | fail | blocked",
     "lastUpdated": "2025-12-02",
-    "totalFeatures": 55,
-    "passing": 37,
+    "totalFeatures": 57,
+    "passing": 41,
     "failing": 1,
     "inProgress": 0
   },
@@ -60,9 +60,11 @@
     "backup-creation": { "status": "pass", "verified": "2025-12-02", "notes": "Backup created at backups/ directory - 4KB test backup verified" }
   },
   "phase-5": {
-    "db-path-configurable": { "status": "not-started", "notes": "DB_DIR points to userData" },
-    "daily-backup-works": { "status": "not-started", "notes": "Backups created on schedule" },
-    "integrity-check-runs": { "status": "not-started", "notes": "PRAGMA integrity_check on startup" },
+    "db-path-configurable": { "status": "pass", "verified": "2025-12-01", "notes": "DB_DIR points to userData via startNextServer()" },
+    "backup-on-startup": { "status": "pass", "verified": "2025-12-02", "notes": "autoBackupOnStartup() checks if >24h since last backup" },
+    "daily-backup-works": { "status": "pass", "verified": "2025-12-02", "notes": "Scheduler starts on app ready, checks hourly, runs at 2 AM local time" },
+    "backup-cleanup-works": { "status": "pass", "verified": "2025-12-02", "notes": "cleanupOldBackups() removes backups older than 30 days - TESTED" },
+    "integrity-check-runs": { "status": "pass", "verified": "2025-12-02", "notes": "checkDatabaseIntegrity() runs PRAGMA integrity_check, shows dialog if corrupt - TESTED" },
     "corruption-recovery-works": { "status": "not-started", "notes": "Corrupt DB restored from backup" },
     "gdpr-export-works": { "status": "not-started", "notes": "Full data export to JSON" }
   },

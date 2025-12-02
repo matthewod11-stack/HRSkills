@@ -12,6 +12,177 @@ Most recent session should be first.
 Use the template from SESSION_PROTOCOL.md
 -->
 
+## Session 2025-12-02 (Phase 5 - Database Integrity Check)
+
+**Phase:** 5 (Database Backup & Recovery)
+**Focus:** Implement PRAGMA integrity_check on startup
+
+### Completed
+- [x] Added `better-sqlite3` import to electron-main.ts
+- [x] Created `IntegrityCheckResult` interface
+- [x] Created `checkDatabaseIntegrity()` function:
+  - Opens database in readonly mode
+  - Runs `PRAGMA integrity_check`
+  - Returns `{ isHealthy: true, errors: [] }` if OK
+  - Returns `{ isHealthy: false, errors: [...] }` if corrupt
+- [x] Created `checkIntegrityOnStartup()` function:
+  - Skips if database doesn't exist
+  - Shows dialog if corruption detected with options: Restore/Continue/Quit
+  - Placeholder for restore functionality (next task)
+- [x] Integrated into app lifecycle after `loadApp()`
+- [x] Exported new functions
+- [x] Verified `npm run type-check` passes
+- [x] Verified `npm run build` passes
+
+### Testing Results
+| Test | Result |
+|------|--------|
+| Integrity check runs on startup | ✅ "[Integrity] Running PRAGMA integrity_check..." |
+| Healthy database returns OK | ✅ "[Integrity] Database is healthy" |
+| Type check passes | ✅ |
+| Build compiles | ✅ |
+
+### Implementation Notes
+- Opens database in `readonly` mode for safety during check
+- Uses `better-sqlite3` (already a dependency)
+- Non-blocking: runs after app loads
+- Dialog offers: Restore from Backup / Continue Anyway / Quit
+- Restore functionality is a placeholder for next task
+
+### Next Session Should
+- Implement corruption recovery (restore from backup)
+- This completes the integrity → detect → recover cycle
+
+---
+
+## Session 2025-12-02 (Phase 5 - Backup Cleanup)
+
+**Phase:** 5 (Database Backup & Recovery)
+**Focus:** Implement 30-day backup cleanup
+
+### Completed
+- [x] Created `cleanupOldBackups()` function:
+  - Parses backup filenames to extract date
+  - Deletes backups older than 30 days
+  - Logs each deletion and total count
+- [x] Added `BACKUP_RETENTION_DAYS` constant (30)
+- [x] Added `BACKUP_FILENAME_REGEX` for parsing filenames
+- [x] Integrated cleanup into all backup paths:
+  - `autoBackupOnStartup()` - after startup backup
+  - `checkScheduledBackup()` - after 2 AM backup
+  - `db:backup` IPC handler - after manual backup
+- [x] Exported new function and constant
+- [x] Verified with test: created fake 35-day-old backup, verified it was deleted
+
+### Testing Results
+| Test | Result |
+|------|--------|
+| Fake old backup (35 days) deleted | ✅ "[Cleanup] Deleted old backup: hrskills-backup-2025-10-28T00-00-00.db" |
+| Recent backups preserved | ✅ Only today's backups remain |
+| Type check passes | ✅ |
+| Build compiles | ✅ |
+
+### Implementation Notes
+- Cleanup runs **after** each successful backup (not on a separate schedule)
+- Uses filename parsing (YYYY-MM-DD) rather than file mtime for reliability
+- Non-blocking and error-tolerant (logs errors, doesn't crash app)
+- Skips non-backup files (files that don't match the naming pattern)
+
+### Next Session Should
+- Continue Phase 5: Implement PRAGMA integrity_check
+- Or implement corruption recovery (restore from backup)
+- Note: "Backup before migrations" requires webapp integration
+
+---
+
+## Session 2025-12-02 (Phase 5 - Daily Scheduled Backup)
+
+**Phase:** 5 (Database Backup & Recovery)
+**Focus:** Implement daily scheduled backup at 2 AM
+
+### Completed
+- [x] Added `lastScheduledBackupDate` field to AppConfig (YYYY-MM-DD format)
+- [x] Created `getTodayDateString()` helper function
+- [x] Created `checkScheduledBackup()` function:
+  - Checks if current hour equals backup hour (2 AM)
+  - Skips if already ran today (prevents duplicates)
+  - Creates backup and updates both config fields
+- [x] Created `startBackupSchedule()` function:
+  - Starts hourly interval timer
+  - Runs initial check immediately on startup
+- [x] Created `stopBackupSchedule()` function for cleanup
+- [x] Integrated into app lifecycle:
+  - `startBackupSchedule()` called after app loads
+  - `stopBackupSchedule()` called on will-quit
+- [x] Exported new functions for testing
+- [x] Verified `npm run type-check` passes
+- [x] Verified `npm run build` passes
+- [x] Verified scheduler starts on app launch
+
+### Testing Results
+| Test | Result |
+|------|--------|
+| Scheduler starts on app launch | ✅ "[ScheduledBackup] Starting scheduler (backup hour: 2:00)" |
+| Type check passes | ✅ |
+| Build compiles | ✅ |
+
+### Implementation Notes
+- Uses `setInterval` with 1-hour check interval (no external dependencies)
+- Uses local time (user's timezone) for 2 AM trigger
+- `lastScheduledBackupDate` (YYYY-MM-DD) ensures once-per-day execution
+- Timer cleaned up on app quit to prevent resource leaks
+
+### Next Session Should
+- Continue Phase 5: Implement backup before migrations
+- Or implement PRAGMA integrity_check for corruption detection
+- Or implement 30-day backup cleanup
+
+---
+
+## Session 2025-12-02 (Phase 5 - Automatic Backup on Startup)
+
+**Phase:** 5 (Database Backup & Recovery)
+**Focus:** Implement automatic backup when app starts if >24h since last backup
+
+### Completed
+- [x] Added `lastBackupTime` field to AppConfig interface
+- [x] Created `createBackup()` reusable function (refactored from IPC handler)
+- [x] Created `autoBackupOnStartup()` function:
+  - Reads last backup time from config.json
+  - Checks if 24+ hours have passed
+  - Skips if <24h since last backup
+  - Skips if no database exists yet
+  - Creates backup and updates config on success
+  - Non-blocking (doesn't delay app startup)
+- [x] Updated `db:backup` IPC handler to use `createBackup()` and update lastBackupTime
+- [x] Integrated `autoBackupOnStartup()` into `app.on('ready')` event
+- [x] Exported new functions for testing
+- [x] Verified `npm run type-check` passes
+- [x] Verified `npm run build` compiles successfully
+
+### Testing Results
+| Test | Result |
+|------|--------|
+| First startup (no previous backup) | ✅ Backup created |
+| Config updated with lastBackupTime | ✅ `"2025-12-02T23:22:28.161Z"` |
+| Second startup (<24h) | ✅ Skipped: "Last backup was 0h ago, skipping" |
+
+### Files Modified
+- `desktop/src/electron-main.ts` — Added auto-backup logic, refactored createBackup()
+
+### Implementation Notes
+- Auto-backup runs **after** app loads (non-blocking)
+- Uses existing `backups/` directory from Phase 4
+- `lastBackupTime` persisted in `config.json` alongside other app settings
+- Failure is logged but doesn't crash app (backup is non-critical)
+
+### Next Session Should
+- Continue Phase 5: Implement daily backup at 2 AM (scheduled backup)
+- Or implement PRAGMA integrity_check for corruption detection
+- Note: Manual backup IPC already exists from Phase 4
+
+---
+
 ## Session 2025-12-02 (Phase 4 - Secure IPC Implementation)
 
 **Phase:** 4 (Secure IPC)

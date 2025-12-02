@@ -9,6 +9,7 @@ import fs from 'fs-extra'
 import detectPort from 'detect-port'
 import keytar from 'keytar'
 import { z } from 'zod'
+import Database from 'better-sqlite3'
 
 // ============================================================================
 // CONSTANTS
@@ -230,6 +231,22 @@ export {
   SERVER_STARTUP_TIMEOUT,
   SERVER_POLL_INTERVAL,
   serverPort,
+  // Phase 5: Backup functions
+  createBackup,
+  autoBackupOnStartup,
+  AUTO_BACKUP_INTERVAL_MS,
+  // Phase 5: Scheduled backup functions
+  checkScheduledBackup,
+  startBackupSchedule,
+  stopBackupSchedule,
+  SCHEDULED_BACKUP_HOUR,
+  BACKUP_CHECK_INTERVAL_MS,
+  // Phase 5: Backup cleanup
+  cleanupOldBackups,
+  BACKUP_RETENTION_DAYS,
+  // Phase 5: Integrity check
+  checkDatabaseIntegrity,
+  checkIntegrityOnStartup,
 }
 
 // ============================================================================
@@ -241,6 +258,8 @@ interface AppConfig {
   licenseValidated?: boolean
   aiProviderConfigured?: boolean
   setupComplete?: boolean
+  lastBackupTime?: string  // ISO timestamp of last automatic backup
+  lastScheduledBackupDate?: string  // YYYY-MM-DD of last scheduled (2 AM) backup
 }
 
 async function getConfig(): Promise<AppConfig> {
@@ -261,6 +280,315 @@ async function saveConfig(updates: Partial<AppConfig>): Promise<void> {
   const configPath = path.join(app.getPath('userData'), 'config.json')
   const existing = await getConfig()
   await fs.writeJson(configPath, { ...existing, ...updates }, { spaces: 2 })
+}
+
+// ============================================================================
+// AUTOMATIC BACKUP (Phase 5)
+// ============================================================================
+
+const AUTO_BACKUP_INTERVAL_MS = 24 * 60 * 60 * 1000 // 24 hours in milliseconds
+
+/**
+ * Create a backup of the database.
+ * Reusable by both auto-backup and manual IPC handler.
+ * Returns the backup path if successful, null if no database exists.
+ */
+async function createBackup(): Promise<string | null> {
+  const dbPath = path.join(app.getPath('userData'), 'database', 'hrskills.db')
+  const backupDir = path.join(app.getPath('userData'), 'backups')
+
+  if (!await fs.pathExists(dbPath)) {
+    console.log('[Backup] No database to backup')
+    return null
+  }
+
+  await fs.ensureDir(backupDir)
+  const timestamp = new Date().toISOString().replace(/:/g, '-').split('.')[0]
+  const backupPath = path.join(backupDir, `hrskills-backup-${timestamp}.db`)
+
+  await fs.copy(dbPath, backupPath)
+  console.log(`[Backup] Created: ${backupPath}`)
+  return backupPath
+}
+
+// ============================================================================
+// BACKUP CLEANUP (Phase 5 - Keep 30 days)
+// ============================================================================
+
+const BACKUP_RETENTION_DAYS = 30
+const BACKUP_FILENAME_REGEX = /^hrskills-backup-(\d{4}-\d{2}-\d{2})T.*\.db$/
+
+/**
+ * Clean up old backups, keeping only the last 30 days.
+ * Runs after each successful backup to prevent disk space accumulation.
+ */
+async function cleanupOldBackups(): Promise<void> {
+  const backupDir = path.join(app.getPath('userData'), 'backups')
+
+  if (!await fs.pathExists(backupDir)) {
+    return
+  }
+
+  try {
+    const files = await fs.readdir(backupDir)
+    const now = new Date()
+    const cutoffDate = new Date(now.getTime() - BACKUP_RETENTION_DAYS * 24 * 60 * 60 * 1000)
+    let deletedCount = 0
+
+    for (const file of files) {
+      const match = file.match(BACKUP_FILENAME_REGEX)
+      if (!match) {
+        continue // Skip non-backup files
+      }
+
+      const dateStr = match[1] // YYYY-MM-DD
+      const backupDate = new Date(dateStr)
+
+      if (backupDate < cutoffDate) {
+        const filePath = path.join(backupDir, file)
+        await fs.remove(filePath)
+        deletedCount++
+        console.log(`[Cleanup] Deleted old backup: ${file}`)
+      }
+    }
+
+    if (deletedCount > 0) {
+      console.log(`[Cleanup] Removed ${deletedCount} backup(s) older than ${BACKUP_RETENTION_DAYS} days`)
+    }
+  } catch (error) {
+    // Log error but don't fail - cleanup is non-critical
+    console.error('[Cleanup] Failed to clean old backups:', error)
+  }
+}
+
+// ============================================================================
+// DATABASE INTEGRITY CHECK (Phase 5)
+// ============================================================================
+
+interface IntegrityCheckResult {
+  isHealthy: boolean
+  errors: string[]
+}
+
+/**
+ * Run SQLite PRAGMA integrity_check on the database.
+ * Returns { isHealthy: true, errors: [] } if OK, or { isHealthy: false, errors: [...] } if corruption detected.
+ */
+function checkDatabaseIntegrity(dbPath: string): IntegrityCheckResult {
+  try {
+    console.log('[Integrity] Running PRAGMA integrity_check...')
+    const db = new Database(dbPath, { readonly: true })
+
+    try {
+      const results = db.pragma('integrity_check') as Array<{ integrity_check: string }>
+      db.close()
+
+      // PRAGMA integrity_check returns "ok" if healthy, or error messages if corrupted
+      const errors = results
+        .map((row) => row.integrity_check)
+        .filter((msg) => msg !== 'ok')
+
+      if (errors.length === 0) {
+        console.log('[Integrity] Database is healthy')
+        return { isHealthy: true, errors: [] }
+      } else {
+        console.error('[Integrity] Database corruption detected:', errors)
+        return { isHealthy: false, errors }
+      }
+    } catch (error) {
+      db.close()
+      throw error
+    }
+  } catch (error) {
+    console.error('[Integrity] Check failed:', error)
+    return {
+      isHealthy: false,
+      errors: [error instanceof Error ? error.message : 'Unknown error during integrity check'],
+    }
+  }
+}
+
+/**
+ * Check database integrity on startup and show dialog if corruption detected.
+ * Returns true if database is healthy or doesn't exist, false if corrupted.
+ */
+async function checkIntegrityOnStartup(): Promise<boolean> {
+  const dbPath = path.join(app.getPath('userData'), 'database', 'hrskills.db')
+
+  if (!await fs.pathExists(dbPath)) {
+    console.log('[Integrity] No database yet, skipping check')
+    return true
+  }
+
+  const result = checkDatabaseIntegrity(dbPath)
+
+  if (!result.isHealthy) {
+    // Show dialog to user about corruption
+    const response = dialog.showMessageBoxSync({
+      type: 'error',
+      title: 'Database Problem Detected',
+      message: 'The database may be corrupted.',
+      detail: `Errors found:\n${result.errors.join('\n')}\n\nWould you like to restore from a backup?`,
+      buttons: ['Restore from Backup', 'Continue Anyway', 'Quit'],
+      defaultId: 0,
+    })
+
+    if (response === 0) {
+      // User wants to restore - this will be implemented in corruption recovery task
+      console.log('[Integrity] User requested backup restore (not yet implemented)')
+      // For now, just continue
+      return false
+    } else if (response === 2) {
+      // User wants to quit
+      app.quit()
+      return false
+    }
+    // User chose to continue anyway
+    console.log('[Integrity] User chose to continue despite corruption')
+  }
+
+  return result.isHealthy
+}
+
+/**
+ * Check if automatic backup is needed (>24h since last backup) and run it.
+ * Non-blocking: runs in background, doesn't delay app startup.
+ */
+async function autoBackupOnStartup(): Promise<void> {
+  try {
+    const config = await getConfig()
+    const lastBackup = config.lastBackupTime ? new Date(config.lastBackupTime) : null
+    const now = new Date()
+
+    // Skip if backup was done within the last 24 hours
+    if (lastBackup) {
+      const msSinceLastBackup = now.getTime() - lastBackup.getTime()
+      if (msSinceLastBackup < AUTO_BACKUP_INTERVAL_MS) {
+        const hoursAgo = Math.round(msSinceLastBackup / (60 * 60 * 1000))
+        console.log(`[AutoBackup] Last backup was ${hoursAgo}h ago, skipping`)
+        return
+      }
+    }
+
+    // Check if database exists before attempting backup
+    const dbPath = path.join(app.getPath('userData'), 'database', 'hrskills.db')
+    if (!await fs.pathExists(dbPath)) {
+      console.log('[AutoBackup] No database yet, skipping')
+      return
+    }
+
+    console.log('[AutoBackup] Starting automatic backup...')
+    const backupPath = await createBackup()
+
+    if (backupPath) {
+      // Update config with new backup time
+      await saveConfig({ lastBackupTime: now.toISOString() })
+      console.log(`[AutoBackup] Complete: ${backupPath}`)
+
+      // Clean up old backups after successful backup
+      await cleanupOldBackups()
+    }
+  } catch (error) {
+    // Log error but don't crash the app - backup is non-critical
+    console.error('[AutoBackup] Failed:', error)
+  }
+}
+
+// ============================================================================
+// SCHEDULED BACKUP (Phase 5 - Daily at 2 AM)
+// ============================================================================
+
+const SCHEDULED_BACKUP_HOUR = 2 // 2 AM local time
+const BACKUP_CHECK_INTERVAL_MS = 60 * 60 * 1000 // Check every hour
+
+let backupScheduleInterval: NodeJS.Timeout | null = null
+
+/**
+ * Get today's date as YYYY-MM-DD string for comparison.
+ */
+function getTodayDateString(): string {
+  const now = new Date()
+  return now.toISOString().split('T')[0]
+}
+
+/**
+ * Check if it's time for a scheduled backup (2 AM) and run it.
+ * Only runs once per calendar day.
+ */
+async function checkScheduledBackup(): Promise<void> {
+  try {
+    const now = new Date()
+    const currentHour = now.getHours()
+    const todayDate = getTodayDateString()
+
+    // Only run during the backup hour (2 AM)
+    if (currentHour !== SCHEDULED_BACKUP_HOUR) {
+      return
+    }
+
+    // Check if we already ran scheduled backup today
+    const config = await getConfig()
+    if (config.lastScheduledBackupDate === todayDate) {
+      console.log('[ScheduledBackup] Already ran today, skipping')
+      return
+    }
+
+    // Check if database exists
+    const dbPath = path.join(app.getPath('userData'), 'database', 'hrskills.db')
+    if (!await fs.pathExists(dbPath)) {
+      console.log('[ScheduledBackup] No database yet, skipping')
+      return
+    }
+
+    console.log('[ScheduledBackup] Running daily 2 AM backup...')
+    const backupPath = await createBackup()
+
+    if (backupPath) {
+      // Update both lastBackupTime and lastScheduledBackupDate
+      await saveConfig({
+        lastBackupTime: now.toISOString(),
+        lastScheduledBackupDate: todayDate,
+      })
+      console.log(`[ScheduledBackup] Complete: ${backupPath}`)
+
+      // Clean up old backups after successful backup
+      await cleanupOldBackups()
+    }
+  } catch (error) {
+    console.error('[ScheduledBackup] Failed:', error)
+  }
+}
+
+/**
+ * Start the scheduled backup timer.
+ * Checks every hour if it's time for the daily backup.
+ */
+function startBackupSchedule(): void {
+  console.log(`[ScheduledBackup] Starting scheduler (backup hour: ${SCHEDULED_BACKUP_HOUR}:00)`)
+
+  // Check immediately on startup (in case app starts during backup hour)
+  checkScheduledBackup().catch((err) => {
+    console.error('[ScheduledBackup] Initial check failed:', err)
+  })
+
+  // Then check every hour
+  backupScheduleInterval = setInterval(() => {
+    checkScheduledBackup().catch((err) => {
+      console.error('[ScheduledBackup] Scheduled check failed:', err)
+    })
+  }, BACKUP_CHECK_INTERVAL_MS)
+}
+
+/**
+ * Stop the scheduled backup timer.
+ * Called on app quit to clean up resources.
+ */
+function stopBackupSchedule(): void {
+  if (backupScheduleInterval) {
+    console.log('[ScheduledBackup] Stopping scheduler')
+    clearInterval(backupScheduleInterval)
+    backupScheduleInterval = null
+  }
 }
 
 // ============================================================================
@@ -330,21 +658,14 @@ function setupIpcHandlers(): void {
 
   // --- Database Operations ---
   ipcMain.handle('db:backup', async () => {
-    const dbPath = path.join(app.getPath('userData'), 'database', 'hrskills.db')
-    const backupDir = path.join(app.getPath('userData'), 'backups')
-
-    if (!await fs.pathExists(dbPath)) {
-      console.log('[Backup] No database to backup')
-      return null
-    }
-
     try {
-      await fs.ensureDir(backupDir)
-      const timestamp = new Date().toISOString().replace(/:/g, '-').split('.')[0]
-      const backupPath = path.join(backupDir, `hrskills-backup-${timestamp}.db`)
-
-      await fs.copy(dbPath, backupPath)
-      console.log(`[Backup] Created: ${backupPath}`)
+      const backupPath = await createBackup()
+      if (backupPath) {
+        // Update lastBackupTime on manual backup too
+        await saveConfig({ lastBackupTime: new Date().toISOString() })
+        // Clean up old backups
+        await cleanupOldBackups()
+      }
       return backupPath
     } catch (error) {
       console.error('[Backup] Failed:', error)
@@ -511,6 +832,19 @@ app.on('ready', async () => {
 
     // Load the app
     loadApp()
+
+    // Check database integrity on startup (Phase 5)
+    checkIntegrityOnStartup().catch((err) => {
+      console.error('[App] Integrity check failed:', err)
+    })
+
+    // Run automatic backup check in background (non-blocking)
+    autoBackupOnStartup().catch((err) => {
+      console.error('[App] Auto-backup check failed:', err)
+    })
+
+    // Start scheduled backup timer (Phase 5 - daily 2 AM backups)
+    startBackupSchedule()
   } catch (error) {
     console.error('[App] Startup error:', error)
     dialog.showErrorBox(
@@ -541,5 +875,6 @@ app.on('before-quit', () => {
 
 app.on('will-quit', () => {
   console.log('[App] Quitting, stopping server...')
+  stopBackupSchedule()  // Clean up backup timer
   stopNextServer()
 })

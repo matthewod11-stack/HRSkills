@@ -326,13 +326,13 @@ Add issue to [KNOWN_ISSUES.md](./KNOWN_ISSUES.md) and move to next independent t
 ### Tasks
 
 - [ ] Implement automatic backup scheduling
-  - [ ] On app startup (if >24h since last backup)
-  - [ ] Daily at 2 AM
+  - [x] On app startup (if >24h since last backup) *(completed 2025-12-02)*
+  - [x] Daily at 2 AM *(completed 2025-12-02)*
   - [ ] Before database migrations
 - [ ] Implement manual backup IPC handler
-- [ ] Implement database integrity verification (`PRAGMA integrity_check`)
+- [x] Implement database integrity verification (`PRAGMA integrity_check`) *(completed 2025-12-02)*
 - [ ] Implement corruption recovery (restore from backup)
-- [ ] Implement cleanup (keep 30 days)
+- [x] Implement cleanup (keep 30 days) *(completed 2025-12-02)*
 - [ ] Add backup UI to Settings page
   - [ ] Show last backup time
   - [ ] "Backup Now" button
@@ -689,13 +689,13 @@ PHASE 4 - SECURE IPC
 [ ] PAUSE 4A: Security audit approved
 
 PHASE 5 - DATABASE BACKUP
-[ ] Implement backup on startup (>24h check)
-[ ] Implement daily backup (2 AM)
+[x] Implement backup on startup (>24h check) *(completed 2025-12-02)*
+[x] Implement daily backup (2 AM) *(completed 2025-12-02)*
 [ ] Implement backup before migrations
 [ ] Implement manual backup IPC
-[ ] Implement PRAGMA integrity_check
+[x] Implement PRAGMA integrity_check *(completed 2025-12-02)*
 [ ] Implement corruption recovery
-[ ] Implement 30-day cleanup
+[x] Implement 30-day cleanup *(completed 2025-12-02)*
 [ ] Add backup UI to Settings
 [ ] Test automatic backup
 [ ] Test manual backup
