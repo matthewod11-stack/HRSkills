@@ -62,6 +62,9 @@ jobs:
           SKIP_ENV_VALIDATION: '1'
           # Provide required paths for static generation
           DB_DIR: '/tmp/hrskills-build'
+          # Placeholder API key for build-time module initialization
+          # Real keys are provided at runtime via macOS Keychain
+          ANTHROPIC_API_KEY: 'sk-ant-build-placeholder-not-a-real-key'
         run: |
           mkdir -p /tmp/hrskills-build
           npm run build
