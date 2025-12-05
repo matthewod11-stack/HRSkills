@@ -23,6 +23,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { AIMetricsDashboard } from '@/components/custom/AIMetricsDashboard';
+import { BackupSettings } from '@/components/custom/BackupSettings';
 import { QuotaBanner } from '@/components/custom/QuotaBanner';
 import { getDaysSinceFirstRun } from '@/lib/first-run-client';
 import { queryKeys } from '@/lib/query-keys';
@@ -456,6 +457,9 @@ export default function SettingsPage() {
               )}
             </div>
           </motion.div>
+
+          {/* Database Backup Section - Desktop Only */}
+          <BackupSettings />
 
           {/* AI Provider Configuration Section */}
           <motion.div

@@ -6,7 +6,6 @@
   "main": "dist/electron-main.js",
   "author": "Matt O'Donnell",
   "license": "PROPRIETARY",
-
   "scripts": {
     "start": "npm run build && electron .",
     "dev": "npm run build && electron . --dev",
@@ -17,29 +16,26 @@
     "dist:mac": "npm run build && electron-builder --mac",
     "postinstall": "electron-builder install-app-deps"
   },
-
   "dependencies": {
-    "electron-log": "^5.0.1",
-    "electron-updater": "^6.1.7",
     "better-sqlite3": "^9.2.2",
-    "fs-extra": "^11.2.0",
-    "node-schedule": "^2.1.1",
-    "keytar": "^7.9.0",
     "detect-port": "^1.5.1",
+    "electron-log": "^5.4.3",
+    "electron-updater": "^6.1.7",
+    "fs-extra": "^11.2.0",
+    "keytar": "^7.9.0",
+    "node-schedule": "^2.1.1",
     "zod": "^3.22.4"
   },
-
   "devDependencies": {
-    "electron": "^28.1.0",
-    "electron-builder": "^24.9.1",
-    "@sentry/electron": "^4.17.0",
-    "typescript": "^5.3.3",
-    "@types/node": "^20.10.6",
+    "@sentry/electron": "^4.24.0",
     "@types/better-sqlite3": "^7.6.8",
     "@types/fs-extra": "^11.0.4",
-    "@types/node-schedule": "^2.1.5"
+    "@types/node": "^20.10.6",
+    "@types/node-schedule": "^2.1.5",
+    "electron": "^28.1.0",
+    "electron-builder": "^24.9.1",
+    "typescript": "^5.3.3"
   },
-
   "build": {
     "appId": "com.hrcommandcenter.app",
     "productName": "HR Command Center",
@@ -73,7 +69,10 @@
       "target": [
         {
           "target": "dmg",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ],
       "icon": "icons/icon.icns",
@@ -85,8 +84,16 @@
     },
     "dmg": {
       "contents": [
-        { "x": 130, "y": 220 },
-        { "x": 410, "y": 220, "type": "link", "path": "/Applications" }
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
       ]
     },
     "publish": {

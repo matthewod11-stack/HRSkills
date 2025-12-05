@@ -98,7 +98,7 @@ export const env = createEnv({
     STRIPE_PRICE_ID: z.string().optional(), // price_... (optional, can look up from product)
 
     // Email (Resend for license delivery)
-    RESEND_API_KEY: z.string().optional(), // re_...
+    RESEND_API_KEY: z.string().optional(), // re_SaTXYGoP_G6o9gLbPRPFLLqKdjRpryuMV
 
     // Build-time (also used in runtime)
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),

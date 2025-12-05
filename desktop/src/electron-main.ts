@@ -1,8 +1,66 @@
 // Electron main process
 // Phase 3: Next.js integration complete
 // Phase 4: Secure IPC implementation
+// Phase 6: Crash reporting (Sentry) and logging (electron-log)
 
-import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
+// =============================================================================
+// SENTRY INITIALIZATION (must be first - before other imports)
+// =============================================================================
+
+import * as Sentry from '@sentry/electron/main'
+import log from 'electron-log/main'
+
+// Configure electron-log
+log.initialize()
+log.transports.file.level = 'info'
+log.transports.file.maxSize = 5 * 1024 * 1024 // 5MB rotation
+log.transports.console.level = 'debug'
+
+// Initialize Sentry (production only)
+// DSN is safe to embed - it only allows sending errors, not reading them
+const SENTRY_DSN = process.env.SENTRY_DSN || 'https://99e78fec149a4cd76cb1bed6efdbc286@o4510364361752576.ingest.us.sentry.io/4510364368371712'
+
+if (SENTRY_DSN && process.env.NODE_ENV === 'production') {
+  Sentry.init({
+    dsn: SENTRY_DSN,
+    // Set release for version tracking
+    release: `hr-command-center@${process.env.npm_package_version || '1.0.0'}`,
+    environment: process.env.NODE_ENV || 'development',
+    // Only send errors, not performance data (to minimize overhead)
+    tracesSampleRate: 0,
+    // Filter out common non-errors
+    beforeSend(event) {
+      // Don't send errors during development
+      if (process.env.NODE_ENV !== 'production') {
+        return null
+      }
+      return event
+    },
+  })
+  log.info('[Sentry] Initialized for production')
+} else {
+  log.info('[Sentry] Skipped (development mode or no DSN)')
+}
+
+// =============================================================================
+// GLOBAL ERROR HANDLERS (catch uncaught errors)
+// =============================================================================
+
+process.on('uncaughtException', (error) => {
+  log.error('[FATAL] Uncaught exception:', error)
+  Sentry.captureException(error)
+})
+
+process.on('unhandledRejection', (reason) => {
+  log.error('[FATAL] Unhandled rejection:', reason)
+  if (reason instanceof Error) {
+    Sentry.captureException(reason)
+  } else {
+    Sentry.captureMessage(`Unhandled rejection: ${String(reason)}`)
+  }
+})
+
+import { app, BrowserWindow, dialog, ipcMain, shell, Menu } from 'electron'
 import path from 'path'
 import { spawn, ChildProcess } from 'child_process'
 import fs from 'fs-extra'
@@ -188,15 +246,22 @@ function stopNextServer(): void {
  * Handle Next.js server crash.
  * Shows a dialog allowing the user to restart or quit.
  * Only triggers for unexpected exits (not during intentional quit).
+ * Reports crash to Sentry for monitoring.
  */
 function handleServerCrash(error: Error): void {
   // Don't show dialog if we're intentionally quitting
   if (isQuitting) {
-    console.log('[Server] Ignoring crash during quit')
+    log.info('[Server] Ignoring crash during quit')
     return
   }
 
-  console.error('[Server] Crash detected:', error.message)
+  log.error('[Server] Crash detected:', error.message)
+
+  // Report to Sentry
+  Sentry.captureException(error, {
+    tags: { component: 'next-server' },
+    extra: { serverPort },
+  })
 
   const result = dialog.showMessageBoxSync({
     type: 'error',
@@ -209,12 +274,12 @@ function handleServerCrash(error: Error): void {
 
   if (result === 0) {
     // User chose Restart
-    console.log('[Server] User requested restart')
+    log.info('[Server] User requested restart')
     app.relaunch()
     app.quit()
   } else {
     // User chose Quit
-    console.log('[Server] User chose to quit')
+    log.info('[Server] User chose to quit')
     app.quit()
   }
 }
@@ -247,6 +312,9 @@ export {
   // Phase 5: Integrity check
   checkDatabaseIntegrity,
   checkIntegrityOnStartup,
+  // Phase 5: Corruption recovery
+  findLatestBackup,
+  restoreFromBackup,
 }
 
 // ============================================================================
@@ -362,6 +430,107 @@ async function cleanupOldBackups(): Promise<void> {
 }
 
 // ============================================================================
+// BACKUP RECOVERY (Phase 5 - Corruption Recovery)
+// ============================================================================
+
+/**
+ * Find the most recent backup file in the backups directory.
+ * Backups are named: hrskills-backup-YYYY-MM-DDTHH-MM-SS.db
+ * Returns the full path to the most recent backup, or null if none exist.
+ */
+async function findLatestBackup(): Promise<string | null> {
+  const backupDir = path.join(app.getPath('userData'), 'backups')
+
+  if (!await fs.pathExists(backupDir)) {
+    console.log('[Recovery] No backups directory exists')
+    return null
+  }
+
+  try {
+    const files = await fs.readdir(backupDir)
+
+    // Filter to only backup files and extract dates for sorting
+    const backups = files
+      .filter((file) => file.match(BACKUP_FILENAME_REGEX))
+      .map((file) => ({
+        file,
+        path: path.join(backupDir, file),
+        // Extract timestamp: hrskills-backup-2025-12-02T10-30-00.db
+        timestamp: file.replace('hrskills-backup-', '').replace('.db', ''),
+      }))
+      .sort((a, b) => b.timestamp.localeCompare(a.timestamp)) // Newest first
+
+    if (backups.length === 0) {
+      console.log('[Recovery] No backup files found')
+      return null
+    }
+
+    console.log(`[Recovery] Found ${backups.length} backup(s), latest: ${backups[0].file}`)
+    return backups[0].path
+  } catch (error) {
+    console.error('[Recovery] Error finding backups:', error)
+    return null
+  }
+}
+
+/**
+ * Restore the database from a backup file.
+ * Creates a safety copy of the corrupt database before overwriting.
+ * Returns true if successful, false otherwise.
+ */
+async function restoreFromBackup(backupPath: string): Promise<boolean> {
+  const dbPath = path.join(app.getPath('userData'), 'database', 'hrskills.db')
+  const dbDir = path.dirname(dbPath)
+
+  try {
+    // Verify backup exists and is readable
+    if (!await fs.pathExists(backupPath)) {
+      console.error('[Recovery] Backup file does not exist:', backupPath)
+      return false
+    }
+
+    // Create a safety copy of the corrupt database (for forensic purposes)
+    if (await fs.pathExists(dbPath)) {
+      const corruptBackupPath = dbPath + '.corrupt-' + Date.now()
+      console.log(`[Recovery] Saving corrupt database to: ${corruptBackupPath}`)
+      await fs.copy(dbPath, corruptBackupPath)
+    }
+
+    // Ensure database directory exists
+    await fs.ensureDir(dbDir)
+
+    // Remove WAL and SHM files if they exist (they're tied to the old database)
+    const walPath = dbPath + '-wal'
+    const shmPath = dbPath + '-shm'
+    if (await fs.pathExists(walPath)) {
+      await fs.remove(walPath)
+      console.log('[Recovery] Removed stale WAL file')
+    }
+    if (await fs.pathExists(shmPath)) {
+      await fs.remove(shmPath)
+      console.log('[Recovery] Removed stale SHM file')
+    }
+
+    // Copy backup over the corrupt database
+    console.log(`[Recovery] Restoring from: ${backupPath}`)
+    await fs.copy(backupPath, dbPath, { overwrite: true })
+
+    // Verify the restored database is healthy
+    const verifyResult = checkDatabaseIntegrity(dbPath)
+    if (!verifyResult.isHealthy) {
+      console.error('[Recovery] Restored database is also corrupt!')
+      return false
+    }
+
+    console.log('[Recovery] Database restored successfully!')
+    return true
+  } catch (error) {
+    console.error('[Recovery] Restore failed:', error)
+    return false
+  }
+}
+
+// ============================================================================
 // DATABASE INTEGRITY CHECK (Phase 5)
 // ============================================================================
 
@@ -434,10 +603,64 @@ async function checkIntegrityOnStartup(): Promise<boolean> {
     })
 
     if (response === 0) {
-      // User wants to restore - this will be implemented in corruption recovery task
-      console.log('[Integrity] User requested backup restore (not yet implemented)')
-      // For now, just continue
-      return false
+      // User wants to restore from backup
+      console.log('[Integrity] User requested backup restore')
+
+      const latestBackup = await findLatestBackup()
+
+      if (!latestBackup) {
+        // No backups available
+        const noBackupResponse = dialog.showMessageBoxSync({
+          type: 'warning',
+          title: 'No Backups Available',
+          message: 'No backup files were found.',
+          detail: 'The database may have been corrupted before any backups were created. You can continue with the current database or quit the application.',
+          buttons: ['Continue Anyway', 'Quit'],
+          defaultId: 0,
+        })
+
+        if (noBackupResponse === 1) {
+          app.quit()
+          return false
+        }
+        console.log('[Integrity] No backups available, user chose to continue')
+        return false
+      }
+
+      // Attempt to restore from backup
+      const restored = await restoreFromBackup(latestBackup)
+
+      if (restored) {
+        // Success! Restart the app to load with restored database
+        dialog.showMessageBoxSync({
+          type: 'info',
+          title: 'Database Restored',
+          message: 'The database has been successfully restored from backup.',
+          detail: 'The application will now restart to load the restored data.',
+          buttons: ['OK'],
+        })
+        console.log('[Integrity] Database restored, restarting app')
+        app.relaunch()
+        app.quit()
+        return false
+      } else {
+        // Restore failed
+        const restoreFailedResponse = dialog.showMessageBoxSync({
+          type: 'error',
+          title: 'Restore Failed',
+          message: 'Failed to restore the database from backup.',
+          detail: 'The backup file may also be corrupted. You can continue with the current database or quit the application.',
+          buttons: ['Continue Anyway', 'Quit'],
+          defaultId: 1,
+        })
+
+        if (restoreFailedResponse === 1) {
+          app.quit()
+          return false
+        }
+        console.log('[Integrity] Restore failed, user chose to continue')
+        return false
+      }
     } else if (response === 2) {
       // User wants to quit
       app.quit()
@@ -720,7 +943,132 @@ function setupIpcHandlers(): void {
     return true
   })
 
+  // --- Open Backup Folder (for Settings UI) ---
+  ipcMain.handle('shell:openBackupFolder', async () => {
+    const backupDir = path.join(app.getPath('userData'), 'backups')
+    await fs.ensureDir(backupDir)  // Create if doesn't exist
+    await shell.openPath(backupDir)
+    return true
+  })
+
   console.log('[IPC] Handlers ready')
+}
+
+// ============================================================================
+// APPLICATION MENU (Phase 6 - Help → View Logs)
+// ============================================================================
+
+function setupApplicationMenu(): void {
+  const isMac = process.platform === 'darwin'
+
+  const template: Electron.MenuItemConstructorOptions[] = [
+    // macOS app menu
+    ...(isMac ? [{
+      label: app.name,
+      submenu: [
+        { role: 'about' as const },
+        { type: 'separator' as const },
+        { role: 'services' as const },
+        { type: 'separator' as const },
+        { role: 'hide' as const },
+        { role: 'hideOthers' as const },
+        { role: 'unhide' as const },
+        { type: 'separator' as const },
+        { role: 'quit' as const },
+      ],
+    }] : []),
+    // Edit menu
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'undo' },
+        { role: 'redo' },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' },
+        { role: 'selectAll' },
+      ],
+    },
+    // View menu
+    {
+      label: 'View',
+      submenu: [
+        { role: 'reload' },
+        { role: 'forceReload' },
+        { type: 'separator' },
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomOut' },
+        { type: 'separator' },
+        { role: 'togglefullscreen' },
+        // DevTools only in development
+        ...(!app.isPackaged ? [
+          { type: 'separator' as const },
+          { role: 'toggleDevTools' as const },
+        ] : []),
+      ],
+    },
+    // Window menu
+    {
+      label: 'Window',
+      submenu: [
+        { role: 'minimize' },
+        { role: 'zoom' },
+        ...(isMac ? [
+          { type: 'separator' as const },
+          { role: 'front' as const },
+        ] : [
+          { role: 'close' as const },
+        ]),
+      ],
+    },
+    // Help menu
+    {
+      role: 'help',
+      submenu: [
+        {
+          label: 'View Logs',
+          click: async () => {
+            const logPath = log.transports.file.getFile().path
+            log.info('[Menu] Opening log file:', logPath)
+            await shell.openPath(path.dirname(logPath))
+          },
+        },
+        {
+          label: 'Open Data Folder',
+          click: async () => {
+            const dataPath = app.getPath('userData')
+            log.info('[Menu] Opening data folder:', dataPath)
+            await shell.openPath(dataPath)
+          },
+        },
+        { type: 'separator' },
+        {
+          label: 'Report a Bug',
+          click: async () => {
+            await shell.openExternal('https://github.com/matthewod11-stack/HRSkills/issues/new')
+          },
+        },
+        { type: 'separator' },
+        {
+          label: 'About HR Command Center',
+          click: () => {
+            dialog.showMessageBox({
+              type: 'info',
+              title: 'About HR Command Center',
+              message: `HR Command Center v${app.getVersion()}`,
+              detail: 'Chat-first HR automation platform.\n\n© 2025 FoundryHR',
+            })
+          },
+        },
+      ],
+    },
+  ]
+
+  const menu = Menu.buildFromTemplate(template)
+  Menu.setApplicationMenu(menu)
+  log.info('[Menu] Application menu configured')
 }
 
 // ============================================================================
@@ -785,6 +1133,50 @@ function createWindow(): void {
   mainWindow.on('closed', () => {
     mainWindow = null
   })
+
+  // Handle renderer process crashes (Phase 6)
+  mainWindow.webContents.on('render-process-gone', (event, details) => {
+    log.error('[Renderer] Process gone:', details.reason, details.exitCode)
+
+    // Report to Sentry
+    Sentry.captureMessage(`Renderer process gone: ${details.reason}`, {
+      level: 'error',
+      tags: { component: 'renderer' },
+      extra: { reason: details.reason, exitCode: details.exitCode },
+    })
+
+    // Show dialog unless it was a clean exit
+    if (details.reason !== 'clean-exit') {
+      const result = dialog.showMessageBoxSync({
+        type: 'error',
+        title: 'Application Error',
+        message: 'The application window has crashed.',
+        detail: `Reason: ${details.reason}\n\nWould you like to reload the application?`,
+        buttons: ['Reload', 'Quit'],
+        defaultId: 0,
+      })
+
+      if (result === 0) {
+        mainWindow?.reload()
+      } else {
+        app.quit()
+      }
+    }
+  })
+
+  // Handle unresponsive renderer (Phase 6)
+  mainWindow.on('unresponsive', () => {
+    log.warn('[Renderer] Window became unresponsive')
+
+    Sentry.captureMessage('Renderer became unresponsive', {
+      level: 'warning',
+      tags: { component: 'renderer' },
+    })
+  })
+
+  mainWindow.on('responsive', () => {
+    log.info('[Renderer] Window became responsive again')
+  })
 }
 
 /**
@@ -803,7 +1195,10 @@ function loadApp(): void {
 // ============================================================================
 
 app.on('ready', async () => {
-  console.log('[App] Ready, starting initialization...')
+  log.info('[App] Ready, starting initialization...')
+
+  // Setup application menu (Phase 6 - includes Help → View Logs)
+  setupApplicationMenu()
 
   // Setup IPC handlers before creating window (Phase 4)
   setupIpcHandlers()

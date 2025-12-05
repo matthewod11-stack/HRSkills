@@ -12,6 +12,182 @@ Most recent session should be first.
 Use the template from SESSION_PROTOCOL.md
 -->
 
+## Session 2025-12-04 (Phase 6 - Crash Reporting & Logging)
+
+**Phase:** 6 (Crash Reporting & Monitoring)
+**Focus:** Implement Sentry error reporting and electron-log for production monitoring
+
+### Completed
+- [x] Installed `@sentry/electron@4.24.0` and `electron-log@5.4.3` (already in dependencies)
+- [x] Configured Sentry initialization in electron-main.ts:
+  - Production-only initialization (skips in development)
+  - Release version tracking (`hr-command-center@{version}`)
+  - Environment tagging
+- [x] Configured electron-log:
+  - 5MB file rotation
+  - File logging at 'info' level, console at 'debug'
+  - Proper initialization for main process
+- [x] Implemented global error handlers:
+  - `process.on('uncaughtException')` - captures and reports to Sentry
+  - `process.on('unhandledRejection')` - captures and reports to Sentry
+- [x] Implemented renderer crash handler:
+  - `render-process-gone` event with reload/quit dialog
+  - Reports crash reason to Sentry
+- [x] Implemented unresponsive renderer handler:
+  - Logs warnings when window becomes unresponsive
+- [x] Updated `handleServerCrash()` to report Next.js crashes to Sentry
+- [x] Created application menu with Help options:
+  - Help → View Logs (opens log directory)
+  - Help → Open Data Folder
+  - Help → Report a Bug (opens GitHub Issues)
+  - Help → About HR Command Center
+- [x] Verified type-check passes
+- [x] Verified build compiles
+- [x] Verified app launches with Sentry integration
+
+### Testing Results
+| Test | Result |
+|------|--------|
+| Desktop type-check | ✅ |
+| Desktop build | ✅ |
+| App launch (dev mode) | ✅ "[Sentry] Skipped (development mode or no DSN)" |
+| Menu appears | ✅ |
+| electron-log timestamps | ✅ |
+
+### Files Modified
+- `desktop/src/electron-main.ts` — Added Sentry, electron-log, error handlers, application menu
+
+### Sentry Setup (User Action Required)
+User has existing Sentry project `hrcommandcenter`. To enable:
+1. Get DSN from Sentry Dashboard → Settings → Client Keys
+2. Set `SENTRY_DSN` environment variable for production builds
+
+### Phase 6 Status
+**Core crash reporting complete!** Remaining Phase 6 items:
+- [x] Install @sentry/electron ✅
+- [x] Configure Sentry (production only) ✅
+- [x] Handle uncaughtException ✅
+- [x] Handle unhandledRejection ✅
+- [x] Handle render-process-gone ✅
+- [x] Configure electron-log ✅
+- [x] Add Help → View Logs menu ✅
+- [ ] Implement telemetry opt-in (deferred - optional feature)
+
+### Next Session Should
+- Proceed to **Phase 7: Auto-Update Infrastructure** (electron-updater, GitHub Releases)
+- Or continue to **Phase 8: First-Run Wizard** if auto-updates can wait
+- Note: Telemetry opt-in UI is optional enhancement, not blocking
+
+---
+
+## Session 2025-12-02 (Phase 5 - Backup UI in Settings)
+
+**Phase:** 5 (Database Backup & Recovery)
+**Focus:** Add backup UI to Settings page
+
+### Completed
+- [x] Added `shell:openBackupFolder` IPC handler to electron-main.ts
+- [x] Updated preload.ts with `openBackupFolder()` method and `lastBackupTime` in config type
+- [x] Updated webapp/lib/types/electron.d.ts with new types
+- [x] Created `BackupSettings` component (`webapp/components/custom/BackupSettings.tsx`):
+  - Shows last backup time (human-readable: "2 hours ago", "3 days ago", etc.)
+  - "Backup Now" button with loading state and success/error feedback
+  - "Open Folder" button to open backups directory in Finder
+  - Only renders in Electron (desktop app)
+- [x] Added BackupSettings to Settings page after Data Status section
+- [x] Verified desktop type-check passes
+- [x] Verified desktop build passes
+- [x] Verified webapp build passes
+
+### Testing Results
+| Test | Result |
+|------|--------|
+| Desktop type-check | ✅ |
+| Desktop build | ✅ |
+| Webapp build | ✅ |
+
+### Files Created
+- `webapp/components/custom/BackupSettings.tsx` — Backup UI component
+
+### Files Modified
+- `desktop/src/electron-main.ts` — Added `shell:openBackupFolder` IPC handler
+- `desktop/src/preload.ts` — Added `openBackupFolder()` and config types
+- `webapp/lib/types/electron.d.ts` — Updated types
+- `webapp/app/settings/page.tsx` — Added BackupSettings component
+
+### Phase 5 Status
+**Phase 5 COMPLETE!** All core backup features implemented:
+- [x] Automatic backup on startup (>24h check) ✅
+- [x] Daily scheduled backup (2 AM) ✅
+- [x] 30-day backup cleanup ✅
+- [x] PRAGMA integrity_check ✅
+- [x] Corruption recovery ✅
+- [x] Backup UI in Settings ✅ (this session)
+- [ ] Backup before migrations (deferred - requires webapp migration system)
+- [ ] GDPR export (deferred to Phase 9)
+
+### Next Session Should
+- Proceed to **Phase 6: Crash Reporting & Monitoring** (Sentry, electron-log)
+- Or continue to Phase 8: First-Run Wizard if crash reporting can wait
+
+---
+
+## Session 2025-12-02 (Phase 5 - Corruption Recovery)
+
+**Phase:** 5 (Database Backup & Recovery)
+**Focus:** Implement corruption recovery (restore from backup)
+
+### Completed
+- [x] Created `findLatestBackup()` function:
+  - Scans backups directory for files matching `hrskills-backup-YYYY-MM-DDTHH-MM-SS.db`
+  - Sorts by timestamp (newest first)
+  - Returns path to most recent backup or null if none exist
+- [x] Created `restoreFromBackup(backupPath)` function:
+  - Creates safety copy of corrupt database (`.corrupt-{timestamp}`)
+  - Removes stale WAL and SHM files (tied to old database)
+  - Copies backup over corrupt database
+  - Verifies restored database is healthy via `checkDatabaseIntegrity()`
+- [x] Updated `checkIntegrityOnStartup()` to use recovery functions:
+  - Finds latest backup when user clicks "Restore from Backup"
+  - Shows "No Backups Available" dialog if none exist
+  - Attempts restore and shows success/failure dialog
+  - Restarts app on successful restore
+- [x] Exported new functions: `findLatestBackup`, `restoreFromBackup`
+- [x] Verified `npm run type-check` passes
+- [x] Verified `npm run build` passes
+
+### Testing Results
+| Test | Result |
+|------|--------|
+| Type check passes | ✅ |
+| Build compiles | ✅ |
+
+### Implementation Notes
+- **Safety first:** Corrupt database is preserved as `hrskills.db.corrupt-{timestamp}` before restore
+- **WAL cleanup:** Removes `-wal` and `-shm` files which are tied to the old database state
+- **Verification:** Restored database is verified with `PRAGMA integrity_check` before accepting
+- **UX flow:** Three possible outcomes:
+  1. Successful restore → Info dialog → App restarts
+  2. No backups available → Warning dialog → Continue/Quit options
+  3. Restore failed → Error dialog → Continue/Quit options
+
+### Phase 5 Status
+**Core backup infrastructure complete!** Remaining Phase 5 items:
+- [x] Automatic backup on startup (>24h check) ✅
+- [x] Daily scheduled backup (2 AM) ✅
+- [x] 30-day backup cleanup ✅
+- [x] PRAGMA integrity_check ✅
+- [x] Corruption recovery ✅ (this session)
+- [ ] Backup before migrations (requires webapp integration)
+- [ ] Backup UI in Settings page
+
+### Next Session Should
+- Continue Phase 5: Add backup UI to Settings page (show last backup time, manual backup button)
+- Or proceed to Phase 6: Crash Reporting & Monitoring
+- Note: "Backup before migrations" is deferred as it requires webapp integration
+
+---
+
 ## Session 2025-12-02 (Phase 5 - Database Integrity Check)
 
 **Phase:** 5 (Database Backup & Recovery)

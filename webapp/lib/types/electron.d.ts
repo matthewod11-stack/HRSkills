@@ -15,6 +15,8 @@ export interface AppConfig {
   licenseValidated?: boolean
   aiProviderConfigured?: boolean
   setupComplete?: boolean
+  lastBackupTime?: string  // ISO timestamp of last backup
+  lastScheduledBackupDate?: string  // YYYY-MM-DD of last scheduled backup
 }
 
 export type AIProvider = 'anthropic' | 'openai'
@@ -49,6 +51,9 @@ export interface ElectronAPI {
 
   // External URLs (security: only HTTPS allowed)
   openExternal: (url: string) => Promise<boolean>
+
+  // Open backup folder in Finder
+  openBackupFolder: () => Promise<boolean>
 
   // Event listeners
   onUpdateAvailable: (callback: (version: string) => void) => void

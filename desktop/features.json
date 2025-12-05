@@ -2,9 +2,9 @@
   "$schema": "./features.schema.json",
   "_meta": {
     "description": "Feature tracking for desktop app implementation. Status: not-started | in-progress | pass | fail | blocked",
-    "lastUpdated": "2025-12-02",
-    "totalFeatures": 57,
-    "passing": 41,
+    "lastUpdated": "2025-12-04",
+    "totalFeatures": 64,
+    "passing": 50,
     "failing": 1,
     "inProgress": 0
   },
@@ -65,10 +65,21 @@
     "daily-backup-works": { "status": "pass", "verified": "2025-12-02", "notes": "Scheduler starts on app ready, checks hourly, runs at 2 AM local time" },
     "backup-cleanup-works": { "status": "pass", "verified": "2025-12-02", "notes": "cleanupOldBackups() removes backups older than 30 days - TESTED" },
     "integrity-check-runs": { "status": "pass", "verified": "2025-12-02", "notes": "checkDatabaseIntegrity() runs PRAGMA integrity_check, shows dialog if corrupt - TESTED" },
-    "corruption-recovery-works": { "status": "not-started", "notes": "Corrupt DB restored from backup" },
+    "corruption-recovery-works": { "status": "pass", "verified": "2025-12-02", "notes": "findLatestBackup() and restoreFromBackup() implemented. Saves corrupt DB, cleans WAL/SHM, verifies restored DB." },
+    "backup-ui-in-settings": { "status": "pass", "verified": "2025-12-02", "notes": "BackupSettings component shows last backup time, Backup Now button, Open Folder button. Desktop-only." },
     "gdpr-export-works": { "status": "not-started", "notes": "Full data export to JSON" }
   },
   "phase-6": {
+    "sentry-installed": { "status": "pass", "verified": "2025-12-04", "notes": "@sentry/electron@4.24.0 installed" },
+    "sentry-configured": { "status": "pass", "verified": "2025-12-04", "notes": "Sentry.init() with production-only, release tracking" },
+    "electron-log-configured": { "status": "pass", "verified": "2025-12-04", "notes": "electron-log@5.4.3 with 5MB rotation, file+console transports" },
+    "uncaught-exception-handler": { "status": "pass", "verified": "2025-12-04", "notes": "process.on('uncaughtException') reports to Sentry" },
+    "unhandled-rejection-handler": { "status": "pass", "verified": "2025-12-04", "notes": "process.on('unhandledRejection') reports to Sentry" },
+    "renderer-crash-handler": { "status": "pass", "verified": "2025-12-04", "notes": "render-process-gone event with reload/quit dialog" },
+    "help-menu-view-logs": { "status": "pass", "verified": "2025-12-04", "notes": "Help → View Logs opens log directory" },
+    "telemetry-opt-in": { "status": "not-started", "notes": "Optional telemetry toggle in Settings" }
+  },
+  "phase-8-wizard": {
     "setup-route-exists": { "status": "not-started", "notes": "webapp/app/setup/page.tsx" },
     "first-run-detection": { "status": "not-started", "notes": "getStartUrl() routes correctly" },
     "license-step-works": { "status": "not-started", "notes": "License key validation in wizard" },

@@ -20,6 +20,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     licenseValidated?: boolean
     aiProviderConfigured?: boolean
     setupComplete?: boolean
+    lastBackupTime?: string  // ISO timestamp of last backup
+    lastScheduledBackupDate?: string  // YYYY-MM-DD of last scheduled backup
   }> => ipcRenderer.invoke('config:get'),
 
   setConfig: (updates: Record<string, unknown>): Promise<boolean> =>
@@ -49,6 +51,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // --- External URLs ---
   openExternal: (url: string): Promise<boolean> =>
     ipcRenderer.invoke('shell:openExternal', url),
+
+  // --- Open Backup Folder ---
+  openBackupFolder: (): Promise<boolean> =>
+    ipcRenderer.invoke('shell:openBackupFolder'),
 
   // --- Event Listeners (for future use: updates, backup status) ---
   onUpdateAvailable: (callback: (version: string) => void): void => {

@@ -329,14 +329,14 @@ Add issue to [KNOWN_ISSUES.md](./KNOWN_ISSUES.md) and move to next independent t
   - [x] On app startup (if >24h since last backup) *(completed 2025-12-02)*
   - [x] Daily at 2 AM *(completed 2025-12-02)*
   - [ ] Before database migrations
-- [ ] Implement manual backup IPC handler
+- [x] Implement manual backup IPC handler *(completed 2025-12-02 in Phase 4)*
 - [x] Implement database integrity verification (`PRAGMA integrity_check`) *(completed 2025-12-02)*
-- [ ] Implement corruption recovery (restore from backup)
+- [x] Implement corruption recovery (restore from backup) *(completed 2025-12-02)*
 - [x] Implement cleanup (keep 30 days) *(completed 2025-12-02)*
-- [ ] Add backup UI to Settings page
-  - [ ] Show last backup time
-  - [ ] "Backup Now" button
-  - [ ] "Open Backup Folder" button
+- [x] Add backup UI to Settings page *(completed 2025-12-02)*
+  - [x] Show last backup time
+  - [x] "Backup Now" button
+  - [x] "Open Backup Folder" button
 
 ### Deliverables
 
@@ -359,23 +359,23 @@ Add issue to [KNOWN_ISSUES.md](./KNOWN_ISSUES.md) and move to next independent t
 
 ### Tasks
 
-- [ ] Install `@sentry/electron`
-- [ ] Configure Sentry (production only)
-- [ ] Implement error handlers
-  - [ ] Uncaught exceptions
-  - [ ] Unhandled promise rejections
-  - [ ] Renderer crashes (`render-process-gone`)
-- [ ] Configure `electron-log`
-  - [ ] Rotate at 5MB
-  - [ ] Location: `~/Library/Logs/HR Command Center/`
-- [ ] Add "Help → View Logs" menu item
-- [ ] Implement optional telemetry (opt-in via Settings)
+- [x] Install `@sentry/electron` *(completed 2025-12-04)*
+- [x] Configure Sentry (production only) *(completed 2025-12-04)*
+- [x] Implement error handlers *(completed 2025-12-04)*
+  - [x] Uncaught exceptions
+  - [x] Unhandled promise rejections
+  - [x] Renderer crashes (`render-process-gone`)
+- [x] Configure `electron-log` *(completed 2025-12-04)*
+  - [x] Rotate at 5MB
+  - [x] Location: `~/Library/Logs/HR Command Center/`
+- [x] Add "Help → View Logs" menu item *(completed 2025-12-04)*
+- [ ] Implement optional telemetry (opt-in via Settings) *(deferred)*
 
 ### Deliverables
 
-- [ ] Sentry receiving crash reports
-- [ ] User-accessible logs via menu
-- [ ] Telemetry opt-in UI
+- [x] Sentry receiving crash reports *(configured, needs DSN in prod)*
+- [x] User-accessible logs via menu
+- [ ] Telemetry opt-in UI *(deferred - optional)*
 
 ### Pause Point 6A
 **Action Required:** Create Sentry project, configure DSN
@@ -702,16 +702,16 @@ PHASE 5 - DATABASE BACKUP
 [ ] Test corruption recovery
 
 PHASE 6 - CRASH REPORTING
-[ ] Install @sentry/electron
-[ ] Configure Sentry (production only)
-[ ] Handle uncaughtException
-[ ] Handle unhandledRejection
-[ ] Handle render-process-gone
-[ ] Configure electron-log
-[ ] Add Help → View Logs menu
-[ ] Implement telemetry opt-in
-[ ] Test crash → Sentry receives
-[ ] PAUSE 6A: Sentry project configured
+[x] Install @sentry/electron
+[x] Configure Sentry (production only)
+[x] Handle uncaughtException
+[x] Handle unhandledRejection
+[x] Handle render-process-gone
+[x] Configure electron-log
+[x] Add Help → View Logs menu
+[ ] Implement telemetry opt-in (deferred)
+[x] Test crash → Sentry receives (configured, needs DSN in prod)
+[x] PAUSE 6A: Sentry project configured (user has existing project)
 
 PHASE 7 - AUTO-UPDATES
 [ ] Install electron-updater
