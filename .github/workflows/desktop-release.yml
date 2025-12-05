@@ -24,6 +24,12 @@ concurrency:
   cancel-in-progress: true
 
 # ============================================
+# Permissions
+# ============================================
+permissions:
+  contents: write  # Required to create GitHub Releases and upload assets
+
+# ============================================
 # Environment Variables
 # ============================================
 env:
