@@ -400,9 +400,10 @@ Add issue to [KNOWN_ISSUES.md](./KNOWN_ISSUES.md) and move to next independent t
   - [x] Update status messages (available, downloading, downloaded, error)
   - [x] Download progress bar
 - [x] Configure electron-builder.yml publish settings *(in package.json build.publish)*
-- [ ] Create `.github/workflows/desktop-release.yml` *(in progress 2025-12-05)*
+- [x] Create `.github/workflows/desktop-release.yml` *(completed 2025-12-05)*
   - [x] Build webapp job (ubuntu) *(works)*
-  - [ ] Build macOS job (artifact merge issue)
+  - [x] Build macOS job (x64 + arm64 DMGs)
+  - [x] GitHub Release with assets uploaded
   - [x] Apple code signing support (when secrets configured)
   - [x] Release notes job
 - [ ] Test update flow locally (requires published GitHub Release)
