@@ -177,6 +177,8 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           CSC_LINK: ${{ secrets.APPLE_CERTIFICATE_P12 }}
           CSC_KEY_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          # Skip code signing if no certificate provided
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
           # Safe reference handling
           EVENT_NAME: ${{ github.event_name }}
           REF_TYPE: ${{ github.ref_type }}
