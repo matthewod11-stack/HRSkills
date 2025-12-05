@@ -58,8 +58,8 @@ jobs:
       - name: Build webapp
         working-directory: webapp
         env:
-          # Minimal env vars for build (no runtime secrets needed)
-          NEXT_PUBLIC_API_URL: ''
+          # Skip T3 env validation during CI build (env vars are runtime-only)
+          SKIP_ENV_VALIDATION: '1'
         run: npm run build
 
       - name: Upload webapp build artifacts
