@@ -121,12 +121,13 @@ jobs:
         run: |
           echo "=== Artifact structure ==="
           ls -la webapp-artifact/
+          ls -la webapp-artifact/webapp/ 2>/dev/null || echo "No webapp subdir"
 
           # Extract the tarred .next directory
           tar -xzf webapp-artifact/.next.tar.gz -C webapp/
 
-          # Copy node_modules (already extracted, no tar needed)
-          cp -r webapp-artifact/node_modules webapp/node_modules
+          # Copy node_modules from artifact's webapp subdirectory
+          cp -r webapp-artifact/webapp/node_modules webapp/node_modules
 
           echo "=== Webapp .next directory ==="
           ls -la webapp/.next | head -5
