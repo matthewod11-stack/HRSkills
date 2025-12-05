@@ -1,0 +1,209 @@
+name: Desktop App Release
+
+# ============================================
+# Trigger Configuration
+# ============================================
+# Trigger on version tags like v1.0.0 or desktop-v1.0.0
+on:
+  push:
+    tags:
+      - 'v*'
+      - 'desktop-v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.0)'
+        required: true
+        type: string
+
+# ============================================
+# Concurrency Control
+# ============================================
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# ============================================
+# Environment Variables
+# ============================================
+env:
+  NODE_VERSION: '20'
+  NEXT_TELEMETRY_DISABLED: 1
+
+# ============================================
+# Jobs
+# ============================================
+jobs:
+  # ------------------------------------------
+  # Job 1: Build Webapp
+  # ------------------------------------------
+  build-webapp:
+    name: Build Webapp
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'webapp/package-lock.json'
+
+      - name: Install webapp dependencies
+        working-directory: webapp
+        run: npm ci
+
+      - name: Build webapp
+        working-directory: webapp
+        env:
+          # Minimal env vars for build (no runtime secrets needed)
+          NEXT_PUBLIC_API_URL: ''
+        run: npm run build
+
+      - name: Upload webapp build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: webapp-build
+          path: |
+            webapp/.next
+            webapp/public
+            webapp/package.json
+            webapp/next.config.js
+            webapp/node_modules
+          retention-days: 1
+
+  # ------------------------------------------
+  # Job 2: Build Desktop App (macOS)
+  # ------------------------------------------
+  build-macos:
+    name: Build macOS App
+    needs: build-webapp
+    runs-on: macos-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'desktop/package-lock.json'
+
+      - name: Download webapp build
+        uses: actions/download-artifact@v4
+        with:
+          name: webapp-build
+          path: webapp
+
+      - name: Install desktop dependencies
+        working-directory: desktop
+        run: npm ci
+
+      - name: Build desktop TypeScript
+        working-directory: desktop
+        run: npm run build
+
+      # Code signing setup (only if secrets are available)
+      - name: Install Apple Certificate
+        if: env.HAS_CERTIFICATE == 'true'
+        env:
+          HAS_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE_P12 != '' }}
+          APPLE_CERTIFICATE_P12: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          # Create temporary keychain
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
+
+          # Create keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Import certificate
+          echo "$APPLE_CERTIFICATE_P12" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+          security import "$RUNNER_TEMP/certificate.p12" -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH"
+
+          # Allow codesign to access the certificate
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+      - name: Build and Publish Desktop App
+        working-directory: desktop
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Apple code signing (optional - app will be unsigned if not set)
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          CSC_LINK: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          CSC_KEY_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          # Safe reference handling
+          EVENT_NAME: ${{ github.event_name }}
+          REF_TYPE: ${{ github.ref_type }}
+        run: |
+          # Determine if we should publish
+          if [[ "$EVENT_NAME" == "push" && "$REF_TYPE" == "tag" ]]; then
+            echo "Building and publishing release..."
+            npm run dist:mac -- --publish always
+          else
+            echo "Building without publishing (manual trigger)..."
+            npm run dist:mac -- --publish never
+          fi
+
+      - name: Upload DMG artifacts (for manual runs)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-dmg
+          path: desktop/dist/*.dmg
+          retention-days: 7
+
+  # ------------------------------------------
+  # Job 3: Create Release Notes
+  # ------------------------------------------
+  release-notes:
+    name: Update Release Notes
+    needs: build-macos
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Update release notes
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Use env vars for safe input handling
+          TAG_NAME: ${{ github.ref_name }}
+          REPO_NAME: ${{ github.repository }}
+        with:
+          body: |
+            ## HR Command Center
+
+            ### Installation
+            1. Download the DMG file for your Mac:
+               - `HR-Command-Center-*-arm64.dmg` for Apple Silicon (M1/M2/M3)
+               - `HR-Command-Center-*-x64.dmg` for Intel Macs
+            2. Open the DMG and drag HR Command Center to Applications
+            3. On first launch, right-click and choose "Open" to bypass Gatekeeper (if unsigned)
+
+            ### What's New
+            See CHANGELOG.md in this repository for details.
+
+            ### System Requirements
+            - macOS 11 (Big Sur) or later
+            - Apple Silicon or Intel processor
+            - 500MB disk space
+            - Internet connection for AI features
+          draft: false
+          prerelease: false

@@ -2,6 +2,7 @@
 // Phase 3: Next.js integration complete
 // Phase 4: Secure IPC implementation
 // Phase 6: Crash reporting (Sentry) and logging (electron-log)
+// Phase 7: Auto-update infrastructure (electron-updater)
 
 // =============================================================================
 // SENTRY INITIALIZATION (must be first - before other imports)
@@ -68,6 +69,7 @@ import detectPort from 'detect-port'
 import keytar from 'keytar'
 import { z } from 'zod'
 import Database from 'better-sqlite3'
+import { autoUpdater } from 'electron-updater'
 
 // ============================================================================
 // CONSTANTS
@@ -815,6 +817,200 @@ function stopBackupSchedule(): void {
 }
 
 // ============================================================================
+// AUTO-UPDATE (Phase 7)
+// ============================================================================
+
+const UPDATE_CHECK_DELAY_MS = 10 * 1000  // 10 seconds after launch
+const UPDATE_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000  // 6 hours
+
+let updateCheckInterval: NodeJS.Timeout | null = null
+
+/**
+ * Configure and initialize the auto-updater.
+ * Sets up event handlers for update lifecycle.
+ */
+function setupAutoUpdater(): void {
+  // Configure auto-updater
+  autoUpdater.autoDownload = false  // Don't auto-download, prompt user first
+  autoUpdater.autoInstallOnAppQuit = true  // Install pending update on quit
+  autoUpdater.logger = log  // Use electron-log for updater logs
+
+  log.info('[AutoUpdater] Initializing...')
+
+  // Event: Update available
+  autoUpdater.on('update-available', (info) => {
+    log.info('[AutoUpdater] Update available:', info.version)
+
+    // Notify renderer about available update
+    if (mainWindow) {
+      mainWindow.webContents.send('update:available', {
+        version: info.version,
+        releaseDate: info.releaseDate,
+      })
+    }
+
+    // Ask user if they want to download
+    dialog.showMessageBox({
+      type: 'info',
+      title: 'Update Available',
+      message: `A new version (${info.version}) is available.`,
+      detail: 'Would you like to download it now? The update will be installed when you quit the app.',
+      buttons: ['Download', 'Later'],
+      defaultId: 0,
+    }).then((result) => {
+      if (result.response === 0) {
+        log.info('[AutoUpdater] User chose to download update')
+        autoUpdater.downloadUpdate()
+      } else {
+        log.info('[AutoUpdater] User deferred update')
+      }
+    })
+  })
+
+  // Event: No update available
+  autoUpdater.on('update-not-available', (info) => {
+    log.info('[AutoUpdater] No update available, current version is latest:', info.version)
+
+    // Notify renderer
+    if (mainWindow) {
+      mainWindow.webContents.send('update:not-available', {
+        version: info.version,
+      })
+    }
+  })
+
+  // Event: Download progress
+  autoUpdater.on('download-progress', (progress) => {
+    log.info(`[AutoUpdater] Download progress: ${Math.round(progress.percent)}%`)
+
+    // Update window progress bar if available
+    if (mainWindow) {
+      mainWindow.setProgressBar(progress.percent / 100)
+      // Also notify renderer for UI updates
+      mainWindow.webContents.send('update:progress', {
+        percent: progress.percent,
+        bytesPerSecond: progress.bytesPerSecond,
+        transferred: progress.transferred,
+        total: progress.total,
+      })
+    }
+  })
+
+  // Event: Update downloaded
+  autoUpdater.on('update-downloaded', (info) => {
+    log.info('[AutoUpdater] Update downloaded:', info.version)
+
+    // Clear progress bar
+    if (mainWindow) {
+      mainWindow.setProgressBar(-1)  // Remove progress bar
+      // Notify renderer
+      mainWindow.webContents.send('update:downloaded', {
+        version: info.version,
+      })
+    }
+
+    // Ask user if they want to restart now
+    dialog.showMessageBox({
+      type: 'info',
+      title: 'Update Ready',
+      message: 'Update downloaded successfully!',
+      detail: `Version ${info.version} has been downloaded. Restart now to apply the update?`,
+      buttons: ['Restart Now', 'Later'],
+      defaultId: 0,
+    }).then((result) => {
+      if (result.response === 0) {
+        log.info('[AutoUpdater] User chose to restart and install')
+        autoUpdater.quitAndInstall()
+      } else {
+        log.info('[AutoUpdater] User deferred restart, will install on quit')
+      }
+    })
+  })
+
+  // Event: Error
+  autoUpdater.on('error', (error) => {
+    log.error('[AutoUpdater] Error:', error.message)
+
+    // Notify renderer
+    if (mainWindow) {
+      mainWindow.webContents.send('update:error', {
+        message: error.message,
+      })
+    }
+
+    // Report to Sentry (non-critical, don't show dialog for every error)
+    Sentry.captureException(error, {
+      tags: { component: 'auto-updater' },
+    })
+  })
+}
+
+/**
+ * Check for updates manually.
+ * Called by the initial delay timer and periodic interval.
+ */
+async function checkForUpdates(): Promise<void> {
+  // Skip update checks in development
+  if (!app.isPackaged) {
+    log.info('[AutoUpdater] Skipping check (development mode)')
+    return
+  }
+
+  try {
+    log.info('[AutoUpdater] Checking for updates...')
+    await autoUpdater.checkForUpdates()
+  } catch (error) {
+    log.error('[AutoUpdater] Check failed:', error)
+  }
+}
+
+/**
+ * Start the auto-update check schedule.
+ * Checks 10 seconds after launch, then every 6 hours.
+ */
+function startUpdateSchedule(): void {
+  // Skip in development
+  if (!app.isPackaged) {
+    log.info('[AutoUpdater] Schedule disabled (development mode)')
+    return
+  }
+
+  log.info('[AutoUpdater] Starting update schedule')
+
+  // Check 10 seconds after launch
+  setTimeout(() => {
+    checkForUpdates()
+  }, UPDATE_CHECK_DELAY_MS)
+
+  // Then check every 6 hours
+  updateCheckInterval = setInterval(() => {
+    checkForUpdates()
+  }, UPDATE_CHECK_INTERVAL_MS)
+}
+
+/**
+ * Stop the auto-update check schedule.
+ * Called on app quit to clean up resources.
+ */
+function stopUpdateSchedule(): void {
+  if (updateCheckInterval) {
+    log.info('[AutoUpdater] Stopping update schedule')
+    clearInterval(updateCheckInterval)
+    updateCheckInterval = null
+  }
+}
+
+// Export for testing
+export {
+  setupAutoUpdater,
+  checkForUpdates,
+  startUpdateSchedule,
+  stopUpdateSchedule,
+  UPDATE_CHECK_DELAY_MS,
+  UPDATE_CHECK_INTERVAL_MS,
+}
+
+// ============================================================================
 // IPC HANDLERS (Secure bridge between renderer and main process)
 // ============================================================================
 
@@ -949,6 +1145,31 @@ function setupIpcHandlers(): void {
     await fs.ensureDir(backupDir)  // Create if doesn't exist
     await shell.openPath(backupDir)
     return true
+  })
+
+  // --- Auto-Update Operations (Phase 7) ---
+  ipcMain.handle('update:checkForUpdates', async () => {
+    // Skip in development
+    if (!app.isPackaged) {
+      log.info('[IPC] Update check skipped (development mode)')
+      return { checking: false, reason: 'development' }
+    }
+
+    try {
+      log.info('[IPC] Manual update check triggered')
+      await autoUpdater.checkForUpdates()
+      return { checking: true }
+    } catch (error) {
+      log.error('[IPC] Update check failed:', error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('update:getInfo', async () => {
+    return {
+      currentVersion: app.getVersion(),
+      isPackaged: app.isPackaged,
+    }
   })
 
   console.log('[IPC] Handlers ready')
@@ -1203,6 +1424,9 @@ app.on('ready', async () => {
   // Setup IPC handlers before creating window (Phase 4)
   setupIpcHandlers()
 
+  // Setup auto-updater (Phase 7)
+  setupAutoUpdater()
+
   // Create the window first (shows while server starts)
   createWindow()
 
@@ -1240,6 +1464,9 @@ app.on('ready', async () => {
 
     // Start scheduled backup timer (Phase 5 - daily 2 AM backups)
     startBackupSchedule()
+
+    // Start auto-update check schedule (Phase 7 - 10s delay, then every 6 hours)
+    startUpdateSchedule()
   } catch (error) {
     console.error('[App] Startup error:', error)
     dialog.showErrorBox(
@@ -1271,5 +1498,6 @@ app.on('before-quit', () => {
 app.on('will-quit', () => {
   console.log('[App] Quitting, stopping server...')
   stopBackupSchedule()  // Clean up backup timer
+  stopUpdateSchedule()  // Clean up update timer
   stopNextServer()
 })

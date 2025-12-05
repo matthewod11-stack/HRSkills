@@ -2,9 +2,9 @@
   "$schema": "./features.schema.json",
   "_meta": {
     "description": "Feature tracking for desktop app implementation. Status: not-started | in-progress | pass | fail | blocked",
-    "lastUpdated": "2025-12-04",
-    "totalFeatures": 64,
-    "passing": 50,
+    "lastUpdated": "2025-12-05",
+    "totalFeatures": 70,
+    "passing": 58,
     "failing": 1,
     "inProgress": 0
   },
@@ -87,7 +87,18 @@
     "test-connection-works": { "status": "not-started", "notes": "API validates entered key" },
     "wizard-completes": { "status": "not-started", "notes": "Full flow end-to-end" }
   },
-  "phase-7": {
+  "phase-7-autoupdate": {
+    "electron-updater-installed": { "status": "pass", "verified": "2025-12-04", "notes": "electron-updater@6.6.2 installed (from Phase 1)" },
+    "autoupdate-logic-implemented": { "status": "pass", "verified": "2025-12-04", "notes": "setupAutoUpdater, checkForUpdates, startUpdateSchedule, stopUpdateSchedule" },
+    "update-check-10s-delay": { "status": "pass", "verified": "2025-12-04", "notes": "UPDATE_CHECK_DELAY_MS = 10 seconds after launch" },
+    "update-check-6h-interval": { "status": "pass", "verified": "2025-12-04", "notes": "UPDATE_CHECK_INTERVAL_MS = 6 hours periodic check" },
+    "download-on-user-approval": { "status": "pass", "verified": "2025-12-04", "notes": "autoDownload: false, dialog prompts user" },
+    "install-on-quit": { "status": "pass", "verified": "2025-12-04", "notes": "autoInstallOnAppQuit: true" },
+    "update-ui-in-settings": { "status": "pass", "verified": "2025-12-05", "notes": "UpdateSettings component shows version, Check for Updates button, download progress" },
+    "github-release-workflow": { "status": "pass", "verified": "2025-12-05", "notes": ".github/workflows/desktop-release.yml - 3 jobs: build-webapp, build-macos, release-notes" },
+    "update-flow-tested": { "status": "not-started", "notes": "Requires published GitHub Release to test" }
+  },
+  "phase-7-signing": {
     "electron-builder-config": { "status": "not-started", "notes": "electron-builder.yml complete" },
     "dmg-builds": { "status": "not-started", "notes": "npm run dist creates .dmg" },
     "app-signed": { "status": "not-started", "notes": "Code signing with Apple cert" },

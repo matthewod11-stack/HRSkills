@@ -22,6 +22,29 @@ export interface AppConfig {
 export type AIProvider = 'anthropic' | 'openai'
 export type ExportFormat = 'json' | 'csv'
 
+// Update event payloads
+export interface UpdateAvailableInfo {
+  version: string
+  releaseDate?: string
+}
+
+export interface UpdateProgress {
+  percent: number
+  bytesPerSecond: number
+  transferred: number
+  total: number
+}
+
+export interface UpdateCheckResult {
+  checking: boolean
+  reason?: string
+}
+
+export interface UpdateInfo {
+  currentVersion: string
+  isPackaged: boolean
+}
+
 export interface ElectronAPI {
   // Flag to detect Electron environment
   readonly isElectron: true
@@ -55,9 +78,18 @@ export interface ElectronAPI {
   // Open backup folder in Finder
   openBackupFolder: () => Promise<boolean>
 
-  // Event listeners
-  onUpdateAvailable: (callback: (version: string) => void) => void
-  onUpdateProgress: (callback: (percent: number) => void) => void
+  // Auto-update operations (Phase 7)
+  checkForUpdates: () => Promise<UpdateCheckResult>
+  getUpdateInfo: () => Promise<UpdateInfo>
+
+  // Event listeners - updates
+  onUpdateAvailable: (callback: (info: UpdateAvailableInfo) => void) => void
+  onUpdateNotAvailable: (callback: (info: { version: string }) => void) => void
+  onUpdateProgress: (callback: (progress: UpdateProgress) => void) => void
+  onUpdateDownloaded: (callback: (info: { version: string }) => void) => void
+  onUpdateError: (callback: (error: { message: string }) => void) => void
+
+  // Event listeners - backup
   onBackupFailed: (callback: (error: string) => void) => void
 
   // Cleanup

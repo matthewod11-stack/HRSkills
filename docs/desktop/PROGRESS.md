@@ -12,6 +12,175 @@ Most recent session should be first.
 Use the template from SESSION_PROTOCOL.md
 -->
 
+## Session 2025-12-05 (Phase 7 - GitHub Release Workflow)
+
+**Phase:** 7 (Auto-Update Infrastructure)
+**Focus:** Create GitHub Actions workflow for automated desktop releases
+
+### Completed
+- [x] Reviewed existing electron-builder publish config (already in package.json)
+- [x] Created `.github/workflows/desktop-release.yml`:
+  - Trigger: Push tags `v*` or `desktop-v*`, or manual dispatch
+  - Job 1: `build-webapp` (ubuntu-latest) - Build Next.js production
+  - Job 2: `build-macos` (macos-latest) - Build Electron for x64 + arm64
+  - Job 3: `release-notes` - Update GitHub Release with installation instructions
+  - Apple code signing support (optional - uses secrets if available)
+  - Security: Uses environment variables for safe input handling (no injection risks)
+- [x] Verified YAML syntax is valid
+- [x] Updated documentation (features.json, ROADMAP.md)
+
+### Testing Results
+| Test | Result |
+|------|--------|
+| Workflow file created | ✅ |
+| YAML syntax valid | ✅ |
+| 3 jobs defined | ✅ (build-webapp, build-macos, release-notes) |
+
+### Files Created
+- `.github/workflows/desktop-release.yml` — GitHub Actions workflow (180 lines)
+
+### GitHub Secrets Required (for code signing)
+| Secret | Purpose |
+|--------|---------|
+| `APPLE_CERTIFICATE_P12` | Base64-encoded .p12 certificate |
+| `APPLE_CERTIFICATE_PASSWORD` | Password for .p12 file |
+| `APPLE_ID` | Apple ID email |
+| `APPLE_APP_SPECIFIC_PASSWORD` | App-specific password |
+| `APPLE_TEAM_ID` | Apple Developer Team ID |
+
+**Note:** Workflow builds unsigned apps if secrets are not configured.
+
+### Phase 7 Status
+**GitHub Release workflow complete!** Remaining Phase 7 items:
+- [x] Install `electron-updater` ✅
+- [x] Implement auto-update logic ✅
+- [x] Add update UI to Settings ✅
+- [x] Configure electron-builder publish ✅
+- [x] Create GitHub release workflow ✅ (this session)
+- [ ] Test update flow (requires tag push: `git tag v1.0.0 && git push --tags`)
+
+### Next Session Should
+- Test update flow by pushing a tag (e.g., `git tag v1.0.0-beta.1 && git push --tags`)
+- Or proceed to Phase 7: Signing (configure Apple certificates)
+- Or proceed to Phase 8: First-Run Wizard
+
+---
+
+## Session 2025-12-05 (Phase 7 - Update UI in Settings)
+
+**Phase:** 7 (Auto-Update Infrastructure)
+**Focus:** Add Update UI to Settings page
+
+### Completed
+- [x] Added IPC handlers for update operations in `electron-main.ts`:
+  - `update:checkForUpdates` - Triggers manual update check
+  - `update:getInfo` - Returns current version and isPackaged status
+- [x] Enhanced auto-updater event handlers to send IPC messages to renderer:
+  - `update:available` - Notifies when update is found
+  - `update:not-available` - Notifies when up-to-date
+  - `update:progress` - Sends download progress (percent, bytesPerSecond, transferred, total)
+  - `update:downloaded` - Notifies when ready to install
+  - `update:error` - Notifies on error
+- [x] Extended `preload.ts` with new update API methods:
+  - `checkForUpdates()` - Manual check trigger
+  - `getUpdateInfo()` - Get version info
+  - Event listeners for all update events
+- [x] Updated `electron.d.ts` with TypeScript interfaces:
+  - `UpdateAvailableInfo`, `UpdateProgress`, `UpdateCheckResult`, `UpdateInfo`
+- [x] Created `UpdateSettings.tsx` component:
+  - Current version display
+  - "Check for Updates" button
+  - Status messages (checking, available, downloading, downloaded, up-to-date, error)
+  - Download progress bar
+  - Development mode indicator
+- [x] Added `UpdateSettings` to Settings page (after BackupSettings)
+- [x] Verified type-check and build pass
+
+### Testing Results
+| Test | Result |
+|------|--------|
+| Desktop type-check | ✅ |
+| Desktop build | ✅ |
+| Webapp build | ✅ |
+
+### Files Modified
+- `desktop/src/electron-main.ts` — Added IPC handlers and enhanced updater events
+- `desktop/src/preload.ts` — Added update API methods and event listeners
+- `webapp/lib/types/electron.d.ts` — Added update-related TypeScript interfaces
+- `webapp/components/custom/UpdateSettings.tsx` — **NEW** Update settings component
+- `webapp/app/settings/page.tsx` — Added UpdateSettings import and component
+
+### Phase 7 Status
+**Update UI complete!** Remaining Phase 7 items:
+- [x] Install `electron-updater` ✅
+- [x] Implement auto-update logic ✅
+- [x] Add update UI to Settings ✅ (this session)
+- [ ] Configure electron-builder.yml publish settings
+- [ ] Create `.github/workflows/desktop-release.yml`
+- [ ] Test update flow (requires published GitHub Release)
+
+### Next Session Should
+- Continue Phase 7: Create GitHub release workflow (`desktop-release.yml`)
+- Or proceed to Phase 8: First-Run Wizard
+- Or proceed to Phase 7: Signing (code signing setup)
+
+---
+
+## Session 2025-12-04 (Phase 7 - Auto-Update Infrastructure)
+
+**Phase:** 7 (Auto-Update Infrastructure)
+**Focus:** Implement electron-updater for automatic updates via GitHub Releases
+
+### Completed
+- [x] Verified `electron-updater@6.6.2` already installed (from Phase 1 scaffolding)
+- [x] Verified `publish` config in package.json points to GitHub Releases
+- [x] Added `autoUpdater` import from `electron-updater`
+- [x] Implemented `setupAutoUpdater()` function:
+  - `autoDownload: false` - prompts user before downloading
+  - `autoInstallOnAppQuit: true` - installs pending update on quit
+  - Event handlers: update-available, update-not-available, download-progress, update-downloaded, error
+  - User dialogs for download and restart prompts
+  - Progress bar in window during download
+- [x] Implemented `checkForUpdates()` function (production only)
+- [x] Implemented `startUpdateSchedule()` function:
+  - Initial check 10 seconds after launch
+  - Periodic check every 6 hours
+- [x] Implemented `stopUpdateSchedule()` for cleanup
+- [x] Integrated into app lifecycle:
+  - `setupAutoUpdater()` called in `app.on('ready')`
+  - `startUpdateSchedule()` called after app loads
+  - `stopUpdateSchedule()` called in `app.on('will-quit')`
+- [x] Verified type-check passes
+- [x] Verified build compiles
+- [x] Verified app launches with auto-updater initialized
+
+### Testing Results
+| Test | Result |
+|------|--------|
+| Desktop type-check | ✅ |
+| Desktop build | ✅ |
+| App launch (dev mode) | ✅ "[AutoUpdater] Initializing..." |
+| Dev mode skips checks | ✅ "[AutoUpdater] Schedule disabled (development mode)" |
+
+### Files Modified
+- `desktop/src/electron-main.ts` — Added auto-updater section with setup, check, and schedule functions
+
+### Phase 7 Status
+**Core auto-update logic complete!** Remaining Phase 7 items:
+- [x] Install `electron-updater` ✅ (already done in Phase 1)
+- [x] Implement auto-update logic ✅ (this session)
+- [ ] Add update UI to Settings (show version, check for updates button)
+- [ ] Configure electron-builder.yml publish settings (already configured)
+- [ ] Create `.github/workflows/desktop-release.yml`
+- [ ] Test update flow locally (requires GitHub Release)
+
+### Next Session Should
+- Continue Phase 7: Add update UI to Settings page OR create GitHub release workflow
+- Or proceed to **Phase 8: First-Run Wizard** if auto-update UI can wait
+- Note: Auto-update logic is functional but needs a published GitHub Release to test fully
+
+---
+
 ## Session 2025-12-04 (Phase 6 - Crash Reporting & Logging)
 
 **Phase:** 6 (Crash Reporting & Monitoring)

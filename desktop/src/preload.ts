@@ -56,13 +56,32 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openBackupFolder: (): Promise<boolean> =>
     ipcRenderer.invoke('shell:openBackupFolder'),
 
-  // --- Event Listeners (for future use: updates, backup status) ---
-  onUpdateAvailable: (callback: (version: string) => void): void => {
-    ipcRenderer.on('update:available', (_, version) => callback(version))
+  // --- Auto-Update Operations (Phase 7) ---
+  checkForUpdates: (): Promise<{ checking: boolean; reason?: string }> =>
+    ipcRenderer.invoke('update:checkForUpdates'),
+
+  getUpdateInfo: (): Promise<{ currentVersion: string; isPackaged: boolean }> =>
+    ipcRenderer.invoke('update:getInfo'),
+
+  // --- Event Listeners (for updates, backup status) ---
+  onUpdateAvailable: (callback: (info: { version: string; releaseDate?: string }) => void): void => {
+    ipcRenderer.on('update:available', (_, info) => callback(info))
   },
 
-  onUpdateProgress: (callback: (percent: number) => void): void => {
-    ipcRenderer.on('update:progress', (_, percent) => callback(percent))
+  onUpdateNotAvailable: (callback: (info: { version: string }) => void): void => {
+    ipcRenderer.on('update:not-available', (_, info) => callback(info))
+  },
+
+  onUpdateProgress: (callback: (progress: { percent: number; bytesPerSecond: number; transferred: number; total: number }) => void): void => {
+    ipcRenderer.on('update:progress', (_, progress) => callback(progress))
+  },
+
+  onUpdateDownloaded: (callback: (info: { version: string }) => void): void => {
+    ipcRenderer.on('update:downloaded', (_, info) => callback(info))
+  },
+
+  onUpdateError: (callback: (error: { message: string }) => void): void => {
+    ipcRenderer.on('update:error', (_, error) => callback(error))
   },
 
   onBackupFailed: (callback: (error: string) => void): void => {

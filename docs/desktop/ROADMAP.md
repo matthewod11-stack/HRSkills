@@ -388,31 +388,39 @@ Add issue to [KNOWN_ISSUES.md](./KNOWN_ISSUES.md) and move to next independent t
 
 ### Tasks
 
-- [ ] Install `electron-updater`
-- [ ] Implement auto-update logic
-  - [ ] Check 10s after launch
-  - [ ] Check every 6 hours
-  - [ ] Download on user approval
-  - [ ] Install on quit
-- [ ] Add update UI to Settings
-  - [ ] "Update Available" banner
-  - [ ] Download progress bar
-  - [ ] "Restart to Update" button
-- [ ] Configure electron-builder.yml publish settings
-- [ ] Create `.github/workflows/desktop-release.yml`
-- [ ] Test update flow locally
+- [x] Install `electron-updater` *(already installed in Phase 1)*
+- [x] Implement auto-update logic *(completed 2025-12-04)*
+  - [x] Check 10s after launch
+  - [x] Check every 6 hours
+  - [x] Download on user approval
+  - [x] Install on quit
+- [x] Add update UI to Settings *(completed 2025-12-05)*
+  - [x] Current version display
+  - [x] "Check for Updates" button
+  - [x] Update status messages (available, downloading, downloaded, error)
+  - [x] Download progress bar
+- [x] Configure electron-builder.yml publish settings *(in package.json build.publish)*
+- [x] Create `.github/workflows/desktop-release.yml` *(completed 2025-12-05)*
+  - [x] Build webapp job (ubuntu)
+  - [x] Build macOS job (macos-latest, x64+arm64)
+  - [x] Apple code signing support (when secrets configured)
+  - [x] Release notes job
+- [ ] Test update flow locally (requires published GitHub Release)
 
 ### Deliverables
 
-- [ ] CI/CD workflow ready
-- [ ] Update mechanism tested
+- [x] CI/CD workflow ready *(desktop-release.yml created 2025-12-05)*
+- [ ] Update mechanism tested (requires tag push to trigger workflow)
 
 ### Pause Point 7A
-**Action Required:** Add GitHub secrets:
-- `MAC_CERT_BASE64`
-- `MAC_CERT_PASSWORD`
-- `APPLE_ID`
-- `APPLE_APP_SPECIFIC_PASSWORD`
+**Action Required:** Add GitHub repository secrets for code signing:
+- `APPLE_CERTIFICATE_P12` — Base64-encoded .p12 certificate
+- `APPLE_CERTIFICATE_PASSWORD` — Password for .p12 file
+- `APPLE_ID` — Your Apple ID email
+- `APPLE_APP_SPECIFIC_PASSWORD` — App-specific password from appleid.apple.com
+- `APPLE_TEAM_ID` — Your Apple Developer Team ID
+
+**Note:** Workflow runs without signing if secrets are not configured (unsigned builds).
 
 ---
 
@@ -714,11 +722,11 @@ PHASE 6 - CRASH REPORTING
 [x] PAUSE 6A: Sentry project configured (user has existing project)
 
 PHASE 7 - AUTO-UPDATES
-[ ] Install electron-updater
-[ ] Implement update check (10s delay)
-[ ] Implement periodic check (6 hours)
-[ ] Implement download on approval
-[ ] Implement install on quit
+[x] Install electron-updater
+[x] Implement update check (10s delay)
+[x] Implement periodic check (6 hours)
+[x] Implement download on approval
+[x] Implement install on quit
 [ ] Add update UI to Settings
 [ ] Configure electron-builder publish
 [ ] Create desktop-release.yml workflow

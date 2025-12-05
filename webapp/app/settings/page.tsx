@@ -25,6 +25,7 @@ import { useEffect, useState } from 'react';
 import { AIMetricsDashboard } from '@/components/custom/AIMetricsDashboard';
 import { BackupSettings } from '@/components/custom/BackupSettings';
 import { QuotaBanner } from '@/components/custom/QuotaBanner';
+import { UpdateSettings } from '@/components/custom/UpdateSettings';
 import { getDaysSinceFirstRun } from '@/lib/first-run-client';
 import { queryKeys } from '@/lib/query-keys';
 
@@ -460,6 +461,9 @@ export default function SettingsPage() {
 
           {/* Database Backup Section - Desktop Only */}
           <BackupSettings />
+
+          {/* App Updates Section - Desktop Only */}
+          <UpdateSettings />
 
           {/* AI Provider Configuration Section */}
           <motion.div
