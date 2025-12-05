@@ -69,12 +69,22 @@ jobs:
           mkdir -p /tmp/hrskills-build
           npm run build
 
+      - name: Package webapp build for artifact transfer
+        run: |
+          # Tar the .next directory to preserve file names with special characters
+          # (Turbopack generates files with colons which GitHub artifacts don't allow)
+          cd webapp
+          tar -czf ../.next.tar.gz .next
+          cd ..
+          echo "=== Packaged .next size ==="
+          ls -lh .next.tar.gz
+
       - name: Upload webapp build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: webapp-build
           path: |
-            webapp/.next
+            .next.tar.gz
             webapp/public
             webapp/package.json
             webapp/next.config.js
@@ -112,11 +122,11 @@ jobs:
           echo "=== Artifact structure ==="
           ls -la webapp-artifact/
 
-          # Copy build artifacts into webapp directory
-          # The artifact contains: .next, public, package.json, next.config.js, node_modules
-          cp -r webapp-artifact/.next webapp/.next
+          # Extract the tarred .next directory
+          tar -xzf webapp-artifact/.next.tar.gz -C webapp/
+
+          # Copy node_modules (already extracted, no tar needed)
           cp -r webapp-artifact/node_modules webapp/node_modules
-          # public, package.json, next.config.js already exist from checkout
 
           echo "=== Webapp .next directory ==="
           ls -la webapp/.next | head -5
