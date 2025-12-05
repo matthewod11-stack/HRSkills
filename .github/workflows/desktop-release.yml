@@ -104,13 +104,29 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: webapp-build
-          # Download to root to preserve webapp/* structure
+          path: webapp-artifact
 
-      - name: Verify webapp artifacts
+      - name: Merge webapp build into source
         run: |
-          echo "Checking webapp directory structure..."
-          ls -la webapp/ || echo "No webapp dir"
-          ls -la webapp/.next 2>/dev/null | head -5 || echo "No .next dir"
+          echo "=== Artifact structure ==="
+          ls -la webapp-artifact/ || echo "No artifact dir"
+          ls -la webapp-artifact/webapp/ 2>/dev/null || echo "No webapp subdir"
+          ls -la webapp-artifact/.next 2>/dev/null || echo "No .next at root"
+
+          # Try different possible structures
+          if [ -d "webapp-artifact/webapp/.next" ]; then
+            cp -r webapp-artifact/webapp/.next webapp/.next
+            cp -r webapp-artifact/webapp/node_modules webapp/node_modules
+          elif [ -d "webapp-artifact/.next" ]; then
+            cp -r webapp-artifact/.next webapp/.next
+            cp -r webapp-artifact/node_modules webapp/node_modules
+          else
+            echo "ERROR: Could not find .next directory in artifact"
+            find webapp-artifact -name ".next" -type d
+          fi
+
+          echo "=== Final webapp structure ==="
+          ls -la webapp/.next 2>/dev/null | head -3 || echo "Still no .next dir"
 
       - name: Install desktop dependencies
         working-directory: desktop
