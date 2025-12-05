@@ -104,7 +104,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: webapp-build
-          path: webapp
+          # Download to root to preserve webapp/* structure
+
+      - name: Verify webapp artifacts
+        run: |
+          echo "Checking webapp directory structure..."
+          ls -la webapp/ || echo "No webapp dir"
+          ls -la webapp/.next 2>/dev/null | head -5 || echo "No .next dir"
 
       - name: Install desktop dependencies
         working-directory: desktop
