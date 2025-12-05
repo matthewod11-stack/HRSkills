@@ -50,11 +50,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: 'package-lock.json'
+          # Note: npm cache disabled because package-lock.json is gitignored
 
       - name: Install all dependencies (monorepo)
-        run: npm ci
+        run: npm install
 
       - name: Build webapp
         working-directory: webapp
@@ -92,8 +91,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: 'desktop/package-lock.json'
+          # Note: npm cache disabled because package-lock.json is gitignored
 
       - name: Download webapp build
         uses: actions/download-artifact@v4
@@ -103,7 +101,7 @@ jobs:
 
       - name: Install desktop dependencies
         working-directory: desktop
-        run: npm ci
+        run: npm install
 
       - name: Build desktop TypeScript
         working-directory: desktop
