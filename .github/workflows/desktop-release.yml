@@ -51,10 +51,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: 'webapp/package-lock.json'
+          cache-dependency-path: 'package-lock.json'
 
-      - name: Install webapp dependencies
-        working-directory: webapp
+      - name: Install all dependencies (monorepo)
         run: npm ci
 
       - name: Build webapp
