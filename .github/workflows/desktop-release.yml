@@ -171,13 +171,13 @@ jobs:
         working-directory: desktop
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Apple code signing (optional - app will be unsigned if not set)
+          # Apple code signing - use provided certificate or disable signing entirely
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          CSC_LINK: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          # If no certificate provided, use "0" to explicitly skip signing
+          CSC_LINK: ${{ secrets.APPLE_CERTIFICATE_P12 || '0' }}
           CSC_KEY_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          # Skip code signing if no certificate provided
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
           # Safe reference handling
           EVENT_NAME: ${{ github.event_name }}
