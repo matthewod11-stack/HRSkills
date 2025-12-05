@@ -12,6 +12,48 @@ Most recent session should be first.
 Use the template from SESSION_PROTOCOL.md
 -->
 
+## Session 2025-12-05 (Phase 7 - GitHub Release Workflow - Continued)
+
+**Phase:** 7 (Auto-Update Infrastructure)
+**Focus:** Test and debug GitHub Actions release workflow
+
+### Completed
+- [x] Pushed tag v1.0.0-beta.1 through v1.0.0-beta.8 to test workflow
+- [x] Fixed npm cache issue (package-lock.json is gitignored)
+- [x] Fixed T3 env validation (added SKIP_ENV_VALIDATION)
+- [x] Fixed database path issue (added DB_DIR)
+- [x] Fixed AI router init (added placeholder ANTHROPIC_API_KEY)
+- [x] Debugging artifact download structure (in progress)
+
+### Issues Encountered
+1. **npm cache**: package-lock.json is gitignored → disabled cache, use `npm install`
+2. **T3 env validation**: Build fails without API keys → `SKIP_ENV_VALIDATION=1`
+3. **Database init**: Path undefined during static gen → `DB_DIR=/tmp/hrskills-build`
+4. **AI router**: Requires ANTHROPIC_API_KEY at build time → placeholder key
+5. **Artifact structure**: .next not being copied correctly → debugging merge logic
+
+### Testing Results
+| Test | Result |
+|------|--------|
+| Desktop type-check | ✅ |
+| Workflow created | ✅ |
+| Webapp build job | ✅ (after env fixes) |
+| macOS build job | ❌ (artifact merge issue) |
+
+### Files Modified
+- `.github/workflows/desktop-release.yml` — Multiple iterations fixing CI issues
+
+### Workflow Status
+**In Progress**: The workflow builds webapp successfully, but artifact transfer to macOS job needs fixing. The issue is that the downloaded artifact structure doesn't match expected paths for electron-builder.
+
+### Next Session Should
+- Debug artifact download by checking v1.0.0-beta.8 workflow logs
+- Fix artifact merge to correctly copy `.next` and `node_modules` to webapp directory
+- Once macOS build passes, test the full release flow
+- Or consider alternative: build webapp on macOS instead of artifact transfer
+
+---
+
 ## Session 2025-12-05 (Phase 7 - GitHub Release Workflow)
 
 **Phase:** 7 (Auto-Update Infrastructure)

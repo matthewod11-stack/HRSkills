@@ -4,9 +4,9 @@
     "description": "Feature tracking for desktop app implementation. Status: not-started | in-progress | pass | fail | blocked",
     "lastUpdated": "2025-12-05",
     "totalFeatures": 70,
-    "passing": 58,
+    "passing": 57,
     "failing": 1,
-    "inProgress": 0
+    "inProgress": 1
   },
   "phase-0": {
     "webapp-builds": { "status": "pass", "notes": "npm run build passes (with ignoreBuildErrors)" },
@@ -95,7 +95,7 @@
     "download-on-user-approval": { "status": "pass", "verified": "2025-12-04", "notes": "autoDownload: false, dialog prompts user" },
     "install-on-quit": { "status": "pass", "verified": "2025-12-04", "notes": "autoInstallOnAppQuit: true" },
     "update-ui-in-settings": { "status": "pass", "verified": "2025-12-05", "notes": "UpdateSettings component shows version, Check for Updates button, download progress" },
-    "github-release-workflow": { "status": "pass", "verified": "2025-12-05", "notes": ".github/workflows/desktop-release.yml - 3 jobs: build-webapp, build-macos, release-notes" },
+    "github-release-workflow": { "status": "in-progress", "notes": ".github/workflows/desktop-release.yml - webapp build works, artifact transfer to macOS needs fixing" },
     "update-flow-tested": { "status": "not-started", "notes": "Requires published GitHub Release to test" }
   },
   "phase-7-signing": {
