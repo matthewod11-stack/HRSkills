@@ -171,18 +171,27 @@ jobs:
         working-directory: desktop
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Apple code signing - use provided certificate or disable signing entirely
+          # Apple code signing (only set if secrets are configured)
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          # If no certificate provided, use "0" to explicitly skip signing
-          CSC_LINK: ${{ secrets.APPLE_CERTIFICATE_P12 || '0' }}
           CSC_KEY_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          # Disable automatic identity discovery - must have explicit certificate
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
           # Safe reference handling
           EVENT_NAME: ${{ github.event_name }}
           REF_TYPE: ${{ github.ref_type }}
+          HAS_SIGNING_CERT: ${{ secrets.APPLE_CERTIFICATE_P12 != '' }}
+          SIGNING_CERT: ${{ secrets.APPLE_CERTIFICATE_P12 }}
         run: |
+          # Only set CSC_LINK if we have a certificate (otherwise skip signing)
+          if [[ "$HAS_SIGNING_CERT" == "true" ]]; then
+            export CSC_LINK="$SIGNING_CERT"
+            echo "Code signing enabled"
+          else
+            echo "Code signing disabled (no certificate)"
+          fi
+
           # Determine if we should publish
           if [[ "$EVENT_NAME" == "push" && "$REF_TYPE" == "tag" ]]; then
             echo "Building and publishing release..."
