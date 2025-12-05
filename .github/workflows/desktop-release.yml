@@ -79,6 +79,7 @@ jobs:
             webapp/package.json
             webapp/next.config.js
             webapp/node_modules
+          include-hidden-files: true
           retention-days: 1
 
   # ------------------------------------------
@@ -109,24 +110,18 @@ jobs:
       - name: Merge webapp build into source
         run: |
           echo "=== Artifact structure ==="
-          ls -la webapp-artifact/ || echo "No artifact dir"
-          ls -la webapp-artifact/webapp/ 2>/dev/null || echo "No webapp subdir"
-          ls -la webapp-artifact/.next 2>/dev/null || echo "No .next at root"
+          ls -la webapp-artifact/
 
-          # Try different possible structures
-          if [ -d "webapp-artifact/webapp/.next" ]; then
-            cp -r webapp-artifact/webapp/.next webapp/.next
-            cp -r webapp-artifact/webapp/node_modules webapp/node_modules
-          elif [ -d "webapp-artifact/.next" ]; then
-            cp -r webapp-artifact/.next webapp/.next
-            cp -r webapp-artifact/node_modules webapp/node_modules
-          else
-            echo "ERROR: Could not find .next directory in artifact"
-            find webapp-artifact -name ".next" -type d
-          fi
+          # Copy build artifacts into webapp directory
+          # The artifact contains: .next, public, package.json, next.config.js, node_modules
+          cp -r webapp-artifact/.next webapp/.next
+          cp -r webapp-artifact/node_modules webapp/node_modules
+          # public, package.json, next.config.js already exist from checkout
 
-          echo "=== Final webapp structure ==="
-          ls -la webapp/.next 2>/dev/null | head -3 || echo "Still no .next dir"
+          echo "=== Webapp .next directory ==="
+          ls -la webapp/.next | head -5
+          echo "=== Webapp .next size ==="
+          du -sh webapp/.next
 
       - name: Install desktop dependencies
         working-directory: desktop
